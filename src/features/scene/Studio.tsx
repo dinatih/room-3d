@@ -295,11 +295,9 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       setFrameloop(loop);
       invalidate();
     };
-    window.addEventListener('start-camera-intro', handleIntroStart);
     document.addEventListener('start-camera-intro', handleIntroStart);
     window.addEventListener('camera-intro-finished', handleIntroEnd);
     return () => {
-      window.removeEventListener('start-camera-intro', handleIntroStart);
       document.removeEventListener('start-camera-intro', handleIntroStart);
       window.removeEventListener('camera-intro-finished', handleIntroEnd);
     };
@@ -510,14 +508,6 @@ export function Studio() {
 
   useEffect(() => {
     (window as any).isAnimProRunning = false;
-    // Analytics tracking (disabled in dev to prevent 404s)
-    /*
-    fetch('/api/visits', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: window.location.pathname }),
-    }).catch(() => {});
-    */
   }, []);
 
   const [lidarMode, setLidarMode] = useState<LidarMode>(0);
@@ -821,7 +811,6 @@ export function Studio() {
       if (backdrop) {
         backdrop.classList.add('exiting');
       }
-      window.dispatchEvent(new CustomEvent('start-camera-intro'));
       document.dispatchEvent(new CustomEvent('start-camera-intro'));
       // Sécurité si aucun événement de fin du vol caméra n'est reçu.
       setTimeout(cleanup, 2200);

@@ -1,3 +1,5 @@
+import type { CameraMode, CameraTarget } from './types';
+
 /** IDs match the poses published by animals and RobotPlacements. */
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
@@ -19,4 +21,11 @@ export function resolveCameraSubject(value: string): CameraSubjectId | undefined
   if (choice) return choice.id;
   if (value === 'dog') return 'shiba';
   if (value === 'ulotte' || value === 'jikin' || value === 'tosakin' || value === 'cat') return value;
+}
+
+/** The selected subject is observed only while a follow/FPV camera is active. */
+export function selectAnimalCameraTarget({ cameraMode, cameraTarget }: { cameraMode: CameraMode | 'plane'; cameraTarget: CameraTarget }): CameraSubjectId | null {
+  if (cameraMode !== 'follow' && cameraMode !== 'fpv') return null;
+  const subject = resolveCameraSubject(cameraTarget);
+  return subject && subject !== 'character' ? subject : null;
 }

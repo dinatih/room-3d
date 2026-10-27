@@ -10,7 +10,7 @@ import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
-import { cameraState } from './cameraState';
+import { selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { PresetButton } from './PresetButton';
 
 export interface ViewControlBarProps {
@@ -65,13 +65,8 @@ export function ViewControlBar({
   const [hoveredView, setHoveredView] = useState<{
     label: string; top?: number; bottom?: number;
   } | null>(null);
-  const [animalCameraTarget, setAnimalCameraTarget] = useState(cameraState.animalTarget);
+  const animalCameraTarget = useSceneStore(selectAnimalCameraTarget);
   const animalCameraActive = Boolean(animalCameraTarget && animalCameraTarget !== 'drone');
-  useEffect(() => {
-    const onAnimalCameraMode = () => setAnimalCameraTarget(cameraState.animalTarget);
-    document.addEventListener('animal-camera-mode', onAnimalCameraMode);
-    return () => document.removeEventListener('animal-camera-mode', onAnimalCameraMode);
-  }, []);
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);

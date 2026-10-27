@@ -263,7 +263,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     cameraState.mode = m;
     if (m !== 'fpv' || cameraState.animalTarget !== 'drone') useDroneControlStore.getState().setPiloting(false);
     if (m !== 'fpv' && m !== 'follow') cameraState.animalTarget = null;
-    document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: Boolean(cameraState.animalTarget) }));
     setMode(m);
 
     if (m === 'orbit' && ctrlRef.current) {
@@ -529,6 +528,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const store = useSceneStore.getState();
     const subject = resolveCameraSubject(cameraState.animalTarget ?? pendingInitialSubject.current ?? 'character');
     if (!subject) throw new Error(`Objet caméra inconnu : ${cameraState.animalTarget}`);
+    if (subject === 'drone') useDroneControlStore.setState({ panelOpen: true });
     useSceneStore.setState({ cameraTarget: subject });
     updateUrlCameraTarget(subject);
     if (cameraState.animalTarget && followMode === 'fpv') { orbitYaw.current = 0; followPitch.current = 0; }
@@ -647,7 +647,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       useDroneControlStore.getState().setPiloting(pilot);
       animalFollowYaw.current = Math.atan2(view.forward.x, view.forward.z);
       hasAnimalFollowPose.current = false;
-      document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: true }));
       keys.current.clear();
       enterFollow(view.eyes.x, view.eyes.z, requestedMode as 'fpv' | 'follow');
       useSceneStore.getState().setActiveCameraPos(null);

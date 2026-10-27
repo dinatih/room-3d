@@ -140,7 +140,7 @@ export function BlackHornetDrone({
         delete cameraState.animalViews.drone;
         if (cameraState.animalTarget === 'drone') {
           cameraState.animalTarget = null;
-          document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: false }));
+          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'reset-orbit' }));
         }
         useDroneControlStore.setState({ available: false });
         useDroneControlStore.getState().setPiloting(false);

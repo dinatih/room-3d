@@ -5,7 +5,7 @@ import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
-import { CAMERA_SUBJECTS } from './camera/cameraSubjects';
+import { CAMERA_SUBJECTS, selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import './VirtualDPad.scss';
 
@@ -36,7 +36,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const wigGrid = useSceneStore(state => state.layers.wigGrid);
   const wigGridHairColor = useSceneStore(state => state.wigGridHairColor);
   const selectControl = useSceneStore(state => state.selectArrowControl);
-  const [animal, setAnimal] = useState(cameraState.animalTarget);
+  const animal = useSceneStore(selectAnimalCameraTarget);
   const [availableSubjects, setAvailableSubjects] = useState(() => Object.keys(cameraState.animalViews));
   const activeKeys = useRef(new Set<string>());
   const zoomFrame = useRef<number | null>(null);
@@ -102,12 +102,6 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
     document.addEventListener(eventName, onArrowKeys);
     return () => document.removeEventListener(eventName, onArrowKeys);
   }, [piloting]);
-
-  useEffect(() => {
-    const onAnimal = () => setAnimal(cameraState.animalTarget);
-    document.addEventListener('animal-camera-mode', onAnimal);
-    return () => document.removeEventListener('animal-camera-mode', onAnimal);
-  }, []);
 
   useEffect(() => {
     releaseAll();

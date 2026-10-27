@@ -89,7 +89,6 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       delete cameraState.animalViews[id];
       if (cameraState.animalTarget === id) {
         cameraState.animalTarget = null;
-        document.dispatchEvent(new CustomEvent('animal-camera-mode', { detail: false }));
         document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'reset-orbit' }));
       }
     };

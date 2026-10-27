@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
 import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
+import { useSceneStore } from './store/useSceneStore';
+import { selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { getActionLabel } from './objectActionRegistry';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import './HornetControls.css';
@@ -14,15 +15,7 @@ export function HornetMenuButton() {
 
 export function HornetControls({ hidden = false }: { hidden?: boolean }) {
   const { available, piloting, speed, pitch, panelOpen, setPiloting, setSpeed } = useDroneControlStore();
-  const [target, setTarget] = useState(cameraState.animalTarget);
-  useEffect(() => {
-    const update = () => {
-      setTarget(cameraState.animalTarget);
-      if (cameraState.animalTarget === 'drone') useDroneControlStore.setState({ panelOpen: true });
-    };
-    document.addEventListener('animal-camera-mode', update);
-    return () => document.removeEventListener('animal-camera-mode', update);
-  }, []);
+  const target = useSceneStore(selectAnimalCameraTarget);
   if (hidden || !panelOpen) return null;
   const command = (key: string) => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key, userInitiated: true } }));
   const degrees = Math.round(pitch * 180 / Math.PI * 10) / 10;
