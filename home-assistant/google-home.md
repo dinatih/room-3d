@@ -9,22 +9,27 @@ dans Smart Life et n’importe pas le foyer Google dans HA.
 - HA dispose déjà de l’URL HTTPS `https://ha.dinatih.org`.
 - `google_assistant` n’est pas encore configuré sur le serveur.
 - Google Cast est présent ; il ne remplace pas cette liaison.
-- Projet Cloud créé : `maison-home-assistant-512902` (« Maison Home Assistant »).
+- Projet Google Home actif : `finovndononv`, renommé « Maison Dinatih » dans Google
+  Home. Le projet Cloud correspondant porte le nom « Maison Home Assistant ».
+- L’ancien projet préparatoire `maison-home-assistant-512902` n’est pas utilisé
+  par la liaison ; il n’a pas été supprimé.
 - HomeGraph API activée sur ce projet, état « Enabled » vérifié dans la console.
-- La console Google Home revient au formulaire de création sans erreur affichée,
-  et sa liste d’import reste vide. La console Actions historique renvoie HTTP 500.
-- Import dans Google Home Developer Console et configuration Cloud-to-cloud à terminer.
-- Aucun compte de service ni clé n’a encore été créé ; aucune configuration HA
-  Google Assistant n’a été installée et aucune association téléphone n’est finalisée.
+- Intégration Cloud-to-cloud « Maison Home Assistant » enregistrée et visible dans
+  la console, avec les URL HA ci-dessous, les scopes `email`/`name`, les types
+  Light/Fan/Blinds/TV et l’icône de Room-3D adaptée au format demandé.
+- Compte de service `home-assistant@finovndononv.iam.gserviceaccount.com` créé.
+- Attribution du rôle `Service Account Token Creator` bloquée par la validation
+  automatique, en attente de l’accord explicite utilisateur. Aucune clé JSON créée.
+- La configuration HA et l’association téléphone ne sont pas encore finalisées.
 - Aucun abonnement, compte facturation ou service payant n’est activé par cette préparation.
 
 ## Paramètres à renseigner dans Google Home Developer Console
 
-Créer/importer le projet, ajouter une intégration Cloud-to-cloud, puis renseigner :
+Paramètres enregistrés dans l’intégration Cloud-to-cloud :
 
 | Champ | Valeur |
 | --- | --- |
-| OAuth Client ID | `https://oauth-redirect.googleusercontent.com/r/maison-home-assistant-512902` |
+| OAuth Client ID | `https://oauth-redirect.googleusercontent.com/r/finovndononv` |
 | Client secret | Chaîne alphanumérique ; HA n’utilise pas ce champ |
 | Authorization URL | `https://ha.dinatih.org/auth/authorize` |
 | Token URL | `https://ha.dinatih.org/auth/token` |
@@ -43,7 +48,7 @@ Fragment à fusionner dans `configuration.yaml` :
 
 ```yaml
 google_assistant:
-  project_id: maison-home-assistant-512902
+  project_id: finovndononv
   service_account: !include google-home-service-account.json
   report_state: true
   expose_by_default: false
