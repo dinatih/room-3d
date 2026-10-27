@@ -110,3 +110,12 @@ Envoi Client ID/secret via HTTP Basic, Local fulfillment et App Flip désactivé
 Le nom et l’identifiant de projet restent identiques et explicites.
 
 Source : [procédure officielle Home Assistant](https://www.home-assistant.io/integrations/google_assistant/).
+
+## Échec après MFA : blocage réseau confirmé
+
+Google Cloud Logging a montré que Cloudflare renvoyait HTTP 403 et une page HTML
+au serveur Google lors de `AUTH_CODE_EXCHANGE`. La règle de blocage HA hors France
+a été corrigée avec une exception limitée à AS15169, aux requêtes POST et aux chemins
+`/auth/token` et `/api/google_assistant`. L’expression enregistrée a été relue.
+La MFA et l’authentification HA restent actives ; le nouvel essai téléphone reste
+à confirmer. Voir [le diagnostic et la règle Cloudflare](./cloudflare-google-home.md).
