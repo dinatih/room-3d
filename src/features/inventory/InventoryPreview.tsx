@@ -1,3 +1,4 @@
+import { enableWireframe } from '../scene/utils/wireframe';
 import { SmartActionPreview } from './SmartActionPreview';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import type { SceneItemProps } from '@shared/types';
@@ -648,48 +649,18 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     return <GlbScene glbPath={glbPath!} onSize={() => onSize(new THREE.Vector3())} onStats={onStats} />;
   }, [Component, glbPath, onStats]);
   const outerRef = useRef<THREE.Group>(null!), innerRef = useRef<THREE.Group>(null!);
+  const invalidate = useThree(state => state.invalidate);
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastTargetYRef = useRef<number | null>(null);
   const lastRadiusRef = useRef<number | null>(null);
   const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number } | null>(null);
 
-  const applyWireframe = useCallback(() => {
-    if (!innerRef.current) return;
-    const targetWireframe = Boolean(wireframe);
-    innerRef.current.traverse(node => {
-      if (!(node as THREE.Mesh).isMesh) return;
-      const mesh = node as THREE.Mesh;
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      materials.forEach(material => {
-        if (!material || !('wireframe' in material)) return;
-        const mat = material as THREE.Material & { wireframe: boolean };
-        if (mat.wireframe !== targetWireframe) {
-          mat.wireframe = targetWireframe;
-          mat.needsUpdate = true;
-        }
-      });
-    });
-  }, [wireframe]);
-
-  useLayoutEffect(applyWireframe, [applyWireframe, actionState, item]);
-  useFrame(applyWireframe);
-  useLayoutEffect(() => () => {
-    if (!innerRef.current) return;
-    innerRef.current.traverse(node => {
-      if (!(node as THREE.Mesh).isMesh) return;
-      const mesh = node as THREE.Mesh;
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      materials.forEach(material => {
-        if (material && 'wireframe' in material) {
-          (material as THREE.Material & { wireframe: boolean }).wireframe = false;
-        }
-      });
-    });
-  }, []);
+  useLayoutEffect(() => {
+    if (wireframe) return enableWireframe(innerRef.current, invalidate);
+  }, [wireframe, actionState, item, PreviewComponent, invalidate]);
 
   const fit = useCallback(() => {
     if (!outerRef.current || !innerRef.current) return;
-    applyWireframe();
     outerRef.current.scale.set(1, 1, 1); outerRef.current.position.set(0, 0, 0); outerRef.current.updateMatrixWorld(true);
 
     const box = new THREE.Box3();
@@ -789,7 +760,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
         onTargetChange([0, targetY, 0]);
       }
     }
-  }, [grounded, preserveOrigin, onTargetChange, onBoundsChange, onStats, glbPath, applyWireframe, item]);
+  }, [grounded, preserveOrigin, onTargetChange, onBoundsChange, onStats, glbPath, item]);
 
   useLayoutEffect(() => {
     lastStatsRef.current = null;

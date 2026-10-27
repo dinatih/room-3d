@@ -8,8 +8,8 @@ import { useRef, useLayoutEffect, createContext, useContext } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { LAYER_ENVIRONMENT, LAYER_WALKER_DETAIL } from '@config';
-import { cameraState } from './cameraState';
 import type { LayerState } from './sidepanel/types';
+import { enableWireframe } from './utils/wireframe';
 import {
   categoryLayerRegistry,
   LayerSmokeTransition,
@@ -35,6 +35,7 @@ export function CategoryLayerGroup({
   layer, children, visible = true, wireframe = false, register = true,
 }: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean; register?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
+  const invalidate = useThree(state => state.invalidate);
   const allowRegistry = useContext(LayerRegistryContext);
   const shouldRegister = register && allowRegistry;
 
@@ -52,20 +53,6 @@ export function CategoryLayerGroup({
     });
   };
 
-  const applyWireframe = (root: THREE.Object3D, wf: boolean) => {
-    root.traverse(obj => {
-      const mesh = obj as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.material) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach(mat => {
-        if ('wireframe' in mat) {
-          (mat as any).wireframe = wf;
-          mat.needsUpdate = true;
-        }
-      });
-    });
-  };
-
   useLayoutEffect(() => {
     const grp = ref.current;
     if (!grp) return;
@@ -74,16 +61,10 @@ export function CategoryLayerGroup({
       grp.visible = visible;
     }
     assignLayers(grp);
-    if (wireframe) {
-      applyWireframe(grp, true);
-    }
 
     const onChildAdded = (e: any) => {
       if (e?.child) {
         assignLayers(e.child);
-        if (wireframe) {
-          applyWireframe(e.child, true);
-        }
       }
     };
 
@@ -95,17 +76,8 @@ export function CategoryLayerGroup({
   }, [layer, visible, shouldRegister]);
 
   useLayoutEffect(() => {
-    const grp = ref.current;
-    if (!grp) return;
-    applyWireframe(grp, !!wireframe);
-    cameraState.invalidate?.();
-    return () => {
-      if (wireframe && grp) {
-        applyWireframe(grp, false);
-        cameraState.invalidate?.();
-      }
-    };
-  }, [wireframe]);
+    if (wireframe) return enableWireframe(ref.current, invalidate);
+  }, [wireframe, invalidate]);
 
   return (
     <CategoryLayerContext.Provider value={layer}>
