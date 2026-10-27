@@ -557,22 +557,6 @@ export function Floor() {
     </group>
   );
 
-  const ceilShape = useMemo(() => new THREE.Shape([
-    new THREE.Vector2(-20, 30),
-    new THREE.Vector2(316, 30),
-    new THREE.Vector2(316, 230),
-    new THREE.Vector2(326, 230),
-    new THREE.Vector2(326, 220),
-    new THREE.Vector2(326, -547.77),
-    new THREE.Vector2(-20, -747.53),
-  ]), []);
-
-  const ceilBottomGeo = useMemo(() => {
-    const geo = new THREE.ShapeGeometry(ceilShape);
-    geo.rotateX(-Math.PI / 2);
-    return geo;
-  }, [ceilShape]);
-
   return (
     <>
       <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={floorCoverings}>
@@ -608,7 +592,7 @@ export function Floor() {
           <MergedStaticGroup name="merged-ceiling" materialOverride={iceCastle ? architecturalGlassMat : undefined}>
             <group position={[0, WALL_H - 1, 0]}>
               <mesh
-                geometry={ceilBottomGeo}
+                geometry={slabTopGeo}
                 material={ceilBottomBack}
                 receiveShadow
                 userData={{ brickType: 'ceiling' }}
