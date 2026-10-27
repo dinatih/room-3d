@@ -211,3 +211,47 @@ it('partage le rendu miroir et restaure la scène même quand une réflexion éc
   assert.equal(renders, 2, 'la profondeur de réflexion doit aussi être restaurée');
   cleanups.forEach(cleanup => cleanup());
 });
+
+it('isole les dalles ALTAPPEN et conserve leurs dimensions après une nouvelle mesure', async () => {
+  const source = new THREE.Group(), effects = [], sizes = [];
+  source.add(new THREE.Mesh(new THREE.BoxGeometry(.3, .02, .3), new THREE.MeshBasicMaterial()));
+  let scene;
+  const { AltappenRug } = load('src/features/scene/items/AltappenRug.tsx', {
+    three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: fn => effects.push(fn) },
+    '@react-three/drei': { useGLTF: Object.assign(() => ({ scene: source }), { preload() {} }) },
+    '@features/scene/useGLTFClone': { useGLTFClone: () => ({ scene }) },
+    '@features/scene/glbUtils': await glbUtils(),
+  });
+  const instances = [source.clone(true), source.clone(true)];
+  for (scene of instances) {
+    for (let measurement = 0; measurement < 2; measurement++) {
+      assert.equal(AltappenRug({ onSize: size => sizes.push(size) }).props.object, scene);
+      effects.pop()();
+    }
+  }
+  assert.equal(source.userData.merged, undefined);
+  assert.deepEqual(source.scale.toArray(), [1, 1, 1]);
+  assert.notEqual(instances[0].children[0].geometry, instances[1].children[0].geometry);
+  sizes.forEach(size => assert(Math.abs(size.x - 30) < 1e-5 && Math.abs(size.z - 30) < 1e-5));
+});
+
+it('conserve les hauteurs assis/debout BOLLSIDAN et la priorité de la hauteur explicite', async () => {
+  const utils = await glbUtils();
+  for (const [props, expected] of [
+    [{}, 70], ...['desk-toggle', 'desk1-toggle', 'desk2-toggle', 'standing'].map(key => [{ actionState: { [key]: true } }, 105]),
+    [{ actionState: { 'desk-toggle': false, standing: true } }, 70],
+    [{ height: 82, actionState: { standing: true } }, 82],
+  ]) {
+    const scene = new THREE.Group(), effects = [], sizes = [];
+    scene.add(new THREE.Mesh(new THREE.BoxGeometry(.68, .8477, .36).translate(0, .8477 / 2, 0), new THREE.MeshBasicMaterial()));
+    const { Bollsidan30574370 } = load('src/features/scene/items/Bollsidan30574370.tsx', {
+      three: THREE, 'react/jsx-runtime': jsx,
+      react: { useMemo: fn => fn(), useCallback: fn => fn, useRef: value => ({ current: value }), useLayoutEffect: fn => effects.push(fn) },
+      '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame() {} },
+      '@react-three/drei': { useGLTF: Object.assign(() => ({ scene }), { preload() {} }) },
+      '@features/scene/glbUtils': utils,
+    });
+    Bollsidan30574370({ ...props, onSize: size => sizes.push(size) }); effects.pop()();
+    assert(Math.abs(sizes[0].y - expected) < 1e-4);
+  }
+});

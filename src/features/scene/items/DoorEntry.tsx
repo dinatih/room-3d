@@ -13,7 +13,6 @@ import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorOb
 import { useDoorOpen } from './useDoorOpen';
 import { useDoorSpring } from './useDoorSpring';
 import { DoorEntryFrame } from './DoorFrame';
-import { NOOP_SIZE } from '../sceneItem';
 
 export const ENTRY_W = 90;
 const W  = ENTRY_W;
@@ -78,7 +77,7 @@ export function DoorEntry({ onSize, isPreview = false, showFrame = true, ...prop
 
   return (
     <group position={[0, 0, 0]}>
-      {showFrame && <DoorEntryFrame {...props} isPreview={isPreview} onSize={NOOP_SIZE} />}
+      {showFrame && <DoorEntryFrame />}
 
       <group ref={doorRef} position={[-W / 2, 0, 0]}>
         {/* Panneau rouge */}

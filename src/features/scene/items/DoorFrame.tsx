@@ -1,16 +1,16 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const H = 204; // Hauteur passage libre (cm)
 
-export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone = false, stopDepth = -2 }: SceneItemProps & { width?: number; wallThickness?: number; twoTone?: boolean; stopDepth?: number }) {
+export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone = false, stopDepth = -2 }: SceneModelProps & { width?: number; wallThickness?: number; twoTone?: boolean; stopDepth?: number }) {
   const innerDepth = wallThickness / 2;
   const outerDepth = innerDepth + 1;
   const stopEnd = stopDepth + 1.8;
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W + 5, H + 1, wallThickness + 2));
+    onSize?.(new THREE.Vector3(W + 5, H + 1, wallThickness + 2));
   }, [onSize, W, wallThickness]);
 
   // Profil du dormant gauche d'après le schéma de conception
@@ -133,6 +133,6 @@ export function DoorFrame({ onSize, width: W = 83, wallThickness = 7.2, twoTone 
   );
 }
 
-export function DoorEntryFrame(props: SceneItemProps) {
-  return <DoorFrame {...props} width={90} wallThickness={10} stopDepth={2} twoTone />;
+export function DoorEntryFrame({ onSize }: SceneModelProps) {
+  return <DoorFrame onSize={onSize} width={90} wallThickness={10} stopDepth={2} twoTone />;
 }

@@ -57,7 +57,7 @@ export function DoorsPlacement({ framesOnly = false }: { framesOnly?: boolean })
         position={[entry.wx, entry.wy, entry.wz]}
         rotation-y={entry.diagRotY}
         userData={framesOnly ? { itemName: 'Dormant de porte' } : { sceneItemRoot: true, itemName: 'Porte entrée', hoverAction: { label: 'Porte entrée', actions: getObjectActionIds('door-entry') } }}>
-        {framesOnly ? <DoorEntryFrame item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} /> : <DoorEntry showFrame={false} item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />}
+        {framesOnly ? <DoorEntryFrame /> : <DoorEntry showFrame={false} item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} />}
       </group>
     </group>
   );

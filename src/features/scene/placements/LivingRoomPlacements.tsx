@@ -186,7 +186,7 @@ export function Beds() {
             hoverAction: { label: hoverLabel, actions: isDouble ? eastHoverActions : westHoverActions },
           }}
         >
-          <Nasfjallet10558045 item={stub('nasfjallet-topper')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Nasfjallet10558045 />
         </group>
       </PositionTransition>
     </>
@@ -238,7 +238,7 @@ export function Desks() {
       <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: getObjectActionIds('desk-bollsidan-1') } }}>
           <group userData={{ sceneItemRoot: true }}>
-            <NavigationObstacle id="desk-bollsidan-1"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d1H} /></NavigationObstacle>
+            <NavigationObstacle id="desk-bollsidan-1"><Bollsidan30574370 height={d1H} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -253,7 +253,7 @@ export function Desks() {
           }
         }}>
           <group userData={{ sceneItemRoot: true }}>
-            <NavigationObstacle id="desk-bollsidan-2"><Bollsidan30574370 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} height={d2H} /></NavigationObstacle>
+            <NavigationObstacle id="desk-bollsidan-2"><Bollsidan30574370 height={d2H} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -444,10 +444,10 @@ function SneakersPair() {
   return (
     <>
       <group position={[MIRROR_CX, 0.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
-        <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <SneakersRed />
       </group>
       <group position={[MIRROR_CX, 18.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
-        <SneakersRed item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <SneakersRed />
       </group>
     </>
   );
@@ -522,7 +522,7 @@ export function LivingRoomFurnishings() {
 
       {/* Penderie Mulig (structure sans cintres) */}
       <group position={[MUL_D, 222, mulCZ]} rotation={[0, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Penderie Mulig' }}>
-        <Mulig30179435 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noHangers />
+        <Mulig30179435 noHangers />
       </group>
 
       {/* Boîtes Drona Kallax NW */}
@@ -616,12 +616,12 @@ export function LivingRoomDecor() {
       {/* Coussins Lagerpoppel mur Est */}
       <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 - 38]} rotation={[0, -Math.PI / 2, -0.967]} userData={{ sceneItemRoot: true, itemName: 'Coussin LAGERPOPPEL 1 (Mur Est Nord)' }}>
         <group position={[29, -40, 0]}>
-          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Lagerpoppel00561816 />
         </group>
       </group>
       <group position={[ROOM_W - 10, WALL_H, ROOM_D / 2 + 38]} rotation={[0, -Math.PI / 2, 0.967]} userData={{ sceneItemRoot: true, itemName: 'Coussin LAGERPOPPEL 2 (Mur Est Sud)' }}>
         <group position={[-29, -40, 0]}>
-          <Lagerpoppel00561816 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Lagerpoppel00561816 />
         </group>
       </group>
 
@@ -641,7 +641,7 @@ export function LivingRoomDecor() {
 
       {/* Sac à dos */}
       <group position={[17 / 2, 138, 258]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Sac à Dos' }}>
-        <Backpack item={{} as any} actionState={{}} onSize={() => {}} />
+        <Backpack />
       </group>
 
       {/* Baskets Sneakers Rouges sur range-chaussures */}

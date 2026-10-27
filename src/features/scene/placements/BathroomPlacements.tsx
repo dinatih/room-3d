@@ -4,7 +4,7 @@ import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
@@ -151,7 +151,7 @@ export function BathroomFurnishings() {
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
       <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, 0, BATH_SOUTH_WALL - 53]} userData={{ sceneItemRoot: true, itemName: 'Tapis Gazon SDB' }}>
-        <GrassRug item={stub('grass-rug')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <GrassRug />
       </group>
 
       {/* Boîtes Drona sur meubles hauts SDB */}

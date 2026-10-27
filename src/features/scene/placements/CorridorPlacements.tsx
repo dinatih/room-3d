@@ -53,7 +53,7 @@ function LinkyGaine() {
       {/* Linky face -X (vers le couloir). GLB front +Z → rotation-y = -π/2.
           Profondeur GLB ≈ 7.1 cm → recule Linky pour que son dos affleure la gaine. */}
       <group position={[LINKY_GAINE_X0 - 7.1 / 2, LINKY_MOUNT_Y, LINKY_GAINE_CZ]} rotation={[0, -Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Compteur Linky' }}>
-        <Linky item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Linky />
       </group>
     </>
   );

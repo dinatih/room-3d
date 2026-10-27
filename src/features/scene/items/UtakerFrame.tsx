@@ -10,7 +10,6 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 
 import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
@@ -42,10 +41,10 @@ function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: nu
           "traversins ... sur le lit" they were at X=-50 and X=50 with rotation Z=PI/2.
           Let's place Blaskata at the same spots. */}
       <group position={[-50, 0, 0]} rotation={[0, 0, 0]}>
-        <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Blaskata50569513 />
       </group>
       <group position={[50, 0, 0]} rotation={[0, 0, 0]}>
-        <Blaskata50569513 item={{ id: 'blaskata' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Blaskata50569513 />
       </group>
     </group>
   );

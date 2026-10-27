@@ -5,7 +5,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const bagMat    = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.83 });
 const bagDark   = new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.88 });
@@ -69,11 +69,11 @@ function BackpackGeom({ W, H, D, groupRef }: { W: number; H: number; D: number; 
 }
 
 /** Grand sac à dos — 32×43×17 cm */
-export function Backpack({ onSize }: SceneItemProps) {
+export function Backpack({ onSize }: SceneModelProps) {
   const groupRef = useRef<THREE.Group>(null!);
   useLayoutEffect(() => {
     groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
   return <BackpackGeom W={32} H={43} D={17} groupRef={groupRef} />;
 }

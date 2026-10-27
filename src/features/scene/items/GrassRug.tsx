@@ -5,7 +5,6 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
 import { makeGrassTex } from '../Building';
 import { noCapMat } from '../building/buildingCommon';
 
@@ -13,7 +12,7 @@ const RUG_W = 200;
 const RUG_D = 100;
 const RUG_H = 1.5;
 
-export function GrassRug({  }: SceneItemProps) {
+export function GrassRug() {
   const mats = useMemo(() => {
     const topTex = makeGrassTex();
     topTex.repeat.set(10, 5);
@@ -37,7 +36,7 @@ export function GrassRug({  }: SceneItemProps) {
 
   return (
     <mesh
-      ref={(m) => { if (m) m.material = mats as any; }}
+      material={mats}
       position={[0, RUG_H / 2 + 0.1, 0]}
       renderOrder={1}
       receiveShadow

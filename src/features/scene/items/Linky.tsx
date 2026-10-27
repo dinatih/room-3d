@@ -3,11 +3,11 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 const GLB = 'items/compteur-linky/compteur-linky.glb';
 
-export function Linky({ onSize, ...props }: SceneItemProps) {
+export function Linky({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -29,7 +29,7 @@ export function Linky({ onSize, ...props }: SceneItemProps) {
   }, [scene, onSize]);
 
   return (
-    <group {...props}>
+    <group>
       <primitive object={scene} />
     </group>
   );

@@ -121,7 +121,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       {/* Évier — bord arrière à 10.5 cm du fond de niche (Z=60) */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W / 2, COUNTER_H + COUNTER_SLAB - 15, 26]}>
-          <Boholmen99157501 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Boholmen99157501 />
         </group>
       </group>
 

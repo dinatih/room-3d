@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 const GLB_SINK   = '/items/boholmen99157501/Boholmen99157501.glb';
@@ -12,7 +12,7 @@ const GLB_FAUCET = 'items/lagan mitigeur chromé/LAGAN Mitigeur chromé.glb';
  * BOHOLMEN évier intégré, 1 bac, acier inoxydable, 47x30 cm + mitigeur LAGAN
  * URL: https://www.ikea.com/fr/fr/p/boholmen-evier-integre-1-bac-acier-inoxydable-s99157501/
  */
-export function Boholmen99157501({ onSize, ...props }: SceneItemProps) {
+export function Boholmen99157501({ onSize }: SceneModelProps) {
   const { scene: sinkScene   } = useGLTFClone(GLB_SINK);
   const { scene: faucetScene } = useGLTFClone(GLB_FAUCET);
   const groupRef = useRef<THREE.Group>(null!);
@@ -48,7 +48,7 @@ export function Boholmen99157501({ onSize, ...props }: SceneItemProps) {
   }, [sinkScene, faucetScene, onSize]);
 
   return (
-    <group ref={groupRef} {...props}>
+    <group ref={groupRef}>
       <primitive object={sinkScene} />
       <group position={[0, 15, 16]} rotation={[0, Math.PI, 0]}>
         <primitive object={faucetScene} />

@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
@@ -10,7 +10,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * Price: 35
  * URL: https://www.ikea.com/fr/fr/p/naesfjaellet-surmatelas-blanc-10558045/
  */
-export function Nasfjallet10558045({ onSize, ...props }: SceneItemProps) {
+export function Nasfjallet10558045({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('/items/nasfjallet10558045/Nasfjallet10558045.glb');
 
   useLayoutEffect(() => {
@@ -29,7 +29,7 @@ export function Nasfjallet10558045({ onSize, ...props }: SceneItemProps) {
   }, [scene, onSize]);
 
   return (
-    <group {...props} userData={{ skipMerge: true, ...(props as any).userData }}>
+    <group userData={{ skipMerge: true }}>
       <primitive object={scene} />
     </group>
   );

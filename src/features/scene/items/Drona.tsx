@@ -11,7 +11,7 @@
  *
  * Exports :
  *   DF             — dimension standard d'une boîte DRONA (33 cm)
- *   Drona          — composant SceneItemProps (instance unique, inventaire)
+ *   Drona          — composant SceneModelProps (instance unique, inventaire)
  *   useDronaGeo    — hook retournant la géométrie active selon le mode sélectionné
  *   DroneCell      — boîte unique pour groupes positionnés
  */
@@ -19,7 +19,7 @@ import { Suspense, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useSceneStore } from '../store/useSceneStore';
 
 /** Dimension standard d'une boîte DRONA (largeur / hauteur) en cm */
@@ -78,11 +78,11 @@ export function useDronaGeo(): THREE.BufferGeometry {
   return prepareDronaGeometry(mesh.geometry);
 }
 
-export function Drona({ onSize }: SceneItemProps) {
+export function Drona({ onSize }: SceneModelProps) {
   return <Suspense fallback={null}><DronaContent onSize={onSize} /></Suspense>;
 }
 
-function DronaContent({ onSize }: Pick<SceneItemProps, 'onSize'>) {
+function DronaContent({ onSize }: SceneModelProps) {
   const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
   const geo = useDronaGeo();
 
@@ -92,7 +92,7 @@ function DronaContent({ onSize }: Pick<SceneItemProps, 'onSize'>) {
     if (geo.boundingBox) {
       geo.boundingBox.getSize(size);
     }
-    onSize(size);
+    onSize?.(size);
   }, [geo, onSize]);
 
   if (mode === 'hidden') return null;

@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
@@ -10,7 +10,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * Price: 24,99
  * URL: https://www.ikea.com/fr/fr/p/blaskata-coussin-cylindrique-gris-clair-50569513/
  */
-export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
+export function Blaskata50569513({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('/items/blaskata50569513/Blaskata50569513.glb');
 
   useLayoutEffect(() => {
@@ -52,7 +52,7 @@ export function Blaskata50569513({ onSize, ...props }: SceneItemProps) {
   }, [scene, onSize]);
 
   return (
-    <group {...props}>
+    <group>
       <primitive object={scene} />
     </group>
   );

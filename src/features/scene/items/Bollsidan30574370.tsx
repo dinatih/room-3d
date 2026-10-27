@@ -8,7 +8,7 @@ import { useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 
 const DEFAULT_H = 70;
@@ -25,7 +25,12 @@ const TOP_BOT   = 76.0;   // table-top assembly starts (chamfer + slab)
 const TOP_THICK = NATURAL_H - TOP_BOT;
 const NATURAL_COL_H = TOP_BOT - LOWER_TOP;
 
-function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize?: SceneItemProps['onSize'], height?: number }) {
+export function Bollsidan30574370({ onSize, height, actionState }: SceneModelProps & { height?: number; actionState?: Record<string, any> }) {
+  const isStanding = Boolean(
+    actionState?.['desk-toggle'] ?? actionState?.['desk1-toggle'] ??
+    actionState?.['desk2-toggle'] ?? actionState?.['standing']
+  );
+  height ??= isStanding ? 105 : DEFAULT_H;
   const { scene } = useGLTF(GLB_PATH);
   const { invalidate } = useThree();
 
@@ -106,23 +111,6 @@ function BollsidanGlb({ onSize, height = DEFAULT_H }: { onSize?: SceneItemProps[
   });
 
   return <primitive object={clone} />;
-}
-
-export function Bollsidan30574370({ onSize, height, actionState, ...props }: SceneItemProps & { height?: number }) {
-  const isStanding = Boolean(
-    actionState?.['desk-toggle'] ??
-    actionState?.['desk1-toggle'] ??
-    actionState?.['desk2-toggle'] ??
-    actionState?.['standing'] ??
-    false
-  );
-  const effectiveHeight = height ?? (isStanding ? 105 : 70);
-
-  return (
-    <group {...props}>
-      <BollsidanGlb onSize={onSize} height={effectiveHeight} />
-    </group>
-  );
 }
 
 useGLTF.preload(GLB_PATH);

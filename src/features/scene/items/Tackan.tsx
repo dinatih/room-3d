@@ -21,7 +21,7 @@ export function Tackan({ onSize }: SceneModelProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize?.(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+  }, [scene, onSize]);
 
   return <primitive object={scene} />;
 }

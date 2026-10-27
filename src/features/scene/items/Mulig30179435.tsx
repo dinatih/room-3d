@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { SpruttigInstances } from './Spruttig20317079';
 
@@ -33,7 +33,7 @@ export function MuligHangers() {
  * Price: 4,99
  * URL: https://www.ikea.com/fr/fr/p/mulig-tringle-a-vetements-blanc-30179435/
  */
-export function Mulig30179435({ onSize, noHangers, ...props }: SceneItemProps & { noHangers?: boolean }) {
+export function Mulig30179435({ onSize, noHangers }: SceneModelProps & { noHangers?: boolean }) {
   const { scene } = useGLTFClone('/items/mulig30179435/Mulig30179435.glb');
   const groupRef = useRef<THREE.Group>(null!);
 
@@ -56,7 +56,7 @@ export function Mulig30179435({ onSize, noHangers, ...props }: SceneItemProps & 
   }, [scene, onSize]);
 
   return (
-    <group ref={groupRef} {...props}>
+    <group ref={groupRef}>
       <primitive object={scene} />
 
       {/* 6 cintres Spruttig instanciés en un seul draw call */}
