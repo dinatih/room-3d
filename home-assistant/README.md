@@ -25,6 +25,13 @@ ce qui polluait l’Overview. Aucun appareil n’a été supprimé du pont Hue.
 Pour les réutiliser, réactiver les entités dans Paramètres → Appareils et services
 → Entités, en affichant les entités désactivées.
 
+Les groupes Hue Douche zone (`light.douche_zone`), Douche
+(`light.douche_douche_2`) et Entrée (`light.entree_entree_2`) sont également
+désactivés dans HA. Les ampoules individuelles `light.douche_douche` et
+`light.entree_entree`, utilisées par Room-3D et Google Home, restent actives.
+Ces groupes proviennent du pont Hue : supprimer des pièces Google ne les retire
+pas de HA. Leur désactivation est réversible et ne modifie pas le pont.
+
 ## Essayer en local
 
 Aucun push ou déploiement n’est nécessaire. Sur le réseau de la maison :
