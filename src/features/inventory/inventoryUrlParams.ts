@@ -20,7 +20,6 @@ export interface InventoryUrlState {
 // Normalise les alias français / raccourcis vers les id de catégories officiels
 const CATEGORY_ALIASES: Record<string, string> = {
   // Personnages
-  characters: 'characters',
   character: 'characters',
   personnages: 'characters',
   personnage: 'characters',
@@ -29,19 +28,16 @@ const CATEGORY_ALIASES: Record<string, string> = {
   persos: 'characters',
 
   // Animations
-  animations: 'animations',
   animation: 'animations',
   anim: 'animations',
   anims: 'animations',
 
   // Actionnable
-  actionnable: 'actionnable',
   actionnables: 'actionnable',
   action: 'actionnable',
   actions: 'actionnable',
 
   // Espaces & Pièces
-  spaces: 'spaces',
   space: 'spaces',
   espaces: 'spaces',
   espace: 'spaces',
@@ -51,61 +47,47 @@ const CATEGORY_ALIASES: Record<string, string> = {
   zone: 'spaces',
 
   // Portes
-  doors: 'doors',
   door: 'doors',
   portes: 'doors',
   porte: 'doors',
 
   // Rangement
-  storage: 'storage',
   rangement: 'storage',
   rangements: 'storage',
 
   // Mobilier
-  furniture: 'furniture',
   mobilier: 'furniture',
   meubles: 'furniture',
   meuble: 'furniture',
 
-  // Tech
-  tech: 'tech',
-
   // Cuisine
-  kitchen: 'kitchen',
   cuisine: 'kitchen',
 
   // Salle de bain
-  bathroom: 'bathroom',
   sdb: 'bathroom',
   'salle-de-bain': 'bathroom',
 
   // Vêtements
-  clothing: 'clothing',
   vetements: 'clothing',
   vetement: 'clothing',
 
   // Déco
-  decor: 'decor',
   deco: 'decor',
 
   // Consommables
-  consumable: 'consumable',
   consumables: 'consumable',
   consommables: 'consumable',
   consommable: 'consumable',
 
   // Perruques
-  wigs: 'wigs',
   wig: 'wigs',
   perruques: 'wigs',
   perruque: 'wigs',
 
   // GLBs
-  glbs: 'glbs',
   glb: 'glbs',
 
   // Tout
-  all: 'all',
   tout: 'all',
 };
 

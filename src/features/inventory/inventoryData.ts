@@ -742,12 +742,6 @@ WIGS_ITEMS.filter(w => !!w.glbPath).forEach(w => {
   RIGGED_WIGS_PATHS[w.id.replace(/^hair_/, '')] = w.glbPath!;
 });
 
-export const isRiggedWig = (id: string | number): boolean => {
-  const strId = String(id);
-  const cleanId = strId.replace(/^hair_/, '');
-  return !!(RIGGED_WIGS_PATHS[strId] || RIGGED_WIGS_PATHS[cleanId]);
-};
-
 export type WigSourceId = 'hair_pack' | 'zhairezt';
 
 export const WIG_SOURCES: { id: WigSourceId; label: string }[] = [
