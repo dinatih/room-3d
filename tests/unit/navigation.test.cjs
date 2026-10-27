@@ -123,7 +123,7 @@ describe('Navigation et portes — géométrie isolée', () => {
             obstacles.removeAgentProfile('sandra');
         }
     });
-    it('ouvre la prochaine porte seulement à proximité et libère la demande si le PNJ recule', () => {
+    it('anticipe la porte avant sa zone de rotation et la libère lorsque le trajet change', () => {
         setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
         const route = nav.createRouteState(), start = { x: 20, z: -200 }, target = { x: 20, z: 100 };
         try {
@@ -131,16 +131,46 @@ describe('Navigation et portes — géométrie isolée', () => {
             route.path.unshift({ x: 20, z: -100 });
             const next = nav.followRoute(route, 'walker', start, target, 3);
             assert(g.distance(next, start) > 0);
-            assert.equal(requests.doorRequested('living'), false, 'A known path must not open a distant door');
+            assert.equal(requests.doorRequested('living'), true, 'The next crossing must open while the actor is still approaching');
             const nearby = { x: 20, z: -50 };
             route.path.shift();
             const approaching = nav.followRoute(route, 'walker', nearby, target, 3);
             assert(g.distance(approaching, nearby) > 0, 'Opening anticipation must still allow movement before contact');
-            assert.equal(requests.doorRequested('living'), true, 'A nearby actor must request the next opening');
+            assert.equal(requests.doorRequested('living'), true);
             nav.followRoute(route, 'walker', start, target, 3);
-            assert.equal(requests.doorRequested('living'), false, 'Moving away must release the opening even when the route still crosses it');
+            assert.equal(requests.doorRequested('living'), true, 'A detour must not close a door still needed by the route');
+            nav.followRoute(route, 'walker', start, { x: 20, z: -250 }, 3);
+            assert.equal(requests.doorRequested('living'), false, 'A changed route must release an unused opening');
             assert.equal(route.waitReason, undefined);
         } finally { nav.resetRoute(route, 'walker'); }
+    });
+
+    it('traverse sans arrêt une porte animée par le ressort réel dans les deux sens', () => {
+        const { useDoorSpring } = load('src/features/scene/items/useDoorSpring.ts', {
+            react: { useRef: value => ({ current: value }) },
+            '@react-three/fiber': { useThree: () => ({ invalidate() {} }) },
+        });
+        for (const speed of [60, 180]) for (const side of [-1, 1]) {
+            setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+            const route = nav.createRouteState(), spring = useDoorSpring(), dt = 1 / 60;
+            let position = { x: 20, z: side * 200 };
+            const target = { x: 20, z: -side * 200 };
+            try {
+                assert(nav.planRoute(route, 'walker', position, target));
+                const budget = route.path.reduce((frames, point, i) => frames + Math.ceil(g.distance(i ? route.path[i - 1] : position, point) / (speed * dt)), 0);
+                for (let frame = 0; frame <= budget && g.distance(position, target) > 0; frame++) {
+                    const before = position;
+                    position = nav.followRoute(route, 'walker', position, target, speed * dt);
+                    assert.equal(route.error, null);
+                    assert(!route.waitReason, `${speed} cm/s, side ${side}, frame ${frame}: ${route.waitReason}`);
+                    assert(g.distance(before, position) > 0, 'An anticipated opening must not stop the actor');
+                    assert(g.segmentFree(before, position, [[g.inflate(doors.doorPolygon('living', doors.doorCollisionState.living.angle), 13.3 + leaf.margin)]]), 'The actor must never cross the actual leaf');
+                    doors.doorCollisionState.living.angle = spring(doors.doorCollisionState.living.angle, requests.doorRequested('living') ? Math.PI / 2 : 0, dt, 0, Math.PI / 2);
+                }
+                assert.deepEqual(position, target);
+                assert.equal(requests.doorRequested('living'), false, 'The cleared opening must close again');
+            } finally { nav.resetRoute(route, 'walker'); }
+        }
     });
 
     it('résout une nouvelle activité et quitte un canapé sans propriétaire de départ mémorisé', () => {

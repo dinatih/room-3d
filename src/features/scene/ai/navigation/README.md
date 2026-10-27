@@ -40,7 +40,8 @@ intégrale sur tous les contours de l'appartement.
 
 Chaque pas reste contrôlé avec la géométrie réelle, les battants et les autres
 acteurs. Les portes sont demandées dès qu'elles apparaissent dans le corridor
-à venir et restent réservées jusqu'au dégagement du corps. Une porte fermée
+à venir, avant l'entrée dans la zone de rotation du battant, et restent réservées
+tant que le trajet les traverse, puis jusqu'au dégagement du corps. Une porte fermée
 n'est jamais traversée avant son ouverture effective.
 
 ## Mobilier et actions

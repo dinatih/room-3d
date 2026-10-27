@@ -293,8 +293,7 @@ function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentP
       const across = (position.x - d.pivot.x) * d.openNormal.x + (position.z - d.pivot.z) * d.openNormal.z;
       return across < -clearance || distance(position, d.pivot) > d.length + clearance;
     });
-    const distant = leaves.every(k => distance(position, DOOR_CONFIGS[k].pivot) > DOOR_CONFIGS[k].length + profile.radius + DOOR_CONFIGS[k].thickness / 2 + DOOR_CONFIGS[k].margin);
-    if ((!crossingAhead || distant) && clear) {
+    if (!crossingAhead && clear) {
       releaseDoor(opening, agentId);
       route.doors.delete(opening);
     }
@@ -303,13 +302,13 @@ function releaseClearedDoors(route: RouteState, agentId: string, profile: AgentP
 
 function passDoors(route: RouteState, agentId: string, profile: AgentProfile, start: Point, proposed: Point): Point {
   releaseClearedDoors(route, agentId, profile, start);
-  // Anticipate only the next opening once the actor reaches its swing area.
+  // Open the next crossing before approaching the leaf's swing area.
   const points = [start, ...route.path.slice(route.index)];
   const crossings = doorKeys.filter(key => DOOR_CONFIGS[key].yMin < profile.height && DOOR_CONFIGS[key].yMax > 0)
     .map(key => ({ key, index: points.findIndex((point, i) => i > 0 && !segmentFree(points[i - 1], point, doorFootprint(profile, key))) }))
     .filter(crossing => crossing.index > 0);
   const first = Math.min(...crossings.map(crossing => crossing.index));
-  for (const { key, index } of crossings) if (index === first && distance(start, DOOR_CONFIGS[key].pivot) <= DOOR_CONFIGS[key].length + profile.radius + DOOR_CONFIGS[key].thickness / 2 + DOOR_CONFIGS[key].margin) {
+  for (const { key, index } of crossings) if (index === first) {
     requestDoor(key, agentId);
     route.doors.add(doorOpeningKey(key));
   }
