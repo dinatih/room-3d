@@ -19,8 +19,13 @@ Elle expose les appareils HA à Google Home ; les noms Smart Life restent indép
 - Configuration HA validée par `check_config`, puis HA redémarré avec succès.
 - Le point d’entrée HTTPS `/api/google_assistant` répond **405** en GET : c’est
   attendu, Google lui adresse des requêtes POST authentifiées.
-- **Seule la lampe du couloir `light.entree_entree` est exposée pour le premier essai.**
-- L’association dans l’application Google Home reste à confirmer par l’utilisateur.
+- Sept entités sont explicitement exposées : les quatre lampes, le purificateur,
+  le volet et la télévision, selon le fichier `google-assistant.yaml`.
+- Association réussie confirmée par l’utilisateur : la lampe du couloir est ajoutée
+  avec **[test] Dinatih Home Assistant**, après correction Cloudflare.
+- Après extension à sept entités, configuration HA validée, redémarrage effectué
+  et `google_assistant.request_sync` appelé pour l’unique compte associé : HTTP 200,
+  aucune nouvelle erreur Google Assistant journalisée à la vérification.
 - Aucun abonnement ou service payant n’a été souscrit pour cette installation.
 
 L’ancien projet `finovndononv` est fermé et programmé pour suppression définitive
@@ -35,7 +40,10 @@ Avec le compte Google utilisé pour créer le projet :
 2. Choisir **[test] Dinatih Home Assistant**.
 3. Se connecter à HA et terminer l’autorisation, y compris la double authentification.
 4. Vérifier l’ajout de la lampe **Entrée**, provenant de ce service, puis sa pièce.
-5. Tester une commande vocale sur cette lampe avant d’exposer les autres appareils.
+5. Vérifier les équipements synchronisés et tester leurs commandes vocales.
+
+L’ajout de la lampe du couloir a été confirmé par l’utilisateur. Les commandes
+physiques des autres appareils depuis Google Home restent à vérifier.
 
 Les liaisons Smart Life/Hue existantes peuvent produire un doublon pendant l’essai.
 Elles n’ont pas été supprimées. Un autre compte Google doit être ajouté comme
@@ -117,5 +125,6 @@ Google Cloud Logging a montré que Cloudflare renvoyait HTTP 403 et une page HTM
 au serveur Google lors de `AUTH_CODE_EXCHANGE`. La règle de blocage HA hors France
 a été corrigée avec une exception limitée à AS15169, aux requêtes POST et aux chemins
 `/auth/token` et `/api/google_assistant`. L’expression enregistrée a été relue.
-La MFA et l’authentification HA restent actives ; le nouvel essai téléphone reste
-à confirmer. Voir [le diagnostic et la règle Cloudflare](./cloudflare-google-home.md).
+La MFA et l’authentification HA restent actives. L’utilisateur a confirmé
+l’association et l’ajout de la lampe après cette correction.
+Voir [le diagnostic et la règle Cloudflare](./cloudflare-google-home.md).

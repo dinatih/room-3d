@@ -193,4 +193,4 @@ L’[inventaire](./inventory.md) détaille les appareils et entités enregistré
 Le panneau connecté contient **Comparer les noms Smart Life / HA**, disponible
 aussi lorsque la liaison des objets réels est suspendue. Le relevé Tuya est celui
 conservé par HA, avec filtre des écarts et actualisation manuelle.
-Voir [les noms](./name-sync.md) et [la préparation Google Home](./google-home.md).
+Voir [les noms](./name-sync.md) et [la liaison Google Home](./google-home.md).

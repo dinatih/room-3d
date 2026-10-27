@@ -55,7 +55,8 @@ Une saisie clavier puis un nouvel enregistrement ont corrigé cela ; la règle a
 ensuite été rouverte et son expression exacte relue. Ne pas se fier au seul résumé
 visuel Cloudflare, qui ne représente pas clairement les parenthèses et `not`.
 
-Le nouvel essai d’association sur le téléphone reste à confirmer. En cas d’erreur,
+L’utilisateur a confirmé la réussite de l’association et l’ajout de la lampe
+dans **[test] Dinatih Home Assistant** après cette correction. En cas d’erreur,
 consulter Google Cloud Logging, puis rechercher le Ray ID correspondant dans les
 événements de sécurité Cloudflare. Ne pas copier les codes OAuth ou jetons des logs.
 

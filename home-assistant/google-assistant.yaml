@@ -6,3 +6,15 @@ expose_by_default: false
 entity_config:
   light.entree_entree:
     expose: true
+  light.douche_douche:
+    expose: true
+  light.porte:
+    expose: true
+  light.cuisine_barre:
+    expose: true
+  fan.living_room:
+    expose: true
+  cover.volet:
+    expose: true
+  media_player.tele:
+    expose: true
