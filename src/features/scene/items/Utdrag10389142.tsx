@@ -1,6 +1,7 @@
+import { useDoorOpen } from './useDoorOpen';
 import { getObjectActionIds } from '../objectActions';
 import { useGLTF } from '@react-three/drei';
-import { useLayoutEffect, useRef, useEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { glbLocalBBox, optimizeMaterials, removeGlbLines } from '@features/scene/glbUtils';
@@ -15,10 +16,10 @@ const RETRACT_OFFSET = -0.16; // Course de 16 cm (en mètres dans l'espace local
  * Réf : IKEA 103.891.42
  * Modèle articulé : caisson fixe (Utdrag_Base) + tiroir télescopique (Utdrag_Drawer)
  */
-export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps) {
+export function Utdrag10389142({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { scene } = useGLTFClone('/items/utdrag10389142/Utdrag10389142.glb');
   const drawerRef = useRef<THREE.Object3D | null>(null);
-  const openRef = useRef(false);
+  const open = useDoorOpen(ACTION_KEY, isPreview, actionState);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -48,7 +49,7 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
 
     // Position initiale : pliée / rétractée dans le caisson
     if (drawer) {
-      drawer.position.y = openRef.current ? 0 : RETRACT_OFFSET;
+      drawer.position.y = open ? 0 : RETRACT_OFFSET;
     }
 
     scene.userData.hoverAction = {
@@ -57,32 +58,11 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
     };
   }, [scene, onSize]);
 
-  // Synchronisation avec l'inventaire
-  useEffect(() => {
-    if (actionState && ACTION_KEY in actionState) {
-      openRef.current = !!actionState[ACTION_KEY];
-      invalidate();
-    }
-  }, [actionState, invalidate]);
-
-  // Synchronisation avec les événements de scène
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail ?? {};
-      if (key === ACTION_KEY) {
-        openRef.current = !openRef.current;
-        invalidate();
-      }
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
-
   // Animation fluide télescopique
   useFrame((_, delta) => {
     const drawer = drawerRef.current;
     if (!drawer) return;
-    const targetY = openRef.current ? 0 : RETRACT_OFFSET;
+    const targetY = open ? 0 : RETRACT_OFFSET;
     if (Math.abs(drawer.position.y - targetY) > 0.0005) {
       drawer.position.y = THREE.MathUtils.damp(drawer.position.y, targetY, 8, delta);
       invalidate();
@@ -92,7 +72,7 @@ export function Utdrag10389142({ onSize, actionState, ...props }: SceneItemProps
   });
 
   return (
-    <group {...props}>
+    <group>
       <primitive object={scene} />
     </group>
   );

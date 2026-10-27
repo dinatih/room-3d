@@ -24,15 +24,15 @@ const { useDoorOpen } = load('src/features/scene/items/useDoorOpen.ts', {
   '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
 });
 
-for (const key of ['entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
+for (const key of ['cabinet', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
   it(`${key} : ouvrir, maintenir ouvert puis fermer, sans modifier la scène depuis l’aperçu`, () => {
     scene[key] = false;
     let preview = {};
-    assert.match(actions.getActionLabel(key, false), /^Ouvrir/);
+    assert.match(actions.getActionLabel(key, false), /^(Ouvrir|Déplier)/);
     preview = actions.toggleObjectAction(key, preview);
     assert.equal(useDoorOpen(key, true, preview), true);
     assert.equal(useDoorOpen(key, false, preview), false);
-    assert.match(actions.getActionLabel(key, preview[key]), /^Fermer/);
+    assert.match(actions.getActionLabel(key, preview[key]), /^(Fermer|Rentrer)/);
     scene[key] = true;
     preview = actions.toggleObjectAction(key, preview);
     assert.equal(useDoorOpen(key, true, preview), false);

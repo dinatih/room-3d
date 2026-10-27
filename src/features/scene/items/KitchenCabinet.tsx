@@ -1,16 +1,15 @@
+import { useDoorOpen } from './useDoorOpen';
 import { getObjectActionIds } from '../objectActions';
 /**
  * KitchenCabinet.tsx — Meuble bas cuisine METOD + porte RINGHULT + poignée KALLROR.
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  *
- * Porte animée (pivot charnière gauche) — deux chemins :
- *  - Main scene  : furniture-toggle { key: 'cabinet' }
- *  - Inventory   : actionState['cabinet'] (prop)
+ * Porte animée (pivot charnière gauche) : store en scène, état local en preview.
  *
  * scene.rotation.y = π → face avant à -Z local (cabFrontZ < 0).
  * Charnière -X local, openAngle = -π/2 → porte tourne vers +Z (vers la pièce). ✓
  */
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -22,12 +21,12 @@ const GLB        = 'items/metod39537986/Metod39537986.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
-export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
+export function KitchenCabinet({ actionState, onSize, isPreview = false }: SceneItemProps) {
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
   const { scene: handle } = useGLTFClone(HANDLE_GLB);
   const pivotRef = useRef<THREE.Group>(null!);
-  const openRef  = useRef(false);
+  const open = useDoorOpen('cabinet', isPreview, actionState);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -83,28 +82,10 @@ export function KitchenCabinet({ actionState, onSize }: SceneItemProps) {
     pivot.userData.hoverAction  = ha;
   }, [scene, door, handle]);
 
-  // Chemin inventory : actionState['cabinet'] (depuis InventoryPreview)
-  useEffect(() => {
-    openRef.current = !!(actionState['cabinet']);
-    invalidate();
-  }, [actionState['cabinet']]);
-
-  // Chemin scène : furniture-toggle { key: 'cabinet' }
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail;
-      if (key !== 'cabinet') return;
-      openRef.current = !openRef.current;
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate]);
-
   useFrame((_, delta) => {
     const pivot = pivotRef.current;
     if (!pivot) return;
-    const targetAngle = openRef.current ? Math.PI / 2 : 0;
+    const targetAngle = open ? Math.PI / 2 : 0;
     if (pivot.rotation.y === targetAngle) return;
     const diff = targetAngle - pivot.rotation.y;
     if (Math.abs(diff) < 0.001) {
