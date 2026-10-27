@@ -675,6 +675,8 @@ export function Character({
     if (!groupRef.current || !mixerRef.current) return;
     const oldX = groupRef.current.position.x, oldZ = groupRef.current.position.z;
     const wasVisible = groupRef.current.visible;
+    const agentDelta = id === 'native' && (cameraState.characterHidden || (!isActive && (!showAllLaraStyles
+      || !isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)))) ? 0 : delta;
 
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     let agentAnimationPaused = false;
@@ -720,7 +722,7 @@ export function Character({
     } else {
       if (isActive) {
         if (hasDynamicTask || isGuidedTour || (!isUserManuallyMoving && isAutonomous)) {
-          const agentState = updateAgent(delta);
+          const agentState = updateAgent(agentDelta);
           agentAnimationPaused = agentState.animationPaused ?? false;
 
           groupRef.current.position.set(agentState.x, agentState.y, agentState.z);
@@ -749,7 +751,7 @@ export function Character({
           setAgentRotation(cameraState.followYaw);
         }
       } else if (isNPC) {
-        const agentState = updateAgent(delta);
+        const agentState = updateAgent(agentDelta);
         agentAnimationPaused = agentState.animationPaused ?? false;
 
         groupRef.current.position.set(agentState.x, agentState.y, agentState.z);

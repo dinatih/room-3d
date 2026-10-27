@@ -1,6 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
+import { LIFE_SETTINGS, type LifeCandidate } from './laraLife';
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
@@ -42,6 +43,7 @@ export function getAvailableAutonomousActivities(characterId: string) {
 
 /** Free activities remain independent from the two scripted tours. */
 export function buildAutonomousActivities(characterId: string): AgentInstruction[] {
+  if (characterId === 'native') return buildLaraLifeInstructions({ activity: 'work', id: 'desk-bollsidan-2', slotId: 'work-standing' });
   const activities = getAvailableAutonomousActivities(characterId);
   for (let i = activities.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -50,4 +52,25 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   const preferred = activities.findIndex(activity => activity.id === INITIAL_SMART_OBJECT_BY_CHAR[characterId]);
   if (preferred > 0) [activities[0], activities[preferred]] = [activities[preferred], activities[0]];
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
+}
+
+export function getLaraLifeCandidates(): LifeCandidate[] {
+  return getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, 'native')).flatMap(object =>
+    object.slots.filter(slot => !slot.isDuo && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native'))
+      .flatMap(slot => {
+        const activity = object.id === 'desk-bollsidan-2' ? 'work'
+          : object.id === 'garden-fresh-air' ? 'walk'
+          : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
+        const position = slot.offset ?? object.position;
+        return activity ? [{ activity, id: object.id, slotId: slot.slotId, x: position[0], z: position[2] } as LifeCandidate] : [];
+      }));
+}
+
+export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
+  const instructions = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native').map(instruction => instruction.type === 'USE_OBJECT'
+    ? { ...instruction, duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, repeatVariation: false,
+      animation: candidate.activity === 'rest' ? 'sitting-idle' : candidate.activity === 'walk' ? 'looking' : 'standing-using-touchscreen-tablet' }
+    : instruction);
+  // A stroll has a real itinerary even when Lara is already at the far end.
+  return candidate.activity === 'walk' ? [{ type: 'MOVE_TO', targetZoneId: 'garden' }, ...instructions] : instructions;
 }

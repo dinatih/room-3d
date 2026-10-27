@@ -1,6 +1,8 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
-import { getAvailableAutonomousActivities } from './autonomousActivities';
+import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
+import { chooseLifeActivity, evolveLife, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
@@ -123,6 +125,18 @@ export function createAgentController(
   let dynamicNavIndex = 0;
   let manualOverride = false;
   let interruptedSmartObjectId: string | undefined = undefined;
+  const hasLife = _characterId === 'native' && enabled;
+  let lifeActivity: LifeActivity | null = hasLife && loop ? 'work' : null;
+  let lifeSnapshotSeconds = 0;
+  const failedLifeTargets = new Map<string, { environment: string; actors?: ActorBlockers }>();
+  const lifeEnvironment = () => JSON.stringify([getObstacleRevision(), OccupancyManager.getReservations()
+    .filter(reservation => reservation.characterId !== _characterId).map(({ slot, characterId }) => [slot, characterId]).sort()]);
+  const interruptLife = (reason: string) => {
+    if (!hasLife) return;
+    lifeActivity = null;
+    if (loop) stepIndex = scenario?.length ?? 0;
+    useLaraLifeStore.setState({ activity: 'Commande utilisateur', reason, needs: { ...nativeLife.needs } });
+  };
   let route = createRouteState();
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
@@ -271,6 +285,7 @@ export function createAgentController(
 
         const targetObjId = e.detail?.objectId;
         if (targetObjId && !OccupancyManager.canUseObject(targetObjId, _characterId)) return;
+        interruptLife('Lara répond à une invitation.');
         navigationScope.clear();
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
         if (role) {
@@ -351,6 +366,7 @@ export function createAgentController(
           return;
         }
 
+        interruptLife('Lara exécute l’action demandée.');
         navigationScope.clear();
         releaseClaimedSlot();
         duoSessionManager.leaveDuoZone(_characterId);
@@ -455,6 +471,12 @@ export function createAgentController(
       }
 
       const firstScenario = prevScenario === undefined;
+      if (hasLife) {
+        lifeActivity = firstScenario && loop ? 'work' : null;
+        if (!firstScenario && loop) stepIndex = scenario?.length ?? 0;
+        useLaraLifeStore.setState({ activity: loop ? 'Reprise de la vie autonome' : 'Visite guidée',
+          reason: loop ? 'Lara choisit selon ses besoins.' : 'Lara suit la visite demandée.' });
+      }
       prevScenario = scenario;
       dynamicNavQueue = [];
       dynamicNavIndex = 0;
@@ -523,6 +545,9 @@ export function createAgentController(
         releaseClaimedSlot();
       }
     }
+    if (hasLife && loop && lifeActivity && !dynamicNavQueue.length && stepIndex >= (scenario?.length ?? 0)) {
+      nativeLife.lastActivity = lifeActivity;
+    }
   };
 
   const resetDuoState = () => {
@@ -538,6 +563,12 @@ export function createAgentController(
   };
 
   const retrySmartAction = (objectId: string) => {
+    const failedInstruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    if (hasLife && loop && lifeActivity) {
+      failedLifeTargets.set(`${objectId}:${failedInstruction?.slotId ?? (lifeActivity === 'walk' ? 'breathe' : '')}`,
+        { environment: lifeEnvironment(), actors: blockedCoords?.actorBlockers });
+      lifeActivity = null;
+    }
     const departureOwner = route.owner;
     const session = duoSessionManager.getSessionFor(_characterId);
     const partners = [session?.participantA?.characterId, session?.participantB?.characterId]
@@ -557,10 +588,14 @@ export function createAgentController(
     state.animation = 'idle';
     // Skip the remaining steps of the failed action, including its exit steps.
     while (scenario?.[stepIndex]?.smartObjectId === objectId) stepIndex++;
-    const candidates = getAvailableAutonomousActivities(_characterId).filter(activity => activity.id !== objectId);
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-    dynamicNavQueue = chosen ? buildSmartObjectInstructionSequence(chosen.id, chosen.slotId, _characterId) : [];
-    appLog(_characterId, `🎲 Action abandonnée (${objectId}), nouveau tirage d'une smartaction${candidates.length ? '' : ' : aucune disponible'}`, {
+    if (hasLife && loop) {
+      pickNewAutonomousActivity();
+    } else {
+      const candidates = getAvailableAutonomousActivities(_characterId).filter(activity => activity.id !== objectId);
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      dynamicNavQueue = chosen ? buildSmartObjectInstructionSequence(chosen.id, chosen.slotId, _characterId) : [];
+    }
+    appLog(_characterId, `Action abandonnée (${objectId}) : ${hasLife && loop ? 'nouveau choix selon les besoins' : 'nouveau tirage d’une smartaction'}`, {
       category: 'object',
       action: 'retry_smartaction',
       actors: [_characterId],
@@ -572,6 +607,32 @@ export function createAgentController(
   };
 
   const pickNewAutonomousActivity = (excludedObjectId?: string) => {
+    if (hasLife && loop) {
+      const environment = lifeEnvironment();
+      for (const [key, failure] of failedLifeTargets) {
+        if (failure.environment !== environment || (failure.actors && !actorBlocksUnchanged(failure.actors))) failedLifeTargets.delete(key);
+      }
+      const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates()
+        .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)), state, nativeLife.lastActivity);
+      lifeActivity = candidate?.activity ?? 'pause';
+      const reason = candidate
+        ? `${LIFE_NEED_LABELS[candidate.activity]} : ${Math.round(nativeLife.needs[candidate.activity])} %.`
+        : 'Lara fait une pause ; ses besoins sont faibles ou les activités adaptées sont indisponibles.';
+      dynamicNavQueue = candidate ? buildLaraLifeInstructions(candidate)
+        : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
+      dynamicNavIndex = 0;
+      stepIndex = scenario?.length ?? 0;
+      cachedCoords = null;
+      cachedCoordsInstruction = null;
+      routeInstruction = null;
+      if (!postureTransition) agentStatus = 'IDLE';
+      useLaraLifeStore.setState({ activity: LIFE_LABELS[lifeActivity], reason, needs: { ...nativeLife.needs } });
+      appLog(_characterId, `🧭 ${LIFE_LABELS[lifeActivity]} — ${reason}`, {
+        category: 'object', action: 'life_decision', actors: [_characterId],
+        object: candidate ? { id: candidate.id, label: SMART_OBJECTS[candidate.id].name, slotId: candidate.slotId } : undefined,
+      });
+      return true;
+    }
     const candidates = getAvailableAutonomousActivities(_characterId);
 
     const nonCurrent = excludedObjectId ? candidates.filter(c => c.id !== excludedObjectId) : candidates;
@@ -780,6 +841,10 @@ export function createAgentController(
     // ── 2. Fin de scénario / Bouclage ──
     if (stepIndex >= scenarioLength && dynamicNavQueue.length === 0) {
       releaseClaimedSlot();
+      if (hasLife && loop) {
+        pickNewAutonomousActivity();
+        return state;
+      }
       if (loop && scenarioLength > 0) {
         stepIndex = 0;
         resetRoute(route, _characterId);
@@ -824,6 +889,10 @@ export function createAgentController(
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
         const isDuo = isDuoSlot(objId, reqSlotId);
+        if (hasLife && loop && lifeActivity && OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+          retrySmartAction(objId);
+          return state;
+        }
         if (isDuo) {
           let role = duoRole;
           if (!role) {
@@ -1119,7 +1188,9 @@ export function createAgentController(
         state.animation = NAVIGATION_WAIT_ANIMATION;
         agentStatus = 'BLOCKED';
         reportNavigationStop(route.error, target.label, { x: target.tx, z: target.tz });
-        if (currentInstruction.smartObjectId) retrySmartAction(currentInstruction.smartObjectId);
+        if (currentInstruction.smartObjectId || (hasLife && loop && lifeActivity === 'walk')) {
+          retrySmartAction(currentInstruction.smartObjectId ?? 'garden-fresh-air');
+        }
         return state;
       }
       if (moved === 0 && dt > 0 && distance(position, { x: target.tx, z: target.tz }) >= 1e-6) {
@@ -1367,6 +1438,7 @@ export function createAgentController(
         if (playback?.animation !== state.animation || !playback.finished) return state;
         timer = 0;
       }
+      if (hasLife && loop && lifeActivity && animationPlayback?.animation !== state.animation) return state;
       timer -= dt;
       if (timer <= 0) {
         if (repeatIndex + 1 < targetRepeats) {
@@ -1473,8 +1545,8 @@ export function createAgentController(
       reportNavigationStop(error.message, label, error.target, error.actorBlockers);
       // An unavailable landing point must not cancel the deployment phase.
       if (!deployment.hasCompleted) { agentStatus = status; return state; }
-      if (instruction.smartObjectId) {
-        retrySmartAction(instruction.smartObjectId);
+      if (instruction.smartObjectId || (hasLife && loop && lifeActivity === 'walk')) {
+        retrySmartAction(instruction.smartObjectId ?? 'garden-fresh-air');
         return state;
       }
       resetRoute(route, _characterId);
@@ -1488,6 +1560,7 @@ export function createAgentController(
   const setPosition = (x: number, y: number, z: number) => {
     navigationScope.clear();
     if (!manualOverride) {
+      interruptLife('Vous contrôlez les déplacements de Lara.');
       manualOverride = true;
       const activeInstruction = dynamicNavIndex < dynamicNavQueue.length
         ? dynamicNavQueue[dynamicNavIndex]
@@ -1551,8 +1624,15 @@ export function createAgentController(
   };
 
   const update = (dt: number): AgentState => {
+    if (hasLife && dt === 0) return state;
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
+    const previousLifeActivity = lifeActivity;
+    const wasMoving = agentStatus === 'MOVING';
+    const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
+      && animationPlayback?.animation === state.animation;
+    const interactionSeconds = interacting ? Math.min(dt, Math.max(0, timer)) : 0;
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     let pendingJob: NavigationJob<unknown> | undefined;
@@ -1568,6 +1648,19 @@ export function createAgentController(
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
+      if (lifeRunning) {
+        // Stationary route waits never satisfy the desire to move.
+        const moving = (wasMoving || agentStatus === 'MOVING') && (state.x !== x || state.z !== z);
+        nativeLife.needs = evolveLife(nativeLife.needs, interactionSeconds, previousLifeActivity, false);
+        nativeLife.needs = evolveLife(nativeLife.needs, dt - interactionSeconds, null, moving);
+        lifeSnapshotSeconds += dt;
+        if (lifeSnapshotSeconds >= 1) {
+          lifeSnapshotSeconds %= 1;
+          useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, activity: lifeActivity
+            ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${LIFE_LABELS[lifeActivity]}`
+            : 'Commande utilisateur' });
+        }
+      }
       const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
       const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
       if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';
@@ -1597,6 +1690,7 @@ export function createAgentController(
             pendingJob: pendingJob && { jobId: pendingJob.id, graphId: pendingJob.graphId, description: pendingJob.description, status: pendingJob.status },
             frameDeltaSeconds: dt, sincePreviousUpdateMs: now - lastDiagnosticUpdateAt,
             deployment, initialProfileResolved, claimedSlot, manualOverride, postureTransition, blockedCoords: blockedCoords && { ...blockedCoords, graph: blockedCoords.graph.id },
+            life: hasLife ? { ...nativeLife, activity: lifeActivity } : undefined,
             route: navigationDiagnostics(route, _characterId, state), idle: isAppIdle(), layers: useSceneStore.getState().layers,
             activeCharacterId: useSceneStore.getState().activeCharacterId, cameraMode: cameraState.mode,
           } });
@@ -1607,7 +1701,7 @@ export function createAgentController(
   };
 
   const hasPendingDynamicTask = () => {
-    return dynamicNavQueue.length > 0 && dynamicNavIndex < dynamicNavQueue.length;
+    return dynamicNavQueue.length > 0 && dynamicNavIndex < dynamicNavQueue.length && !lifeActivity;
   };
 
   const getStatus = () => agentStatus;

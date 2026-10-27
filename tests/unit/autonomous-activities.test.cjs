@@ -4,6 +4,7 @@ const { load } = require('../support/load-ts.cjs');
 
 function fixture(characterId = 'rosanna') {
   const objects = [
+    { id: 'desk-bollsidan-2', position: [0, 0, 0], slots: [{ slotId: 'work-standing' }] },
     { id: 'bed-east', slots: ['seat-1', 'seat-2', 'seat-3', 'lie-down'].map(slotId => ({ slotId })) },
     { id: 'chair', slots: [{ slotId: 'sit' }] },
     { id: 'duo', slots: [{ slotId: 'hug', isDuo: true }] },
@@ -11,7 +12,7 @@ function fixture(characterId = 'rosanna') {
   ];
   const occupied = new Set();
   return { occupied, ...load('src/features/scene/ai/autonomousActivities.ts', {
-    './aiTypes': {}, './smartObjectRegistry': {
+    './aiTypes': {}, './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './smartObjectRegistry': {
       getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId, actor) => {
         assert.equal(actor, characterId);
@@ -39,7 +40,7 @@ describe('Tirage autonome par slot', () => {
   it('donne quatre candidats au lit et un à la chaise, en conservant les activités duo', () => {
     const { getAvailableAutonomousActivities } = fixture();
     const candidates = getAvailableAutonomousActivities('rosanna');
-    assert.equal(candidates.length, 6);
+    assert.equal(candidates.length, 7);
     assert.equal(candidates.filter(activity => activity.id === 'bed-east').length, 4);
     assert.equal(candidates.filter(activity => activity.id === 'chair').length, 1);
     assert(candidates.some(activity => activity.id === 'duo' && activity.slotId === 'hug'));
@@ -62,5 +63,14 @@ describe('Tirage autonome par slot', () => {
     assert.deepEqual(entries.map(step => `${step.smartObjectId}:${step.slotId}`).sort(),
       getAvailableAutonomousActivities('rosanna').map(activity => `${activity.id}:${activity.slotId}`).sort());
     for (let i = 0; i < steps.length; i += 2) assert.equal(steps[i].slotId, steps[i + 1].slotId);
+  });
+
+  it('limite le départ de Native au bureau, pendant une minute sans séquence mélangée', () => {
+    const steps = fixture('native').buildAutonomousActivities('native');
+    assert.equal(steps.length, 2);
+    assert(steps.every(step => step.smartObjectId === 'desk-bollsidan-2'));
+    assert.equal(steps[1].duration, 60);
+    assert.equal(steps[1].repeatCount, 1);
+    assert.equal(steps[1].animation, 'standing-using-touchscreen-tablet');
   });
 });

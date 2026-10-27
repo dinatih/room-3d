@@ -11,6 +11,8 @@ const apartment = {
     profile: { radius: 13.3, height: 170 },
 };
 exports.navigation = [
+    { id: 'lara-life', behavior: 'fait travailler, marcher et se reposer Lara Native, puis respecte une interruption manuelle', activity: 'life', count: 2,
+        layers: { animals: false }, timeoutMs: 300000 },
     { id: 'autonomous-all', behavior: 'fait vivre tous les personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: CHARACTERS.length, preset: 'mid', sessionMs: 15000, timeoutMs: 60000 },
     { id: 'solo-xbot-doors', behavior: 'termine seul le trajet séjour, entrée et couloir bâtiment avec le gabarit du Xbot', activity: 'soloDoors', layers: { animals: false }, profile: { radius: 15, height: 170 }, timeoutMs: 60000 },
     { id: 'occupied-target', behavior: 'atteint une destination occupée avec une empreinte PNJ à zéro', activity: 'arrival', actors: 1, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
