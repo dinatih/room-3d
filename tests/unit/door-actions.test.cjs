@@ -41,3 +41,20 @@ for (const key of ['cabinet', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor
     assert.equal(useDoorOpen(key, false, preview), false);
   });
 }
+
+it('VIHALS : le pliage de la scène et celui de la preview restent indépendants', () => {
+  const { Vihals } = load('src/features/scene/items/Vihals.tsx', {
+    react: {}, three: require('three'), 'react/jsx-runtime': require('react/jsx-runtime'),
+    '../objectActions': { getObjectActionIds: () => ['vihals-toggle'] },
+    '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
+    '@react-three/drei': { useGLTF: { preload() {} } },
+    '@features/scene/useGLTFClone': {}, '@features/scene/glbUtils': {},
+  });
+  const label = (isPreview, folded) => Vihals({ isPreview, actionState: { 'vihals-toggle': folded } }).props.userData.hoverAction.label;
+  scene['vihals-toggle'] = false;
+  assert.equal(label(true, true), 'VIHALS (Pliée)');
+  assert.equal(label(false, true), 'VIHALS (Dépliée)');
+  scene['vihals-toggle'] = true;
+  assert.equal(label(true, false), 'VIHALS (Dépliée)');
+  assert.equal(label(false, false), 'VIHALS (Pliée)');
+});

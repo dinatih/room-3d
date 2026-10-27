@@ -5,7 +5,8 @@ import { getObjectActionIds } from '../objectActions';
  * Pliée   : procédural FoldedVihals, 44×88×9cm (debout, fine tranche verticale).
  * Action 'vihals-toggle' bascule entre les deux représentations (snap).
  */
-import { useLayoutEffect, useState, useEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
+import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -114,23 +115,9 @@ function FoldedVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
 }
 
 // ── Composant principal ──────────────────────────────────────────────────────
-export function Vihals({ onSize, actionState }: SceneItemProps) {
-  const [folded, setFolded] = useState(() => !!actionState?.['vihals-toggle']);
-
-  useEffect(() => {
-    if (actionState?.['vihals-toggle'] !== undefined) {
-      setFolded(!!actionState['vihals-toggle']);
-    }
-  }, [actionState?.['vihals-toggle']]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail;
-      if (key === 'vihals-toggle') setFolded((v) => !v);
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
+export function Vihals({ onSize, actionState, isPreview = false }: SceneItemProps) {
+  const sceneState = useFurnitureToggles(['vihals-toggle']);
+  const folded = Boolean((isPreview ? actionState : sceneState)['vihals-toggle']);
 
   return (
     <group userData={{
