@@ -337,7 +337,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       approachWidth: (id === 'drona-kitchen-diy' || id === 'drona-kitchen-electronics') ? 33 : undefined,
       navigationOwner: 'kallax-cuisine',
       offset: [0, -KALLAX_CUISINE_DRONA_POSITIONS[item.index][1], id === 'drona-kitchen-diy' ? -65 : -50] as [number, number, number],
-      rotY: 0, animation: 'pick-fruit',
+      rotY: 0, animation: 'take-book-shelf',
     }],
   }])),
   ...Object.fromEntries(Object.entries(BATHROOM_STORAGE_ITEMS).map(([id, item]) => [id, {
@@ -346,7 +346,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: item.kind === 'cabinet' ? 'Prendre un objet dans l’armoire' : 'Prendre un objet dans la Dröna',
       relative: true, arrival: 'approach' as const, navigationOwner: item.cabinetId,
       offset: [0, -item.position[1], item.kind === 'cabinet' ? 60 : -BATHROOM_BOX_APPROACH] as [number, number, number],
-      rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: 'pick-fruit',
+      rotY: item.kind === 'cabinet' ? Math.PI : 0, animation: 'take-book-shelf',
     }],
   }])),
 
@@ -516,7 +516,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: id === 'drona-se-pyjama' ? 'Prendre un pyjama' : 'Prendre du linge de maison',
       relative: true, arrival: 'approach' as const, navigationOwner: 'kallax-se',
       offset: [0, -KALLAX_SE_DRONA_POSITIONS[item.index][1], -80] as [number, number, number],
-      rotY: 0, animation: 'pick-fruit',
+      rotY: 0, animation: 'take-book-shelf',
     }],
   }])),
   ...Object.fromEntries(Object.entries(DRONA_SPECIAL_ITEMS).map(([id, item]) => [id, {
@@ -526,7 +526,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       slotId: 'pick-item', name: item.interaction, relative: true, arrival: 'approach' as const,
       navigationOwner: `kallax-${item.shelf}`,
       offset: [0, -item.position[1], -item.approach] as [number, number, number],
-      rotY: 0, animation: 'pick-fruit',
+      rotY: 0, animation: 'take-book-shelf',
     }],
   }])),
   'drona-ne-catchall': {
