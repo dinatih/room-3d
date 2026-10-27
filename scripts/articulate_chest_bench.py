@@ -50,10 +50,10 @@ lid_parts = {39419, 21502, 0, 10751}
 assert lid_parts <= parts.keys()
 
 # Hollow cavity is island 56817 (108 faces).
-# The 18 top cap faces are removed and the 90 inner wall/floor faces are flipped inward.
+# The top cap/bevel faces (min_z > 0.58) are removed and the 66 cavity wall/floor faces are flipped inward.
 cavity_island = parts[56817]
-cavity_top_caps = {p for p in cavity_island if mesh.polygons[p].normal.z > 0.8 and sum(mesh.vertices[i].co.z for i in mesh.polygons[p].vertices) / len(mesh.polygons[p].vertices) > 0.55}
-assert len(cavity_top_caps) == 18, f"Unexpected top cap count: {len(cavity_top_caps)}"
+cavity_top_faces = {p for p in cavity_island if min(mesh.vertices[i].co.z for i in mesh.polygons[p].vertices) > 0.58}
+assert len(cavity_top_faces) == 42, f"Unexpected cavity top faces count: {len(cavity_top_faces)}"
 
 def extract_body(name, identifiers):
     keep = {vertex for part in identifiers for face in parts[part] for vertex in mesh.polygons[face].vertices}
@@ -65,13 +65,13 @@ def extract_body(name, identifiers):
     bmesh.ops.delete(bm, geom=[vertex for vertex in bm.verts if vertex.index not in keep], context='VERTS')
     bm.faces.ensure_lookup_table()
 
-    # Flip the 90 cavity wall/floor faces and remove the 18 top cap faces
+    # Flip the 66 cavity wall/floor faces and remove all top cap and bevel faces (min_z > 0.58)
     cavity_bm_faces = [f for f in bm.faces if -0.57 < f.calc_center_median().x < 0.58 and -0.24 < f.calc_center_median().y < 0.25 and 0.03 < f.calc_center_median().z < 0.59]
-    top_caps = [f for f in cavity_bm_faces if f.normal.z > 0.8 and f.calc_center_median().z > 0.55]
+    top_faces = [f for f in cavity_bm_faces if min(v.co.z for v in f.verts) > 0.58]
     for f in cavity_bm_faces:
-        if f not in top_caps:
+        if f not in top_faces:
             f.normal_flip()
-    bmesh.ops.delete(bm, geom=top_caps, context='FACES')
+    bmesh.ops.delete(bm, geom=top_faces, context='FACES')
 
     bm.to_mesh(data)
     bm.free()

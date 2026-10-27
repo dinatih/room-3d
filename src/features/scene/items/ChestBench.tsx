@@ -34,8 +34,6 @@ export function ChestBench({ actionState, onSize }: SceneItemProps) {
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
     scene.userData.hoverAction = { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') };
-    const lid = scene.getObjectByName('ChestBenchLid');
-    if (lid) lid.userData = { birdPerch: !isOpen };
     runtime.current = { mixer, action };
     onSize(box.getSize(new THREE.Vector3()));
   }, []);
@@ -43,17 +41,11 @@ export function ChestBench({ actionState, onSize }: SceneItemProps) {
   useFrame((_, dt) => {
     const rt = runtime.current;
     if (!rt) return;
-    const targetTime = isOpen ? LID_DURATION : 0;
-    if (rt.action.time === targetTime) return;
+    const target = isOpen ? LID_DURATION : 0;
+    if (rt.action.time === target) return;
     const step = dt / LID_DURATION;
-    rt.action.time = THREE.MathUtils.clamp(
-      rt.action.time + (isOpen ? step : -step) * LID_DURATION,
-      0,
-      LID_DURATION,
-    );
+    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isOpen ? step : -step) * LID_DURATION, 0, LID_DURATION);
     rt.mixer.update(0);
-    const lid = scene.getObjectByName('ChestBenchLid');
-    if (lid) lid.userData.birdPerch = !isOpen;
     invalidate();
   });
 
