@@ -16,12 +16,12 @@ export const BATHROOM_STORAGE_ITEMS = {
   },
   'drona-bathroom-west': {
     label: 'Dröna SDB Ouest',
-    position: [BATH_WEST_WALL + 20, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + 19.5] as [number, number, number],
+    position: [BATH_WEST_WALL + 20, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + 1 + DRONA_HEIGHT / 2] as [number, number, number],
     rotationY: Math.PI, cabinetId: 'bathroom-cabinet-west', kind: 'box',
   },
   'drona-bathroom-east': {
     label: 'Dröna SDB Est',
-    position: [BATH_EAST_WALL - 23, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + 19.5] as [number, number, number],
+    position: [BATH_EAST_WALL - 23, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + 1 + DRONA_HEIGHT / 2] as [number, number, number],
     rotationY: Math.PI, cabinetId: 'bathroom-cabinet-east', kind: 'box',
   },
 };
