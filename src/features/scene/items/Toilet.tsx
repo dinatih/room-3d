@@ -5,6 +5,7 @@
  * Coordonnées locales : centré X/Z, Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
+import { useDoorOpen } from './useDoorOpen';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -40,22 +41,14 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   const seatHingeRef = useRef<THREE.Group | null>(null);
   const buttonRef = useRef<THREE.Object3D | null>(null);
 
-  const isLidOpenRef = useRef(false);
-  const isSeatOpenRef = useRef(false);
+  const isLidOpen = useDoorOpen('wc-lid-toggle', isPreview, actionState);
+  const isSeatOpen = useDoorOpen('wc-seat-toggle', isPreview, actionState);
   const isFlushingRef = useRef(false);
 
   useLayoutEffect(() => {
     if (isPreview) return;
     const handler = (e: any) => {
       const { key, value } = e.detail;
-      if (key === 'wc-lid-toggle') {
-        isLidOpenRef.current = value !== undefined ? !!value : !isLidOpenRef.current;
-        invalidate();
-      }
-      if (key === 'wc-seat-toggle') {
-        isSeatOpenRef.current = value !== undefined ? !!value : !isSeatOpenRef.current;
-        invalidate();
-      }
       if (key === 'wc-flush') {
         isFlushingRef.current = value !== undefined ? !!value : true;
         invalidate();
@@ -73,11 +66,9 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
 
   useLayoutEffect(() => {
     if (!isPreview) return;
-    isLidOpenRef.current = !!actionState['wc-lid-toggle'];
-    isSeatOpenRef.current = !!actionState['wc-seat-toggle'];
     isFlushingRef.current = !!actionState['wc-flush'];
     invalidate();
-  }, [isPreview, actionState['wc-lid-toggle'], actionState['wc-seat-toggle'], actionState['wc-flush'], invalidate]);
+  }, [isPreview, actionState['wc-flush'], invalidate]);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -138,7 +129,7 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
   useFrame((_, delta) => {
     let active = false;
     if (lidHingeRef.current && lidHingeRef.current.userData.initialRotation !== undefined) {
-      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
+      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpen ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetLidAngle - lidHingeRef.current.rotation.x;
       if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
         lidHingeRef.current.rotation.x = THREE.MathUtils.damp(
@@ -149,7 +140,7 @@ export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProp
     }
     
     if (seatHingeRef.current && seatHingeRef.current.userData.initialRotation !== undefined) {
-      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpenRef.current ? -TOILET_HINGE_ANGLE : 0);
+      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpen ? -TOILET_HINGE_ANGLE : 0);
       const diff = targetSeatAngle - seatHingeRef.current.rotation.x;
       if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
         seatHingeRef.current.rotation.x = THREE.MathUtils.damp(

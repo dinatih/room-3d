@@ -24,7 +24,7 @@ const { useDoorOpen } = load('src/features/scene/items/useDoorOpen.ts', {
   '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
 });
 
-for (const key of ['cabinet', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
+for (const key of ['wc-lid-toggle', 'wc-seat-toggle', 'cabinet', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
   it(`${key} : ouvrir, maintenir ouvert puis fermer, sans modifier la scène depuis l’aperçu`, () => {
     scene[key] = false;
     let preview = {};
@@ -57,4 +57,14 @@ it('VIHALS : le pliage de la scène et celui de la preview restent indépendants
   scene['vihals-toggle'] = true;
   assert.equal(label(true, false), 'VIHALS (Dépliée)');
   assert.equal(label(false, false), 'VIHALS (Pliée)');
+});
+
+it('les états persistants VIHALS et WC sont résolus dans le store, sans anciennes clés', () => {
+  const { resolveStoreKey } = load('src/features/scene/store/useSceneStore.ts', {}, source =>
+    'const initialFurniture = {}; const initialLayers = {};\n' + source.slice(source.indexOf('const initialExtraStates:'), source.indexOf('const initialActiveChar =')));
+  for (const key of ['vihals-toggle', 'wc-lid-toggle', 'wc-seat-toggle']) {
+    assert.deepEqual(resolveStoreKey(key), { type: 'extra', name: key });
+  }
+  assert.equal(resolveStoreKey('wcLid').type, 'transient');
+  assert.equal(resolveStoreKey('wc-flush').type, 'transient');
 });
