@@ -45,6 +45,7 @@ import { UtakerFrame } from '../items/UtakerFrame';
 import { Nasfjallet10558045 } from '../items/Nasfjallet10558045';
 import { Bollsidan30574370 } from '../items/Bollsidan30574370';
 import { AirPerformer } from '../items/AirPerformer';
+import { AirPerformerRemote } from '../items/AirPerformerRemote';
 import { Fniss40295439 } from '../items/Fniss40295439';
 import { TV } from '../items/TV';
 import { TV_POSITION } from '../tvData';
@@ -62,6 +63,7 @@ import {
   DESK2_POSITIONS,
   SMORKULL_POSITIONS,
   AIRPERFORMER_POSITIONS,
+  AIRPERFORMER_REMOTE_POSITIONS,
   DOUBLE_BED_POSITIONS,
   SINGLE_BED_POSITIONS,
 } from '../furniturePositions';
@@ -373,6 +375,8 @@ export function OfficeChair() {
 
 function AirPerformer_() {
   const [posIdx, setPosIdx] = useState(0);
+  const [remoteIdx, setRemoteIdx] = useState(0);
+
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
@@ -382,19 +386,38 @@ function AirPerformer_() {
           positionState['airperformer-position'] = { idx: next, total: AIRPERFORMER_POSITIONS.length };
           return next;
         });
+      } else if (key === 'airperformer-remote-position') {
+        setRemoteIdx(i => {
+          const next = (i + 1) % AIRPERFORMER_REMOTE_POSITIONS.length;
+          positionState['airperformer-remote-position'] = { idx: next, total: AIRPERFORMER_REMOTE_POSITIONS.length };
+          return next;
+        });
       }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, []);
+
   useEffect(() => { positionState['airperformer-position'] = { idx: posIdx, total: AIRPERFORMER_POSITIONS.length }; }, [posIdx]);
+  useEffect(() => { positionState['airperformer-remote-position'] = { idx: remoteIdx, total: AIRPERFORMER_REMOTE_POSITIONS.length }; }, [remoteIdx]);
+
   const p = AIRPERFORMER_POSITIONS[posIdx];
+  const rp = AIRPERFORMER_REMOTE_POSITIONS[remoteIdx];
+  const remotePos = remoteIdx === 0
+    ? { x: p.x, y: 105.5, z: p.z, ry: p.ry }
+    : { x: rp.x, y: rp.y ?? 0, z: rp.z, ry: rp.ry };
+
   return (
-    <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
-      <group userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
-        <NavigationObstacle id="air-performer"><AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
-      </group>
-    </PositionTransition>
+    <>
+      <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
+        <group userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
+          <NavigationObstacle id="air-performer"><AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+        </group>
+      </PositionTransition>
+      <PositionTransition furnitureKey="airperformer-remote-position" x={remotePos.x} y={remotePos.y} z={remotePos.z} ry={remotePos.ry}>
+        <AirPerformerRemote />
+      </PositionTransition>
+    </>
   );
 }
 

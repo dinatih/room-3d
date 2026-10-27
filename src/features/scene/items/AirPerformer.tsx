@@ -2,6 +2,7 @@ import { isHomeAssistantLinked, useHomeAssistant } from '../../home-assistant/co
 import { entityAvailable } from '../../home-assistant/appliances';
 import { getNextActionValue } from '../objectActionRegistry';
 import { getObjectActionIds } from '../objectActions';
+import { useGLTFClone } from '../useGLTFClone';
 /**
  * AirPerformer.tsx — Philips Air Performer AMF870/15 3D procedural simulation.
  * Exact replication of philips_air_performer (2) best.html design.
@@ -127,9 +128,11 @@ function buildShoulder(bottomR: number, topRX: number, topRZ: number, yBottom: n
 
 export function AirPerformer({ onSize, actionState, isPreview = false }: SceneItemProps) {
   const { invalidate } = useThree();
+  const { scene: remoteGlb } = useGLTFClone('items/philips-amf870/philips-amf870-remote.glb');
 
   // ── States & Refs for configuration ────────────────────────────────────────
   const [power, setPower] = useState(false);
+  const [oscillating, setOscillating] = useState(true);
   const [mode, setMode] = useState<string>('auto');
   const [speed, setSpeed] = useState(5);
   const [targetTemp, setTargetTemp] = useState(25);
@@ -175,6 +178,9 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       if (key === 'airPerformerPower') {
         setPower(p => !p);
         invalidate();
+      } else if (key === 'airPerformerOscillation') {
+        setOscillating(o => !o);
+        invalidate();
       } else if (key === 'airPerformerMode') {
         setMode(m => getNextActionValue(key, m));
         invalidate();
@@ -190,10 +196,11 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
   useEffect(() => {
     if (!isPreview) return;
     setPower(!!actionState.airPerformerPower);
+    if (actionState.airPerformerOscillation !== undefined) setOscillating(!!actionState.airPerformerOscillation);
     setMode(actionState.airPerformerMode ?? 'auto');
     setSpeed(actionState.airPerformerSpeed ?? 5);
     invalidate();
-  }, [isPreview, actionState.airPerformerPower, actionState.airPerformerMode, actionState.airPerformerSpeed, invalidate]);
+  }, [isPreview, actionState.airPerformerPower, actionState.airPerformerOscillation, actionState.airPerformerMode, actionState.airPerformerSpeed, invalidate]);
 
   // ── Web Audio Synthesizer ──────────────────────────────────────────────────
   const audioRef = useRef<{
@@ -755,11 +762,15 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     const time = state.clock.getElapsedTime();
 
     // 1. Device Oscillation Logic
-    oscillationTimeRef.current += delta * 0.25;
-    const maxAngleRad = (90 * Math.PI) / 180;
-    if (oscillatingGroupRef.current) {
-      oscillatingGroupRef.current.rotation.y =
-        Math.sin(oscillationTimeRef.current * Math.PI) * (maxAngleRad / 2);
+    if (oscillating) {
+      oscillationTimeRef.current += delta * 0.25;
+      const maxAngleRad = (90 * Math.PI) / 180;
+      if (oscillatingGroupRef.current) {
+        oscillatingGroupRef.current.rotation.y =
+          Math.sin(oscillationTimeRef.current * Math.PI) * (maxAngleRad / 2);
+      }
+    } else if (oscillatingGroupRef.current && Math.abs(oscillatingGroupRef.current.rotation.y) > 0.001) {
+      oscillatingGroupRef.current.rotation.y = THREE.MathUtils.lerp(oscillatingGroupRef.current.rotation.y, 0, delta * 2.0);
     }
 
     // 2. Heater Glow Pulses
@@ -849,7 +860,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
       userData={{
         hoverAction: {
           label: power
-            ? `Air Performer (ON - Mode ${mode.toUpperCase()} - PM2.5: ${pm25State} µg/m³)`
+            ? `Air Performer (ON - Mode ${mode.toUpperCase()}${oscillating ? ' - Oscillant' : ''} - PM2.5: ${pm25State} µg/m³)`
             : 'Air Performer (Éteint)',
           actions: getObjectActionIds('air-performer')
         }
@@ -934,6 +945,8 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
           decay={1.5}
           position={[0, loopBottomY + outerH / 2, 8.0]}
         />
+        {/* H. Magnetized Remote on Top (Preview only) */}
+        {isPreview && <primitive object={remoteGlb} position={[0, loopBottomY + outerH - 0.9, 0]} scale={100} />}
       </group>
 
       {/* ── 3. PARTICLE SYSTEMS (LOCAL SIMULATION) ── */}

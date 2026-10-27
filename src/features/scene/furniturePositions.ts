@@ -10,6 +10,7 @@ import { ROOM_D, ROOM_W, FURNITURE_WALL_CLEARANCE } from './wallData';
 
 export interface FurnitureTransform {
   x: number;
+  y?: number;
   z: number;
   ry: number;
 }
@@ -51,6 +52,12 @@ export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
 export const AIRPERFORMER_POSITIONS: readonly FurnitureTransform[] = [
   { x: 261, z: 65.5, ry: 0 },
   { x: 200, z: 100,  ry: 0 },
+];
+
+export const AIRPERFORMER_REMOTE_POSITIONS: readonly FurnitureTransform[] = [
+  { x: 0, y: 105.5, z: 0, ry: 0 },
+  { x: 120, y: 72.5, z: 20, ry: 0.1 },
+  { x: 280, y: 77.5, z: 40, ry: -Math.PI / 4 },
 ];
 
 export interface DoubleBedConfig {
@@ -96,6 +103,7 @@ export const DYNAMIC_FURNITURE_ANCHORS: Record<string, readonly FurnitureTransfo
   'desk2-position': DESK2_POSITIONS,
   'smorkull-position': SMORKULL_POSITIONS,
   'airperformer-position': AIRPERFORMER_POSITIONS,
+  'airperformer-remote-position': AIRPERFORMER_REMOTE_POSITIONS,
   'bed-position': BED_DOUBLE_CENTER_POSITIONS,
   'bed-west-position': BED_WEST_POSITIONS,
   'bed-east-position': BED_EAST_POSITIONS,
