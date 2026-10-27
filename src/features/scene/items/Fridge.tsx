@@ -13,7 +13,8 @@ import type { SceneItemProps } from '@shared/types';
 const GLB = 'items/lagan_anim/LAGAN_anim.glb';
 
 export const FRIDGE_LOCAL_POSITION: [number, number, number] = [70, 0, 30];
-export const FRIDGE_DOOR_DURATION = 1;
+// Le clip d'origine ouvre la porte jusqu'à ~131.85° en 1 s. 90° correspond à (PI / 2) / (131.85° en rad).
+export const FRIDGE_DOOR_DURATION = (Math.PI / 2) / (2 * Math.atan2(0.9130040407180786, 0.40795058012008667));
 export const FRIDGE_CRISPER_DURATION = 1;
 
 export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProps & { isPreview?: boolean }) {
@@ -101,7 +102,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     const r = runtime.current;
     if (!r || (isPreview && actionState.previewPaused)) return;
     const desired = target.current;
-    const doorEnd = desired.door ? r.door.getClip().duration : 0;
+    const doorEnd = desired.door ? FRIDGE_DOOR_DURATION : 0;
     const drawerEnd = desired.crisper ? r.crisper.getClip().duration : 0;
     const move = (a: THREE.AnimationAction, end: number) => {
       a.time = a.time < end ? Math.min(end, a.time + delta) : Math.max(end, a.time - delta);
