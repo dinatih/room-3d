@@ -14,7 +14,6 @@
  *   Drona          — composant SceneItemProps (instance unique, inventaire)
  *   useDronaGeo    — hook retournant la géométrie active selon le mode sélectionné
  *   DroneCell      — boîte unique pour groupes positionnés
- *   DronaInstances — N boîtes via InstancedMesh, prend un tableau de Matrix4
  */
 import { Suspense, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -110,22 +109,5 @@ function DroneCellContent() {
   const geo = useDronaGeo();
   if (mode === 'hidden') return null;
   return <mesh key={mode} geometry={geo} material={dronaMat} dispose={null} castShadow receiveShadow userData={{ skipMerge: true }} />;
-}
-
-/** N boîtes Drona via InstancedMesh. Chaque Matrix4 encode position + rotation. */
-export function DronaInstances({ matrices }: { matrices: THREE.Matrix4[] }) {
-  return <Suspense fallback={null}><DronaInstancesContent matrices={matrices} /></Suspense>;
-}
-
-function DronaInstancesContent({ matrices }: { matrices: THREE.Matrix4[] }) {
-  const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
-  const geo = useDronaGeo();
-  const N = matrices.length;
-  const apply = (mesh: THREE.InstancedMesh) => {
-    matrices.forEach((m, i) => mesh.setMatrixAt(i, m));
-    mesh.instanceMatrix.needsUpdate = true;
-  };
-  if (mode === 'hidden') return null;
-  return <instancedMesh key={mode} args={[geo, dronaMat, N]} castShadow receiveShadow onUpdate={apply} />;
 }
 
