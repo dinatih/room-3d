@@ -439,7 +439,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });
         // Keep the safe step already checked above; follow the new corridor next frame.
         if (progressing) { route.waitReason = undefined; return limited; }
-        route.waitReason = 'Contournement d’un autre PNJ calculé';
+        route.waitReason = fullTransitRooms.length ? 'Contournement d’une pièce complète calculé' : 'Contournement d’un autre PNJ calculé';
         return start;
       }
       if (insideObstacle(goal, actors.map(polygon => [polygon]))) {

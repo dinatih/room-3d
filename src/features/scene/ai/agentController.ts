@@ -161,11 +161,12 @@ export function createAgentController(
     appLog(
       _characterId,
       pending
-        ? `⏳ Navigation en attente vers ${label} : ${reason} — position (${state.x.toFixed(1)}, ${state.z.toFixed(1)}), animation ${state.animation}`
-        : `🚧 Navigation bloquée vers ${label} : ${reason} — ${describeNavigationBlock(_characterId, state, target, route, actorBlockers)}`,
+        ? `⏳ Navigation en attente : ${reason} — vers ${label} — position (${state.x.toFixed(1)}, ${state.z.toFixed(1)}), animation ${state.animation}`
+        : `🚧 Navigation bloquée : ${reason} — vers ${label} — ${describeNavigationBlock(_characterId, state, target, route, actorBlockers)}`,
       {
         category: 'nav',
         action: pending ? 'nav_waiting' : 'nav_blocked',
+        reason,
         actors: [_characterId],
         animation: pending ? { id: state.animation, mode: 'solo', actorId: _characterId } : undefined,
         object: objId ? { id: objId, label, slotId: instruction?.slotId ?? claimedSlot?.slotId } : undefined,

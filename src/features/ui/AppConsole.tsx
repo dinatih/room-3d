@@ -59,6 +59,7 @@ export interface AppLogObjectRef {
 export interface AppLogMetadata {
   category?: AppLogCategory;
   action?: string;
+  reason?: string;
   actors?: string[];
   animation?: AppLogAnimationRef;
   object?: AppLogObjectRef;
@@ -71,6 +72,7 @@ export interface AppLogEntry {
   timestamp: number;
   category: AppLogCategory;
   action?: string;
+  reason?: string;
   actors: string[];
   animation?: AppLogAnimationRef;
   object?: AppLogObjectRef;
@@ -136,6 +138,7 @@ export const appLog = (tag: string, message: string, meta?: AppLogMetadata): voi
     timestamp: Date.now(),
     category: inferLogCategory(tag, meta),
     action: meta?.action,
+    reason: meta?.reason,
     actors,
     animation: meta?.animation,
     object: meta?.object,
