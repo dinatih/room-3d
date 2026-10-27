@@ -17,23 +17,6 @@ export const HUMAN_BODY_HEIGHT = 173.4;
 /** Physical leaf contacts must resolve the millimetre gaps around closed doors. */
 const DOOR_CONTACT_ERROR = 0.1;
 
-export interface CircleObstacle {
-  x: number;
-  z: number;
-  radius: number;
-  yMin?: number;
-  yMax?: number;
-}
-
-export interface BoxObstacle {
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
-  yMin?: number;
-  yMax?: number;
-}
-
 export interface DoorConfig {
   pivot: { x: number; z: number };
   length: number;

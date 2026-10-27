@@ -192,8 +192,6 @@ export interface ToolbarPanelsProps {
   prefix?:                 React.ReactNode;
 }
 
-export type TabKey = 'profile' | 'layers' | 'personnage' | 'perf' | 'plan2d' | 'interactif' | null;
-
 export const ALL_HAIR_COLORS: string[] = [
   'naturel', 'noir', 'brun', 'chatain', 'blond', 'roux', 'rouge', 'blanc', 'bleu', 'vert', 'rose', 'violet', 'arc-en-ciel'
 ];
