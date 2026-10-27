@@ -22,6 +22,18 @@ Références : [intégration Tuya HA](https://www.home-assistant.io/integrations
 [API de modification Tuya](https://developer.tuya.com/en/docs/archived-documents/a358769080?id=Ka7kjxvo4fcck).
 Le document API est archivé : confirmer le contrat actuel sur le projet avant utilisation.
 
+### Gratuité de l’API
+
+Vérification du 27 octobre 2026 : Tuya annonce un essai IoT Core gratuit d’un mois,
+avec possibilité de demander une prolongation. Ce n’est pas une gratuité permanente
+garantie. L’édition d’essai annonce 26 000 appels API et 68 000 messages par mois,
+avec au plus 50 appareils dont 10 contrôlables. L’accès au renommage reste à vérifier
+sur le projet ; aucun abonnement n’a été souscrit.
+
+Sources : [essai gratuit Tuya](https://support.tuya.com/en/help/_detail/K9zsowlj19oaf),
+[prolongation après un mois](https://support.tuya.com/en/help/_detail/Kf4xa2nbp7fp0),
+[quotas des offres](https://developer.tuya.com/en/docs/iot/membership-service?id=K9m8k45jwvg9j).
+
 ## Implémentation proposée
 
 Un petit service côté serveur, distinct du navigateur, suffit. Une liste explicite

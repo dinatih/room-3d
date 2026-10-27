@@ -1,4 +1,4 @@
-import { useHomeAssistant } from '../../home-assistant/connection';
+import { isHomeAssistantLinked, useHomeAssistant } from '../../home-assistant/connection';
 import { entityAvailable } from '../../home-assistant/appliances';
 import { getNextActionValue } from '../objectActionRegistry';
 import { getObjectActionIds } from '../objectActions';
@@ -150,7 +150,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
   useEffect(() => { modeRef.current = mode; }, [mode]);
   useEffect(() => { speedRef.current = speed; }, [speed]);
 
-  const remote = useHomeAssistant(state => state.enabled && !isPreview);
+  const remote = useHomeAssistant(state => isHomeAssistantLinked(state) && !isPreview);
   const entities = useHomeAssistant(state => state.entities);
   useEffect(() => {
     if (!remote) return;

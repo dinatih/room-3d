@@ -14,6 +14,7 @@ export const LIGHT_KEYS = Object.keys(LIGHTS) as LightKey[];
 export const isHomeAssistantLight = (key: string): key is LightKey => Object.prototype.hasOwnProperty.call(LIGHTS, key);
 const TOKEN_KEY = 'room3d.ha.auth';
 const ENABLED_KEY = 'room3d.ha.enabled';
+const LINKED_KEY = 'room3d.ha.linked';
 
 export interface LightState {
   name: string | null;
@@ -26,6 +27,7 @@ export interface LightState {
 }
 interface HomeAssistantState {
   enabled: boolean;
+  linked: boolean;
   status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
   lights: Record<LightKey, LightState>;
   entities: Record<string, HassEntity>;
@@ -36,11 +38,16 @@ const emptyLights = () => Object.fromEntries(LIGHT_KEYS.map(key => [key, {
   name: null, on: null, brightness: 1, rgb: null, available: false, pending: false, error: null,
 }])) as Record<LightKey, LightState>;
 export const useHomeAssistant = create<HomeAssistantState>(() => ({
-  enabled: false, status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null,
+  enabled: false, linked: sessionStorage.getItem(LINKED_KEY) !== '0', status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null,
 }));
+export const isHomeAssistantLinked = (state: HomeAssistantState) => state.enabled && state.linked;
+export function setHomeAssistantLinked(linked: boolean) {
+  sessionStorage.setItem(LINKED_KEY, linked ? '1' : '0');
+  useHomeAssistant.setState({ linked });
+}
 export const isHomeAssistantAction = (key: string): key is LightKey | ApplianceAction => isHomeAssistantLight(key) || isApplianceAction(key);
 export function isHomeAssistantControlDisabled(key: string, state: HomeAssistantState) {
-  if (!state.enabled) return false;
+  if (!isHomeAssistantLinked(state)) return false;
   if (isHomeAssistantLight(key)) return state.status !== 'connected' || !state.lights[key].available || state.lights[key].pending;
   if (isApplianceAction(key)) return state.status !== 'connected' || !!state.applianceCommands[key]?.pending || !applianceAvailable(key, state.entities[APPLIANCES[key].entity]);
   return false;
@@ -176,6 +183,7 @@ export function resumeHomeAssistant() {
 
 export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
   const state = useHomeAssistant.getState();
+  if (!isHomeAssistantLinked(state)) return;
   const light = state.lights[key];
   if (light.pending) return;
   if (!connection?.connected || state.status !== 'connected' || !light.available || light.on === null) {
@@ -194,6 +202,7 @@ export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
 }
 
 export async function requestHomeAssistantAction(key: LightKey | ApplianceAction, value?: boolean | number | string) {
+  if (!isHomeAssistantLinked(useHomeAssistant.getState())) return;
   if (isHomeAssistantLight(key)) {
     if (value !== undefined && typeof value !== 'boolean') throw new Error('Commande de lumière invalide.');
     return setHomeAssistantLight(key, value);

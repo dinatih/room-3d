@@ -6,7 +6,7 @@ import { dispatchKey, type FurnitureState } from '../types';
 import type { PlaneModelKey } from '@features/scene/PaperPlane';
 import { getActionLabel } from '../../objectActionRegistry';
 import { HomeAssistantPanel } from '../../../home-assistant/HomeAssistant';
-import { isHomeAssistantLight, isHomeAssistantControlDisabled, useHomeAssistant } from '../../../home-assistant/connection';
+import { isHomeAssistantLinked, isHomeAssistantLight, isHomeAssistantControlDisabled, useHomeAssistant } from '../../../home-assistant/connection';
 
 export interface InteractiveSectionProps {
   isMobile: boolean;
@@ -75,7 +75,7 @@ export function InteractiveSection({
   ) => {
     const val = furniture[key];
     const isOn = typeof val === 'boolean' ? val : !!val;
-    const unavailable = isHomeAssistantLight(key) && ha.enabled && (ha.status !== 'connected' || !ha.lights[key].available);
+    const unavailable = isHomeAssistantLight(key) && isHomeAssistantLinked(ha) && (ha.status !== 'connected' || !ha.lights[key].available);
     return (
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
@@ -85,7 +85,7 @@ export function InteractiveSection({
           opacity: isOn ? 1 : 0.55,
         }}
       >
-        <span>{isHomeAssistantLight(key) && ha.enabled ? ha.lights[key].name ?? label : label}</span>
+        <span>{isHomeAssistantLight(key) && isHomeAssistantLinked(ha) ? ha.lights[key].name ?? label : label}</span>
         <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
           {unavailable ? 'INDISPONIBLE' : displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
         </span>

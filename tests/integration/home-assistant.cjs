@@ -189,6 +189,46 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       await page.evaluate(key => window.haTest.useSceneStore.getState().triggerAction(key), key);
     }
     assert.equal(calls.length, expectedCalls, 'NPC actions must never command real appliances');
+    const toggleLink = async () => {
+      const wasLinked = await page.evaluate(() => window.haTest.useHomeAssistant.getState().linked);
+      await page.evaluate(() => document.querySelector('input[role="switch"]').click());
+      await page.waitForFunction(previous => window.haTest.useHomeAssistant.getState().linked !== previous, {}, wasLinked);
+    };
+    await toggleLink();
+    assert.equal(await page.evaluate(() => window.haTest.useHomeAssistant.getState().status), 'connected');
+    assert(await page.evaluate(() => !!sessionStorage.getItem('room3d.ha.auth')));
+    assert.equal((await read('lampCorridor')).on, true, 'Real corridor is initially on');
+    await page.evaluate(() => {
+      const store = window.haTest.useSceneStore.getState();
+      store.toggleFurniture('lampCorridor');
+      store.triggerAction('tv-toggle', false, 'user');
+      store.toggleFurniture('glassDoorV2ShutterPos');
+      store.triggerAction('airPerformerPower', undefined, 'user');
+    });
+    assert.equal((await read('lampCorridor')).on, false, 'Paused lights must simulate locally');
+    const localCover = await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos);
+    publish('light.entree_entree', 'on');
+    publish('cover.volet', 'closed', { supported_features: 7, current_position: 0 });
+    await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().entities['cover.volet'].attributes.current_position === 0);
+    assert.equal((await read('lampCorridor')).on, false, 'HA events must not overwrite the paused simulation');
+    assert.equal(await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos), localCover);
+    await page.evaluate(async () => {
+      const api = await import('/src/features/home-assistant/connection.ts');
+      await api.setHomeAssistantLight('lampCorridor', true);
+      await api.requestHomeAssistantAction('tvOn', true);
+    });
+    assert.equal(calls.length, expectedCalls, 'All service entry points must block commands while paused');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.evaluate(async () => { window.haTest = await import('/tests/fixtures/home-assistant-entry.tsx'); });
+    await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'connected');
+    assert.equal(await page.evaluate(() => window.haTest.useHomeAssistant.getState().linked), false, 'Pause survives reload');
+    assert.equal(authorizationExchanges, 1, 'Pause and reload retain OAuth authorization');
+    assert.equal(refreshExchanges, 1);
+    assert.equal(calls.length, expectedCalls);
+    await toggleLink();
+    await page.waitForFunction(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos === 100);
+    assert.equal((await read('lampCorridor')).on, true, 'Resume immediately uses the latest HA state');
+    assert.equal(calls.length, expectedCalls, 'Resume must not replay simulated actions');
     accepting = false;
     for (const ws of server.clients) ws.terminate();
     await page.waitForFunction(() => window.haTest.useHomeAssistant.getState().status === 'reconnecting');
@@ -209,7 +249,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     assert.equal(calls.length, expectedCalls);
     await page.evaluate(() => window.haTest.unmount());
     assert.deepEqual(errors, []);
-    console.log('PASS: OAuth reload, four lights, HA names, purifier, shutter position, TV, user/NPC separation, reconnect without replay and simulation');
+    console.log('PASS: OAuth reload, four lights, HA names, purifier, shutter position, TV, pause/resume and reload without logout, user/NPC separation, reconnect without replay and simulation');
   } finally {
     if (browser) await browser.close();
     for (const ws of server.clients) ws.terminate();

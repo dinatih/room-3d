@@ -53,6 +53,19 @@ utiliser une adresse HA HTTPS (préremplie : `https://ha.dinatih.org`). La valid
 de l’authentification en iframe et de l’accès distant reste à faire ; commencer
 par un onglet normal. Une iframe n’authentifie pas automatiquement l’application.
 
+## Développer sans agir sur les appareils
+
+Dans **Interactions → Home Assistant**, désactiver **Lier les appareils réels**.
+La connexion OAuth et le WebSocket restent ouverts, mais les clics et les actions
+3D fonctionnent en simulation locale. Les états HA continuent d’être reçus en
+arrière-plan sans modifier la scène ; couleurs, présence et purificateur retrouvent
+leur simulation. Les commandes réelles du panneau sont masquées.
+
+Ce choix est conservé dans l’onglet après rechargement et HMR. Réactiver le switch
+resynchronise la scène avec les derniers états HA, sans rejouer les actions de dev.
+Une commande déjà envoyée avant la suspension peut encore se terminer.
+**Déconnecter Home Assistant** reste disponible pour effacer la session OAuth.
+
 ## Comportement
 
 - Sans connexion explicite, la scène et ses interactions restent simulées.

@@ -1,6 +1,6 @@
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
-import { isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
+import { isHomeAssistantLinked, isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
 import {
@@ -610,7 +610,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
-    if (isHomeAssistantAction(key) && useHomeAssistant.getState().enabled) {
+    if (isHomeAssistantAction(key) && isHomeAssistantLinked(useHomeAssistant.getState())) {
       const value = key === 'glassDoorV2ShutterPos' ? getNextActionValue(key, useSceneStore.getState().furniture[key]) : undefined;
       void requestHomeAssistantAction(key, value);
       return;
@@ -718,7 +718,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       cameraState.invalidate?.();
       return {
         layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
-        furniture: key === 'lightsHD' && isActivating && !useHomeAssistant.getState().enabled ? { ...state.furniture, lampOn: true } : state.furniture,
+        furniture: key === 'lightsHD' && isActivating && !isHomeAssistantLinked(useHomeAssistant.getState()) ? { ...state.furniture, lampOn: true } : state.furniture,
       };
     });
   },
@@ -828,7 +828,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
 
   triggerAction: (key, targetState, source) => {
     const lightKey = resolveStoreKey(key).name;
-    if (isHomeAssistantAction(lightKey) && useHomeAssistant.getState().enabled) {
+    if (isHomeAssistantAction(lightKey) && isHomeAssistantLinked(useHomeAssistant.getState())) {
       if (source === 'user') {
         const value = lightKey === 'glassDoorV2ShutterPos' ? getNextActionValue(lightKey, useSceneStore.getState().furniture[lightKey]) : targetState;
         void requestHomeAssistantAction(lightKey, value);
@@ -892,7 +892,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         cameraState.invalidate?.();
         return {
           layers: nextLayers,
-          furniture: lKey === 'lightsHD' && nextVal && !useHomeAssistant.getState().enabled ? { ...state.furniture, lampOn: true } : state.furniture,
+          furniture: lKey === 'lightsHD' && nextVal && !isHomeAssistantLinked(useHomeAssistant.getState()) ? { ...state.furniture, lampOn: true } : state.furniture,
         };
       });
     } else if (resolved.type === 'extra') {
