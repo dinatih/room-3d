@@ -1,4 +1,21 @@
 const fs = require('node:fs');
+if (process.argv[2] === '--door') {
+  const { load } = require('../tests/support/load-ts.cjs');
+  const g = require('../src/features/scene/ai/navigation/geometry.ts');
+  const obstacles = require('../src/features/scene/ai/navigation/obstacles.ts');
+  const rows = fs.readFileSync(process.argv[3] || '/tmp/room-3d-logs/latest.jsonl', 'utf8').trim().split('\n').map(JSON.parse);
+  const world = rows.findLast(row => row.entry.action === 'nav_world').entry.data;
+  const doors = load('src/features/scene/doorObstacles.ts', {
+    './cameraState': { cameraState: { positions: {} } }, './ai/navigation/obstacles': obstacles,
+    './ai/navigation/geometry': g, './ai/navigation/doorRequests': require('../src/features/scene/ai/navigation/doorRequests.ts'),
+    './wallData': require('../src/features/scene/wallData.ts'),
+  });
+  const door = world.doors.find(d => d.key === 'living').config;
+  const contacts = world.furniture.filter(o => o.yMax >= door.yMin && o.yMin <= door.yMax)
+    .map(o => ({ ...o, contact: doors.getDoorContactAngle(door, o.polygon) })).filter(o => o.contact !== null).sort((a, b) => a.contact - b.contact);
+  console.log(JSON.stringify({ door, contacts, protections: world.doorRequests.protections }, null, 2));
+  return;
+}
 if (process.argv[2] === '--characters') {
   require('../tests/support/load-ts.cjs');
   const { CHARACTERS } = require('../src/features/scene/characterConfig.ts');

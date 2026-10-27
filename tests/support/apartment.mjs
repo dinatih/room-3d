@@ -355,12 +355,17 @@ export async function door(fixture) {
         trace({ actor: holder, status: pose.status, animation: pose.animation, protectedDoor: key, model: liveActor.model });
         const start = await resolveNavigation(() => getZoneDestination(key === 'living' ? 'corridor' : 'garden', id));
         const target = await resolveNavigation(() => getZoneDestination('living', id, start));
+        let protectedFrames = 0;
         const actors = await walk([{ id, route, position: start, target }], fixture, undefined, async () => {
             const state = await liveActor.tick();
             cameraState.positions[holder] = { x: state.x, y: state.y, z: state.z, yaw: state.rotY };
+            if (state.status === 'INTERACTING' && OccupancyManager.getOccupant(fixture.objectId, object.slots[0].slotId) === holder) {
+                check(requests.getAgentDoorProtection(key, holder), 'Lost protection while the Kallax interaction is active');
+                protectedFrames++;
+            }
         });
-        check(requests.getAgentDoorProtection(key, holder), 'Lost interaction protection during passage');
-        return { actors, sequence, pose, protectedDoor: key, angleDegrees: limit * 180 / Math.PI };
+        check(protectedFrames > 0, 'The passage must overlap an active protected interaction');
+        return { actors, sequence, pose, protectedDoor: key, protectedFrames, angleDegrees: limit * 180 / Math.PI };
     }
     finally {
         liveActor?.close();

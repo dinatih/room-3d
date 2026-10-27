@@ -13,6 +13,22 @@ const { useDoorSpring } = load('src/features/scene/items/useDoorSpring.ts', {
   react: { useRef: current => ({ current }) }, '@react-three/fiber': { useThree: () => ({ invalidate() {} }) },
 });
 
+it('ouvre le séjour sans confondre le placard derrière le battant avec une butée', () => {
+  const door = doors.DOOR_CONFIGS.living;
+  const closet = { id: 'door-test-closet', polygon: g.rectangle(170.6, 438.6, 59.79999923706056, 52.79999923706055), yMin: .2, yMax: 249.8 };
+  obstacles.registerObstacle(closet);
+  try {
+    assert.equal(doors.getDoorContactAngle(door, closet.polygon), null);
+    assert.equal(doors.computeDoorAllowedAngle(door), door.maxAngle);
+    const spring = useDoorSpring();
+    let angle = 0;
+    for (let frame = 0; frame < 120; frame++) angle = spring(angle, -door.maxAngle, 1 / 60, -doors.computeDoorAllowedAngle(door), 0);
+    assert.equal(angle, -door.maxAngle);
+    obstacles.registerObstacle({ ...closet, polygon: g.rectangle(240, 365, 20, 20) });
+    assert(doors.computeDoorAllowedAngle(door) < door.maxAngle, 'A real obstacle on the opening side must still stop the leaf');
+  } finally { obstacles.unregisterObstacle(closet.id); }
+});
+
 it('la porte du séjour ne se referme pas sur Native arrêté à la position des logs', () => {
   const id = 'door-contact-native', door = doors.DOOR_CONFIGS.living, point = { x: 255.5, z: 364.7 };
   const profile = { radius: 13.3, height: 170 };

@@ -48,9 +48,9 @@ export function rectangle(x: number, z: number, w: number, d: number, ry = 0): P
     .map(([px, pz]) => ({ x: x + c * px + s * pz, z: z - s * px + c * pz }));
 }
 
-export function inflate(polygon: Polygon, radius: number): Polygon {
+export function inflate(polygon: Polygon, radius: number, maxError = CLEARANCE_ERROR): Polygon {
   if (radius === 0) return polygon;
-  const count = Math.ceil(Math.PI / Math.acos(radius / (radius + CLEARANCE_ERROR)));
+  const count = Math.ceil(Math.PI / Math.acos(radius / (radius + maxError)));
   const circumradius = radius / Math.cos(Math.PI / count);
   const offsets = Array.from({ length: count }, (_, i) => ({ x: circumradius * Math.cos(2 * Math.PI * i / count), z: circumradius * Math.sin(2 * Math.PI * i / count) }));
   return convexHull(polygon.flatMap(p => offsets.map(o => ({ x: snap(p.x + o.x), z: snap(p.z + o.z) }))));

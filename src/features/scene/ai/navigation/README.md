@@ -30,6 +30,8 @@ Les obstacles conservent leurs trous et les passages étroits. Les dilatations
 arrondies utilisent une approximation conservative à 1 cm près : elles ne
 réduisent jamais le rayon physique, mais peuvent ajouter jusqu'à 1 cm de marge.
 Cette tolérance simplifie les contours sans arrondir les positions des PNJ.
+Les contacts physiques des battants utilisent 1 mm pour préserver les petits jeux
+autour des portes fermées, indépendamment des contours de navigation.
 Les dilatations physiques utilisent le rayon du corps pour les murs et son quart pour les
 meubles, comme les empreintes représentées par le debug. Les hauteurs excluent
 les volumes qui ne rencontrent pas le corps. Les limites du sol sont des

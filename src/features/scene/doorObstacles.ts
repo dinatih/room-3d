@@ -14,6 +14,8 @@ import { pX, pZ, DiagWall, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from './wallData'
 
 export const HUMAN_BODY_RADIUS = 28;
 export const HUMAN_BODY_HEIGHT = 173.4;
+/** Physical leaf contacts must resolve the millimetre gaps around closed doors. */
+const DOOR_CONTACT_ERROR = 0.1;
 
 export interface CircleObstacle {
   x: number;
@@ -71,7 +73,7 @@ export const doorCollisionState = {
  * Résout l'angle critique de contact entre un battant et une boîte AABB.
  */
 export function getDoorContactAngle(door: DoorConfig, polygon: Polygon): number | null {
-  const corners = inflate(polygon, door.thickness / 2 + door.margin);
+  const corners = inflate(polygon, door.thickness / 2 + door.margin, DOOR_CONTACT_ERROR);
   // Inflate the polygon by the leaf half-thickness and the door's own margin.
   let earliestContact: number | null = null;
 
