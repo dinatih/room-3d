@@ -848,8 +848,7 @@ if (typeof window !== 'undefined') {
 }
 
 /** Read the scene's value using the same action ID as components and previews. */
-export function getSceneActionValue(id: string): any {
-  const state = useSceneStore.getState();
+export function getSceneActionValue(id: string, state = useSceneStore.getState()): any {
   if (id === 'desk2-screen-toggle') return state.desk2ScreenActive || state.extraStates.desk2Screen;
   const key = resolveStoreKey(id);
   if (key.type === 'furniture') return state.furniture[key.name as keyof FurnitureState];

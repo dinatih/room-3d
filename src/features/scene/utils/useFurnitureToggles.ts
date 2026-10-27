@@ -1,41 +1,14 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { useSceneStore, resolveStoreKey } from '../store/useSceneStore';
+import { useShallow } from 'zustand/react/shallow';
+import { useSceneStore, getSceneActionValue } from '../store/useSceneStore';
 
-/**
- * Écoute l'état réactif centralisé dans le store Zustand et retourne un objet
- * indexé par event-key pour chaque clé demandée.
- *
- * Usage : useFurnitureToggles(['lamp-bath-toggle', 'corrDoors'])
- * → retourne { 'lamp-bath-toggle': boolean, 'corrDoors': boolean, … }
- *
- * resolveStoreKey() traduit automatiquement chaque event-key vers la vraie
- * propriété du store (ex: 'lamp-bath-toggle' → furniture.lampBath).
- */
+/** Lit uniquement les actions demandées, avec les mêmes identifiants que les previews. */
 export function useFurnitureToggles(keys: string[]): Record<string, any> {
   const { invalidate } = useThree();
-  const furniture = useSceneStore(state => state.furniture);
-  const extraStates = useSceneStore(state => state.extraStates);
-
-  const state: Record<string, any> = {};
-  for (const key of keys) {
-    const resolved = resolveStoreKey(key);
-    let val: any;
-    if (resolved.type === 'furniture') {
-      val = (furniture as any)[resolved.name];
-    } else if (resolved.type === 'extra') {
-      val = (extraStates as any)[resolved.name];
-    }
-    if (val !== undefined) {
-      state[key] = val;
-    }
-  }
-
-  // Force le rafraîchissement du Canvas R3F quand une valeur change
-  const valuesHash = Object.values(state).join(',');
-  useEffect(() => {
-    invalidate();
-  }, [valuesHash, invalidate]);
-
-  return state;
+  const values = useSceneStore(useShallow(state => Object.fromEntries(
+    keys.map(key => [key, getSceneActionValue(key, state)]),
+  )));
+  useEffect(() => { invalidate(); }, [values, invalidate]);
+  return values;
 }
