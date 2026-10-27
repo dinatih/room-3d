@@ -241,8 +241,6 @@ export function Tile() {
   const CLOSET_Z_REAL = ((CORRIDOR_NORTH_WALL) + KITCHEN_SOUTH_WALL) / 2;
 
   const { bathGeo, bathMat, closetMat } = useMemo(() => {
-    const baseTex = makeTileTex();
-
     const Bz = DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope;
     const Cz = DiagWall.A.z + (BATH_EAST_WALL - DiagWall.A.x) * DiagWall.slope;
 
@@ -266,7 +264,7 @@ export function Tile() {
     }
     g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 
-    const tBath = baseTex.clone();
+    const tBath = makeTileTex();
     tBath.wrapS = tBath.wrapT = THREE.RepeatWrapping;
     tBath.repeat.set(1, 1);
     tBath.needsUpdate = true;
@@ -281,10 +279,8 @@ export function Tile() {
     ctx.fillStyle = '#4a3020';
     ctx.fillRect(0, 0, 128, 3); ctx.fillRect(0, 125, 128, 3);
     ctx.fillRect(0, 0, 3, 128); ctx.fillRect(125, 0, 3, 128);
-    const brownTex = new THREE.CanvasTexture(brownCanvas);
-    brownTex.wrapS = brownTex.wrapT = THREE.RepeatWrapping;
-
-    const tB = brownTex.clone();
+    const tB = new THREE.CanvasTexture(brownCanvas);
+    tB.wrapS = tB.wrapT = THREE.RepeatWrapping;
     tB.repeat.set(CLOSET_W_REAL / 20, CLOSET_D_REAL / 20);
     tB.needsUpdate = true;
     const mB = new THREE.MeshStandardMaterial({
@@ -298,7 +294,7 @@ export function Tile() {
     <>
       <mesh geometry={bathGeo} material={bathMat} rotation={[-Math.PI / 2, 0, 0]} receiveShadow userData={{ brickType: 'floor' }} />
       <mesh
-        ref={(m) => { if (m) m.material = closetMat; }}
+        material={closetMat}
         rotation={[-Math.PI / 2, 0, 0]}
         position={[CLOSET_X_REAL, 0, CLOSET_Z_REAL]}
         receiveShadow
@@ -600,7 +596,7 @@ export function Floor() {
             </group>
 
             <mesh
-              ref={(m) => { if (m) m.material = ceilMats as any; }}
+              material={ceilMats}
               position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
               receiveShadow
               userData={{ brickType: 'ceiling' }}
