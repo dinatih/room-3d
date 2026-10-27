@@ -24,3 +24,7 @@ entity_config:
     expose: true
   sensor.entree_capteur_entree_temperature:
     expose: true
+  climate.chauffe_serviettes:
+    expose: true
+  switch.jardin_socket_1:
+    expose: true

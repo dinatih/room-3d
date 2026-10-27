@@ -19,9 +19,9 @@ Elle expose les appareils HA à Google Home ; les noms Smart Life restent indép
 - Configuration HA validée par `check_config`, puis HA redémarré avec succès.
 - Le point d’entrée HTTPS `/api/google_assistant` répond **405** en GET : c’est
   attendu, Google lui adresse des requêtes POST authentifiées.
-- Dix entités sont explicitement exposées : les quatre lampes, le purificateur,
-  le volet, la télévision et les températures des trois capteurs Hue, selon
-  le fichier `google-assistant.yaml`.
+- Douze entités sont explicitement exposées : les quatre lampes, le purificateur,
+  le volet, la télévision, les températures des trois capteurs Hue, le
+  chauffe-serviettes et la prise Jardin, selon `google-assistant.yaml`.
 - Association réussie confirmée par l’utilisateur : la lampe du couloir est ajoutée
   avec **[test] Dinatih Home Assistant**, après correction Cloudflare.
 - Après extension à sept entités, configuration HA validée, redémarrage effectué
@@ -142,7 +142,7 @@ n’est pas prise en charge lorsqu’il existe plusieurs foyers dans le compte G
 
 L’interface Google Home web a confirmé des doublons constructeur/HA. L’utilisateur
 a dissocié Somfy TaHoma, qui ne fournissait que le volet. Les services restants
-confirmés sont Dinatih, Hue, Philips Air purifier et Smart Life.
+confirmés après retrait de Hue et Philips Air purifier sont Dinatih et Smart Life.
 
 Pour préparer le retrait de Hue, les températures des trois capteurs Cuisine,
 Salle de bain et Couloir sont exposées explicitement via HA, en plus des lampes
@@ -151,11 +151,32 @@ ajoutées : elles reproduiraient les lampes individuelles. Les quatre autres
 lampes Hue sont indisponibles dans HA et n’étaient pas visibles dans l’inventaire
 Google consulté ; elles ne sont pas supprimées de HA.
 
-La dissociation de Hue et Philips Air purifier reste à effectuer dans l’application
-Google Home, après vérification des appareils issus de Dinatih. Smart Life reste
-associé tant que ses équipements supplémentaires ne sont pas repris. Aucun
+L’utilisateur a confirmé la dissociation de Hue et Philips Air purifier. Smart Life
+reste associé tant que ses équipements supplémentaires ne sont pas repris. Aucun
 appareil n’est supprimé des applications constructeur. Les mouvements des capteurs
 Hue ne sont pas exposés : Google Assistant HA ne prend pas en charge leur classe.
+
+### Reprise Smart Life en cours
+
+`light.porte` (Lumière Séjour) était déjà exposée. Le chauffe-serviettes
+`climate.chauffe_serviettes` et la prise `switch.jardin_socket_1`, disponibles et
+affectés à Salle de bain/Jardin dans HA, sont ajoutés à la liste explicite.
+Le rétroéclairage du chauffe-serviettes, le verrou enfant et les réglages techniques
+ne sont pas exposés comme des appareils supplémentaires.
+
+Avant dissociation Smart Life, identifier la lampe `light.fenetre`, la prise
+`switch.tete_socket_1` et les deux sorties
+`switch.interrupteurs_salle_de_bain_switch_1` / `_2`. Le « Radiateur » de l’ancien
+inventaire Google n’a pas de correspondance HA établie. Les boutons Tuya remontent
+comme événements, les détecteurs comme mouvements : ces classes ne sont pas
+exposables directement par Google Assistant HA. Leur présence dans HA ne garantit
+pas que les appuis ont été testés ni que leurs automatisations ont été transférées.
+
+L’interrupteur rond commande Lumière Séjour et se trouve dans Séjour, selon
+l’utilisateur. Il n’a pas été remplacé par un interrupteur virtuel Google.
+Les anciennes pièces Google invisibles dans la gestion ont été supprimées par
+l’utilisateur après affectation temporaire du Nest Mini à chacune, puis retour
+du Mini dans Séjour avant suppression des pièces devenues accessibles.
 
 Les seules pièces HA sont Séjour, Cuisine, Couloir, Salle de bain et Jardin.
 Les sept appareils exposés ont une pièce HA ; la télévision Android TV, auparavant
