@@ -249,6 +249,7 @@ const initialExtraStates: Record<string, boolean> = {
   'wc-lid-toggle': false,
   'wc-seat-toggle': false,
   'vihals-toggle': false,
+  'chest-bench-open': false,
   'character-meshes': false,
   aiGoToilet: false,
   aiSitDesk1: false,

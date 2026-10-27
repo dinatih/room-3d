@@ -50,7 +50,7 @@ export function GardenFurniture() {
       </group>
 
       {/* Banc Coffre */}
-      <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'chest', kind: 'furniture' }, itemName: 'Banc Coffre Jardin' }}>
+      <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'chest', kind: 'furniture' }, itemName: 'Banc Coffre Jardin', hoverAction: { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') } }}>
         <NavigationObstacle id="chest-bench"><ChestBench item={stub('chest-bench')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
       </group>
 
