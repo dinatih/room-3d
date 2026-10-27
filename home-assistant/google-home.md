@@ -9,27 +9,33 @@ dans Smart Life et n’importe pas le foyer Google dans HA.
 - HA dispose déjà de l’URL HTTPS `https://ha.dinatih.org`.
 - `google_assistant` n’est pas encore configuré sur le serveur.
 - Google Cast est présent ; il ne remplace pas cette liaison.
-- Projet Google Home actif : `finovndononv`, renommé « Maison Dinatih » dans Google
-  Home. Le projet Cloud correspondant porte le nom « Maison Home Assistant ».
-- L’ancien projet préparatoire `maison-home-assistant-512902` n’est pas utilisé
-  par la liaison ; il n’a pas été supprimé.
-- HomeGraph API activée sur ce projet, état « Enabled » vérifié dans la console.
-- Intégration Cloud-to-cloud « Maison Home Assistant » enregistrée et visible dans
-  la console, avec les URL HA ci-dessous, les scopes `email`/`name`, les types
-  Light/Fan/Blinds/TV et l’icône de Room-3D adaptée au format demandé.
-- Compte de service `home-assistant@finovndononv.iam.gserviceaccount.com` créé.
-- Attribution du rôle `Service Account Token Creator` bloquée par la validation
-  automatique, en attente de l’accord explicite utilisateur. Aucune clé JSON créée.
+- Projet Google Home actif : `dinatih-home-assistant`, créé et vérifié dans la
+  console Google Home. L’identifiant et le nom sont explicites.
+- L’ancien projet `finovndononv` est fermé et en attente de suppression définitive
+  après le 26 novembre 2026, selon la confirmation affichée par Google Cloud.
+- Le projet préparatoire `maison-home-assistant-512902` reste inutilisé : la console
+  Google Home ne le proposait pas à l’import. Il n’a pas été supprimé.
+- HomeGraph API activée sur `dinatih-home-assistant`, état « Enabled » vérifié.
+- Formulaire Cloud-to-cloud « Maison Home Assistant » préparé avec les URL HA
+  ci-dessous, les scopes `email`/`name`, les types Light/Fan/Blinds/TV et l’icône
+  Room-3D adaptée au format demandé. Enregistrement non effectué sur ce projet.
+- Le contrôle automatique exige un accord explicite pour enregistrer la chaîne
+  de remplissage `HomeAssistantLink` dans le champ Google « Client secret », malgré
+  la documentation HA qui précise que ce champ n’est pas utilisé.
+- Aucun compte de service ni clé JSON n’a été créé sur le nouveau projet. L’accord
+  IAM demandé pour l’ancien projet ne s’applique pas au nouveau ; l’attribution du
+  rôle `Service Account Token Creator` et la création/transmission d’une clé
+  nécessitent l’accord explicite demandé par le contrôle automatique.
 - La configuration HA et l’association téléphone ne sont pas encore finalisées.
 - Aucun abonnement, compte facturation ou service payant n’est activé par cette préparation.
 
 ## Paramètres à renseigner dans Google Home Developer Console
 
-Paramètres enregistrés dans l’intégration Cloud-to-cloud :
+Paramètres préparés dans le formulaire Cloud-to-cloud, à enregistrer après accord :
 
 | Champ | Valeur |
 | --- | --- |
-| OAuth Client ID | `https://oauth-redirect.googleusercontent.com/r/finovndononv` |
+| OAuth Client ID | `https://oauth-redirect.googleusercontent.com/r/dinatih-home-assistant` |
 | Client secret | Chaîne alphanumérique ; HA n’utilise pas ce champ |
 | Authorization URL | `https://ha.dinatih.org/auth/authorize` |
 | Token URL | `https://ha.dinatih.org/auth/token` |
@@ -48,7 +54,7 @@ Fragment à fusionner dans `configuration.yaml` :
 
 ```yaml
 google_assistant:
-  project_id: finovndononv
+  project_id: dinatih-home-assistant
   service_account: !include google-home-service-account.json
   report_state: true
   expose_by_default: false
