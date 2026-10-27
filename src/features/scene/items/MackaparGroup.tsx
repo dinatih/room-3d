@@ -3,9 +3,7 @@ import * as THREE from 'three';
 import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
 import { TShirt } from './TShirt';
-// import { Salopette }   from './Salopette';
 import { DroneCell, DF } from './Drona';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -87,7 +85,7 @@ export function MackaparGroup({ onSize, noDrona, noHangers }: SceneItemProps & {
   return (
     <group ref={ref}>
       <group userData={{ sceneItemRoot: true }}>
-        <Mackapar50530988 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Mackapar50530988 />
       </group>
 
       {!noHangers && <MackaparHangers />}
