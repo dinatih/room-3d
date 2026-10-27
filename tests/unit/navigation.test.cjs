@@ -16,16 +16,22 @@ let roomFull = false, checkedRoom;
 const navigationDependencies = {
     '@/devLog': { devLog() {}, DEV_LOG_ENABLED: false },
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
-    '../occupancyManager': { OccupancyManager: { hasRoomCapacity: () => !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom', 'corridor'], ROOM_CAPACITIES: { living: 8, bathroom: 3, corridor: 2 } },
+    '../occupancyManager': { OccupancyManager: { hasRoomCapacity: room => room !== checkedRoom || !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom', 'corridor'], ROOM_CAPACITIES: { living: 8, bathroom: 3, corridor: 2 }, ROOM_FOOTPRINTS: {} },
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,
     '../../doorObstacles': doors, './doorRequests': requests, '../agent/agentAvoidance': { limitAgentMovement: (id, start, proposed) => proposed, isAgentDestinationFree: () => true, getAgentObstacles: () => [], beginActorBlockCheck: () => { }, endActorBlockCheck: () => new Map(), actorBlocksUnchanged: () => true },
     './comfort': require('../../src/features/scene/ai/navigation/comfort.ts'), './pathfindingClient': {
-      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); graph.definition = definition; graph.findReachable = (start, targets) => targets.find(target => graph.canReach(start, target)) ?? null; return { retain: () => () => {}, read: () => { if (holdBuilds) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); return graph; }, cancel() { cancelledGraphs++; } }; },
+      prepareNavigationGraph: definition => { const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new g.VisibilityGraph(g.mergeObstacles(definition.obstacles)); let ready = false; graph.definition = definition; graph.findReachable = (start, targets) => targets.find(target => graph.canReach(start, target)) ?? null; return { get pending() { return holdBuilds && !ready; }, retain: () => () => {}, read: () => { if (holdBuilds && !ready) throw new navigationDependencies['./navigationScope'].NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} }); ready = true; return graph; }, cancel() { cancelledGraphs++; } }; },
       readObjectApproach: (graph, query) => queries.objectApproachCandidates(query, graph),
       findPath: (graph, start, target) => { pathRequests++; return graph.find(start, target); },
     }, '../../cameraState': { cameraState },
 };
 const nav = load('src/features/scene/ai/navigation/service.ts', navigationDependencies);
+const loadAvoidance = () => load('src/features/scene/ai/agent/agentAvoidance.ts', {
+    '@/devLog': { devLog() {} }, '../../cameraState': { cameraState },
+    '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
+    '../navigation/obstacles': obstacles, '../navigation/geometry': g,
+    '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
+});
 function setup(active, gap) {
     for (const [key, door] of Object.entries(doors.DOOR_CONFIGS)) {
         requests.releaseAgentDoors('walker');
@@ -59,15 +65,163 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('contourne une pièce de transit pleine puis reprend le chemin direct quand elle se libère', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const footprint = [{ x: -20, z: -40 }, { x: 20, z: -40 }, { x: 20, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 40 }, { x: -20, z: 40 }];
+        const isInRoom = (room, point) => room === 'living' && Math.abs(point.x) <= 20 && Math.abs(point.z) <= 40 && (point.x <= 0 || point.z <= 0);
+        let full = true;
+        const transit = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../occupancyManager': {
+            ...navigationDependencies['../occupancyManager'], isInRoom, ROOM_FOOTPRINTS: { living: footprint },
+            OccupancyManager: { hasRoomCapacity: room => room !== 'living' || !full },
+        } });
+        const route = transit.createRouteState(), target = { x: 100, z: 0 };
+        let position = { x: -100, z: 0 };
+        try {
+            const budget = Math.ceil((g.distance(position, target) + 2 * (40 + 80)) / 3) + footprint.length;
+            for (let frame = 0; frame < budget && g.distance(position, target) > 0; frame++) {
+                const before = position;
+                position = transit.followRoute(route, 'walker', position, target, 3);
+                assert(!isInRoom('living', position), 'A detour must respect the occupied room boundary');
+                assert(g.distance(position, before) > 0, route.waitReason);
+                if (route.crowd?.graph) assert(!g.insideObstacle({ x: 5, z: 5 }, route.crowd.graph.obstacles), 'The room concavity must leave the adjoining corridor free');
+            }
+            assert.deepEqual(position, target);
+            transit.resetRoute(route, 'walker');
+            position = transit.followRoute(route, 'walker', { x: -100, z: 0 }, target, 3);
+            assert(route.crowd);
+            full = false;
+            transit.followRoute(route, 'walker', position, target, 3);
+            assert.equal(route.crowd, undefined, 'An available room restores the shorter static route');
+        } finally { transit.resetRoute(route, 'walker'); }
+    });
+    it('sépare Alex et Rajaa au contact relevé pendant la simulation à 25 PNJ', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const surfaces = architecture.walkableSurfaces.splice(0, architecture.walkableSurfaces.length, [g.rectangle(0, 0, 2000, 2000)]);
+        const avoidance = loadAvoidance();
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        const actors = [
+            { id: 'walker', position: { x: 249.43726991434085, z: -413.99102991434086 }, target: { x: 400, z: -300 }, route: crowded.createRouteState() },
+            { id: 'encounter', position: { x: 250.52280797221866, z: -412.24813860307967 }, target: { x: -300, z: -200 }, route: crowded.createRouteState() },
+        ];
+        obstacles.setAgentProfile('encounter', obstacles.getAgentProfile('walker'));
+        actors.forEach(actor => { cameraState.positions[actor.id] = { ...actor.position, y: 0 }; });
+        try {
+            for (const actor of actors) {
+                const other = actors.find(other => other !== actor);
+                assert.deepEqual(avoidance.limitAgentMovement(actor.id, actor.position, other.position), actor.position, 'Deepening the body overlap must remain forbidden');
+                const before = actor.position;
+                actor.position = crowded.followRoute(actor.route, actor.id, actor.position, actor.target, 3);
+                cameraState.positions[actor.id] = { ...actor.position, y: 0 };
+                if (g.distance(before, actor.position) === 0) {
+                    const next = crowded.followRoute(actor.route, actor.id, actor.position, actor.target, 3);
+                    assert(g.distance(next, actor.position) > 0, `${actor.id} remains blocked after a ready detour: ${JSON.stringify({ position: actor.position, others: cameraState.positions, path: actor.route.path, obstacles: avoidance.getAgentObstacles(actor.id, actor.position) })}`);
+                    assert(g.distance(next, other.position) >= g.distance(actor.position, other.position) - Math.SQRT2 * g.BOOLEAN_PRECISION);
+                }
+            }
+        } finally {
+            actors.forEach(actor => { crowded.resetRoute(actor.route, actor.id); delete cameraState.positions[actor.id]; });
+            obstacles.removeAgentProfile('encounter');
+            architecture.walkableSurfaces.splice(0, architecture.walkableSurfaces.length, ...surfaces);
+        }
+    });
+    it('rafraîchit une ancienne pose de porte avant de déclarer toutes les approches inaccessibles', () => {
+        const { NavigationScope, NavigationPending } = navigationDependencies['./navigationScope'];
+        const moving = navigationDependencies['../../furniturePositions'].movingFurniture;
+        for (const furnitureMoving of [false, true]) {
+            setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+            requests.protectDoor('living', 'storage', { x: -1.5, z: 60, y: 0, radius: 13.3, height: 170 });
+            const scope = new NavigationScope(), profile = obstacles.getAgentProfile('walker');
+            const old = nav.getNavigationGraph(profile), angle = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.living);
+            const start = { x: -41.5 + Math.cos(angle) * leaf.length / 2, z: Math.sin(angle) * leaf.length / 2 };
+            const target = { x: 20, z: 100 };
+            assert(!old.canReach(start, start));
+            try {
+                assert.throws(() => scope.run(() => {
+                    assert.equal(nav.getNavigationGraph(profile), old);
+                    throw new NavigationPending({ status: 'pending', settled: Promise.resolve(), cancel() {} });
+                }), NavigationPending);
+                if (furnitureMoving) moving.add('unrelated-moving-furniture');
+                requests.releaseAgentDoors('storage');
+                const point = scope.run(() => nav.getObjectApproach('free-target', target, 'walker', start));
+                assert(point, 'An old closed leaf must not strand an actor in a currently open passage');
+                assert(nav.getNavigationGraph(profile).canReach(start, point));
+            } finally { moving.clear(); scope.clear(); requests.releaseAgentDoors('storage'); }
+        }
+    });
+    it('partage le même réseau pour les écarts flottants du même gabarit sans réduire les dimensions', () => {
+        setup({}, 83);
+        const radii = [13.265273447935224, 13.265273447935268, 13.265273447935357];
+        try {
+            radii.forEach((radius, i) => obstacles.setAgentProfile(`same-body-${i}`, { radius, height: 173.4 }));
+            const profile = obstacles.getAgentProfile('same-body-0'), graph = nav.getNavigationGraph(profile);
+            radii.forEach((radius, i) => {
+                assert.equal(obstacles.getAgentProfile(`same-body-${i}`), profile);
+                assert(profile.radius >= radius && profile.radius - radius <= g.BOOLEAN_PRECISION);
+                assert.equal(nav.getNavigationGraph(obstacles.getAgentProfile(`same-body-${i}`)), graph);
+            });
+            obstacles.setAgentProfile('same-body-0', profile);
+            assert.equal(obstacles.getAgentProfile('same-body-0'), profile, 'Canonical profiles must not grow when registered again');
+        } finally { radii.forEach((_, i) => obstacles.removeAgentProfile(`same-body-${i}`)); }
+    });
+
+    it('avance pendant la préparation d’un détour, attend au contact puis contourne sans traverser le PNJ', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const avoidance = loadAvoidance();
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        const route = crowded.createRouteState(), target = { x: 100, z: -100 };
+        let position = { x: -100, z: -100 };
+        obstacles.setAgentProfile('blocker', obstacles.getAgentProfile('walker'));
+        cameraState.positions.blocker = { x: 0, y: 0, z: -100 };
+        cameraState.positions.walker = { ...position, y: 0 };
+        try {
+            assert(crowded.planRoute(route, 'walker', position, target));
+            position = crowded.followRoute(route, 'walker', position, target, 3);
+            cameraState.positions.walker = { ...position, y: 0 };
+            const readyPreparation = route.crowd.preparation, waypoint = route.path[route.index];
+            cameraState.positions.blocker = { x: (position.x + waypoint.x) / 2, y: 0, z: (position.z + waypoint.z) / 2 };
+            holdBuilds = true;
+            const beforeRenewal = position;
+            position = crowded.followRoute(route, 'walker', position, target, 3);
+            assert.notEqual(route.crowd.preparation, readyPreparation, 'A completed detour must refresh when its body obstacles move');
+            assert(g.distance(position, beforeRenewal) > 0);
+            cameraState.positions.walker = { ...position, y: 0 };
+            for (let frame = 0; frame < 10; frame++) {
+                const before = position, preparation = route.crowd?.preparation;
+                position = crowded.followRoute(route, 'walker', position, target, 3);
+                assert(g.distance(position, before) > 0, 'A future collision must not stop the free current step');
+                assert.equal(route.waitReason, undefined);
+                if (preparation) assert.equal(route.crowd.preparation, preparation);
+                cameraState.positions.walker = { ...position, y: 0 };
+            }
+            const footprints = avoidance.getAgentObstacles('walker', position).map(polygon => [polygon]);
+            position = footprints[0][0].reduce((a, b) => a.x < b.x ? a : b);
+            cameraState.positions.walker = { ...position, y: 0 };
+            assert.deepEqual(crowded.followRoute(route, 'walker', position, target, 3), position);
+            assert.equal(route.waitReason, 'Calcul de navigation en cours');
+            holdBuilds = false;
+            crowded.followRoute(route, 'walker', position, target, 3);
+            const budget = route.path.reduce((frames, point, i) => frames + Math.ceil(g.distance(i ? route.path[i - 1] : position, point) / 3), 0);
+            for (let frame = 0; frame <= budget && g.distance(position, target) > 0; frame++) {
+                const before = position;
+                position = crowded.followRoute(route, 'walker', position, target, 3);
+                assert(g.distance(before, position) > 0, `A ready detour must progress: ${route.waitReason}`);
+                assert(g.segmentFree(before, position, footprints));
+                cameraState.positions.walker = { ...position, y: 0 };
+            }
+            assert.deepEqual(position, target);
+        } finally {
+            holdBuilds = false; crowded.resetRoute(route, 'walker');
+            delete cameraState.positions.blocker; delete cameraState.positions.walker;
+            obstacles.removeAgentProfile('blocker');
+        }
+    });
     it('quitte le contact de Sandra aux coordonnées du blocage de David', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
-        const avoidance = load('src/features/scene/ai/agent/agentAvoidance.ts', {
-            '@/devLog': { devLog() {} }, '../../cameraState': { cameraState },
-            '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
-            '../navigation/obstacles': obstacles, '../navigation/geometry': g,
-            '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
-        });
+        const avoidance = loadAvoidance();
         const start = { x: 498.3174969946046, z: -298.91871689634644 }, target = { x: 500, z: -100 };
         cameraState.positions.walker = { ...start, y: 0 };
         cameraState.positions.sandra = { x: 500, z: -300, y: 0 };
@@ -97,11 +251,7 @@ describe('Navigation et portes — géométrie isolée', () => {
     it('choisit une place libre au sol pour atterrir près d’un PNJ ou de sa destination réservée', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
-        const avoidance = load('src/features/scene/ai/agent/agentAvoidance.ts', {
-            '@/devLog': { devLog() {} },
-            '../../cameraState': { cameraState }, '../../store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { npcCollisions: true } }) } },
-            '../navigation/obstacles': obstacles, '../navigation/geometry': g, '../duoSessionManager': { duoSessionManager: { getSessionFor: () => undefined } },
-        });
+        const avoidance = loadAvoidance();
         const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
         const goal = { x: -100, z: -200 };
         obstacles.setAgentProfile('sandra', obstacles.getAgentProfile('walker'));

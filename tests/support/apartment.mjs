@@ -10,7 +10,7 @@ import * as geometry from '/src/features/scene/ai/navigation/geometry.ts';
 import { getZoneDestination } from '/src/features/scene/ai/navigation/destinations.ts';
 import { cameraState } from '/src/features/scene/cameraState.ts';
 import { pathfindingStats } from '/src/features/scene/ai/navigation/pathfindingClient.ts';
-import { OccupancyManager, LIMITED_ROOMS, ROOM_CAPACITIES } from '/src/features/scene/ai/occupancyManager.ts';
+import { OccupancyManager, LIMITED_ROOMS, ROOM_CAPACITIES, ROOM_FOOTPRINTS, isInRoom } from '/src/features/scene/ai/occupancyManager.ts';
 export const check = (condition, message) => { if (!condition)
     throw Error(message); };
 export const trace = entry => window.__testTrace.push({ at: performance.now(), ...entry });
@@ -47,6 +47,41 @@ export async function autonomous(fixture) {
     check(ids.length === fixture.count && moved.size > 0, 'The real character simulation did not advance');
     return { count: ids.length, spawns, moved: [...moved], frames, roomMax, navigation: structuredClone(pathfindingStats) };
 }
+export async function fullLivingTransit(fixture) {
+    const { CHARACTERS } = await import('/src/features/scene/characterConfig.ts');
+    const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+    const active = useSceneStore.getState().activeCharacterId;
+    const id = CHARACTERS.find(character => character.id !== active).id, route = nav.createRouteState();
+    const holders = CHARACTERS.filter(character => character.id !== active && character.id !== id).slice(0, ROOM_CAPACITIES.living);
+    register(id, fixture);
+    try {
+        for (const holder of holders) {
+            const objectId = `suite-full-room-${holder.id}`;
+            registry.SMART_OBJECTS[objectId] = { id: objectId, name: 'Reserved living place', category: 'storage', position: [100, 0, 100], rotationY: 0,
+                slots: [{ slotId: 'held', offset: [100, 0, 100] }] };
+            check(OccupancyManager.claimSlot(objectId, 'held', holder.id), 'Could not fill living room reservations');
+        }
+        check(!OccupancyManager.hasRoomCapacity('living', id), 'The living room must remain full');
+        const start = await resolveNavigation(() => nav.getObjectApproach('suite-start', { x: 177.5, z: -80 }, id, undefined, false, undefined, true));
+        const toilet = registry.getSmartObject('toilet'), point = toilet.slots[0].offset;
+        const target = await resolveNavigation(() => nav.getObjectApproach('toilet', { x: point[0], z: point[2] }, id, start, false, undefined, true));
+        check(start && target && isInRoom('bathroom', target), 'Missing garden-to-bathroom endpoints');
+        check(await resolveNavigation(() => nav.planRoute(route, id, start, target)), route.error);
+        const preferred = [start, ...route.path];
+        check(preferred.some((point, i) => i > 0 && !geometry.segmentFree(preferred[i - 1], point, [[ROOM_FOOTPRINTS.living]])), 'The fixture must initially prefer crossing the living room');
+        cameraState.positions[id] = { ...start, y: 0, yaw: 0 };
+        let entryUsed = false;
+        const actors = await walk([{ id, route, position: start, target }], fixture, undefined, () => {
+            check(!isInRoom('living', cameraState.positions[id]), 'Entered the full living room during transit');
+            entryUsed ||= route.doors.has('entry');
+        });
+        check(entryUsed, 'The alternative path must use the entrance door');
+        return { actors, entryUsed, avoidedRoom: 'living', reservedPlaces: ROOM_CAPACITIES.living };
+    } finally {
+        nav.resetRoute(route, id); release(id);
+        for (const holder of holders) { OccupancyManager.releaseAllForCharacter(holder.id); delete registry.SMART_OBJECTS[`suite-full-room-${holder.id}`]; }
+    }
+}
 const release = id => {
     requests.releaseAgentDoors(id);
     avoidance.reserveAgentDestination(id, null);
@@ -62,7 +97,7 @@ export async function walk(actors, fixture, steering, onFrame) {
         a.turn ??= 0;
     }
     while (actors.some(a => !a.arrived)) {
-        check(performance.now() - began < fixture.timeoutMs, `Trajet interrompu: ${JSON.stringify(actors.map(a => ({ id: a.id, position: a.position, error: a.route.error, wait: a.route.waitReason })))}`);
+        check(performance.now() - began < fixture.timeoutMs, `Trajet interrompu: ${JSON.stringify(actors.map(a => ({ id: a.id, position: a.position, error: a.route.error, wait: a.route.waitReason, index: a.route.index, path: a.route.path, crowd: a.route.crowd?.signature })))}`);
         if (onFrame)
             await onFrame();
         // Publish all positions before advancing any actor, so the frame is concurrent.

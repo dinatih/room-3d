@@ -2,7 +2,7 @@ import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, type AgentProfile } from './obstacles';
-import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, type Point, type Polygon } from './geometry';
+import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, doorPolygon } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, getDoorRequestDiagnostics, type DoorKey, type DoorProtection } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, getActorNavigationDiagnostics, type ActorBlockers } from '../agent/agentAvoidance';
@@ -10,7 +10,7 @@ import { NAVIGATION_COMFORT_CM } from './comfort';
 import type { GraphDefinition, ApproachRegion } from './queries';
 import { NavigationScope, NavigationPending, navigationValue, getNavigationScope } from './navigationScope';
 import { findPath, prepareNavigationGraph, readObjectApproach, getNavigationJobDiagnostics, type NavigationGraph } from './pathfindingClient';
-import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES } from '../occupancyManager';
+import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES, ROOM_FOOTPRINTS } from '../occupancyManager';
 import { devLog, DEV_LOG_ENABLED } from '@/devLog';
 
 export { architectureObstacles };
@@ -96,7 +96,7 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const shutterBlocked = glassShutterState.clearHeight < profile.height;
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = profileCache.get(key);
-  if (old && (movingFurniture.size || (old.revision === revision && old.doorAngles === doorAngles))) return old;
+  if (old && old.doorAngles === doorAngles && (movingFurniture.size || old.revision === revision)) return old;
   const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
   if (old && old.preparation !== previous) old.preparation.cancel();
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
@@ -135,23 +135,21 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
 }
 
 function readPreparedGraph(entry: ReturnType<typeof getNavigationPreparation>, continuingRoute: boolean): NavigationGraph {
-  try {
-    const graph = entry.preparation.read();
-    entry.previous?.cancel(); entry.previous = undefined;
-    return entry.graph = graph;
-  }
-  catch (error) {
-    // Existing paths may advance while their replacement builds. Every proposed
-    // step is checked against live furniture and doors before being applied.
-    if (error instanceof NavigationPending && continuingRoute && entry.graph) return entry.graph;
-    throw error;
-  }
+  // Polling a replacement must neither interrupt a safe route nor record a wait.
+  if (entry.preparation.pending && continuingRoute && entry.graph) return entry.graph;
+  const graph = entry.preparation.read();
+  entry.previous?.cancel(); entry.previous = undefined;
+  return entry.graph = graph;
 }
 
 /** Geometry preparation and candidate reachability execute entirely in the worker. */
 export function getObjectApproach(owner: string, goal: Point, agentId: string, start?: Point, exiting = false, departureOwner?: string, flexible = false, region?: ApproachRegion): Point | null {
   owner = getInteractionOwner(owner);
-  const profile = getAgentProfile(agentId), graph = getNavigationGraph(profile);
+  const profile = getAgentProfile(agentId);
+  let graph = getNavigationGraph(profile);
+  // A pending operation may retain an older leaf pose. Refresh before rejecting
+  // every activity merely because its start now lies inside that obsolete pose.
+  if (start && !graph.canReach(start, start)) graph = readPreparedGraph(getNavigationPreparation(profile), false);
   if (start && departureOwner && !exiting && insideObstacle(start, graph.obstacles)) {
     const destination = getObjectApproach(owner, goal, agentId, undefined, false, undefined, flexible, region);
     if (!destination) return null;
@@ -333,9 +331,18 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
   route.waitReason = undefined;
   owner = owner ? getInteractionOwner(owner) : undefined;
   const crowd = route.crowd;
+  const segments = [[start, route.path[route.index] ?? target], ...(crowd ? [[crowd.resume.start, crowd.resume.next]] : [])];
+  const fullTransitRooms = LIMITED_ROOMS.filter(room => !isInRoom(room, start) && !isInRoom(room, target)
+    && !OccupancyManager.hasRoomCapacity(room, agentId) && segments.some(([a, b]) => !segmentFree(a, b, [[ROOM_FOOTPRINTS[room]]])));
+  // Occupancy includes room boundaries; keep detours outside them on the same grid.
+  const roomPolygons = fullTransitRooms.flatMap(room => {
+    const polygon = ROOM_FOOTPRINTS[room];
+    return [polygon, ...polygon.map((point, i) => inflate([point, polygon[(i + 1) % polygon.length]], BOOLEAN_PRECISION, BOOLEAN_PRECISION))];
+  });
+  const roomObstacles = roomPolygons.map(polygon => [polygon]);
   if (crowd?.graph || crowd?.planning || crowd?.preparing) {
     const reachable = limitAgentMovement(agentId, crowd.resume.start, crowd.resume.next);
-    if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z) {
+    if (reachable.x === crowd.resume.next.x && reachable.z === crowd.resume.next.z && segmentFree(crowd.resume.start, crowd.resume.next, roomObstacles)) {
       // The obstruction has cleared: recover the shorter static route without
       // rebuilding a crowd graph every time a distant actor moves.
       clearCrowd(route);
@@ -388,35 +395,39 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     route.waitReason = 'Trajet coupé par la géométrie actuelle';
     return start;
   }
-  const limited = limitAgentMovement(agentId, start, position);
+  let limited = limitAgentMovement(agentId, start, position);
   for (const room of LIMITED_ROOMS) {
     if (!isInRoom(room, start) && isInRoom(room, limited) && !OccupancyManager.hasRoomCapacity(room, agentId)) {
       route.waitReason = `${{ living: 'Séjour complet', bathroom: 'Salle de bains complète', corridor: 'Couloir complet' }[room]} (${ROOM_CAPACITIES[room]} ${room === 'living' ? 'PNJ' : 'personnages'})`;
-      return start;
+      if (isInRoom(room, target)) return start;
+      limited = start;
     }
   }
   // Plan before contact along the next segment, including free comfort bands.
   const nextWaypoint = route.path[route.index];
   const ahead = nextWaypoint ? limitAgentMovement(agentId, start, nextWaypoint) : position;
-  const blockedAhead = !!nextWaypoint && (ahead.x !== nextWaypoint.x || ahead.z !== nextWaypoint.z);
+  const blockedAhead = !!nextWaypoint && (ahead.x !== nextWaypoint.x || ahead.z !== nextWaypoint.z || !segmentFree(start, nextWaypoint, roomObstacles));
   if (limited.x !== position.x || limited.z !== position.z || blockedAhead) {
-    route.waitReason = 'Déplacement limité par le corps d’un autre PNJ';
+    const progressing = limited.x !== start.x || limited.z !== start.z;
+    route.waitReason ??= 'Déplacement limité par le corps d’un autre PNJ';
     // A stop at contact is insufficient: keep a real path around the other bodies.
     const base = route.crowd && (route.crowd.graph === route.graph || route.crowd.planning) ? route.crowd.base
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined);
-    const obstacles = getAgentObstacles(agentId, start);
+    const actors = getAgentObstacles(agentId, start), obstacles = [...actors, ...roomPolygons];
     const signature = JSON.stringify(obstacles);
     if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature)) {
       // Finish the current crowd snapshot instead of restarting for every
       // moving actor. Live movement collision checks still protect every step.
       let crowd = route.crowd;
-      if ((!crowd?.planning && !crowd?.preparation) || crowd.base !== base) {
+      if ((!crowd?.planning && !crowd?.preparing) || crowd.base !== base) {
         crowd?.preparation?.cancel();
         const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])], surfaces: walkableSurfaces });
         crowd = { base, graph: null, preparation, preparing: true, signature,
           resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
         route.crowd = crowd;
       }
+      // A future obstruction must not stop an already collision-checked step.
+      if (crowd.preparation?.pending && progressing) { route.waitReason = undefined; return limited; }
       const graph = crowd.planning ??= crowd.preparation!.read();
       crowd.preparing = false;
       const goal = route.target ?? target;
@@ -426,11 +437,12 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       if (path) {
         route.path = path; route.index = 0; route.graph = graph; route.target = { ...goal };
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });
-        // Stay outside the conservative detour boundary until its first step.
+        // Keep the safe step already checked above; follow the new corridor next frame.
+        if (progressing) { route.waitReason = undefined; return limited; }
         route.waitReason = 'Contournement d’un autre PNJ calculé';
         return start;
       }
-      if (insideObstacle(goal, obstacles.map(polygon => [polygon]))) {
+      if (insideObstacle(goal, actors.map(polygon => [polygon]))) {
         route.error = 'Destination occupée par un autre acteur';
         route.occupiedTarget = { point: { ...goal }, destination: { ...target } };
         releaseAgentDoors(agentId);

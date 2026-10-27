@@ -1,4 +1,52 @@
 const fs = require('node:fs');
+if (process.argv[2] === '--invalid') {
+  (async () => {
+    require('../tests/support/load-ts.cjs');
+    const g = require('../src/features/scene/ai/navigation/geometry.ts');
+    const geometries = new Map();
+    let world;
+    for await (const line of require('node:readline').createInterface({ input: fs.createReadStream(process.argv[3] || '/tmp/room-3d-logs/latest.jsonl'), crlfDelay: Infinity })) {
+      if (!line) continue;
+      const row = JSON.parse(line), { action, data: d } = row.entry;
+      if (action === 'nav_world') world = d;
+      if (action === 'nav_graph_geometry') geometries.set(`${d.epoch}:${d.graphId}`, d);
+      if (action !== 'nav_path' || d.startAccessible) continue;
+      const geometry = geometries.get(`${d.epoch}:${d.graphId}`);
+      if (!geometry) continue;
+      const blockers = geometry.definition.solids.flatMap((solid, i) => g.pointInRing(d.start, g.inflate(solid.polygon, solid.radius))
+        ? [{ ...solid, source: geometry.sources[i] || world?.doors[i - geometry.sources.length] }] : []);
+      fs.writeFileSync('/tmp/navigation-invalid-start.json', JSON.stringify({ ...d, geometry, world }));
+      console.log(JSON.stringify({ path: d, blockers }, null, 2));
+      return;
+    }
+  })().catch(error => { console.error(error); process.exitCode = 1; });
+  return;
+}
+if (process.argv[2] === '--stops') {
+  (async () => {
+    const file = process.argv[3] || '/tmp/room-3d-logs/latest.jsonl';
+    const reasons = {}, open = new Map(), stops = [], invalidStarts = [], pendingBuilds = new Map();
+    let world;
+    for await (const line of require('node:readline').createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity })) {
+      if (!line) continue;
+      const row = JSON.parse(line), { action, tag, data: d } = row.entry;
+      if (action === 'nav_world') world = d;
+      if (action === 'nav_path' && !d.startAccessible) invalidStarts.push({ at: row.elapsedMs, ...d, definition: undefined });
+      if (action === 'nav_graph_created') pendingBuilds.set(`${d.epoch}:${d.graphId}`, d.definition.solids ? 'static' : 'crowd');
+      if (action !== 'nav_agent_snapshot') continue;
+      const sad = d.state.animation === 'sad-idle' && !d.idle;
+      if (sad) {
+        const reason = d.pendingJob?.description || d.route.waitReason || d.route.error || d.navigationError;
+        reasons[reason] = (reasons[reason] || 0) + 1;
+        let stop = open.get(tag);
+        if (!stop) { stop = { actor: tag, at: row.elapsedMs, durationMs: 0, reason, position: d.state, instruction: d.instruction, route: { graphId: d.route.graphId, target: d.route.target, next: d.route.next, error: d.route.error, crowd: d.route.crowd && { baseId: d.route.crowd.baseId, graphId: d.route.crowd.graphId, preparing: d.route.crowd.preparing } } }; open.set(tag, stop); stops.push(stop); }
+        stop.durationMs = row.elapsedMs - stop.at;
+      } else open.delete(tag);
+    }
+    console.log(JSON.stringify({ file: fs.realpathSync(file), reasons, graphs: [...pendingBuilds.values()].reduce((a, kind) => ({ ...a, [kind]: (a[kind] || 0) + 1 }), {}), stops: stops.sort((a, b) => b.durationMs - a.durationMs), invalidStarts, stats: world?.jobs.stats }, null, 2));
+  })().catch(error => { console.error(error); process.exitCode = 1; });
+  return;
+}
 if (process.argv[2] === '--door') {
   const { load } = require('../tests/support/load-ts.cjs');
   const g = require('../src/features/scene/ai/navigation/geometry.ts');
@@ -22,8 +70,10 @@ if (process.argv[2] === '--characters') {
   console.log(JSON.stringify({ count: CHARACTERS.length, ids: CHARACTERS.map(c => c.id) }));
   return;
 }
-if (process.argv[2] === '--browser') {
-  const fixture = { ...require('../tests/fixtures/cases.cjs').navigation[0], id: 'navmesh-seven', count: 7, captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: 'node scripts/temp_navmesh_audit.cjs --browser' };
+if (['--browser', '--browser-crowd'].includes(process.argv[2])) {
+  const crowd = process.argv[2] === '--browser-crowd';
+  const fixture = { ...require('../tests/fixtures/cases.cjs').navigation.find(fixture => fixture.id === 'autonomous-all'), id: crowd ? 'navmesh-crowd' : 'navmesh-seven',
+    ...(crowd ? { sessionMs: 120000, timeoutMs: 180000 } : { count: 7 }), captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: `node scripts/temp_navmesh_audit.cjs ${process.argv[2]}` };
   process.env.ROOM_TEST_RESULTS = '/tmp/room-navmesh-browser';
   fs.mkdirSync(process.env.ROOM_TEST_RESULTS, { recursive: true });
   require('../tests/support/browser.cjs').withBrowser(fixture, async (page, result) => {

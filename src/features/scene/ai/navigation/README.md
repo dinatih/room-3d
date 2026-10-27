@@ -23,6 +23,11 @@ Une approche prépare aussi le réseau d'entrée dans son meuble pendant la marc
 Les gabarits identiques partagent leurs instantanés. Le dernier agent qui quitte
 un gabarit libère ses ressources. Un `NavigationScope` conserve l'instantané
 pendant une requête asynchrone, même si d'autres acteurs remplacent le cache.
+Les dimensions sont arrondies vers l'extérieur sur la grille géométrique commune
+pour partager les réseaux malgré les écarts flottants des modèles identiques.
+Si le départ devient inaccessible dans une ancienne pose de porte, l'approche
+consulte la géométrie actuelle avant de refuser la destination. Les changements
+de porte restent pris en compte pendant le mouvement d'un autre meuble.
 
 ## Collisions et confort
 
@@ -44,7 +49,15 @@ globale du coût de proximité ; le trajet ne prétend plus minimiser cette
 intégrale sur tous les contours de l'appartement.
 
 Chaque pas reste contrôlé avec la géométrie réelle, les battants et les autres
-acteurs. Les portes sont demandées dès qu'elles apparaissent dans le corridor
+acteurs. Un contournement en préparation laisse avancer les pas encore libres ;
+sa publication conserve le pas déjà contrôlé. Les tangentes aux PNJ utilisent
+la même précision numérique que les contours du planificateur.
+Un détour terminé est renouvelé si les acteurs qui bloquent le trajet ont bougé ;
+un calcul en cours termine son instantané avant ce renouvellement.
+Les pièces pleines deviennent des obstacles de transit : le trajet peut utiliser
+le jardin et les couloirs du bâtiment. Une destination pleine conserve son attente,
+et les occupants déjà à l'intérieur peuvent sortir.
+Les portes sont demandées dès qu'elles apparaissent dans le corridor
 à venir, avant l'entrée dans la zone de rotation du battant, et restent réservées
 tant que le trajet les traverse, puis jusqu'au dégagement du corps. Une porte fermée
 n'est jamais traversée avant son ouverture effective.

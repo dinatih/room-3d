@@ -46,8 +46,11 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
       const journal = [], client = clientModule(journal);
       const answer = (request, milliseconds, result) => worker.onmessage({ data: { id: request.id, graphId: request.graphId, ok: true, milliseconds, result } });
       const preparation = client.prepareNavigationGraph(definition), build = sent.shift();
+      assert.equal(preparation.pending, true);
+      assert(!journal.some(entry => entry.action === 'nav_job_wait'), 'Checking preparation must not count as a blocked actor');
       assert.throws(() => preparation.read(), scopes.NavigationPending);
       now = 30; answer(build, 7, snapshot());
+      assert.equal(preparation.pending, false);
       now = 42; const graph = preparation.read(); preparation.read();
       const first = new scopes.NavigationScope(), second = new scopes.NavigationScope();
       const readFirst = () => client.readDuoAnchor(graph, duo), readDuo = () => client.readDuoAnchor(graph, { ...duo, anchor: { x: 10, z: 0 } });

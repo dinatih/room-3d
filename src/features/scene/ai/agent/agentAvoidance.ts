@@ -125,9 +125,10 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     const radius = actorClearance(profile, body);
     if (distance(other, projectToSegment(other, start, proposed)) > radius + CLEARANCE_ERROR + Math.SQRT2 * BOOLEAN_PRECISION) continue;
     const polygon = inflate([{ x: other.x, z: other.z }], radius);
-    // Existing overlaps may separate, but must not deepen.
+    // Existing overlaps may separate; inward motion cannot exceed grid precision.
     if (pointInRing(start, polygon)) {
-      if (dx * vx + dz * vz < 0) { fraction = 0; observedBlockers.get(id)?.set(otherId, actorState(otherId)); }
+      // Clipped detour tangents are rounded to the boolean grid before routing.
+      if (dx * vx + dz * vz < -Math.hypot(dx, dz) * Math.SQRT2 * BOOLEAN_PRECISION) { fraction = 0; observedBlockers.get(id)?.set(otherId, actorState(otherId)); }
       continue;
     }
     // Clip the step against the very same convex footprint as the planner.

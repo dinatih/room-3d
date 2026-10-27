@@ -181,7 +181,7 @@ function releaseGraph(id: number): void {
   devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
 }
 
-export function prepareNavigationGraph(definition: WorkerDefinition): { id: number; epoch: string; read(): NavigationGraph; retain(): () => void; cancel(): void } {
+export function prepareNavigationGraph(definition: WorkerDefinition): { id: number; epoch: string; readonly pending: boolean; read(): NavigationGraph; retain(): () => void; cancel(): void } {
   const id = ++nextGraphId;
   devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_created', data: { epoch: navigationEpoch, graphId: id, definition } });
   const job = request(id, definition, { kind: 'build' });
@@ -194,6 +194,7 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { id: numb
   return {
     id,
     epoch: navigationEpoch,
+    get pending() { return job.status === 'pending'; },
     retain: () => {
       if (users === 0) throw new Error('Cannot retain a released navigation graph');
       users++;

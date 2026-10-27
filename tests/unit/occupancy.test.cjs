@@ -49,6 +49,14 @@ it('exclut réciproquement les objets et slots d’un groupe, puis les libère',
 });
 
 describe('Capacité des pièces', () => {
+    it('décrit les mêmes intérieurs pour les détours et le comptage des occupants', () => {
+        const { isInRoom, ROOM_FOOTPRINTS } = fixture();
+        const { pointInRing } = require('../../src/features/scene/ai/navigation/geometry.ts');
+        for (const room of ['living', 'bathroom', 'corridor']) {
+            for (const point of [{ x: 100, z: 100 }, { x: 100, z: 430 }, { x: 100, z: 550 }, { x: 250, z: 550 }, { x: -100, z: -100 }])
+                assert.equal(pointInRing(point, ROOM_FOOTPRINTS[room]), isInRoom(room, point));
+        }
+    });
     it('limite le couloir à deux présences ou arrivées, joueur et Ybot inclus', () => {
         const { ids, camera, manager, ROOM_CAPACITIES } = fixture();
         assert.equal(ROOM_CAPACITIES.corridor, 2);

@@ -15,6 +15,7 @@ exports.navigation = [
         layers: { animals: false }, timeoutMs: 300000 },
     { id: 'autonomous-all', behavior: 'fait vivre tous les personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: CHARACTERS.length, preset: 'mid', sessionMs: 15000, timeoutMs: 60000 },
     { id: 'solo-xbot-doors', behavior: 'termine seul le trajet séjour, entrée et couloir bâtiment avec le gabarit du Xbot', activity: 'soloDoors', layers: { animals: false }, profile: { radius: 15, height: 170 }, timeoutMs: 60000 },
+    { id: 'full-living-transit', behavior: 'rejoint les WC par le jardin et la porte d’entrée sans traverser un séjour plein', activity: 'fullLivingTransit', layers: { animals: false }, travelCmPerFrame: 12, timeoutMs: 60000 },
     { id: 'occupied-target', behavior: 'atteint une destination occupée avec une empreinte PNJ à zéro', activity: 'arrival', actors: 1, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'garden-fifteen', behavior: 'termine quinze trajets simultanés dans le jardin sans rotation en boucle', activity: 'arrival', actors: 15, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
     { id: 'locomotion-twenty-seven', behavior: 'poursuit les trajets libres de 27 contrôleurs pendant un recalcul distant et initialise leurs interactions', activity: 'locomotion', actors: 27, timeoutMs: 60000 },

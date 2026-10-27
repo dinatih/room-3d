@@ -1,4 +1,4 @@
-import { inflate, type Point, type Polygon } from './geometry';
+import { inflate, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
 
 export interface NavigationObstacleDef {
   id: string;
@@ -31,6 +31,12 @@ function releaseUnusedProfile(profile: AgentProfile | undefined): void {
 }
 export function setAgentProfile(id: string, profile: AgentProfile): void {
   if (!Number.isFinite(profile.radius) || !Number.isFinite(profile.height) || !(profile.radius > 0) || !(profile.height > 0)) throw new Error(`Invalid navigation profile ${id}`);
+  const scale = Math.round(1 / BOOLEAN_PRECISION);
+  const outward = (value: number) => {
+    const integer = Math.round(value * scale);
+    return (integer + (integer / scale < value ? 1 : 0)) / scale;
+  };
+  profile = { radius: outward(profile.radius), height: outward(profile.height) };
   // Equal bodies share graph caches, while removed/replaced bodies must not
   // keep every historical graph alive in a global string-keyed cache.
   const previous = profiles.get(id);
