@@ -96,7 +96,8 @@ Ne jamais la placer dans Room-3D, `/config/www` ou une variable `VITE_*`.
 
 Pour exposer un autre appareil, ajouter explicitement son entité dans
 `entity_config`, valider la configuration, redémarrer HA et demander une
-synchronisation Google. Omettre `name` et `room` pour utiliser les noms et pièces HA.
+synchronisation Google. Omettre `name` et `room` pour transmettre les noms HA et
+les indications de pièce des appareils exposés. Cela ne fusionne pas les pièces Google.
 Un pseudonyme personnalisé dans Google Home peut modifier le nom affiché.
 Le mode test Google peut demander une réactivation périodique.
 
@@ -128,3 +129,40 @@ a été corrigée avec une exception limitée à AS15169, aux requêtes POST et 
 La MFA et l’authentification HA restent actives. L’utilisateur a confirmé
 l’association et l’ajout de la lampe après cette correction.
 Voir [le diagnostic et la règle Cloudflare](./cloudflare-google-home.md).
+
+## Pièces Google existantes et doublons constructeur
+
+HA fournit des **indications de pièce** (`roomHint`) pour les appareils exposés.
+Cela ne constitue pas une synchronisation complète du foyer Google : la liaison ne
+renomme ni ne fusionne une pièce Google existante et ne reclasse pas les appareils
+fournis par une autre liaison Hue/Smart Life. Les noms et affectations personnalisés
+Google peuvent rester distincts de ceux de HA. L’affectation automatique des pièces
+n’est pas prise en charge lorsqu’il existe plusieurs foyers dans le compte Google.
+
+L’interface Google Home web a confirmé des doublons : un volet dans « Pièce » et
+un volet dans « Séjour », ainsi qu’une lampe Entrée dans « Entrée » et dans
+« Couloir ». La présence d’anciens appareils ne prouve donc pas que l’association
+HA a remplacé les liaisons constructeur. Leur suppression n’a pas été effectuée.
+
+Les seules pièces HA sont Séjour, Cuisine, Couloir, Salle de bain et Jardin.
+Les sept appareils exposés ont une pièce HA ; la télévision Android TV, auparavant
+sans pièce, a été affectée à Séjour et une nouvelle synchronisation demandée.
+
+Si « Pièce » et « Séjour » existent déjà dans Google Home, le nettoyage se fait
+une fois dans l’application Google Home :
+
+1. Pour chaque appareil encore dans « Pièce », ouvrir ses paramètres, puis
+   **Pièce / Emplacement**, et choisir sa pièce cible existante (par exemple Séjour).
+2. Vérifier que « Pièce » est vide avant de la supprimer dans **Paramètres du
+   domicile → Appareils, groupes et pièces → Pièce → Supprimer la pièce**.
+3. Identifier les appareils en double par leur service d’origine avant de décider
+   quelle liaison conserver. Dissocier Hue ou Smart Life enlève tous les appareils
+   fournis par ce service, y compris ceux qui ne font pas partie des sept exposés HA.
+
+Ne pas dissocier globalement les services constructeur pour retirer un seul doublon.
+La gestion des pièces n’est pas exposée dans l’interface web consultée ; aucune
+modification de la pièce Google « Pièce » n’a été annoncée comme effectuée.
+
+Références : [indications de pièce HA](https://www.home-assistant.io/integrations/google_assistant/#roomarea-support),
+[gestion des pièces Google Home](https://support.google.com/googlehome/answer/15559809),
+[liaisons et dissociation des services](https://support.google.com/googlehome/answer/9159862).
