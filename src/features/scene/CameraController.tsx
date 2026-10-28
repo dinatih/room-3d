@@ -153,7 +153,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Maintient le target d'OrbitControls synchronisé avec currentTarget lors du changement de caméra
   useLayoutEffect(() => {
-    if (ctrlRef.current && modeRef.current === 'orbit') {
+    if (!cameraState.isXR && ctrlRef.current && modeRef.current === 'orbit') {
       ctrlRef.current.target.copy(currentTarget.current);
       ctrlRef.current.update();
     }
@@ -899,6 +899,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
 
   // Synchronisation réactive de la projection de caméra (Perspective <-> Ortho)
   useEffect(() => {
+    if (cameraState.isXR) return;
     const orbitCamera = cameraProjection === 'ortho' ? orthoCamRef.current : defaultPerspCamRef.current;
     if (orbitTypeRef.current === cameraProjection && (modeRef.current !== 'orbit' || camera === orbitCamera)) return;
     orbitTypeRef.current = cameraProjection;

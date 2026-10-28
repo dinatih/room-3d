@@ -15,7 +15,7 @@ import { ROOM_W, ROOM_D } from './wallData';
 const WALK_SPEED = 2.7; // 2.7 cm / frame @ 60fps = 162 cm/s (synchro anim_walking.glb)
 
 export function VRMode() {
-  const { gl, camera, scene } = useThree();
+  const { gl, scene, get, set } = useThree();
   const rigRef     = useRef<THREE.Group | null>(null);
   const movingRef = useRef(false);
 
@@ -34,6 +34,8 @@ export function VRMode() {
     rig.add(ctrl);
 
     let currentSession: any = null;
+    let previousCamera: ReturnType<typeof get>['camera'];
+    const camera = new THREE.PerspectiveCamera();
 
     const onSessionEnd = () => {
       currentSession = null;
@@ -41,7 +43,8 @@ export function VRMode() {
       document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: false } }));
       movingRef.current = false;
       cameraState.isMoving = false;
-      scene.add(camera);
+      rig.remove(camera);
+      set({ camera: previousCamera });
     };
 
     const onToggleVR = async () => {
@@ -54,11 +57,16 @@ export function VRMode() {
       try {
         const sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] };
         const session = await navXr.requestSession('immersive-vr', sessionInit);
+        previousCamera = get().camera;
+        camera.near = previousCamera.near;
+        camera.far = previousCamera.far;
+        camera.layers.mask = previousCamera.layers.mask;
+        currentSession = session;
         session.addEventListener('end', onSessionEnd);
         await gl.xr.setSession(session);
-        currentSession = session;
 
         cameraState.isXR = true;
+        set({ camera });
         document.dispatchEvent(new CustomEvent('vr-state-change', { detail: { active: true } }));
         camera.position.set(0, 0, 0);
         const activeId = (window as any).activeCharacterId || 'lara';
@@ -87,8 +95,9 @@ export function VRMode() {
         document.body.appendChild(hint);
         setTimeout(() => { hint.style.opacity = '0'; }, 4500);
         setTimeout(() => { hint.remove(); }, 5000);
-      } catch {
-        // VR non supporté ou refusé — rien à afficher
+      } catch (error) {
+        console.error('Impossible de démarrer le mode VR', error);
+        if (currentSession) await currentSession.end();
       }
     };
 
@@ -134,7 +143,7 @@ export function VRMode() {
 
     if (movingRef.current) {
       const dir = new THREE.Vector3();
-      const xrCam = gl.xr.getCamera() || camera;
+      const xrCam = gl.xr.getCamera();
       xrCam.getWorldDirection(dir);
       dir.y = 0;
       if (dir.lengthSq() > 1e-4) {

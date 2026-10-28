@@ -264,38 +264,25 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
   const gl = useThree((state) => state.gl);
 
   useEffect(() => {
-    // Si on est en VR WebXR ou en mode Immersif gyro, on ne suspend jamais le frameloop
-    const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
-    const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
-      ? 'never'
-      : (isOrbiting ? 'always' : 'demand');
-    setFrameloop(loop);
-    if (loop !== 'never') {
-      invalidate();
-    }
-  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl]);
-
-  // Frameloop continu 60fps garanti pendant l'intro transition
-  useEffect(() => {
-    const handleIntroStart = () => {
-      setFrameloop('always');
-      invalidate();
-    };
-    const handleIntroEnd = () => {
-      const isXRActive = cameraState.isXR || gl.xr?.isPresenting;
-      const loop = (showInventory || isCvModalOpen || isPhotoModeOpen || (isIdle && !isXRActive))
-        ? 'never'
-        : (isOrbiting ? 'always' : 'demand');
+    const updateLoop = (event?: Event | { type: string }) => {
+      const isXRActive = cameraState.isXR || gl.xr.isPresenting;
+      const loop = isXRActive || cameraState.isIntroRunning || event?.type === 'start-camera-intro' ? 'always'
+        : (showInventory || isCvModalOpen || isPhotoModeOpen || isIdle) ? 'never'
+        : isOrbiting ? 'always' : 'demand';
       setFrameloop(loop);
-      invalidate();
+      if (loop !== 'never') invalidate();
     };
-    document.addEventListener('start-camera-intro', handleIntroStart);
-    window.addEventListener('camera-intro-finished', handleIntroEnd);
+    const events = ['start-camera-intro', 'vr-state-change', 'immersive-state-change'];
+    updateLoop();
+    events.forEach(event => document.addEventListener(event, updateLoop));
+    gl.xr.addEventListener('sessionend', updateLoop);
+    window.addEventListener('camera-intro-finished', updateLoop);
     return () => {
-      document.removeEventListener('start-camera-intro', handleIntroStart);
-      window.removeEventListener('camera-intro-finished', handleIntroEnd);
+      events.forEach(event => document.removeEventListener(event, updateLoop));
+      gl.xr.removeEventListener('sessionend', updateLoop);
+      window.removeEventListener('camera-intro-finished', updateLoop);
     };
-  }, [setFrameloop, invalidate, gl, showInventory, isCvModalOpen, isPhotoModeOpen, isIdle, isOrbiting]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl]);
 
   return null;
 }
