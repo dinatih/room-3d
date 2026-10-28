@@ -669,6 +669,20 @@ INVENTORY.push({
   notes: 'Maillages officiels raph_common (MIT), carrosserie rouge. Animations visuelles : repos, roulage, virages, balayage de direction et danse des roues. Quatre roues synchronisées avec les déplacements et deux articulations de direction arrière. Patrouille autonome dans le jardin. Dimensions du modèle de simulation, antennes comprises.',
 });
 
+INVENTORY.push({
+  id: 'syck-rc003a',
+  name: 'RICE COOKER AND SUSHI SET',
+  brand: 'Senya',
+  category: 'kitchen',
+  qty: 1,
+  dims: { w: 20, d: 18, h: 21 },
+  glbPath: 'items/syck-rc003a/syck-rc003a.glb',
+  photos: ['items/syck-rc003a/preview.png', 'items/syck-rc003a/set.png', 'items/syck-rc003a/open.png', 'items/syck-rc003a/parts.png'],
+  url: 'https://senya.fr',
+  price: '39,99',
+  notes: 'Référence : SYCK-RC003/A. Cuiseur à riz électrique compact avec poignée de transport, cuve antiadhésive 1 L et accessoires à sushi.',
+});
+
 export interface WigItem {
   id: string;
   name: string;

@@ -401,5 +401,7 @@ WIGS_ITEMS.forEach(wig => {
 
 
 import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
+import { SyckRc003a } from '@features/scene/items/SyckRc003a';
 
 SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;
+SCENE_REGISTRY['syck-rc003a'] = SyckRc003a as any;
