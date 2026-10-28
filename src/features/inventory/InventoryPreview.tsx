@@ -1397,7 +1397,7 @@ export function InventoryPreview({
           </div>
 
           {showing3D && actionKeys.length > 0 && (
-            <div className="position-absolute end-0 top-0 me-2 z-3 d-flex flex-column gap-1">
+            <div className="position-absolute end-0 top-0 m-2 z-3 d-flex flex-column gap-1">
               {actionKeys.map(key => {
                 const action = getActionDef(key)!;
                 if (action.type === 'select') return (
