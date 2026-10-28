@@ -9,6 +9,7 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
+import { glbLocalBBox } from '../glbUtils';
 import { Kallax2x1 }      from './Kallax2x1';
 import { Kallax1x1 }      from './Kallax1x1';
 import { MannequinHead }  from './MannequinHead';
@@ -79,14 +80,13 @@ export function KallaxNWMannequins() {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noMannequins?: boolean }) {
+export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, actionState = {} }: Partial<Omit<SceneItemProps, 'item'>> & { noDrona?: boolean; noMannequins?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = -h1 / 2; // -20.5 : center the pivoted Kallax at X=0
 
   useLayoutEffect(() => {
-    ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(glbLocalBBox(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>

@@ -65,3 +65,26 @@ it('une DRONA coulissante peut inverser sa course et garder sa preview indépend
   actions = [];
   assert.throws(() => render({}), /missing opening action/);
 });
+
+it('les quatre groupes KALLAX mesurent leurs dimensions locales et acceptent une mesure omise', () => {
+  const fs = require('node:fs'), ts = require('typescript');
+  const { glbLocalBBox } = load('src/features/scene/glbUtils.ts', {
+    three: THREE, 'three/addons/utils/BufferGeometryUtils.js': {},
+  });
+  for (const name of ['KallaxNW', 'KallaxNE', 'KallaxSE', 'KallaxCuisine']) {
+    const file = `src/features/scene/items/${name}.tsx`, root = new THREE.Group(), parent = new THREE.Group();
+    root.add(new THREE.Mesh(new THREE.BoxGeometry(2, 4, 6)));
+    parent.position.set(100, 200, 300); parent.rotation.y = Math.PI / 2; parent.scale.setScalar(3); parent.add(root);
+    const sizes = [], mocks = {
+      three: THREE, 'react/jsx-runtime': jsx, '../glbUtils': { glbLocalBBox },
+      react: { useRef: () => ({ current: root }), useLayoutEffect: fn => fn() },
+    };
+    for (const entry of ts.preProcessFile(fs.readFileSync(file, 'utf8')).importedFiles) {
+      mocks[entry.fileName] ??= new Proxy({}, { get: (_, key) => key === 'DF' ? 33 : key.endsWith('_POSITIONS') ? [] : key.includes('ITEMS') ? {} : function Child() {} });
+    }
+    const Component = load(file, mocks)[name];
+    Component({ onSize: size => sizes.push(size.toArray()), noDrona: true, noMannequins: true });
+    assert.deepEqual(sizes, [[2, 4, 6]], name);
+    assert.doesNotThrow(() => Component({ noDrona: true, noMannequins: true }));
+  }
+});

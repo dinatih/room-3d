@@ -8,6 +8,7 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
+import { glbLocalBBox } from '../glbUtils';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
 import { DroneCell, DF } from './Drona';
@@ -52,13 +53,12 @@ export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPrevi
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxNE({ onSize, noDrona, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean }) {
+export function KallaxNE({ onSize, noDrona, isPreview = false, actionState = {} }: Partial<Omit<SceneItemProps, 'item'>> & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
-    ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(glbLocalBBox(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>

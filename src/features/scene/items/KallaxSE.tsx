@@ -9,6 +9,7 @@
  */
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
+import { glbLocalBBox } from '../glbUtils';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
 import { DroneCell } from './Drona';
@@ -49,14 +50,13 @@ export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPrevi
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionState }: SceneItemProps & { noDrona?: boolean; noCaps?: boolean }) {
+export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionState = {} }: Partial<Omit<SceneItemProps, 'item'>> & { noDrona?: boolean; noCaps?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
   const px = (-h1 / 2) + 3; // -20.5 : center the pivoted Kallax at X=0
 
   useLayoutEffect(() => {
-    ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(glbLocalBBox(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>

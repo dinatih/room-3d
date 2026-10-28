@@ -62,7 +62,7 @@ export function KitchenFurniture() {
     <MergedStaticGroup name="merged-kitchen-furniture">
       {/* Kallax Cuisine en séparation (structure sans Drona) */}
       <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax Cuisine' }}>
-        <NavigationObstacle id="kallax-cuisine"><KallaxCuisine item={stub('kallax-sw-stack')} actionState={as} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
+        <NavigationObstacle id="kallax-cuisine"><KallaxCuisine actionState={as} noDrona /></NavigationObstacle>
       </group>
 
       {/* Poubelle TATAY — angle KallaxCuisine × Mackapar */}

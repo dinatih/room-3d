@@ -12,7 +12,6 @@ import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
-import type { Item } from '@shared/types';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
@@ -67,9 +66,6 @@ import {
   DOUBLE_BED_POSITIONS,
   SINGLE_BED_POSITIONS,
 } from '../furniturePositions';
-
-const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
 
@@ -471,15 +467,15 @@ export function LivingRoomFurniture() {
     <MergedStaticGroup name="merged-living-room-furniture">
       {/* Meubles Kallax (structure sans Drona ni Mannequins) */}
       <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax NW' }}>
-        <NavigationObstacle id="kallax-nw"><KallaxNW item={stub('kallax-nw-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noMannequins /></NavigationObstacle>
+        <NavigationObstacle id="kallax-nw"><KallaxNW noDrona noMannequins /></NavigationObstacle>
       </group>
 
       <group position={KALLAX_NE_POSITION} rotation={[0, KALLAX_NE_ROTATION, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax NE' }}>
-        <NavigationObstacle id="kallax-ne"><KallaxNE item={stub('kallax-ne-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
+        <NavigationObstacle id="kallax-ne"><KallaxNE noDrona /></NavigationObstacle>
       </group>
 
       <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Kallax SE' }}>
-        <NavigationObstacle id="kallax-se" compound><KallaxSE item={stub('kallax-se-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noCaps /></NavigationObstacle>
+        <NavigationObstacle id="kallax-se" compound><KallaxSE noDrona noCaps /></NavigationObstacle>
       </group>
 
       {/* Lits et Bureaux */}
