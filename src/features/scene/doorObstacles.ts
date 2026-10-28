@@ -142,7 +142,7 @@ export function computeDoorDynamics(
 ): DoorDynamicsResult {
   const furnitureMaxAngle = computeDoorAllowedAngle(door);
 
-  let push = 0, minimum = 0;
+  let push = 0, minimum = 0, maximum = furnitureMaxAngle;
   for (const id in cameraState.positions) {
     const p = cameraState.positions[id];
     const height = hasAgentProfile(id) ? getAgentProfile(id).height : (id === 'robin' ? 15 : HUMAN_BODY_HEIGHT);
@@ -154,12 +154,13 @@ export function computeDoorDynamics(
     const across = vx * door.openNormal.x + vz * door.openNormal.z;
     const clearance = NAVIGATION_RADIUS_CM + door.thickness / 2;
     const distance = Math.hypot(along, across);
-    // A leaf already beyond a body must stop on its opening-side tangent.
-    // The spring needs a hard limit: its closing momentum can overshoot a target.
+    // Keep the leaf on its current side of each body, in both directions.
+    // Hard limits also stop spring momentum from crossing a stationary actor.
     if (across >= 0 && distance <= door.length + clearance) {
       const bearing = Math.atan2(across, along);
       const tangent = Math.asin(Math.min(1, (clearance + CLEARANCE_ERROR) / distance));
-      if (Math.abs(currentAngle) >= bearing - tangent) minimum = Math.max(minimum, Math.min(door.maxAngle, bearing + tangent));
+      if (Math.abs(currentAngle) >= bearing) minimum = Math.max(minimum, Math.min(door.maxAngle, bearing + tangent));
+      else maximum = Math.min(maximum, Math.max(0, bearing - tangent));
     }
     // Les deux battants vitrés se partagent la même ouverture : une présence
     // devant le droit ne doit pas aussi pousser le gauche au-delà de leur jonction.
@@ -179,7 +180,7 @@ export function computeDoorDynamics(
     push = Math.max(push, Math.min(door.maxAngle, Math.max(0, angle)));
   }
 
-  return { allowed: furnitureMaxAngle, push: Math.min(furnitureMaxAngle, push), minimum: Math.min(furnitureMaxAngle, minimum) };
+  return { allowed: maximum, push: Math.min(maximum, push), minimum: Math.min(maximum, minimum) };
 }
 
 /**

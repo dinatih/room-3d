@@ -35,6 +35,27 @@ it('la porte-fenêtre repose sans rebond contre une interaction protégée au Ka
   assert(!requests.doorProtected('glassLeft'));
 });
 
+it('le battant ne traverse pas Safa après la libération du Kallax, en ouverture comme en fermeture', () => {
+  const id = 'door-contact-safa', point = { x: 227.5436666666667, y: 0, z: 58.751 };
+  const door = doors.DOOR_CONFIGS.glassRight;
+  obstacles.setAgentProfile(id, { radius: 13.3, height: 173.4 });
+  cameraState.positions[id] = point;
+  try {
+    for (const opening of [true, false]) for (const dt of [1 / 240, 1 / 60, 1 / 15, .5]) {
+      const spring = useDoorSpring();
+      let angle = opening ? 0 : door.maxAngle;
+      for (let frame = 0; frame < 240; frame++) {
+        const { allowed, minimum } = doors.computeDoorDynamics(door, angle);
+        angle = spring(angle, opening ? allowed : minimum, dt, minimum, allowed);
+        assert(g.segmentFree(point, point, [[g.inflate(doors.doorPolygon('glassRight', angle), obstacles.NAVIGATION_RADIUS_CM)]]), `Leaf crossed Safa, opening=${opening}, dt=${dt}`);
+      }
+      assert(angle > 0 && angle < door.maxAngle, 'The body must stop the leaf on either side');
+    }
+    cameraState.positions[id] = { ...point, x: point.x + door.length * 2 };
+    assert.equal(doors.computeDoorDynamics(door, 0).allowed, door.maxAngle, 'Leaving releases the opening stop');
+  } finally { delete cameraState.positions[id]; obstacles.removeAgentProfile(id); }
+});
+
 it('ouvre le séjour sans confondre le placard derrière le battant avec une butée', () => {
   const door = doors.DOOR_CONFIGS.living;
   const closet = { id: 'door-test-closet', polygon: g.rectangle(170.6, 438.6, 59.79999923706056, 52.79999923706055), yMin: .2, yMax: 249.8 };
