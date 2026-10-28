@@ -464,7 +464,7 @@ export function SpatialZonePreview({
         ) : (
           <button
             type="button"
-            className="btn btn-sm btn-dark bg-opacity-75 border-secondary text-white shadow-sm p-1 d-flex align-items-center justify-content-center"
+            className="btn btn-sm btn-light border shadow-sm p-1 d-flex align-items-center justify-content-center"
             style={{ width: 28, height: 28, borderRadius: 6 }}
             onClick={() => setShowFpsGraph(true)}
             title="Afficher les performances"
@@ -473,18 +473,7 @@ export function SpatialZonePreview({
             <i className="bi bi-bar-chart-fill" style={{ fontSize: 13 }} aria-hidden="true" />
           </button>
         )}
-        <div style={{
-          background: 'rgba(15, 23, 42, 0.85)',
-          color: '#ffffff',
-          padding: '4px 10px',
-          borderRadius: 6,
-          fontSize: 12,
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-        }}>
+        <div className="bg-body text-body border rounded px-2 py-1 small fw-bold d-flex align-items-center gap-2 shadow-sm">
           <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
           <span>Vue Découpée : {zone.name}</span>
         </div>
@@ -501,47 +490,19 @@ export function SpatialZonePreview({
           onClick={() => toggleLayer('aiZones')}
           aria-pressed={showZoneUi}
           title={showZoneUi ? 'Masquer les marqueurs des zones IA' : 'Afficher les marqueurs des zones IA'}
-          style={{
-            background: showZoneUi ? 'rgba(8, 145, 178, 0.95)' : 'rgba(15, 23, 42, 0.65)',
-            color: '#ffffff',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            padding: '3px 8px',
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className={`btn btn-sm ${showZoneUi ? 'btn-primary' : 'btn-light border'} shadow-sm`}
         >
           🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
         </button>
         <button
           onClick={() => setShowFpsGraph(v => !v)}
-          style={{
-            background: showFpsGraph ? 'rgba(15, 23, 42, 0.9)' : 'rgba(15, 23, 42, 0.65)',
-            color: '#ffffff',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            padding: '3px 8px',
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className={`btn btn-sm ${showFpsGraph ? 'btn-primary' : 'btn-light border'} shadow-sm`}
         >
           📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
         </button>
       </div>
 
-      <div style={{
-        position: 'absolute',
-        bottom: 8,
-        right: 8,
-        background: 'rgba(15, 23, 42, 0.75)',
-        color: '#94a3b8',
-        padding: '2px 8px',
-        borderRadius: 4,
-        fontSize: 10,
-        pointerEvents: 'none'
-      }}>
+      <div className="position-absolute bottom-0 end-0 m-2 bg-body text-body-secondary border rounded px-2 py-1 small pe-none">
         Clic gauche : rotation • Molette : zoom • Clic droit : translation
       </div>
     </div>

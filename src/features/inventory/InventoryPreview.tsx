@@ -843,8 +843,8 @@ function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: str
       <img src={photos[idx]} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
       {photos.length > 1 && (
         <>
-          <button onClick={handlePrev} style={{ position: 'absolute', left: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>‹</button>
-          <button onClick={handleNext} style={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.45)', border: 'none', color: '#fff', borderRadius: 4, cursor: 'pointer', padding: '6px 9px', fontSize: 16, lineHeight: 1 }}>›</button>
+          <button onClick={handlePrev} className="btn btn-sm btn-light border shadow-sm position-absolute start-0 top-50 translate-middle-y ms-1">‹</button>
+          <button onClick={handleNext} className="btn btn-sm btn-light border shadow-sm position-absolute end-0 top-50 translate-middle-y me-1">›</button>
           <div style={{ position: 'absolute', bottom: 30, left: 0, right: 0, textAlign: 'center', fontSize: 10, color: '#666', pointerEvents: 'none' }}>{idx + 1} / {photos.length}</div>
         </>
       )}
@@ -1169,7 +1169,7 @@ export function InventoryPreview({
               ) : (
                 <button
                   type="button"
-                  className="btn btn-sm btn-dark bg-opacity-75 border-secondary text-white shadow-sm p-1 d-flex align-items-center justify-content-center"
+                  className="btn btn-sm btn-light border shadow-sm p-1 d-flex align-items-center justify-content-center"
                   style={{ width: 28, height: 28, borderRadius: 6 }}
                   onClick={() => setShowMiniPerf(true)}
                   title="Afficher les performances (H)"
@@ -1189,15 +1189,15 @@ export function InventoryPreview({
               onWheel={e => e.stopPropagation()}
             >
               {selectedBoneName && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, background: 'rgba(15, 23, 42, 0.92)', border: '1.5px solid #e63946', padding: '6px 8px', borderRadius: 6, maxWidth: 280, boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                <div className="d-flex flex-column gap-1 bg-body text-body border border-primary px-2 py-1 rounded shadow-sm" style={{ maxWidth: 280 }}>
+                  <div className="d-flex align-items-center justify-content-between gap-2 small fw-bold">
                     <span className="text-truncate">
-                      🎨 Influence : <span style={{ fontFamily: 'monospace', color: '#fffa65', textDecoration: 'underline' }}>{selectedBoneName}</span>
+                      🎨 Influence : <span className="font-monospace text-primary text-decoration-underline">{selectedBoneName}</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setSelectedBoneName(null)}
-                      style={{ background: 'none', border: 'none', color: '#ff7979', cursor: 'pointer', fontSize: 13, padding: '0 2px', lineHeight: 1 }}
+                      className="btn btn-sm btn-link text-danger p-0"
                       title="Désactiver l'influence de l'os"
                     >
                       ✕
@@ -1205,7 +1205,7 @@ export function InventoryPreview({
                   </div>
                   {/* Légende Heatmap des couleurs d'influence */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8.5, color: '#94a3b8' }}>
+                    <div className="d-flex justify-content-between small text-body-secondary">
                       <span>0.0 (Bleu)</span>
                       <span>0.5 (Vert/Jaune)</span>
                       <span>1.0 (Rouge)</span>
@@ -1219,7 +1219,7 @@ export function InventoryPreview({
                       }}
                       title="Bleu = 0% | Jaune = ~75% | Rouge = 100% (le maillage suit l'os à 100%)"
                     />
-                    <div style={{ fontSize: 8, color: '#cbd5e1', textAlign: 'center', opacity: 0.9 }}>
+                    <div className="small text-body-secondary text-center">
                       Rouge: 100% suit l'os | Bleu: statique (0%)
                     </div>
                   </div>
@@ -1288,7 +1288,7 @@ export function InventoryPreview({
               <button
                 type="button"
                 onClick={() => setSimulateMotion(v => !v)}
-                className={`btn btn-sm ${simulateMotion ? 'btn-success text-white fw-bold' : 'btn-dark bg-opacity-50 border-secondary text-white'} py-1 px-2 small d-flex align-items-center gap-1`}
+                className={`btn btn-sm ${simulateMotion ? 'btn-success fw-bold' : 'btn-light border'} py-1 px-2 small d-flex align-items-center gap-1`}
                 style={{ fontSize: 11 }}
                 title={simulateMotion ? "Arrêter la simulation de mouvements (M)" : "Simuler le vent et les mouvements des bustes (M)"}
                 aria-pressed={simulateMotion}
@@ -1303,7 +1303,7 @@ export function InventoryPreview({
                   <button
                     type="button"
                     onClick={() => setShowBoneTree(v => !v)}
-                    className={`btn btn-sm ${showBoneTree ? 'btn-info text-white fw-bold' : 'btn-dark bg-opacity-50 border-secondary text-white'} py-1 px-2 small d-flex align-items-center gap-1`}
+                    className={`btn btn-sm ${showBoneTree ? 'btn-info fw-bold' : 'btn-light border'} py-1 px-2 small d-flex align-items-center gap-1`}
                     style={{ fontSize: 11 }}
                     title={showBoneTree ? "Masquer l'arbre des os" : "Afficher l'arborescence complète des os"}
                   >
@@ -1418,7 +1418,7 @@ export function InventoryPreview({
                     key={key}
                     type="button"
                     onClick={() => setActionStates(s => toggleObjectAction(key, s))}
-                    className={`btn btn-sm ${on ? 'btn-primary' : 'btn-dark bg-opacity-50 border-secondary'} text-white py-1 px-2 small`}
+                    className={`btn btn-sm ${on ? 'btn-primary' : 'btn-light border'} py-1 px-2 small shadow-sm`}
                     aria-pressed={on}
                     data-object-action={key}
                   >
@@ -1430,7 +1430,7 @@ export function InventoryPreview({
           )}
 
           {!hideFooter && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '6px 10px', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center' }}>
+            <div className="position-absolute bottom-0 start-0 end-0 px-2 py-1 bg-body text-body border-top small d-flex align-items-center">
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 'bold', fontSize: 12 }}>{item.name}</div>
                 <div style={{ opacity: 0.8 }}>
