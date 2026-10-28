@@ -4,7 +4,8 @@ import type { CameraMode, CameraTarget } from './types';
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
   { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane' },
-  { id: 'shiba', target: 'ushiro', label: 'Chien', icon: 'bi-heart' },
+  { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart' },
+  { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart' },
   { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter' },
   { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot' },
   { id: 'unitree-go2', target: 'go2', label: 'Go2', icon: 'bi-robot' },
@@ -14,13 +15,13 @@ export const CAMERA_SUBJECTS = [
   { id: 'jumper-robot', target: 'jumper', label: 'Jumper', icon: 'bi-robot' },
 ] as const;
 
-export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'ulotte' | 'jikin' | 'tosakin' | 'cat';
+export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'cat';
 
 export function resolveCameraSubject(value: string): CameraSubjectId | undefined {
   const choice = CAMERA_SUBJECTS.find(subject => subject.id === value || subject.target === value);
   if (choice) return choice.id;
   if (value === 'dog') return 'shiba';
-  if (value === 'ulotte' || value === 'jikin' || value === 'tosakin' || value === 'cat') return value;
+  if (value === 'jikin' || value === 'tosakin' || value === 'cat') return value;
 }
 
 /** The selected subject is observed only while a follow/FPV camera is active. */
