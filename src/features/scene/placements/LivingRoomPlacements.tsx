@@ -497,7 +497,7 @@ export function LivingRoomFurniture() {
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Meuble Mackapär' }}>
-        <NavigationObstacle id="mackapar"><MackaparGroup item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona noHangers /></NavigationObstacle>
+        <NavigationObstacle id="mackapar"><MackaparGroup noDrona noHangers /></NavigationObstacle>
       </group>
 
       {/* Rangement chaussures Grejig */}
@@ -650,7 +650,7 @@ export function LivingRoomDecor() {
           <cylinderGeometry args={[0.4, 0.4, 1.6, 8]} />
           <meshStandardMaterial color="#222222" roughness={0.3} metalness={0.8} />
         </mesh>
-        <Spruttig20317079 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Spruttig20317079 />
         <MaillotInyeong />
       </group>
 

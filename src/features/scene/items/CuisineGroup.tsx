@@ -23,7 +23,7 @@ import { Fornuft10428488 } from './Fornuft10428488';
 import { Fornuft90428489 } from './Fornuft90428489';
 import { Fornuft80428475 } from './Fornuft80428475';
 import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Wrapper world pos: (KITCHEN_WEST_WALL=30, 0, ROOM_D=400)
@@ -40,33 +40,17 @@ const FRIDGE_W    = 60;
 // World: x=[46.75, 80, 113.25], y=211.7, z=440.5, rotY=π
 // Local (wrapper at (30,0,400)): x=[16.75, 50, 83.25], y=211.7, z=40.5, rotY=π
 
-const rot90    = new THREE.Matrix4(); // Identité
-
-const KIT_W_FULL = 100;
-const gap        = (KIT_W_FULL - 3 * DF) / 4;  // 0.25
-
-const DRONA_MATRICES = [0, 1, 2].map(i => {
-  const x = gap + DF / 2 + i * (DF + gap);      // 16.75, 50, 83.25
-  return rot90.clone().setPosition(x, 194 + DF / 2, (KIT_D - 38 / 2 - 0.5) - 12);
-  //                                                         40.5
-});
-
-// ── Composant principal ───────────────────────────────────────────────────────
-
-const DRONA_TRANSFORMS = DRONA_MATRICES.map(m => {
-  const p = new THREE.Vector3();
-  const q = new THREE.Quaternion();
-  const s = new THREE.Vector3();
-  m.decompose(p, q, s);
-  return { p, q, s };
-});
+const gap = (KIT_W - 3 * DF) / 4; // 0.25 cm
+const DRONA_POSITIONS = [0, 1, 2].map(i => new THREE.Vector3(
+  gap + DF / 2 + i * (DF + gap), 194 + DF / 2, (KIT_D - 38 / 2 - 0.5) - 12,
+));
 
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
 export function CuisineDrona() {
   return (
     <>
-      {DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
+      {DRONA_POSITIONS.map((position, i) => (
+        <group key={i} position={position} userData={{ sceneItemRoot: true }}>
           <DroneCell />
         </group>
       ))}
@@ -94,13 +78,13 @@ export function CuisineLillhavet() {
   );
 }
 
-export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: boolean }) {
+export function CuisineGroup({ onSize, noDrona }: SceneModelProps & { noDrona?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
   // Local positions (wrapper at (KITCHEN_WEST_WALL=30, 0, ROOM_D=400)):
   //   Counter      : (KIT_W/2, COUNTER_H, KIT_D/2)           = (50, 90, 30)
@@ -161,13 +145,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneItemProps & { noDrona?: b
       </group>
 
       {/* 3 boîtes Drona sur le meuble haut */}
-      {!noDrona && DRONA_TRANSFORMS.map((t, i) => (
-        <group key={i} userData={{ sceneItemRoot: true }}>
-          <group position={t.p} quaternion={t.q} scale={t.s}>
-            <DroneCell />
-          </group>
-        </group>
-      ))}
+      {!noDrona && <CuisineDrona />}
     </group>
   );
 }

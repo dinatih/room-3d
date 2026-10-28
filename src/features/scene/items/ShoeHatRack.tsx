@@ -8,7 +8,7 @@
  */
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 import { SHOE_HAT_RACK } from '../shoeHatRackData';
 
@@ -55,10 +55,10 @@ export function ShoeHatRackCaps() {
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
-export function ShoeHatRack({ onSize, noCaps }: SceneItemProps & { noCaps?: boolean }) {
+export function ShoeHatRack({ onSize, noCaps }: SceneModelProps & { noCaps?: boolean }) {
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, D));
-  }, []);
+    onSize?.(new THREE.Vector3(W, H, D));
+  }, [onSize]);
 
   return (
     <group userData={{ sceneItemRoot: true }}>

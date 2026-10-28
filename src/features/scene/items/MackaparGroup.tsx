@@ -4,7 +4,7 @@ import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
 import { TShirt } from './TShirt';
 import { DroneCell, DF } from './Drona';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 // Hauteurs des tringles de penderie MACKAPÄR
@@ -23,18 +23,6 @@ const MACKAPAR_HANGER_TRANSFORMS = [
     rotation: [0, -HANGER_ROTS[i], 0] as [number, number, number],
   })),
 ];
-
-// ── Drona (2 boîtes sur le dessus) ───────────────────────────────────────────
-const dronaMatrices = (() => {
-  const dummy = new THREE.Object3D();
-  const dronaY = 200 + DF / 2 + 0.2;
-  return [20, -20].map(z => {
-    dummy.position.set(0.5, dronaY, z);
-    dummy.rotation.set(0, -Math.PI / 2, 0);
-    dummy.updateMatrix();
-    return dummy.matrix.clone();
-  });
-})();
 
 export function MackaparHangers() {
   return (
@@ -57,30 +45,26 @@ export function MackaparHangers() {
 export function MackaparDrona() {
   return (
     <>
-      {dronaMatrices.map((m, i) => {
-        const p = new THREE.Vector3().setFromMatrixPosition(m);
-        const q = new THREE.Quaternion().setFromRotationMatrix(m);
-        return (
-          <group key={i} userData={{ sceneItemRoot: true }}>
-            <group position={p} quaternion={q}>
-              <DroneCell />
-            </group>
+      {[20, -20].map(z => (
+        <group key={z} userData={{ sceneItemRoot: true }}>
+          <group position={[0.5, 200 + DF / 2 + 0.2, z]} rotation-y={-Math.PI / 2}>
+            <DroneCell />
           </group>
-        );
-      })}
+        </group>
+      ))}
     </>
   );
 }
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export function MackaparGroup({ onSize, noDrona, noHangers }: SceneItemProps & { noDrona?: boolean; noHangers?: boolean }) {
+export function MackaparGroup({ onSize, noDrona, noHangers }: SceneModelProps & { noDrona?: boolean; noHangers?: boolean }) {
   const ref = useRef<THREE.Group>(null!);
 
   useLayoutEffect(() => {
     ref.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
-  }, []);
+    onSize?.(new THREE.Box3().setFromObject(ref.current).getSize(new THREE.Vector3()));
+  }, [onSize]);
 
   return (
     <group ref={ref}>

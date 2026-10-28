@@ -4,7 +4,7 @@ import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairCl
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_SIZE } from '@features/scene/sceneItem';
 import type { Item } from '@shared/types';
 
 import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGroup';
@@ -47,7 +47,7 @@ export function KitchenEquipment() {
     <MergedStaticGroup name="merged-kitchen-equipment">
       {/* Meubles Cuisine (évier, structure) */}
       <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Meubles Cuisine' }}>
-        <NavigationObstacle id="cuisine-group"><CuisineGroup item={stub('cuisine-stack')} actionState={NOOP_STATE} onSize={NOOP_SIZE} noDrona /></NavigationObstacle>
+        <NavigationObstacle id="cuisine-group"><CuisineGroup noDrona /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

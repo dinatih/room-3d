@@ -13,7 +13,7 @@ import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from './kallaxSeDrona';
@@ -95,7 +95,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
 
       {/* Porte-chaussures bord à bord avec le congélateur (profondeur 47,37 cm). */}
       <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ sceneItemRoot: true }}>
-        <ShoeHatRack item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} noCaps={noCaps} />
+        <ShoeHatRack noCaps={noCaps} />
       </group>
     </group>
   );
