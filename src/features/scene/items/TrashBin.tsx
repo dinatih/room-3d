@@ -1,6 +1,6 @@
 /**
  * TrashBin.tsx — TATAY Smart Deco 25L (26×36×47 cm).
- * Modèle officiel Amazon AR découpé avec animation d'ouverture du couvercle.
+ * Modèle officiel Amazon AR avec animation coordonnée du couvercle et de la pédale.
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -12,13 +12,13 @@ import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/trash-bin/tatay-smart-deco.glb';
-const ANIM_DURATION = 1.0;
+const ANIM_DURATION = 0.8;
 
 export function TrashBin({ actionState, onSize }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const isOpen = !!actionState?.['bin-toggle'];
   const { invalidate } = useThree();
-  const runtime = useRef<{ mixer: THREE.AnimationMixer; action: THREE.AnimationAction } | null>(null);
+  const runtime = useRef<{ mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[] } | null>(null);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -26,10 +26,11 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
     scene.rotation.set(0, 0, 0);
 
     const mixer = new THREE.AnimationMixer(scene);
-    const clip = animations.find(a => a.name === 'bin_open');
-    if (!clip) throw new Error('TrashBin: missing bin_open animation');
-    const action = mixer.clipAction(clip).play();
-    action.paused = true;
+    const actions = animations.map(clip => {
+      const act = mixer.clipAction(clip).play();
+      act.paused = true;
+      return act;
+    });
     mixer.update(0);
 
     const box = glbLocalBBox(scene);
@@ -43,7 +44,7 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
       label: 'Poubelle TATAY 25L',
       actions: getObjectActionIds('trash-bin'),
     };
-    runtime.current = { mixer, action };
+    runtime.current = { mixer, actions };
     onSize(box.getSize(new THREE.Vector3()));
   }, [scene, animations, onSize]);
 
@@ -51,9 +52,13 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
     const rt = runtime.current;
     if (!rt) return;
     const target = isOpen ? ANIM_DURATION : 0;
-    if (rt.action.time === target) return;
+    const first = rt.actions[0];
+    if (!first || first.time === target) return;
     const step = dt / ANIM_DURATION;
-    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isOpen ? step : -step) * ANIM_DURATION, 0, ANIM_DURATION);
+    const newTime = THREE.MathUtils.clamp(first.time + (isOpen ? step : -step) * ANIM_DURATION, 0, ANIM_DURATION);
+    for (const act of rt.actions) {
+      act.time = newTime;
+    }
     rt.mixer.update(0);
     invalidate();
   });
