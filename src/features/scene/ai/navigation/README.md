@@ -67,6 +67,10 @@ n'est jamais traversée avant son ouverture effective.
 
 ## Mobilier et actions
 
+Les points duo libres vérifient l'ancre et les positions des deux participants
+pour toute la playlist avant de réserver les places. Un changement de clip ne
+doit pas laisser un participant dans un obstacle à la fin de la séquence.
+
 Les transformations animées restent des obstacles actifs, même avec le décor
 masqué. Pendant un déplacement de meuble, un trajet libre continue ; un segment
 réellement coupé s'arrête. La pose stabilisée prépare un nouvel instantané. Les

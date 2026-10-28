@@ -1,4 +1,21 @@
 const fs = require('node:fs');
+if (process.argv[2] === '--actor') {
+  (async () => {
+    let previous;
+    for await (const line of require('node:readline').createInterface({ input: fs.createReadStream(process.argv[3] || '/tmp/room-3d-logs/latest.jsonl'), crlfDelay: Infinity })) {
+      if (!line) continue;
+      const row = JSON.parse(line), { tag, action, data: d } = row.entry;
+      if (tag !== (process.argv[4] || 'sara')) continue;
+      if (action === 'nav_agent_snapshot') {
+        const signature = JSON.stringify([d.state.x, d.state.z, d.status, d.state.animation]);
+        if (signature === previous) continue;
+        previous = signature;
+        console.log(JSON.stringify({ at: row.elapsedMs, action, state: d.state, status: d.status, manual: d.manualOverride, instruction: d.instruction, route: d.route }));
+      } else if (action === 'nav_instruction' || action === 'nav_stop') console.log(JSON.stringify({ at: row.elapsedMs, action, ...d }));
+    }
+  })().catch(error => { console.error(error); process.exitCode = 1; });
+  return;
+}
 if (process.argv[2] === '--invalid') {
   (async () => {
     require('../tests/support/load-ts.cjs');

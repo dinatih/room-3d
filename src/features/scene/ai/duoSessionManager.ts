@@ -573,7 +573,7 @@ class DuoSessionManager {
     if (!targetA || !targetB || targetA === targetB) return null;
 
 
-    if (objectId === 'duo-zone') {
+    if (slot?.isDuo) {
       const safeAnchor = findDuoAnchor(anchorPos, anchorRotY, playlist,
         getNavigationGraph(getAgentProfile(targetA)), getNavigationGraph(getAgentProfile(targetB)));
       if (!safeAnchor) {

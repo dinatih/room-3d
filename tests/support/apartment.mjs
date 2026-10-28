@@ -47,6 +47,39 @@ export async function autonomous(fixture) {
     check(ids.length === fixture.count && moved.size > 0, 'The real character simulation did not advance');
     return { count: ids.length, spawns, moved: [...moved], frames, roomMax, navigation: structuredClone(pathfindingStats) };
 }
+export async function duoFencePlacement(fixture) {
+    const { duoSessionManager } = await import('/src/features/scene/ai/duoSessionManager.ts');
+    const { computeWorldTransform } = await import('/src/features/scene/animations/duoWorldTransform.ts');
+    const { getDuoAnimationDef } = await import('/src/features/scene/animations/duoAnimations.ts');
+    const objectId = 'interx-affection-sequence-point', object = registry.SMART_OBJECTS[objectId];
+    const original = object.slots[0], anchor = [0, 0, -250];
+    const ids = ['native', 'sara'], route = nav.createRouteState();
+    const def = getDuoAnimationDef('interx-g053t006a026r012');
+    const first = getDuoAnimationDef('interx-g039t002a006r006');
+    check(def && first, 'Missing recorded Inter-X clips');
+    object.slots[0] = { ...original, offset: anchor, duoPool: [first.id, def.id], duoCount: 2 };
+    for (const id of ids) register(id, fixture);
+    try {
+        const graph = await resolveNavigation(() => nav.getNavigationGraph(profiles.getAgentProfile('sara')));
+        const result = await resolveNavigation(() => duoSessionManager.startDuoSession(objectId, original.slotId, ...ids));
+        check(result, 'The recorded Inter-X duo could not be placed');
+        const session = duoSessionManager.getSessionFor('sara');
+        const before = computeWorldTransform(anchor, 0, def.offsetB).posB;
+        check(geometry.insideObstacle({ x: before[0], z: before[2] }, graph.obstacles), 'The original Sara pose must reproduce the fence collision');
+        for (const animation of session.playlist) {
+            const { posA, posB } = computeWorldTransform(session.location.anchorPos, session.location.anchorRotY, animation.offsetB);
+            for (const position of [posA, posB]) check(graph.canReach({ x: position[0], z: position[2] }, { x: position[0], z: position[2] }), 'A duo pose is inside an obstacle');
+        }
+        const after = computeWorldTransform(session.location.anchorPos, session.location.anchorRotY, def.offsetB).posB;
+        const position = { x: after[0], z: after[2] }, target = { x: session.location.anchorPos[0], z: session.location.anchorPos[2] };
+        duoSessionManager.leaveDuoZone('sara');
+        const actors = await walk([{ id: 'sara', route, position, target }], fixture);
+        return { before, after, actors };
+    } finally {
+        duoSessionManager.leaveDuoZone('sara'); duoSessionManager.leaveDuoZone('native');
+        nav.resetRoute(route, 'sara'); ids.forEach(release); object.slots[0] = original;
+    }
+}
 export async function fullLivingTransit(fixture) {
     const { CHARACTERS } = await import('/src/features/scene/characterConfig.ts');
     const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
