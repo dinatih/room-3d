@@ -677,6 +677,18 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'microduck',
+  name: 'Microduck — robot canard',
+  brand: 'Microduck',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 14.36, d: 12.27, h: 27.45 },
+  glbPath: 'models/microduck.glb',
+  description: 'Petit robot bipède blanc et orange, avec bec articulé.',
+  notes: 'Modèle assemblé par Gemini. Animations : repos, marche et coin-coin. Patrouille autonome dans le jardin. Dimensions mesurées en posture de repos.',
+});
+
+INVENTORY.push({
   id: 'raph-rover',
   name: 'Raph Rover — robot mobile',
   brand: 'Fictionlab',

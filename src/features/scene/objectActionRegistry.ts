@@ -51,6 +51,16 @@ function positionAction(key: string): Record<string, ActionConfig> {
 }
 
 const ACTIONS: Record<string, ActionConfig> = {
+  'microduck-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
+  'microduck-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
+  'microduck-motion': {
+    label: 'Animation de Microduck', type: 'select', initialValue: 'idle',
+    options: [
+      { value: 'idle', label: 'Repos' },
+      { value: 'walk', label: 'Marche' },
+      { value: 'quack', label: 'Coin-coin' },
+    ],
+  },
   'raph-rover-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
   'raph-rover-autonomous': { label: 'Vie autonome', icon: 'bi-play-circle', sceneOnly: true },
   'raph-rover-motion': {

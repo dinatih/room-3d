@@ -1,3 +1,4 @@
+import { Microduck } from '@features/scene/items/Microduck';
 import { Jumper } from '@features/scene/items/Jumper';
 import { RaphRover } from '@features/scene/items/RaphRover';
 import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '@features/scene/items/Unitree';
@@ -138,6 +139,7 @@ function ShoeHatRackPreview(props: SceneItemProps) {
 }
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'microduck': Microduck,
   'jumper-robot': Jumper,
   'unitree-h2': UnitreeH2,
   'unitree-g1': UnitreeG1,

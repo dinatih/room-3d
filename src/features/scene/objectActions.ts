@@ -1,5 +1,6 @@
 import { AIR_PERFORMER_ACTION_IDS } from '../home-assistant/airPerformer';
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
+  'microduck': ['microduck-motion', 'microduck-replay', 'microduck-autonomous'],
   'raph-rover': ['raph-rover-motion', 'raph-rover-replay', 'raph-rover-autonomous'],
   'unitree-h2': ['unitree-h2-motion', 'unitree-h2-replay'],
   'unitree-g1': ['unitree-g1-motion', 'unitree-g1-replay', 'unitree-g1-autonomous'],

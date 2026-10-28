@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { INVENTORY } from '@features/inventory/inventoryData';
+import { Microduck } from '../items/Microduck';
 import { Jumper } from '../items/Jumper';
 import { UnitreeG1, UnitreeGo2, UnitreeH2 } from '../items/Unitree';
 import { UnitreeAs2w } from '../items/UnitreeAs2w';
@@ -30,6 +31,7 @@ const PATROL = {
   minZ: -620, maxZ: -420,
 };
 const ROBOTS = [
+  { id: 'microduck', Component: Microduck, position: [320, 0, -440], walk: 'walk', speed: 15, pause: 4, radiusScale: 2 / 3 },
   { id: 'unitree-h2', Component: UnitreeH2, position: [120, 0, -520], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },

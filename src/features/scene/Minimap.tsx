@@ -320,6 +320,7 @@ function drawMinimap(
     { id: 'unitree-go2', name: 'Go2', color: '#0f172a', accent: '#0284c7', type: 'dog' },
     { id: 'unitree-as2w', name: 'As2-W', color: '#991b1b', accent: '#ef4444', type: 'dog' },
     { id: 'jumper-robot', name: 'Jumper', color: '#14532d', accent: '#22c55e', type: 'jumper' },
+    { id: 'microduck', name: 'Microduck', color: '#f97316', accent: '#facc15', type: 'humanoid' },
     { id: 'raph-rover', name: 'Raph', color: '#991b1b', accent: '#ef4444', type: 'rover' },
   ];
 
