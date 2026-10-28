@@ -19,7 +19,7 @@ import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
-import { computeSteeringVector, computeRotYStep, setAgentVelocity, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, setAgentVelocity, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
@@ -207,13 +207,11 @@ export function createAgentController(
     const object = instr.smartObjectId && !instr.targetPos ? getSmartObject(instr.smartObjectId) : undefined;
     const slot = object ? object.slots.find(slot => slot.slotId === instr.slotId) ?? object.slots[0] : undefined;
     const targetKey = object ? JSON.stringify([object.position, object.rotationY, slot?.offset, slot?.approachOffset, slot?.rotY]) : undefined;
-    const occupiedApproach = (agentStatus !== 'INTERACTING' || instr.type === 'OBSERVE_OBJECT') && cachedCoords && hasAgentProfile(_characterId)
-      && !isAgentDestinationFree(_characterId, { x: cachedCoords.tx, z: cachedCoords.tz });
     const coords = cachedCoords;
     const obstructedTarget = coords && cachedCoordsRevision !== revision && hasAgentProfile(_characterId) && [...furnitureObstacles.values()]
       .some(o => (!coords.owner || !o.owner || getInteractionOwner(o.owner) !== getInteractionOwner(coords.owner)) && o.yMin < getAgentProfile(_characterId).height && o.yMax > 0
         && pointInRing({ x: coords.tx, z: coords.tz }, inflate(o.polygon, furnitureClearance(getAgentProfile(_characterId)))));
-    if (occupiedApproach || obstructedTarget || cachedTargetKey !== targetKey || cachedCoordsInstruction !== instr || !cachedCoords) {
+    if (obstructedTarget || cachedTargetKey !== targetKey || cachedCoordsInstruction !== instr || !cachedCoords) {
       beginActorBlockCheck(_characterId);
       try {
         const travel = slot?.entryAnimation ? postureDistances.get(resolveAnimationId(slot.entryAnimation)) : undefined;

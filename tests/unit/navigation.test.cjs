@@ -187,7 +187,7 @@ describe('Navigation et portes — géométrie isolée', () => {
             assert(!g.pointInRing(position, g.inflate(doors.doorPolygon('living', 0), obstacles.NAVIGATION_RADIUS_CM)), 'An actor already inside a leaf must also escape');
         } finally { for (const id of ids) { delete cameraState.positions[id]; obstacles.removeAgentProfile(id); requests.releaseAgentDoors(id); } }
     });
-    it('recule dans la pièce précédente pour laisser passer un PNJ dans un couloir étroit', () => {
+    it('traverse un PNJ qui bouche un couloir sans traverser les murs', () => {
         setup({}, 83);
         architecture.architectureObstacles.splice(0, architecture.architectureObstacles.length,
             ...[-155, 155].map(x => ({ id: `neck-${x}`, polygon: g.rectangle(x, 0, 290, 80), yMin: 0, yMax: 250 })));
@@ -201,26 +201,31 @@ describe('Navigation et portes — géométrie isolée', () => {
             },
         });
         const route = crowded.createRouteState(), target = { x: 0, z: -100 };
-        let position = { x: 0, z: 100 }, yielded = false;
+        let position = { x: 0, z: 100 }, crossed = false;
         obstacles.setAgentProfile('blocker', obstacles.getAgentProfile('walker'));
         cameraState.positions.blocker = { x: 0, y: 0, z: 0 };
         cameraState.positions.walker = { ...position, y: 0 };
         try {
-            for (let frame = 0; frame < 1000 && (g.distance(position, target) > 0 || cameraState.positions.blocker.z < 100); frame++) {
+            for (let frame = 0; frame < 1000 && g.distance(position, target) > 0; frame++) {
                 const before = position;
                 position = crowded.followRoute(route, 'walker', position, target, 3);
-                assert(g.distance(before, position) <= 3 + g.BOOLEAN_PRECISION, 'Yielding must never teleport to the destination');
+                assert(g.distance(before, position) > 0 && g.distance(before, position) <= 3 + g.BOOLEAN_PRECISION, 'A blocked detour must continue walking without teleporting');
+                assert.equal(route.error, null);
+                assert(g.segmentFree(before, position, route.crowd?.base.obstacles ?? route.graph.obstacles), 'Walls must still block every step');
                 cameraState.positions.walker = { ...position, y: 0 };
-                yielded ||= !!route.crowd?.yielding;
-                if (yielded) {
-                    const other = cameraState.positions.blocker;
-                    cameraState.positions.blocker = { ...avoidance.limitAgentMovement('blocker', other, { x: 0, z: Math.min(100, other.z + 3) }), y: 0 };
-                }
-                assert(g.distance(position, cameraState.positions.blocker) >= 2 * obstacles.NAVIGATION_RADIUS_CM - Math.SQRT2 * g.BOOLEAN_PRECISION, 'Yielding must preserve the shared navigation radius');
+                crossed ||= g.distance(position, cameraState.positions.blocker) < 2 * obstacles.NAVIGATION_RADIUS_CM;
             }
-            assert(yielded, 'An impossible detour must give way along the already travelled approach');
-            assert.deepEqual(position, target, JSON.stringify({ wait: route.waitReason, error: route.error, path: route.path, index: route.index, target: route.target, crowd: route.crowd && { yielding: route.crowd.yielding, resume: route.crowd.resume }, other: cameraState.positions.blocker }));
-            assert.equal(cameraState.positions.blocker.z, 100);
+            assert(crossed, 'An impossible detour must allow crossing the actor');
+            assert.deepEqual(position, target);
+            assert.equal(cameraState.positions.blocker.z, 0);
+            crowded.resetRoute(route, 'walker');
+            for (let frame = 0; frame < 1000 && g.distance(position, cameraState.positions.blocker) > 0; frame++) {
+                const body = cameraState.positions.blocker;
+                position = crowded.followRoute(route, 'walker', position, { x: body.x, z: body.z }, 3);
+                cameraState.positions.walker = { ...position, y: 0 };
+                assert.equal(route.error, null, 'An actor at the destination must never invalidate it');
+            }
+            assert.deepEqual(position, { x: 0, z: 0 });
         } finally { crowded.resetRoute(route, 'walker'); delete cameraState.positions.walker; delete cameraState.positions.blocker; obstacles.removeAgentProfile('blocker'); }
     });
     it('laisse Vivida et Ybot suivre leurs tangentes sans enfermer les départs au contact après arrondi', () => {
@@ -360,7 +365,7 @@ describe('Navigation et portes — géométrie isolée', () => {
         } finally { radii.forEach((_, i) => obstacles.removeAgentProfile(`same-body-${i}`)); }
     });
 
-    it('avance pendant la préparation d’un détour, attend au contact puis contourne sans traverser le PNJ', () => {
+    it('avance au contact pendant la préparation d’un détour puis utilise le détour disponible', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const avoidance = loadAvoidance();
@@ -393,8 +398,9 @@ describe('Navigation et portes — géométrie isolée', () => {
             const footprints = avoidance.getAgentObstacles('walker', position).map(polygon => [polygon]);
             position = footprints[0][0].reduce((a, b) => a.x < b.x ? a : b);
             cameraState.positions.walker = { ...position, y: 0 };
-            assert.deepEqual(crowded.followRoute(route, 'walker', position, target, 3), position);
-            assert.equal(route.waitReason, 'Calcul de navigation en cours');
+            const crossing = crowded.followRoute(route, 'walker', position, target, 3);
+            assert(g.distance(crossing, position) > 0, 'A pending actor detour must not pause the walker at contact');
+            assert.equal(route.waitReason, undefined);
             holdBuilds = false;
             crowded.followRoute(route, 'walker', position, target, 3);
             const budget = route.path.reduce((frames, point, i) => frames + Math.ceil(g.distance(i ? route.path[i - 1] : position, point) / 3), 0);
@@ -685,6 +691,10 @@ describe('Navigation et portes — géométrie isolée', () => {
             assert.equal(position.x, 3);
             assert.equal(pathRequests, planned, 'Admission must resume the existing path');
             roomFull = true;
+            const contact = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies,
+                '../agent/agentAvoidance': { ...navigationDependencies['../agent/agentAvoidance'], limitAgentMovement: (_id, start) => start } });
+            assert.deepEqual(contact.followRoute(contact.createRouteState(), 'walker', { x: 0, z: -100 }, target, 3), { x: 0, z: -100 },
+                'Crossing an actor must still respect room admission even when contact clips the step before the entrance');
             position = nav.followRoute(route, 'walker', position, { x: -3, z: -100 }, 6);
             assert.equal(position.x, -3, 'Leaving a full room must remain possible');
         } finally { checkedRoom = undefined; roomFull = false; nav.resetRoute(route, 'walker'); }

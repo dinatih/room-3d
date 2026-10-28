@@ -30,14 +30,10 @@ export function getZoneDestination(id: string, agentId?: string, start?: Point, 
     : id === 'corridor' ? p.x >= BATH_EAST_WALL && p.x <= ROOM_EAST_WALL && p.z >= CORRIDOR_NORTH_WALL && p.z <= diagonal(p.x) : id === 'garden' ? p.x >= garden.min[0] && p.x <= garden.max[0] && p.z >= garden.min[2] && p.z <= garden.max[2] : true;
   let candidates = [...graph.vertices, ...getAgentObstacles(agentId).flat()].filter(p => belongs(p) && !insideObstacle(p, graph.obstacles));
   candidates.sort((a, b) => distance(a, center) - distance(b, center));
-  if (!insideObstacle(center, graph.obstacles) && isAgentDestinationFree(agentId, center)) candidates.unshift(center);
-  while (candidates.length) {
-    const target = start ? graph.findReachable(start, candidates) : candidates[0];
-    if (!target) break;
-    if (isAgentDestinationFree(agentId, target)) return target;
-    // Check live reservations after the worker replies, without changing every
-    // query key whenever an unrelated actor moves during the calculation.
-    candidates = candidates.slice(candidates.findIndex(p => p.x === target.x && p.z === target.z) + 1);
-  }
+  if (!insideObstacle(center, graph.obstacles)) candidates.unshift(center);
+  const free = new Set(candidates.filter(p => isAgentDestinationFree(agentId, p)));
+  candidates = [...free, ...candidates.filter(p => !free.has(p))];
+  const target = start ? graph.findReachable(start, candidates) : candidates[0];
+  if (target) return target;
   throw new NavigationBlockedError(`No free destination inside ${id}`, center);
 }
