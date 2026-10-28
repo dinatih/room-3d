@@ -39,7 +39,7 @@ export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPrevi
         const target = DRONA_ITEMS.find(([, item]) => item.index === i);
         return (
           <group key={i} name={`drona-se-cell-${i}`} position={position} userData={{ sceneItemRoot: true }}>
-            {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}
+            {target ? <SlidingDrona objectId={target[0]} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}
           </group>
         );
       })}

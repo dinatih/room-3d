@@ -45,7 +45,7 @@ export function KallaxNWDrona({ isPreview = false, actionState = {} }: { isPrevi
         return (
           <group key={i} name={`drona-nw-cell-${i}`} position={position} userData={{ sceneItemRoot: true }}>
           {target
-            ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
+            ? <SlidingDrona objectId={target[0]} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : <DroneCell />}
           </group>
         );

@@ -38,7 +38,7 @@ export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { is
         const target = DRONA_ITEMS.find(([, item]) => item.index === i);
         return (
           <group key={i} name={`drona-kitchen-cell-${i}`} position={position} userData={{ sceneItemRoot: true }}>
-            {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState}>
+            {target ? <SlidingDrona objectId={target[0]} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState}>
               {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - position[1], -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Télémètre Laserliner' }}>
                 <LaserDistanceMaster />
               </group>}

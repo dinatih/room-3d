@@ -38,6 +38,7 @@ it('l’inventaire et les boîtes placées partagent le même rendu et la même 
 
 it('une DRONA coulissante peut inverser sa course et garder sa preview indépendante', () => {
   const group = new THREE.Group(), refs = [], state = { extraStates: { slide: false } };
+  let actions = ['slide'];
   let cursor = 0, frame, geometry = new THREE.BoxGeometry(33, 33, 38);
   geometry.computeBoundingBox();
   const { SlidingDrona } = load('src/features/scene/items/SlidingDrona.tsx', {
@@ -45,17 +46,22 @@ it('une DRONA coulissante peut inverser sa course et garder sa preview indépend
     react: { useEffect: fn => fn(), useRef: value => refs[cursor++] ??= { current: value === null ? group : value } },
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
     './Drona': { DroneCell() {}, useDronaGeo: () => geometry },
-    '../store/useSceneStore': { useSceneStore: select => select(state) },
-    '../objectActions': { getObjectActionIds: () => ['slide'] }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { box: { slots: [] } } },
+    './useDoorOpen': { useDoorOpen: (key, preview, actions) => preview ? !!actions[key] : !!state.extraStates[key] },
+    '../objectActions': { getObjectActionIds: () => actions }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { box: { name: 'Boîte', slots: [{ slotId: 'pick-item' }] } } },
   });
-  const render = props => { cursor = 0; SlidingDrona({ objectId: 'box', label: 'Boîte', actionId: 'slide', duration: 1, ...props }); };
-  render({}); frame(null, .25); assert(group.position.z === 0);
+  const render = props => { cursor = 0; return SlidingDrona({ objectId: 'box', duration: 1, ...props }); };
+  const closed = render({}); frame(null, .25); assert(group.position.z === 0);
+  assert.equal(closed.props.userData.hoverAction.label, 'Boîte');
+  assert.deepEqual(closed.props.userData.hoverAction.actions, ['slide', 'smart-object:::box:::pick-item']);
   state.extraStates.slide = true;
   render({}); frame(null, .25); assert(Math.abs(group.position.z + 38 / 6) < 1e-6);
-  render({ isPreview: true, actionState: { slide: false } }); frame(null, .125);
+  const preview = render({ isPreview: true, actionState: { slide: false } }); frame(null, .125);
+  assert.deepEqual(preview.props.userData.hoverAction.actions, ['slide']);
   assert(Math.abs(group.position.z + 38 / 12) < 1e-6);
   state.extraStates.slide = false;
   render({ isPreview: true, actionState: { slide: true } }); frame(null, 1);
   assert.equal(group.position.z, -38 * 2 / 3);
   assert.equal(state.extraStates.slide, false);
+  actions = [];
+  assert.throws(() => render({}), /missing opening action/);
 });
