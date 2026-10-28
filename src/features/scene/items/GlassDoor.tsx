@@ -1,5 +1,5 @@
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { doorRequested } from '../ai/navigation/doorRequests';
+import { doorProtected, doorRequested } from '../ai/navigation/doorRequests';
 /**
  * Porte-fenêtre double battant PVC blanc — 160×210cm total (seuil 20cm).
  * V2 : Deux battants ouvrants individuels, logique de dépendance physique,
@@ -164,8 +164,10 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
     if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
     if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
 
-    const leftNext = leftSpring(leftRotRef.current, leftTarget, delta, -dynLeft.allowed, -dynLeft.minimum);
-    const rightNext = rightSpring(rightRotRef.current, rightTarget, delta, dynRight.minimum, dynRight.allowed);
+    // A protected interaction is a resting contact, not a bouncing door stop.
+    const restitution = navigationEnabled && doorProtected('glassRight') ? 0 : undefined;
+    const leftNext = leftSpring(leftRotRef.current, leftTarget, delta, -dynLeft.allowed, -dynLeft.minimum, restitution);
+    const rightNext = rightSpring(rightRotRef.current, rightTarget, delta, dynRight.minimum, dynRight.allowed, restitution);
     let moved = leftNext !== leftRotRef.current || rightNext !== rightRotRef.current;
     leftRotRef.current = leftNext;
     rightRotRef.current = rightNext;

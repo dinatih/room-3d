@@ -10,7 +10,7 @@ const REST_TOLERANCE = 0.001; // Radians et radians/seconde.
 export function useDoorSpring() {
   const velocity = useRef(0);
   const { invalidate } = useThree();
-  return (current: number, target: number, delta: number, min: number, max: number) => {
+  return (current: number, target: number, delta: number, min: number, max: number, restitution = RESTITUTION) => {
     const decay = FREQUENCY * DAMPING;
     const frequency = FREQUENCY * Math.sqrt(1 - DAMPING * DAMPING);
     const offset = current - target;
@@ -19,7 +19,7 @@ export function useDoorSpring() {
     const envelope = Math.exp(-decay * delta);
     const next = target + envelope * (offset * cosine + (velocity.current + decay * offset) / frequency * sine);
     velocity.current = envelope * (velocity.current * cosine - (decay * velocity.current + FREQUENCY ** 2 * offset) / frequency * sine);
-    if (next < min || next > max) velocity.current *= -RESTITUTION;
+    if (next < min || next > max) velocity.current *= -restitution;
     const angle = Math.max(min, Math.min(max, next));
     if (Math.abs(angle - target) < REST_TOLERANCE && Math.abs(velocity.current) < REST_TOLERANCE) {
       velocity.current = 0;

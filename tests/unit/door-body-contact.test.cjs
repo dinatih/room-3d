@@ -4,13 +4,35 @@ const { load } = require('../support/load-ts.cjs');
 const g = require('../../src/features/scene/ai/navigation/geometry.ts');
 const obstacles = require('../../src/features/scene/ai/navigation/obstacles.ts');
 const cameraState = { positions: {} };
+const requests = require('../../src/features/scene/ai/navigation/doorRequests.ts');
 const doors = load('src/features/scene/doorObstacles.ts', {
   './cameraState': { cameraState }, './ai/navigation/obstacles': obstacles, './ai/navigation/geometry': g,
-  './ai/navigation/doorRequests': require('../../src/features/scene/ai/navigation/doorRequests.ts'),
+  './ai/navigation/doorRequests': requests,
   './wallData': require('../../src/features/scene/wallData.ts'),
 });
 const { useDoorSpring } = load('src/features/scene/items/useDoorSpring.ts', {
   react: { useRef: current => ({ current }) }, '@react-three/fiber': { useThree: () => ({ invalidate() {} }) },
+});
+
+it('la porte-fenêtre repose sans rebond contre une interaction protégée au Kallax', () => {
+  const id = 'door-contact-kallax';
+  requests.protectDoor('glassRight', id, { x: 212.877, z: 58.751, y: 0, radius: obstacles.NAVIGATION_RADIUS_CM, height: 170 });
+  try {
+    assert(requests.doorProtected('glassLeft'), 'Both leaves share the protected opening');
+    const limit = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.glassRight);
+    assert(limit > 0 && limit < Math.PI / 2);
+    for (const sign of [-1, 1]) for (const dt of [1 / 240, 1 / 60, 1 / 15, .5]) {
+      const spring = useDoorSpring();
+      let angle = 0, contact = false;
+      for (let frame = 0; frame < 120; frame++) {
+        angle = spring(angle, sign * limit, dt, sign < 0 ? -limit : 0, sign < 0 ? 0 : limit, 0);
+        if (contact) assert.equal(angle, sign * limit, 'Continued pressure must not restart an oscillation');
+        contact ||= angle === sign * limit;
+      }
+      assert(contact, 'The leaf must reach the protected stop');
+    }
+  } finally { requests.releaseDoor('glassRight', id); }
+  assert(!requests.doorProtected('glassLeft'));
 });
 
 it('ouvre le séjour sans confondre le placard derrière le battant avec une butée', () => {

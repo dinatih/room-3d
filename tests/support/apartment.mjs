@@ -429,6 +429,7 @@ export async function door(fixture) {
             cameraState.positions[holder] = { x: state.x, y: state.y, z: state.z, yaw: state.rotY };
             if (state.status === 'INTERACTING' && OccupancyManager.getOccupant(fixture.objectId, object.slots[0].slotId) === holder) {
                 check(requests.getAgentDoorProtection(key, holder), 'Lost protection while the Kallax interaction is active');
+                check(state.animation !== 'sad-idle', 'Door pressure interrupted the protected Kallax animation');
                 protectedFrames++;
             }
         });

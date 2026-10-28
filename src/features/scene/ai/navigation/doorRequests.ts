@@ -30,6 +30,7 @@ export function requestDoor(key: DoorKey, agentId: string): void {
   entries.add(agentId);
 }
 export function doorRequested(key: DoorKey): boolean { return Boolean(passages.get(doorOpeningKey(key))?.size); }
+export function doorProtected(key: DoorKey): boolean { return Boolean(protections.get(doorOpeningKey(key))?.size); }
 export function releaseDoor(key: DoorKey, agentId: string): void {
   key = doorOpeningKey(key);
   const requests = passages.get(key);
