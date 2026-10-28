@@ -181,7 +181,15 @@ function releaseGraph(id: number): void {
   devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
 }
 
-export function prepareNavigationGraph(definition: WorkerDefinition): { id: number; epoch: string; readonly pending: boolean; read(): NavigationGraph; retain(): () => void; cancel(): void } {
+type GraphPreparation = { id: number; epoch: string; readonly pending: boolean; read(): NavigationGraph; retain(): () => void; cancel(): void };
+const sharedGraphs = new Map<string, GraphPreparation>();
+export function prepareNavigationGraph(definition: WorkerDefinition): GraphPreparation {
+  const key = JSON.stringify(definition), shared = sharedGraphs.get(key);
+  if (shared) {
+    const release = shared.retain();
+    let cancelled = false;
+    return { ...shared, get pending() { return shared.pending; }, cancel: () => { if (!cancelled) { cancelled = true; release(); } } };
+  }
   const id = ++nextGraphId;
   devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_created', data: { epoch: navigationEpoch, graphId: id, definition } });
   const job = request(id, definition, { kind: 'build' });
@@ -189,9 +197,9 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { id: numb
   let users = 1, cancelled = false;
   const release = () => {
     if (users <= 0) throw new Error('Navigation graph released without an owner');
-    if (--users === 0) { job.cancel(); releaseGraph(id); }
+    if (--users === 0) { sharedGraphs.delete(key); job.cancel(); releaseGraph(id); }
   };
-  return {
+  const preparation: GraphPreparation = {
     id,
     epoch: navigationEpoch,
     get pending() { return job.status === 'pending'; },
@@ -216,6 +224,8 @@ export function prepareNavigationGraph(definition: WorkerDefinition): { id: numb
       return graph;
     },
   };
+  sharedGraphs.set(key, preparation);
+  return preparation;
 }
 
 export function readObjectApproach(graph: NavigationGraph, approach: ApproachQuery): Point[] {

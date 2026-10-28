@@ -27,6 +27,30 @@ function withWorker(exercise) {
 }
 
 describe('Construction du réseau et requêtes géométriques dans le worker', () => {
+  it('partage une seule construction entre 25 lecteurs et ne libère le réseau qu’au dernier départ', () => {
+    const previous = globalThis.Worker, sent = [];
+    let worker;
+    globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
+    try {
+      const client = clientModule();
+      const readers = Array.from({ length: 25 }, () => client.prepareNavigationGraph(structuredClone(definition)));
+      assert.equal(sent.length, 1, 'Identical geometry must be built once, including concurrent requests');
+      const build = sent.shift();
+      assert(readers.every(reader => reader.pending && reader.id === build.graphId));
+      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, result: snapshot() } });
+      const graph = readers[0].read();
+      assert(readers.every(reader => !reader.pending && reader.read() === graph));
+      for (const reader of readers.slice(0, -1)) { reader.cancel(); reader.cancel(); }
+      assert.equal(sent.length, 0, 'One owner must not release another owner’s graph');
+      readers.at(-1).cancel();
+      assert.deepEqual(sent.shift(), { release: graph.id });
+      const replacement = client.prepareNavigationGraph(definition);
+      assert.notEqual(replacement.id, graph.id, 'Unused geometry must not remain cached forever');
+      const different = client.prepareNavigationGraph({ ...definition, solids: [{ polygon: geometry.rectangle(0, 0, 10, 10), radius: 6 }] });
+      assert.notEqual(different.id, replacement.id, 'Different collision geometry must remain separate');
+      replacement.cancel(); different.cancel();
+    } finally { if (previous === undefined) delete globalThis.Worker; else globalThis.Worker = previous; }
+  });
   it('quitte un meuble du côté connecté à la prochaine destination', () => {
     const furniture = geometry.rectangle(0, 0, 40, 400);
     const graph = queries.buildNavigationGraph({ ...definition, solids: [{ polygon: furniture, radius: 0, comfort: false }] });

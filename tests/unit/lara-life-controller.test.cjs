@@ -12,8 +12,9 @@ function world(id = 'native') {
   const objects = Object.fromEntries(candidates.map(candidate => [candidate.id, { id: candidate.id, name: candidate.id,
     position: [candidate.x, 0, candidate.z], slots: [{ slotId: 'use', animation: candidate.activity, duration: 1 }] }]));
   const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
-  let revision = 0, failedId, actorBlockedId, crowdWait, attempts = [], snapshot = {};
+  let revision = 0, failedId, actorBlockedId, crowdWait, navigationPending, attempts = [], snapshot = {};
   class NavigationBlockedError extends Error { constructor() { super('actor in the approach'); this.target = { x: 20, z: 10 }; } }
+  class NavigationPending { constructor(job) { this.job = job; } }
   const graph = {}, cameraState = { isSceneLaunched: true, positions: {} };
   const occupancy = { canUseObject: () => true, isSlotOccupied: () => false,
     claimSlot: (objectId, slotId, characterId) => (reservations.set(`${objectId}:${slotId}`, characterId), true),
@@ -48,6 +49,7 @@ function world(id = 'native') {
     '../animations/animationResolver': { resolveAnimationId: value => value, getAnimationDef: () => ({ duration: 1 }), resolveSlotAnimation: slot => slot },
     '../cameraState': { cameraState }, './agent/agentWalkAnimations': { getRandomNpcWalkAnimation: () => 'walk', getWalkSpeedForAnimation: () => 100 },
     './agent/agentInstructionCoords': { resolveInstructionCoords: instruction => {
+      if (navigationPending) throw new NavigationPending({ description: 'Construction du réseau de navigation' });
       if (actorBlockedId && instruction.smartObjectId === actorBlockedId) throw new NavigationBlockedError();
       const object = objects[instruction.smartObjectId];
       return object ? { tx: object.position[0], ty: 0, tz: object.position[2], anim: object.slots[0].animation, label: object.id }
@@ -57,7 +59,7 @@ function world(id = 'native') {
       beginActorBlockCheck: noop, endActorBlockCheck: () => new Map([['other', 'position']]), actorBlocksUnchanged: () => Boolean(actorBlockedId) },
     './agent/agentDuoHandler': {}, './navigation/doorRequests': { releaseAgentDoors: noop },
     '@features/scene/utils/deskScreenVideo': { setDesk2SmartActionState: noop },
-    './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending: class extends Error {} },
+    './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
     '@/devLog': { devLog: noop, DEV_LOG_ENABLED: false }, '../idleState': { isAppIdle: () => false },
   });
   const scenario = sequence('desk-bollsidan-2', 'use');
@@ -69,21 +71,56 @@ function world(id = 'native') {
   };
   return { controller, nativeLife, logs, tick, snapshot, attempts,
     pauseCrowd: value => { crowdWait = value; },
+    pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
 
-it('attend un contournement de PNJ sans sad et conserve sad pour un trajet impossible', () => {
+it('attend un calcul sans conserver le sad de l’action précédente, puis reprend', () => {
   const w = world('rosanna');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
-  w.pauseCrowd(true); w.tick();
-  assert.equal(w.controller.getStatus(), 'MOVING');
-  assert.equal(w.controller.state.animation, 'idle');
-  assert(w.logs.some(log => log.action === 'nav_blocked'), 'The wait must remain visible in diagnostics');
-  w.pauseCrowd('blocked'); w.tick();
-  assert.equal(w.controller.getStatus(), 'BLOCKED');
+  w.controller.state.animation = 'sad-idle';
+  w.pauseNavigation(true);
+  for (let i = 0; i < 5; i++) {
+    w.tick(1, false);
+    assert.equal(w.controller.state.animation, 'idle', 'Network preparation must never display sad');
+  }
+  assert(w.logs.some(log => log.action === 'nav_waiting'));
+  w.pauseNavigation(false); w.tick();
+  assert.equal(w.controller.state.x, 100);
+});
+
+it('attend un contournement sans sad et limite un échec à 250 ms sans cacher son état bloqué', () => {
+  const previousClock = globalThis.performance;
+  let now = 0;
+  globalThis.performance = { now: () => now };
+  try {
+    const w = world('rosanna');
+    w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
+    w.pauseCrowd(true); w.tick();
+    assert.equal(w.controller.getStatus(), 'MOVING');
+    assert.equal(w.controller.state.animation, 'idle');
+    assert(w.logs.some(log => log.action === 'nav_blocked'), 'The wait must remain visible in diagnostics');
+    w.pauseCrowd('blocked'); w.tick();
+    assert.equal(w.controller.getStatus(), 'BLOCKED');
+    assert.equal(w.controller.state.animation, 'sad-idle');
+    now = 249; w.tick();
+    assert.equal(w.controller.state.animation, 'sad-idle');
+    now = 250; w.tick();
+    assert.equal(w.controller.state.animation, 'idle');
+    now = 1000; w.tick();
+    assert.equal(w.controller.state.animation, 'idle', 'Repeated failures must not restart sad while still stopped');
+    assert.equal(w.controller.getStatus(), 'BLOCKED');
+    w.pauseCrowd(false); w.tick();
+    assert.equal(w.controller.state.x, 100, 'Clearing the other actor must resume the route');
+  } finally { globalThis.performance = previousClock; }
+});
+
+it('préserve une animation sad explicitement demandée par une interaction', () => {
+  const w = world('rosanna');
+  w.controller.configure({ scenario: [{ type: 'WAIT', duration: 3, animation: 'sad-idle' }], loop: false });
+  w.tick(.5, false); w.tick(.5, false);
+  assert.equal(w.controller.getStatus(), 'INTERACTING');
   assert.equal(w.controller.state.animation, 'sad-idle');
-  w.pauseCrowd(false); w.tick();
-  assert.equal(w.controller.state.x, 100, 'Clearing the other actor must resume the route');
 });
 
 it('attend la vraie animation avant de satisfaire un besoin et de terminer l’activité', () => {

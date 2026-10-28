@@ -51,7 +51,7 @@ it('attend le départ du PNJ bloquant puis termine le déploiement avant de choi
         return { tx:500,ty:0,tz:100 };
       };
       const getInteractionOwner = owner => owner, releaseAgentDoors = () => {}, reportNavigationStop = () => {}, appLog = () => {};
-      const SMART_OBJECTS = {}, NAVIGATION_WAIT_ANIMATION = 'idle';
+      const SMART_OBJECTS = {}, NAVIGATION_BLOCKED_ANIMATION = 'sad-idle';
       const retrySmartAction = () => { retries++; agentStatus = 'IDLE'; timer = 0; };
       const advance = dt => { ${source.slice(begin, end)} return state; };
       ${source.slice(update, updateEnd)}

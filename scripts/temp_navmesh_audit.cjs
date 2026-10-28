@@ -51,13 +51,17 @@ if (process.argv[2] === '--stops') {
       if (action === 'nav_path' && !d.startAccessible) invalidStarts.push({ at: row.elapsedMs, ...d, definition: undefined });
       if (action === 'nav_graph_created') pendingBuilds.set(`${d.epoch}:${d.graphId}`, d.definition.solids ? 'static' : 'crowd');
       if (action !== 'nav_agent_snapshot') continue;
-      const sad = d.state.animation === 'sad-idle' && !d.idle;
-      if (sad) {
+      const navigating = ['MOVING', 'BLOCKED', 'IDLE'].includes(d.status);
+      const sad = navigating && d.state.animation === 'sad-idle' && !d.idle;
+      const waiting = navigating && !d.idle && d.noProgressMs > 0
+        && (d.pendingJob || d.navigationError || d.route.waitReason || d.route.error);
+      if (sad || waiting) {
         const reason = d.pendingJob?.description || d.route.waitReason || d.route.error || d.navigationError;
         reasons[reason] = (reasons[reason] || 0) + 1;
         let stop = open.get(tag);
         if (!stop) { stop = { actor: tag, at: row.elapsedMs, durationMs: 0, reason, position: d.state, instruction: d.instruction, route: { graphId: d.route.graphId, target: d.route.target, next: d.route.next, error: d.route.error, crowd: d.route.crowd && { baseId: d.route.crowd.baseId, graphId: d.route.crowd.graphId, preparing: d.route.crowd.preparing } } }; open.set(tag, stop); stops.push(stop); }
         stop.durationMs = row.elapsedMs - stop.at;
+        stop.sadSamples = (stop.sadSamples || 0) + Number(sad);
       } else open.delete(tag);
     }
     console.log(JSON.stringify({ file: fs.realpathSync(file), reasons, graphs: [...pendingBuilds.values()].reduce((a, kind) => ({ ...a, [kind]: (a[kind] || 0) + 1 }), {}), stops: stops.sort((a, b) => b.durationMs - a.durationMs), invalidStarts, stats: world?.jobs.stats }, null, 2));

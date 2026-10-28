@@ -30,7 +30,9 @@ import { isAppIdle } from '../idleState';
 export type { AgentState };
 export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
 
-export const NAVIGATION_WAIT_ANIMATION = resolveAnimationId('sad-idle');
+export const NAVIGATION_WAIT_ANIMATION = resolveAnimationId('idle');
+const NAVIGATION_BLOCKED_ANIMATION = resolveAnimationId('sad-idle');
+const NAVIGATION_SAD_LIMIT_MS = 250; // User-requested maximum for navigation failures.
 
 interface AgentDeploymentState {
   hasStarted: boolean;
@@ -138,7 +140,7 @@ export function createAgentController(
     useLaraLifeStore.setState({ activity: 'Commande utilisateur', reason, needs: { ...nativeLife.needs } });
   };
   let route = createRouteState();
-  const navigationWaitAnimation = () => route.crowd && !route.error ? 'idle' : NAVIGATION_WAIT_ANIMATION;
+  let navigationStopStartedAt: number | undefined;
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
   let diagnosticStop: { reason: string; startedAt: number } | undefined;
@@ -1191,7 +1193,7 @@ export function createAgentController(
       }
       if (moved > 0) state.rotY = computeRotYStep(state.rotY, Math.atan2(position.x - oldPosition.x, position.z - oldPosition.z), ROT_SPEED, dt);
       if (route.error) {
-        state.animation = NAVIGATION_WAIT_ANIMATION;
+        state.animation = NAVIGATION_BLOCKED_ANIMATION;
         agentStatus = 'BLOCKED';
         reportNavigationStop(route.error, target.label, { x: target.tx, z: target.tz });
         if (currentInstruction.smartObjectId || (hasLife && loop && lifeActivity === 'walk')) {
@@ -1366,7 +1368,7 @@ export function createAgentController(
           advanceToNextStep(hasNavStep);
         }
       } else {
-        state.animation = moved > 0 ? currentWalkAnim : navigationWaitAnimation();
+        state.animation = moved > 0 ? currentWalkAnim : NAVIGATION_WAIT_ANIMATION;
       }
     } else if (agentStatus === 'INTERACTING') {
       // Observation never resolves a slot animation or joins a duo session.
@@ -1557,7 +1559,7 @@ export function createAgentController(
       if (!(error instanceof NavigationBlockedError) || !instruction) throw error;
       releaseAgentDoors(_characterId);
       blockedCoords = { instruction, graph: getNavigationGraph(getAgentProfile(_characterId), undefined), x:state.x, z:state.z, owner:route.owner, status, actorBlockers:error.actorBlockers };
-      state.animation = NAVIGATION_WAIT_ANIMATION;
+      state.animation = NAVIGATION_BLOCKED_ANIMATION;
       agentStatus = 'BLOCKED';
       const label = instruction.smartObjectId ? (SMART_OBJECTS[instruction.smartObjectId]?.name ?? instruction.smartObjectId) : instruction.targetZoneId ?? instruction.type;
       reportNavigationStop(error.message, label, error.target, error.actorBlockers);
@@ -1663,6 +1665,7 @@ export function createAgentController(
       waitingForNavigation = true;
       pendingReason = error.job.description;
       pendingJob = error.job;
+      if (agentStatus !== 'INTERACTING' && state.animation === NAVIGATION_BLOCKED_ANIMATION) state.animation = NAVIGATION_WAIT_ANIMATION;
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
@@ -1682,7 +1685,14 @@ export function createAgentController(
       }
       const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
       const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
-      if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? navigationWaitAnimation() : 'idle';
+      if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = NAVIGATION_WAIT_ANIMATION;
+      const stopped = agentStatus !== 'INTERACTING' && agentStatus !== 'TRANSITIONING' && agentStatus !== 'FINISHED'
+        && state.x === x && state.z === z && (navigationError || waitingForNavigation || route.error);
+      if (!stopped) navigationStopStartedAt = undefined;
+      else {
+        navigationStopStartedAt ??= performance.now();
+        if (state.animation === NAVIGATION_BLOCKED_ANIMATION && performance.now() - navigationStopStartedAt >= NAVIGATION_SAD_LIMIT_MS) state.animation = NAVIGATION_WAIT_ANIMATION;
+      }
       if (pendingReason) {
         const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
         const objId = instruction?.smartObjectId;
