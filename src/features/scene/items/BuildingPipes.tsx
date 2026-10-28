@@ -93,9 +93,9 @@ export function BuildingPipes({ onSize }: SceneModelProps) {
         roughness: 0.35,
         metalness: 0.05,
       }),
-      // Aluminium strié pour la gaine flexible de hotte
+      // Finition noire pour la gaine flexible de hotte
       flexMat: new THREE.MeshStandardMaterial({
-        color: 0xd8dde3,
+        color: 0x111111,
         roughness: 0.28,
         metalness: 0.85,
       }),

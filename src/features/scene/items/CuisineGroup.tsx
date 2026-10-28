@@ -37,12 +37,11 @@ const CABINET_W   = 40;
 const FRIDGE_W    = 60;
 
 // ── Drona (3 boîtes sur le meuble haut) ──────────────────────────────────────
-// World: x=[46.75, 80, 113.25], y=211.7, z=440.5, rotY=π
-// Local (wrapper at (30,0,400)): x=[16.75, 50, 83.25], y=211.7, z=40.5, rotY=π
+// Décalage de 0,5 cm vers le nord (-Z) pour dégager la gaine de hotte.
 
 const gap = (KIT_W - 3 * DF) / 4; // 0.25 cm
 const DRONA_POSITIONS = [0, 1, 2].map(i => new THREE.Vector3(
-  gap + DF / 2 + i * (DF + gap), 194 + DF / 2, (KIT_D - 38 / 2 - 0.5) - 12,
+  gap + DF / 2 + i * (DF + gap), 194 + DF / 2, (KIT_D - 38 / 2 - 0.5) - 12 - 0.5,
 ));
 
 /** Drona layer seul — pour placement dans un layer séparé (furniture). */
