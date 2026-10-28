@@ -107,21 +107,29 @@ if (process.argv[2] === '--invalid') {
   (async () => {
     require('../tests/support/load-ts.cjs');
     const g = require('../src/features/scene/ai/navigation/geometry.ts');
-    const geometries = new Map();
+    const geometries = new Map(), staticObstacles = new Map();
     let world;
     for await (const line of require('node:readline').createInterface({ input: fs.createReadStream(process.argv[3] || '/tmp/room-3d-logs/latest.jsonl'), crlfDelay: Infinity })) {
       if (!line) continue;
       const row = JSON.parse(line), { action, data: d } = row.entry;
       if (action === 'nav_world') world = d;
-      if (action === 'nav_graph_geometry') geometries.set(`${d.epoch}:${d.graphId}`, d);
+      if (action === 'nav_graph_created' || action === 'nav_graph_geometry') geometries.set(`${d.epoch}:${d.graphId}`, { ...d, at: row.elapsedMs });
       if (action !== 'nav_path' || d.startAccessible) continue;
       const geometry = geometries.get(`${d.epoch}:${d.graphId}`);
       if (!geometry) continue;
-      const blockers = geometry.definition.solids.flatMap((solid, i) => g.pointInRing(d.start, g.inflate(solid.polygon, solid.radius))
-        ? [{ ...solid, source: geometry.sources[i] || world?.doors[i - geometry.sources.length] }] : []);
+      let base;
+      if (geometry.definition.obstacles) for (const [key, candidate] of geometries) {
+        if (!candidate.definition.solids) continue;
+        let obstacles = staticObstacles.get(key);
+        if (!obstacles) { obstacles = g.union(candidate.definition.solids.map(s => g.inflate(s.polygon, s.radius))); staticObstacles.set(key, obstacles); }
+        if (JSON.stringify(obstacles) === JSON.stringify(geometry.definition.obstacles.slice(0, obstacles.length))) base = { graphId: candidate.graphId, startBlockedByStatic: g.insideObstacle(d.start, obstacles) };
+      }
+      const blockers = geometry.definition.solids
+        ? geometry.definition.solids.flatMap((solid, i) => g.pointInRing(d.start, g.inflate(solid.polygon, solid.radius))
+          ? [{ ...solid, source: geometry.sources?.[i] || world?.doors[i - (geometry.sources?.length ?? 0)] }] : [])
+        : geometry.definition.obstacles.flatMap((rings, index) => g.insideObstacle(d.start, [rings]) ? [{ index, rings }] : []);
       fs.writeFileSync('/tmp/navigation-invalid-start.json', JSON.stringify({ ...d, geometry, world }));
-      console.log(JSON.stringify({ path: d, blockers }, null, 2));
-      return;
+      console.log(JSON.stringify({ at: row.elapsedMs, graphAt: geometry.at, base, path: d, blockers }, null, 2));
     }
   })().catch(error => { console.error(error); process.exitCode = 1; });
   return;
