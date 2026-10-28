@@ -183,8 +183,8 @@ export function BathroomFurnishings() {
         <OneBlade />
       </group>
 
-      {/* Brosse à dents Oral-B dans le panier Tisken (debout/penchée à côté) */}
-      <group position={[BATH_EAST_WALL - 102, 128, BATH_NORTH_WALL + 6.5]} rotation={[0.2, 0.1, -0.25]} userData={{ sceneItemRoot: true, itemName: 'Brosse à dents Oral-B' }}>
+      {/* Brosse à dents Oral-B dans le panier Tisken (debout/penchée au fond du bac à côté du OneBlade) */}
+      <group position={[BATH_EAST_WALL - 104, 121, BATH_NORTH_WALL + 13]} rotation={[-0.15, 0.1, -0.2]} userData={{ sceneItemRoot: true, itemName: 'Brosse à dents Oral-B' }}>
         <OralBToothbrush />
       </group>
     </MergedStaticGroup>
