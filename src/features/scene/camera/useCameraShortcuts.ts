@@ -438,6 +438,8 @@ export function useCameraShortcuts({
       }
 
       if (e.key === 'y' || e.key === 'Y') {
+        if (e.repeat) return;
+        e.preventDefault();
         if (modeRef.current === 'top' && topFollowRef.current) {
           exitTop();
           appLog('system', '🎥 Mode Vue Libre (Orbit)');
@@ -451,6 +453,9 @@ export function useCameraShortcuts({
       if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 't' || e.key === 'T')) {
         if (e.repeat) return;
         e.preventDefault();
+        const store = useSceneStore.getState();
+        store.setCameraTarget('studio');
+        store.setCameraMovement('fix');
         dispatchView('west', undefined, false, 90);
         appLog('system', '🎥 Vue du dessus');
         return;
