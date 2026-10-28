@@ -1,5 +1,5 @@
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, transitionDogAction, type DogAction } from './dogBehavior';
+import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination } from '../ai/agent/agentAvoidance';
@@ -17,7 +17,6 @@ import { glbLocalBBox } from '../glbUtils';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { getObjectActionIds } from '../objectActions';
 import { getAnimationOriginTransform } from '../animations/animationResolver';
-import { SubjectDriver } from '../camera/subjectControls';
 
 const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
 const DANCE_RADIUS = 75; // cm du partenaire
@@ -46,7 +45,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
   const navigationEnabled = useNavigationEnabled();
   const routeRef = useRef(createRouteState());
   const life = useMemo(createDogBehavior, []);
-  const driver = useMemo(() => new SubjectDriver('shiba'), []);
   const activeAction = useRef<THREE.AnimationAction | null>(null);
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
@@ -143,7 +141,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     onSize?.(finalSize);
 
     return () => {
-      if (!isPreview) driver.dispose();
+      if (!isPreview) life.driver?.dispose();
       if (!isPreview && navigationEnabled) { removeAgentProfile('shiba'); resetRoute(routeRef.current, 'shiba'); releaseDogRoute(life, 'shiba'); }
       mixerRef.current?.stopAllAction();
       mixerRef.current?.uncacheRoot(scene);
@@ -243,18 +241,10 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     }
     mixerRef.current.update(delta);
     invalidate();
-    driver.step(modelRef.current, delta, WALK_SPEED);
-    if (driver.started) {
-      releaseDogRoute(life, 'shiba'); resetRoute(routeRef.current, 'shiba');
-      life.autonomous = false; danceRef.current.owner = null;
-      mixerRef.current.stopAllAction(); activeAction.current = null;
-    }
-    if (driver.active) {
-      const action = driver.moving ? 'walk' : 'idle';
-      if (life.action !== action || driver.started) { life.action = action; context().play(action); }
+    if (updateDogControl(life, context(), delta)) {
+      if (life.driver!.started) { resetRoute(routeRef.current, 'shiba'); danceRef.current.owner = null; }
       return;
     }
-    if (driver.resumed) { modelRef.current.getWorldPosition(life.position); resumeDogBehavior(life, context()); }
     
     if (!isPreview) {
       // Vérifier si un personnage actif exécute l'animation Dance With Dog
@@ -280,7 +270,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           mixerRef.current.stopAllAction();
           const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
           if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
-          mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+          activeAction.current = mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
         }
         const target = dogDanceTarget(dancingChar.x, dancingChar.y, dancingChar.z, dancingChar.yaw);
         reserveAgentDestination('shiba', target);
@@ -298,7 +288,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
             mixerRef.current.stopAllAction();
             const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
             if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
-            mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+            activeAction.current = mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
           }
           if (next.x !== before.x || next.z !== before.z) modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta);
         } else {
@@ -309,7 +299,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
             mixerRef.current.stopAllAction();
             const jumpClip = animations.find(clip => clip.name === 'Dog|Jump');
             if (!jumpClip) throw new Error('Shiba choreography requires Dog|Jump');
-            mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
+            activeAction.current = mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
           }
         }
 

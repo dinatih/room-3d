@@ -10,16 +10,21 @@ import { inflate, segmentFree } from '../ai/navigation/geometry';
 import { DOOR_CONFIGS, doorCollisionState, doorPolygon } from '../doorObstacles';
 
 export const SUBJECT_RESUME_MS = 12000;
-interface SubjectInput { keys: Set<string>; until: number }
+interface SubjectInput { keys: Set<string>; until: number; action: 'jump' | 'rest' | null }
 const inputs = new Map<string, SubjectInput>();
 export function recordSubjectCommand(id: string, now = performance.now()): SubjectInput {
   let input = inputs.get(id);
-  if (!input) { input = { keys: new Set(), until: 0 }; inputs.set(id, input); }
+  if (!input) { input = { keys: new Set(), until: 0, action: null }; inputs.set(id, input); }
   input.until = now + SUBJECT_RESUME_MS;
   return input;
 }
 export function setSubjectInput(id: string, key: string, pressed: boolean, now = performance.now()): void {
-  recordSubjectCommand(id, now).keys[pressed ? 'add' : 'delete'](key);
+  const input = recordSubjectCommand(id, now);
+  if (pressed && !input.keys.has(key) && (id === 'shiba' || id === 'ulotte')) {
+    if (key === 'character:Elevate') input.action = 'jump';
+    if (key === 'character:Descend') input.action = 'rest';
+  }
+  input.keys[pressed ? 'add' : 'delete'](key);
 }
 export function readSubjectInput(id: string, now = performance.now()): SubjectInput | null {
   const input = inputs.get(id);
@@ -34,6 +39,7 @@ export function releaseSubjectInputs(now = performance.now()): void {
 
 /** Shared takeover clock and collision-checked body movement; each actor keeps its own AI. */
 export class SubjectDriver {
+  action: 'jump' | 'rest' | null = null;
   active = false;
   started = false;
   resumed = false;
@@ -49,6 +55,8 @@ export class SubjectDriver {
   dispose(): void { inputs.delete(this.id); this.active = false; this.navigation.clear(); }
   step(root: Group, delta: number, speed: number, flightRadius?: number): void {
     const input = readSubjectInput(this.id);
+    this.action = input?.action ?? null;
+    if (input) input.action = null;
     this.started = Boolean(input) && !this.active;
     this.resumed = !input && this.active;
     this.active = Boolean(input);

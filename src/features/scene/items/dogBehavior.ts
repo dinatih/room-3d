@@ -6,6 +6,7 @@ import { computeSteeringVector, computeRotYStep, reserveAgentDestination, isAgen
 import { appLog } from '@features/ui/AppConsole';
 import { dogFeedingStation } from './dogBowlData';
 import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
+import { SubjectDriver } from '../camera/subjectControls';
 
 export const DOG_ACTIVITY = {
   walkChance: 0.8, localTripChance: 0.8,
@@ -30,6 +31,7 @@ export function createDogBehavior() {
     autonomous: true, mode: 'rest' as 'rest' | 'move' | 'meal-approach' | 'meal-align' | 'eat',
     action: 'idle' as DogAction, lastPause: 'idle' as DogAction,
     remaining: 0, mealRemaining: mealInterval(), gait: 'walk' as 'walk' | 'run',
+    driver: null as SubjectDriver | null, controlAction: null as 'jump' | 'rest' | null, controlRemaining: 0,
   };
 }
 export type DogBehavior = ReturnType<typeof createDogBehavior>;
@@ -52,6 +54,29 @@ export function resumeDogBehavior(state: DogBehavior, context: DogContext) {
   state.action = 'idle';
   state.lastPause = 'idle';
   state.remaining = context.play('idle') * DOG_ACTIVITY.minRestCycles;
+}
+export function updateDogControl(state: DogBehavior, context: DogContext, delta: number): boolean {
+  const driver = state.driver ??= new SubjectDriver(context.id);
+  driver.step(context.root, delta, DOG_WALK_SPEED[context.id]);
+  if (driver.started) { releaseDogRoute(state, context.id); state.autonomous = false; state.controlAction = null; }
+  if (driver.active) {
+    if (driver.action) {
+      state.controlAction = state.action = driver.action;
+      state.controlRemaining = context.play(driver.action, true);
+    } else {
+      if (state.controlAction === 'jump') {
+        state.controlRemaining -= delta;
+        if (state.controlRemaining <= 0) state.controlAction = null;
+      }
+      if (driver.moving) state.controlAction = null;
+      const action = state.controlAction ?? (driver.moving ? 'walk' : 'idle');
+      if (state.action !== action || driver.started) { state.action = action; context.play(action); }
+    }
+    context.root.getWorldPosition(state.position);
+    return true;
+  }
+  if (driver.resumed) { context.root.getWorldPosition(state.position); resumeDogBehavior(state, context); }
+  return false;
 }
 export function startDogPause(state: DogBehavior, context: DogContext) {
   releaseDogRoute(state, context.id);

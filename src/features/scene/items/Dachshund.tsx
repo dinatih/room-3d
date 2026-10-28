@@ -12,7 +12,7 @@ import { cameraState } from '../cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { isAppIdle } from '../idleState';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, transitionDogAction, type DogAction } from './dogBehavior';
+import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 
 const HEIGHT = 30; // cm, hauteur totale du teckel (tête comprise).
@@ -112,6 +112,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
       if (!isPreview && navigationEnabled) {
+        life.driver?.dispose();
         removeAgentProfile('ulotte');
         releaseDogRoute(life, 'ulotte');
       }
@@ -156,7 +157,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     }
     // Les previews de zones ne doivent pas publier d'agents dans la scène principale.
     if (!navigationEnabled) return;
-    updateDogBehavior(life, context(), delta);
+    if (!updateDogControl(life, context(), delta)) updateDogBehavior(life, context(), delta);
     mixer.update(delta);
     root.current.getWorldQuaternion(life.rotation);
     const position = life.position;

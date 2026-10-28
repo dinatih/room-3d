@@ -13,6 +13,46 @@ const controls = load('src/features/scene/camera/subjectControls.ts', {
   '../ai/navigation/navigationScope': { NavigationScope: class { poll(fn) { fn(); return true; } clear() {} } },
   '../ai/navigation/geometry': { segmentFree: () => !blocked }, '../doorObstacles': { DOOR_CONFIGS: {}, doorCollisionState: {} },
 });
+const dogs = load('src/features/scene/items/dogBehavior.ts', {
+  three: THREE, '../ai/SpatialZone': {},
+  '../ai/navigation/service': { createRouteState: () => ({}), resetRoute() {} },
+  '../ai/navigation/obstacles': {},
+  '../ai/agent/agentAvoidance': { reserveAgentDestination() {} },
+  '@features/ui/AppConsole': {}, './dogBowlData': {},
+  '../ai/navigation/navigationScope': { NavigationScope: class { clear() {} } },
+  '../camera/subjectControls': controls,
+});
+it('fait sauter puis asseoir chaque chien sans répéter le saut pendant un appui long', () => {
+  for (const id of ['shiba', 'ulotte']) {
+    cameraState.animalViews[id] = { forward: { x: 0, y: 0, z: 1 } };
+    const root = new THREE.Group(), state = dogs.createDogBehavior(), calls = [];
+    const context = { id, root, play: (action, once) => { calls.push([action, once]); return 2; } };
+    try {
+      controls.setSubjectInput(id, 'character:Elevate', true);
+      dogs.updateDogControl(state, context, 0.1);
+      assert.deepEqual(calls, [['jump', true]]);
+      controls.setSubjectInput(id, 'character:Elevate', true);
+      dogs.updateDogControl(state, context, 1);
+      assert.equal(calls.length, 1);
+      dogs.updateDogControl(state, context, 1);
+      assert.equal(state.action, 'idle');
+      assert(root.position.equals(new THREE.Vector3()));
+      controls.setSubjectInput(id, 'character:Elevate', false);
+      controls.setSubjectInput(id, 'character:Descend', true);
+      dogs.updateDogControl(state, context, 0.1);
+      assert.deepEqual(calls.at(-1), ['rest', true]);
+      controls.setSubjectInput(id, 'character:Descend', false);
+      dogs.updateDogControl(state, context, 3);
+      assert.equal(state.action, 'rest');
+      controls.setSubjectInput(id, 'character:ArrowUp', true);
+      dogs.updateDogControl(state, context, 0.1);
+      assert.equal(state.action, 'walk');
+      controls.setSubjectInput(id, 'character:ArrowUp', false, performance.now() - controls.SUBJECT_RESUME_MS);
+      assert.equal(dogs.updateDogControl(state, context, 0.1), false);
+      assert.equal(state.autonomous, true);
+    } finally { state.driver?.dispose(); }
+  }
+});
 it('monte et descend les sujets volants sans déplacer les sujets terrestres', () => {
   for (const id of ['drone', 'robin', 'dji-neo', 'dji-avata-2', 'dji-fpv', 'test']) {
     cameraState.animalViews[id] = { forward: { x: 0, y: 0, z: 1 } };
