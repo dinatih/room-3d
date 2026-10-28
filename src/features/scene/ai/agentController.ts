@@ -19,7 +19,7 @@ import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
 import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
-import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
+import { computeSteeringVector, computeRotYStep, setAgentVelocity, isAgentDestinationFree, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
@@ -138,6 +138,7 @@ export function createAgentController(
     useLaraLifeStore.setState({ activity: 'Commande utilisateur', reason, needs: { ...nativeLife.needs } });
   };
   let route = createRouteState();
+  const navigationWaitAnimation = () => route.crowd && !route.error ? 'idle' : NAVIGATION_WAIT_ANIMATION;
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
   let diagnosticStop: { reason: string; startedAt: number } | undefined;
@@ -1365,7 +1366,7 @@ export function createAgentController(
           advanceToNextStep(hasNavStep);
         }
       } else {
-        state.animation = moved > 0 ? currentWalkAnim : NAVIGATION_WAIT_ANIMATION;
+        state.animation = moved > 0 ? currentWalkAnim : navigationWaitAnimation();
       }
     } else if (agentStatus === 'INTERACTING') {
       // Observation never resolves a slot animation or joins a duo session.
@@ -1641,7 +1642,7 @@ export function createAgentController(
   };
 
   const update = (dt: number): AgentState => {
-    if (hasLife && dt === 0) return state;
+    if (hasLife && dt === 0) { setAgentVelocity(_characterId, null); return state; }
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
@@ -1665,6 +1666,7 @@ export function createAgentController(
       if (agentStatus === 'TRANSITIONING') state.animationPaused = true;
       return state;
     } finally {
+      setAgentVelocity(_characterId, dt > 0 ? { x: (state.x - x) / dt, z: (state.z - z) / dt } : null);
       if (lifeRunning) {
         // Stationary route waits never satisfy the desire to move.
         const moving = (wasMoving || agentStatus === 'MOVING') && (state.x !== x || state.z !== z);
@@ -1680,7 +1682,7 @@ export function createAgentController(
       }
       const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
       const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
-      if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? NAVIGATION_WAIT_ANIMATION : 'idle';
+      if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = agentStatus === 'MOVING' || waitingForNavigation ? navigationWaitAnimation() : 'idle';
       if (pendingReason) {
         const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
         const objId = instruction?.smartObjectId;

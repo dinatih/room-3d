@@ -12,7 +12,7 @@ function world(id = 'native') {
   const objects = Object.fromEntries(candidates.map(candidate => [candidate.id, { id: candidate.id, name: candidate.id,
     position: [candidate.x, 0, candidate.z], slots: [{ slotId: 'use', animation: candidate.activity, duration: 1 }] }]));
   const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
-  let revision = 0, failedId, actorBlockedId, attempts = [], snapshot = {};
+  let revision = 0, failedId, actorBlockedId, crowdWait, attempts = [], snapshot = {};
   class NavigationBlockedError extends Error { constructor() { super('actor in the approach'); this.target = { x: 20, z: 10 }; } }
   const graph = {}, cameraState = { isSceneLaunched: true, positions: {} };
   const occupancy = { canUseObject: () => true, isSlotOccupied: () => false,
@@ -30,7 +30,11 @@ function world(id = 'native') {
     './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop } },
     '../animations/duoAnimations': { getDuoAnimationForClip: noop },
     './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; }, recoverDoorContact: () => undefined,
-      followRoute: (route, actor, start, goal) => { attempts.push(goal.x); if (goal.x === objects[failedId]?.position[0]) { route.error = 'sealed'; return start; } return goal; },
+      followRoute: (route, actor, start, goal) => {
+        attempts.push(goal.x); route.crowd = crowdWait ? {} : undefined;
+        if (crowdWait) { route.error = crowdWait === 'blocked' ? 'sealed' : null; return start; }
+        if (goal.x === objects[failedId]?.position[0]) { route.error = 'sealed'; return start; } return goal;
+      },
       getInteractionOwner: value => value, getContainingObjectOwner: noop, getNavigationGraph: () => graph,
       describeNavigationBlock: () => 'sealed', navigationDiagnostics: noop,
       NavigationBlockedError },
@@ -49,7 +53,7 @@ function world(id = 'native') {
       return object ? { tx: object.position[0], ty: 0, tz: object.position[2], anim: object.slots[0].animation, label: object.id }
         : { tx: instruction.targetPos?.[0] ?? 0, tz: instruction.targetPos?.[2] ?? 0, label: 'pause' };
     } },
-    './agent/agentAvoidance': { computeRotYStep: (from, to) => to, isAgentDestinationFree: () => true,
+    './agent/agentAvoidance': { setAgentVelocity: noop, computeRotYStep: (from, to) => to, isAgentDestinationFree: () => true,
       beginActorBlockCheck: noop, endActorBlockCheck: () => new Map([['other', 'position']]), actorBlocksUnchanged: () => Boolean(actorBlockedId) },
     './agent/agentDuoHandler': {}, './navigation/doorRequests': { releaseAgentDoors: noop },
     '@features/scene/utils/deskScreenVideo': { setDesk2SmartActionState: noop },
@@ -64,8 +68,23 @@ function world(id = 'native') {
     return controller.update(seconds);
   };
   return { controller, nativeLife, logs, tick, snapshot, attempts,
+    pauseCrowd: value => { crowdWait = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
+
+it('attend un contournement de PNJ sans sad et conserve sad pour un trajet impossible', () => {
+  const w = world('rosanna');
+  w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
+  w.pauseCrowd(true); w.tick();
+  assert.equal(w.controller.getStatus(), 'MOVING');
+  assert.equal(w.controller.state.animation, 'idle');
+  assert(w.logs.some(log => log.action === 'nav_blocked'), 'The wait must remain visible in diagnostics');
+  w.pauseCrowd('blocked'); w.tick();
+  assert.equal(w.controller.getStatus(), 'BLOCKED');
+  assert.equal(w.controller.state.animation, 'sad-idle');
+  w.pauseCrowd(false); w.tick();
+  assert.equal(w.controller.state.x, 100, 'Clearing the other actor must resume the route');
+});
 
 it('attend la vraie animation avant de satisfaire un besoin et de terminer l’activité', () => {
   const w = world();

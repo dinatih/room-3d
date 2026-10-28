@@ -65,6 +65,40 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    for (const crossing of [false, true]) for (const travel of [3, 11]) it(`${crossing ? 'croise à angle droit' : 'anticipe un face-à-face'} sans arrêt (${travel} cm par pas)`, () => {
+        setup({}, 83);
+        const avoidance = loadAvoidance(), ids = ['walker', 'oncoming'];
+        obstacles.setAgentProfile('oncoming', obstacles.getAgentProfile('walker'));
+        const actors = ids.map((id, i) => ({ id, position: crossing && i ? { x: 0, z: -10 } : { x: i ? 60 : -60, z: 50 }, target: crossing && i ? { x: 0, z: 110 } : { x: i ? -60 : 60, z: 50 } }));
+        try {
+            let anticipated = false;
+            for (let frame = 0; frame < 200; frame++) {
+                for (const a of actors) {
+                    cameraState.positions[a.id] = { ...a.position, y: 0 };
+                    avoidance.setAgentVelocity(a.id, a.previous ? { x: a.position.x - a.previous.x, z: a.position.z - a.previous.z } : null);
+                    a.previous = { ...a.position };
+                }
+                const next = actors.map(a => {
+                    const remaining = g.distance(a.position, a.target);
+                    if (!remaining) return a.position;
+                    const dx = (a.target.x - a.position.x) / remaining, dz = (a.target.z - a.position.z) / remaining;
+                    const s = avoidance.computeSteeringVector(a.id, a.position.x, a.position.z, dx, dz, remaining);
+                    if (frame === 0 && s.steerZ !== 0) anticipated = true;
+                    const proposed = remaining <= travel ? a.target : { x: a.position.x + s.steerX * travel, z: a.position.z + s.steerZ * travel };
+                    const p = avoidance.limitAgentMovement(a.id, a.position, proposed);
+                    assert(g.distance(a.position, p) > 0, JSON.stringify({ crossing, travel, frame, actor: a, steering: s }));
+                    cameraState.positions[a.id] = { ...p, y: 0 };
+                    avoidance.setAgentVelocity(a.id, { x: p.x - a.position.x, z: p.z - a.position.z });
+                    return p;
+                });
+                actors.forEach((a, i) => { a.position = next[i]; });
+                assert(!g.pointInRing(actors[0].position, g.inflate([actors[1].position], obstacles.NAVIGATION_RADIUS_CM * 2)), JSON.stringify({ crossing, travel, frame, actors }));
+                if (actors.every(a => g.distance(a.position, a.target) === 0)) break;
+            }
+            assert(crossing || anticipated, 'Avoidance must begin before the former 24 cm limit');
+            assert(actors.every(a => g.distance(a.position, a.target) === 0));
+        } finally { for (const id of ids) delete cameraState.positions[id]; obstacles.removeAgentProfile('oncoming'); }
+    });
     it('calcule un détour de dégagement quand le mobilier interdit toutes les sorties directes', () => {
         setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
         const furniture = { id: 'escape-screen', polygon: g.rectangle(0, 25, 100, 4), yMin: 0, yMax: 200 };

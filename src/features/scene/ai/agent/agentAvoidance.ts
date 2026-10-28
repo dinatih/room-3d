@@ -14,6 +14,11 @@ export const actorClearance = (profile: { radius: number }, body: { radius: numb
   actorRadius(profile) + actorRadius(body);
 const destinations = new Map<string, Point>();
 const passingSides = new Map<string, Map<string, number>>();
+const velocities = new Map<string, Point>();
+export function setAgentVelocity(id: string, velocity: Point | null): void {
+  if (velocity && (velocity.x !== 0 || velocity.z !== 0)) velocities.set(id, velocity);
+  else velocities.delete(id);
+}
 // Only actors which rejected a candidate invalidate a failed approach. Unrelated
 // moving actors must not trigger expensive searches for an impossible geometry.
 export type ActorBlockers = Map<string, string>;
@@ -46,6 +51,7 @@ export function reserveAgentDestination(id: string, target: Point | null): void 
   if (target) destinations.set(id, { ...target });
   else {
     destinations.delete(id);
+    velocities.delete(id);
     passingSides.delete(id);
     for (const sides of passingSides.values()) sides.delete(id);
   }
@@ -71,8 +77,11 @@ export function isAgentDestinationFree(id: string, target: Point): boolean {
 }
 
 /** Anticipate contact using avoidance radii; keep the passing side for the encounter. */
-export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, _distToTarget: number): SteeringResult {
+export function computeSteeringVector(characterId: string, currentX: number, currentZ: number, dirX: number, dirZ: number, distToTarget: number): SteeringResult {
   let steerX = dirX, steerZ = dirZ;
+  let turn = 0;
+  const ownVelocity = velocities.get(characterId);
+  const speed = ownVelocity ? Math.hypot(ownVelocity.x, ownVelocity.z) : 1;
   if (useSceneStore.getState().layers.npcCollisions) {
     const profile = getAgentProfile(characterId);
     const y = cameraState.positions[characterId]?.y ?? 0;
@@ -83,23 +92,35 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
-      const distance = Math.hypot(dx, dz);
       const clearance = actorClearance(profile, body);
-      const lookahead = clearance * 2;
-      if (distance >= lookahead) { sides.delete(otherId); continue; }
-      const forward = dx * dirX + dz * dirZ;
-      const cross = dirX * dz - dirZ * dx;
-      if (forward > 0 && Math.abs(cross) < clearance) {
+      // Respect both the current footprint and the predicted moving footprint.
+      for (const otherVelocity of [undefined, ...(ownVelocity && velocities.has(otherId) ? [velocities.get(otherId)] : [])]) {
+        const vx = dirX * speed - (otherVelocity?.x ?? 0), vz = dirZ * speed - (otherVelocity?.z ?? 0);
+        const relativeSpeed = Math.hypot(vx, vz);
+        if (relativeSpeed === 0) continue;
+        const ux = vx / relativeSpeed, uz = vz / relativeSpeed;
+        const forward = dx * ux + dz * uz;
+        const cross = ux * dz - uz * dx;
+        if (forward <= 0 || forward > relativeSpeed * distToTarget / speed + clearance) { sides.delete(otherId); continue; }
+        if (Math.abs(cross) > clearance + CLEARANCE_ERROR) continue;
+        const polygon = inflate([{ x: other.x, z: other.z }], clearance);
+        if (pointInRing({ x: currentX, z: currentZ }, polygon)) continue;
+        const angles = polygon.map(p => Math.atan2(ux * (p.z - currentZ) - uz * (p.x - currentX), ux * (p.x - currentX) + uz * (p.z - currentZ)));
+        const low = Math.min(...angles), high = Math.max(...angles);
+        if (low >= 0 || high <= 0) continue;
         let side = sides.get(otherId);
         if (side === undefined) { side = cross > 0 ? -1 : 1; sides.set(otherId, side); }
-        const proximity = (lookahead - distance) / clearance;
-        const lateral = (clearance - Math.abs(cross)) / clearance;
-        steerX -= dirZ * side * proximity * lateral;
-        steerZ += dirX * side * proximity * lateral;
+        // Aim at the footprint's tangent before contact, using the planner's geometry.
+        const tangent = side < 0 ? low : high;
+        const c = Math.cos(tangent), s = Math.sin(tangent);
+        const correctedX = dirX * speed + vx * (c - 1) - vz * s;
+        const correctedZ = dirZ * speed + vx * s + vz * (c - 1);
+        const angle = Math.atan2(dirX * correctedZ - dirZ * correctedX, dirX * correctedX + dirZ * correctedZ);
+        if (Math.abs(angle) > Math.abs(turn)) turn = angle;
       }
-      // Keep forward progress even when a sidestep is impossible. The route
-      // checks furniture and falls back to its straight step in narrow spaces.
     }
+    steerX = dirX * Math.cos(turn) - dirZ * Math.sin(turn);
+    steerZ = dirX * Math.sin(turn) + dirZ * Math.cos(turn);
   }
   const length = Math.hypot(steerX, steerZ);
   SHARED_STEER.steerX = length > 0 ? steerX / length : dirX;
@@ -204,7 +225,7 @@ export function computeRotYStep(currentRotY: number, targetRotY: number, rotSpee
 
 export function getActorNavigationDiagnostics() {
   return Object.entries(cameraState.positions).map(([id, position]) => ({
-    id, position, destination: destinations.get(id),
+    id, position, destination: destinations.get(id), velocity: velocities.get(id),
     profile: hasAgentProfile(id) ? getAgentProfile(id) : undefined,
     avoidanceRadius: hasAgentProfile(id) ? actorRadius(getAgentProfile(id)) : undefined,
     passingSides: [...(passingSides.get(id) ?? [])], sessionId: duoSessionManager.getSessionFor(id)?.sessionId,

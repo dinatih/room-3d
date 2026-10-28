@@ -146,6 +146,7 @@ export async function walk(actors, fixture, steering, onFrame) {
                 const s = avoidance.computeSteeringVector(a.id, before.x, before.z, direction.x, direction.z, remaining);
                 return { x: s.steerX, z: s.steerZ };
             });
+            avoidance.setAgentVelocity(a.id, { x: (a.position.x - before.x) / fixture.dt, z: (a.position.z - before.z) / fixture.dt });
             check(!a.route.error, `${a.id}: ${a.route.error}`);
             if (geometry.distance(before, a.position) > 0) {
                 const yaw = avoidance.computeRotYStep(a.yaw, Math.atan2(a.position.x - before.x, a.position.z - before.z), fixture.turnSpeed, fixture.dt);
@@ -175,11 +176,15 @@ export async function arrival(fixture) {
         check(target, 'No clear garden segment');
         if (fixture.occupied)
             cameraState.positions[blocker] = { ...target, y: 0, yaw: 0 };
-        for (const [i, id] of ids.entries())
-            actors.push({ id, route: nav.createRouteState(), position: { ...(fixture.crossing && i === 1 ? target : start) }, target: fixture.crossing && i === 1 ? start : target });
-        trace({ instructions: actors.map(a => ({ actor: a.id, type: 'MOVE_TO', start: a.position, target: a.target })), occupied: fixture.occupied, avoidanceScale: avoidance.ACTOR_AVOIDANCE_SCALE });
-        check(avoidance.ACTOR_AVOIDANCE_SCALE === 0, 'This regression specifically covers zero actor footprints');
-        return { actors: await walk(actors, fixture), avoidanceScale: avoidance.ACTOR_AVOIDANCE_SCALE };
+        for (const [i, id] of ids.entries()) {
+            const position = fixture.crossing && i === 1 ? target : start;
+            const destination = fixture.crossing && i === 1 ? start : target;
+            const extension = fixture.crossing ? (profiles.NAVIGATION_RADIUS_CM * 2 + geometry.CLEARANCE_ERROR) / geometry.distance(position, destination) : 0;
+            const goal = { x: destination.x + (destination.x - position.x) * extension, z: destination.z + (destination.z - position.z) * extension };
+            actors.push({ id, route: nav.createRouteState(), position: { ...position }, target: goal });
+        }
+        trace({ instructions: actors.map(a => ({ actor: a.id, type: 'MOVE_TO', start: a.position, target: a.target })), occupied: fixture.occupied, navigationRadius: profiles.NAVIGATION_RADIUS_CM });
+        return { actors: await walk(actors, fixture), navigationRadius: profiles.NAVIGATION_RADIUS_CM };
     }
     finally {
         for (const a of actors)
@@ -299,9 +304,9 @@ export async function locomotion(fixture) {
                     actor.interactionFrames = (actor.interactionFrames ?? 0) + 1;
                 }
                 if (['MOVING', 'IDLE'].includes(actor.controller.getStatus()) && !moved) {
-                    const expected = actor.controller.getStatus() === 'MOVING' ? [NAVIGATION_WAIT_ANIMATION] : [resolveAnimationId('idle'), NAVIGATION_WAIT_ANIMATION];
+                    const expected = [resolveAnimationId('idle'), NAVIGATION_WAIT_ANIMATION];
                     check(expected.includes(resolveAnimationId(state.animation)), `${actor.id} walks without moving: ${state.animation}`);
-                    if (resolveAnimationId(state.animation) === NAVIGATION_WAIT_ANIMATION)
+                    if (actor.controller.getStatus() === 'MOVING' || resolveAnimationId(state.animation) === NAVIGATION_WAIT_ANIMATION)
                         check(APP_LOG_HISTORY.some(entry => entry.actors.includes(actor.id) && ['nav_waiting', 'nav_blocked'].includes(entry.action)), `${actor.id} entered navigation idle without a reason in the console`);
                     waits++;
                 }
