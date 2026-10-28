@@ -154,7 +154,7 @@ export class HornetTour {
   private euler = new Euler(0, 0, 0, 'YXZ');
   private waitReason = '';
 
-  constructor(readonly radius: number, private log: (message: string) => void, private random = Math.random) {
+  constructor(readonly radius: number, private log: (message: string) => void, private random = Math.random, private agentId = 'drone') {
     this.space = new HornetSpace(radius);
     this.observations = hornetObservations(radius);
   }
@@ -170,7 +170,7 @@ export class HornetTour {
     if (room) this.roomIndex = ROOMS.indexOf(room);
     this.revision = -1;
   }
-  release(): void { releaseAgentDoors('drone'); }
+  release(): void { releaseAgentDoors(this.agentId); }
   private network(): void {
     if (this.revision === getObstacleRevision()) return;
     this.revision = getObstacleRevision();
@@ -287,7 +287,7 @@ export class HornetTour {
     const stop = this.path.findIndex(p => this.space.safeStop(p));
     const corridor = [position, ...this.path.slice(0, stop < 0 ? this.path.length : stop + 1)];
     const doors = [...new Set(corridor.slice(1).flatMap((p, i) => this.space.doorsBetween(corridor[i], p)))];
-    for (const key of doors) requestDoor(key, 'drone');
+    for (const key of doors) requestDoor(key, this.agentId);
     // Keep requests until the body has completely left every swept volume.
     if (!doors.length && this.space.safeStop(position)) this.release();
     let blocked: string | undefined;

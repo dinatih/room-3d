@@ -4,6 +4,9 @@ import type { CameraMode, CameraTarget } from './types';
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
   { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane' },
+  { id: 'dji-neo', target: 'dji-neo', label: 'Neo', icon: 'bi-airplane' },
+  { id: 'dji-avata-2', target: 'dji-avata-2', label: 'Avata 2', icon: 'bi-airplane' },
+  { id: 'dji-fpv', target: 'dji-fpv', label: 'FPV', icon: 'bi-airplane' },
   { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart' },
   { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart' },
   { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter' },
@@ -17,6 +20,10 @@ export const CAMERA_SUBJECTS = [
 ] as const;
 
 export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'cat';
+
+export function isFlyingSubject(id: string | null): boolean {
+  return id === 'drone' || id === 'robin' || id === 'dji-neo' || id === 'dji-avata-2' || id === 'dji-fpv';
+}
 
 export function resolveCameraSubject(value: string): CameraSubjectId | undefined {
   const choice = CAMERA_SUBJECTS.find(subject => subject.id === value || subject.target === value);

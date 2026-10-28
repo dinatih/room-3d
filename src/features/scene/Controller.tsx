@@ -5,7 +5,7 @@ import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
-import { CAMERA_SUBJECTS, selectAnimalCameraTarget } from './camera/cameraSubjects';
+import { CAMERA_SUBJECTS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import './Controller.scss';
 
@@ -195,13 +195,13 @@ export function Controller({ visible = false }: { visible?: boolean }) {
         </div>
         {(['character', 'camera'] as const).map(inputControl => {
           const isCamera = inputControl === 'camera';
-          const extras = piloting
-            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: button.key === 'Elevate' ? 'Monter le Hornet (Espace)' : 'Descendre le Hornet (C)' }))
+          const extras = !isCamera
+            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: `${button.key === 'Elevate' ? 'Monter' : 'Descendre'} : ${piloting ? 'Hornet' : subject.label}` }))
             : EXTRA_CAMERA_CONTROLS;
-          const buttons = isCamera ? [...DIRECTIONS, ...extras] : DIRECTIONS;
+          const buttons = isCamera || piloting || isFlyingSubject(animal) ? [...DIRECTIONS, ...extras] : DIRECTIONS;
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
-              <div className="virtual-dpad" role="group" aria-label={piloting ? isCamera ? 'Rotation du Hornet' : 'Déplacement du Hornet' : inputControl === 'character' ? 'Déplacement du PNJ' : 'Déplacement de la caméra'}>
+              <div className={`virtual-dpad ${!isCamera ? 'virtual-dpad--subject' : ''}`} role="group" aria-label={isCamera ? 'Déplacement de la caméra' : `Déplacement : ${piloting ? 'Hornet' : subject.label}`}>
                 {!isCamera && <div className="virtual-dpad__subject">
                   <PanelPopover icon={subject.icon} title="Objet de position de la caméra" compactMode triggerClassName="virtual-dpad__button rounded-3" onOpen={popover => {
                     refreshSubjects();

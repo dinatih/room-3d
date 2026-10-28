@@ -1,5 +1,6 @@
 import { Vector3, type Group } from 'three';
 import { cameraState } from '../cameraState';
+import { isFlyingSubject } from './cameraSubjects';
 import { HornetSpace } from '../hornetTour';
 import { getNavigationGraph } from '../ai/navigation/service';
 import { getAgentProfile } from '../ai/navigation/obstacles';
@@ -65,9 +66,11 @@ export class SubjectDriver {
     root.getWorldPosition(this.position);
     this.next.copy(this.position);
     const travel = (held('ArrowUp') - held('ArrowDown')) * speed * delta;
-    if (travel) {
+    const rise = isFlyingSubject(this.id) ? (held('Elevate') - held('Descend')) * speed * delta : 0;
+    if (travel || rise) {
       this.direction.set(Math.sin(this.heading), 0, Math.cos(this.heading));
       this.next.addScaledVector(this.direction, travel);
+      this.next.y += rise;
       // Robin keeps its existing free-flight movement between perches.
       if (flightRadius !== undefined && this.id !== 'robin') {
         this.airspace ??= new HornetSpace(flightRadius);

@@ -22,7 +22,7 @@ export function useDroneControls(preview: boolean) {
       invalidate();
     };
     const publishKeys = () => {
-      const aliases: Record<string, string> = { z: 'ArrowUp', w: 'ArrowUp', s: 'ArrowDown', q: 'ArrowLeft', a: 'ArrowLeft', d: 'ArrowRight', ' ': 'camera:Elevate', c: 'camera:Descend' };
+      const aliases: Record<string, string> = { z: 'ArrowUp', w: 'ArrowUp', s: 'ArrowDown', q: 'ArrowLeft', a: 'ArrowLeft', d: 'ArrowRight', ' ': 'character:Elevate', c: 'character:Descend' };
       document.dispatchEvent(new CustomEvent('drone-arrow-keys', { detail: [...droneInput.keys].map(key => aliases[key] ?? (key.startsWith('Arrow') && droneInput.keys.has('Alt') ? 'Alt' + key : key)) }));
     };
     const release = () => { if (droneInput.keys.size) recordSubjectCommand('drone'); droneInput.keys.clear(); releasePointer(); publishKeys(); };

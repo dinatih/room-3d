@@ -25,6 +25,18 @@ const start = tour => tour.observations.find(o => o.id === 'garden').position.cl
 const openRequested = () => {
   for (const key of Object.keys(doors.DOOR_CONFIGS)) doors.doorCollisionState[key].angle = requests.doorRequested(key) ? doors.DOOR_CONFIGS[key].maxAngle : 0;
 };
+it('conserve les demandes des autres drones lorsqu’une visite libère ses portes', () => {
+  const neo = new HornetTour(radius, () => {}, Math.random, 'dji-neo');
+  const avata = new HornetTour(radius, () => {}, Math.random, 'dji-avata-2');
+  requests.requestDoor('living', 'dji-neo');
+  requests.requestDoor('living', 'dji-avata-2');
+  try {
+    neo.release();
+    assert(requests.doorRequested('living'));
+    avata.release();
+    assert(!requests.doorRequested('living'));
+  } finally { neo.release(); avata.release(); }
+});
 afterEach(() => {
   requests.releaseAgentDoors('drone');
   for (const id of [...obstacles.furnitureObstacles.keys()]) if (id.startsWith('hornet-test-')) obstacles.unregisterObstacle(id);

@@ -5,12 +5,35 @@ const { load } = require('../support/load-ts.cjs');
 const cameraState = { animalViews: { test: { forward: { x: 0, y: 0, z: 1 } } }, positions: {} };
 let blocked = false;
 const controls = load('src/features/scene/camera/subjectControls.ts', {
+  './cameraSubjects': require('../../src/features/scene/camera/cameraSubjects.ts'),
   three: THREE, '../cameraState': { cameraState }, '../hornetTour': { HornetSpace: class { blocker() { return blocked; } } },
   '../ai/navigation/service': { getNavigationGraph: () => ({ obstacles: [] }) },
   '../ai/navigation/obstacles': { getAgentProfile: () => ({ radius: 10, height: 30 }) },
   '../ai/agent/agentAvoidance': { limitAgentMovement: (_, __, point) => point },
   '../ai/navigation/navigationScope': { NavigationScope: class { poll(fn) { fn(); return true; } clear() {} } },
   '../ai/navigation/geometry': { segmentFree: () => !blocked }, '../doorObstacles': { DOOR_CONFIGS: {}, doorCollisionState: {} },
+});
+it('monte et descend les sujets volants sans déplacer les sujets terrestres', () => {
+  for (const id of ['drone', 'robin', 'dji-neo', 'dji-avata-2', 'dji-fpv', 'test']) {
+    cameraState.animalViews[id] = { forward: { x: 0, y: 0, z: 1 } };
+    const driver = new controls.SubjectDriver(id), root = new THREE.Group();
+    root.position.y = 100;
+    try {
+      controls.setSubjectInput(id, 'character:Elevate', true);
+      driver.step(root, 1, 20, 10);
+      assert.equal(root.position.y, id === 'test' ? 100 : 120);
+      controls.setSubjectInput(id, 'character:Elevate', false);
+      controls.setSubjectInput(id, 'character:Descend', true);
+      driver.step(root, 1, 20, 10);
+      assert.equal(root.position.y, 100);
+      if (id !== 'robin') {
+        blocked = true;
+        driver.step(root, 1, 20, 10);
+        assert.equal(root.position.y, 100);
+        blocked = false;
+      }
+    } finally { driver.dispose(); }
+  }
 });
 afterEach(() => { new controls.SubjectDriver('test').dispose(); new controls.SubjectDriver('other').dispose(); blocked = false; });
 it('reprend exactement après 12 secondes depuis le relâchement, même après un appui long', () => {
