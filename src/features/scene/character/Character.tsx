@@ -921,7 +921,7 @@ export function Character({
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
-        if (from) retireAction(from, characterGrid || !animCrossfade ? 0 : (isPreview ? Math.min(blendDuration, 0.15) : blendDuration));
+        if (from) retireAction(from, isPreview || characterGrid || !animCrossfade ? 0 : blendDuration);
 
         const isOnceAnim = isPostureTransition(target) || getAnimationDef(target)?.loop === 'once' ||
                            target === 'pistol-kneel-to-stand' ||
@@ -947,7 +947,7 @@ export function Character({
           to.clampWhenFinished = false;
         }
 
-        if (characterGrid) {
+        if (isPreview || characterGrid) {
           if (from) from.stop();
           to.reset().play();
           to.setEffectiveWeight(1);
@@ -957,14 +957,13 @@ export function Character({
             to.setEffectiveTimeScale(1);
             to.setEffectiveWeight(1);
             if (animCrossfade) {
-              const crossDuration = isPreview ? Math.min(blendDuration, 0.15) : blendDuration;
-              to.crossFadeFrom(from, crossDuration, !postureTransition && !isPostureTransition(activeActionName.current));
+              to.crossFadeFrom(from, blendDuration, !postureTransition && !isPostureTransition(activeActionName.current));
             } else {
               from.stop();
             }
             to.play();
           } else {
-            to.reset().fadeIn(animCrossfade ? (isPreview ? 0.1 : blendDuration) : 0).play();
+            to.reset().fadeIn(animCrossfade ? blendDuration : 0).play();
             to.setEffectiveWeight(1);
           }
         }
