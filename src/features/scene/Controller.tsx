@@ -158,7 +158,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
               <button
                 key={direction}
                 type="button"
-                className={`btn btn-sm btn-outline-secondary py-0 px-1 ${isPressed ? 'is-pressed' : ''}`}
+                className={`btn btn-sm btn-outline-dark py-0 px-1 ${isPressed ? 'is-pressed' : ''}`}
                 aria-pressed={isPressed}
                 aria-label={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
                 title={direction === 'in' ? 'Zoomer' : 'Dézoomer'}
@@ -178,7 +178,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
               {choice.target === 'studio' && <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>}
               <button
                 type="button"
-                className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-secondary'}`}
+                className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-dark'}`}
                 aria-label={`Cibler : ${choice.label}`}
                 title={`Cibler : ${choice.label}`}
                 aria-pressed={!animal && target === choice.target}
