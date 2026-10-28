@@ -6,7 +6,7 @@ import { createRigidMeshBatches } from './rigidMeshBatches';
 /** Register after the model's animation callback so every pass sees its current pose. */
 export function useRigidMeshBatches(scene: Object3D) {
   const group = useMemo(() => new Group(), [scene]);
-  const controller = useRef<ReturnType<typeof createRigidMeshBatches>>();
+  const controller = useRef<ReturnType<typeof createRigidMeshBatches> | undefined>(undefined);
   useLayoutEffect(() => {
     controller.current = createRigidMeshBatches(scene, group);
     return () => { controller.current!.dispose(); controller.current = undefined; };

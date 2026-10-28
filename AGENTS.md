@@ -26,7 +26,7 @@ En développement, chaque chargement de page crée un journal JSONL distinct dan
 
 ## Stack & Architecture
 
-- **Technologies** : React 18 + Three.js + `@react-three/fiber` (R3F) + `@react-three/drei` + Vite + TypeScript.
+- **Technologies** : React 19 + Three.js + `@react-three/fiber` (R3F) + `@react-three/drei` + Vite 8 + TypeScript 6.
 
 Chaque meuble ou objet interactif est un composant autonome implémentant l'interface `SceneItemProps` :
 - **Coordonnées locales** : Centré en X/Z, base au sol à Y=0 (ou sur la surface d'appui).

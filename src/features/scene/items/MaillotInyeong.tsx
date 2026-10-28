@@ -5,10 +5,10 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { GroupProps } from '@react-three/fiber';
+import type { ThreeElements } from '@react-three/fiber';
 import type { SceneItemProps } from '@shared/types';
 
-export interface MaillotInyeongProps extends Partial<SceneItemProps>, GroupProps {
+export type MaillotInyeongProps = Partial<SceneItemProps> & ThreeElements['group'] & {
   playerName?: string;
   playerNumber?: string | number;
 }

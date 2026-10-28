@@ -12,7 +12,7 @@ const puppeteer = require('puppeteer');
     page.on('console', message => {
       if (message.text().includes('[Raytracing]')) console.log(message.text());
     });
-    await page.goto('http://127.0.0.1:5173/AGENTS.md');
+    await page.goto('http://localhost:5173/AGENTS.md');
     await page.evaluate(async () => {
       const refresh = (await import('/@react-refresh')).default;
       refresh.injectIntoGlobalHook(window);

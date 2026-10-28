@@ -45,7 +45,7 @@ it('écrit un fichier par chargement, conserve les événements tardifs et point
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-test-')), streams = [], httpServer = new EventEmitter(), errors = [];
   const { devLogPlugin } = load('scripts/dev-log-plugin.ts', {
     'node:fs': { ...fs, createWriteStream: (...args) => { const stream = fs.createWriteStream(...args); streams.push(stream); return stream; } },
-    'node:path': { default: path }, 'node:child_process': { execFileSync: (_, args) => args[0] === 'rev-parse' ? 'test-commit' : '' },
+    'node:path': path, 'node:child_process': { execFileSync: (_, args) => args[0] === 'rev-parse' ? 'test-commit' : '' },
   });
   let receive;
   devLogPlugin(directory).configureServer({ httpServer, config: { root: process.cwd(), logger: { info() {}, error: error => errors.push(error) } }, ws: { on: (name, handler) => { assert.equal(name, 'room:app-log'); receive = handler; } } });

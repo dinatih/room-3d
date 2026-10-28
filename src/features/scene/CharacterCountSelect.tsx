@@ -30,7 +30,7 @@ export function CharacterCountSelect() {
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary`}
-        {...{ popovertarget: id }}
+        popoverTarget={id}
         title="Choisir le nombre de personnages"
         aria-label="Choisir le nombre de personnages"
         onClick={event => {

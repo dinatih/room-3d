@@ -181,7 +181,7 @@ export function PanelPopover({
         ref={triggerRef}
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${isOpen ? 'btn-danger text-white' : active ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'} view-control-bar__npc-trigger ${triggerClassName ?? ''}`}
-        {...{ popovertarget: id }}
+        popoverTarget={id}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={id}

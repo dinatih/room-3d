@@ -78,7 +78,7 @@ export function PresetButton({ hideUI = false }: { hideUI?: boolean }) {
         ref={qualityTriggerRef}
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'high' ? 'btn-danger' : graphicsQualityPreset === 'mid' ? 'btn-warning text-dark' : graphicsQualityPreset === 'mid-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
-        {...{ popovertarget: qualityPopoverId }}
+        popoverTarget={qualityPopoverId}
         onClick={(e) => {
           e.stopPropagation();
           updateQualityPopoverPosition();

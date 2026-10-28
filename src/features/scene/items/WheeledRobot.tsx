@@ -15,7 +15,7 @@ export function WheeledRobot({ onSize, actionState, isPreview, modelId, driveSpe
   const animate = useMemo(() => createMotion(scene), [scene, createMotion]);
   const placement = useRef<Group>(null!);
   const time = useRef(0);
-  const previous = useRef<{ position: Vector3; yaw: number }>();
+  const previous = useRef<{ position: Vector3; yaw: number } | undefined>(undefined);
   const position = useMemo(() => new Vector3(), []);
   const quaternion = useMemo(() => new Quaternion(), []);
   const forward = useMemo(() => new Vector3(), []);

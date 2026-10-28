@@ -8,10 +8,10 @@
  */
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import type { GroupProps } from '@react-three/fiber';
+import type { ThreeElements } from '@react-three/fiber';
 import type { SceneItemProps } from '@shared/types';
 
-export interface TShirtProps extends Partial<SceneItemProps>, GroupProps {
+export type TShirtProps = Partial<SceneItemProps> & ThreeElements['group'] & {
   color?: string | number;
 }
 

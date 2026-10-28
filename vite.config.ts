@@ -1,17 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { devLogPlugin } from './scripts/dev-log-plugin';
+import { devLogPlugin } from './scripts/dev-log-plugin.ts';
 
 export default defineConfig({
   plugins: [react(), devLogPlugin()],
   base: '/',
   resolve: {
     alias: {
-      '@':         path.resolve(__dirname, 'src'),
-      '@features': path.resolve(__dirname, 'src/features'),
-      '@shared':   path.resolve(__dirname, 'src'),
-      '@config':   path.resolve(__dirname, 'src/features/scene/config.ts'),
+      '@':         path.resolve(import.meta.dirname, 'src'),
+      '@features': path.resolve(import.meta.dirname, 'src/features'),
+      '@shared':   path.resolve(import.meta.dirname, 'src'),
+      '@config':   path.resolve(import.meta.dirname, 'src/features/scene/config.ts'),
     },
   },
   server: {
@@ -23,9 +23,9 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
-        inventory: path.resolve(__dirname, 'index.html'),
+        inventory: path.resolve(import.meta.dirname, 'index.html'),
       },
     },
   },

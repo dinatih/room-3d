@@ -58,7 +58,7 @@ export function CharacterSelect({ hideUI = false, value, onChange, characters = 
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__npc-trigger`}
         style={{ borderColor: activeChar?.color }}
-        {...{ popovertarget: characterPopoverId }}
+        popoverTarget={characterPopoverId}
         aria-haspopup="dialog"
         aria-expanded={characterPopoverOpen}
         aria-controls={characterPopoverId}

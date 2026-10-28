@@ -6,7 +6,7 @@ import { LAYER_WALKER_DETAIL } from '@config';
 
 /** Publie la pose du regard après l'animation, sans intervenir dans l'IA. */
 export function useAnimalCamera(
-  id: string, root: RefObject<THREE.Group>, scene: THREE.Object3D, preview: boolean,
+  id: string, root: RefObject<THREE.Group | null>, scene: THREE.Object3D, preview: boolean,
   headName: string, mouthName: string, eyeNames?: [string, string],
 ) {
   const rig = useRef<{ head: THREE.Object3D; mouth: THREE.Object3D; eyes: THREE.Object3D[]; radius: number } | null>(null);

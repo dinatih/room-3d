@@ -239,7 +239,7 @@ export function ViewControlBar({
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--green`}
-        {...{ popovertarget: elevationPopoverId }}
+        popoverTarget={elevationPopoverId}
         aria-haspopup="dialog"
         aria-label={`Angle d’élévation de la caméra : ${currentElevation}°`}
         title="Choisir l’angle d’élévation"
