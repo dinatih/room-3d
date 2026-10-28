@@ -246,8 +246,8 @@ def selected_files(entries):
             reason = None
             if re.search(r't.?pose|a.?pose|/rigs/|/uemannypose/', file, re.I):
                 reason = 'Calibration rig, not a motion'
-            elif entry['source'] == 'sample_dances_fbx.zip' and 'UE FBX 30fps' in file:
-                reason = 'Equivalent rig/cadence export; retained original 60fps motion'
+            elif entry['source'] == 'sample_dances_fbx.zip' and 'AWESOME DOG FBX 60fps' in file:
+                reason = 'Alternative rig export; UE FBX 30fps retained with standard human bone alignment'
             elif entry['source'].startswith('shy_dancing') and path.parent != WORK / Path(entry['source']).stem:
                 reason = 'Equivalent Unreal rig export; retained original 60fps motion'
             if reason:
