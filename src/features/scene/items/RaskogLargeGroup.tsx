@@ -8,7 +8,6 @@ import * as THREE from 'three';
 import { Raskog30586783 } from './Raskog30586783';
 import { MannequinHead } from './MannequinHead';
 import { BaseballCap }   from './BaseballCap';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneModelProps } from '@shared/types';
 
 // Hauteur tête (base → sommet) : 8 + 8 + 8.9 × scale 1.15
@@ -32,7 +31,7 @@ export function RaskogLargeGroup({ onSize }: SceneModelProps) {
       </group>
       {/* Tête de mannequin — toujours visible */}
       <group position={[0, top, -2]} rotation-y={Math.PI / 2}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <MannequinHead />
       </group>
     </group>
   );

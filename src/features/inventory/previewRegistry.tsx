@@ -383,9 +383,7 @@ WIGS_ITEMS.forEach(wig => {
             wigId={wig.id}
             hairColor={hairColor}
             windEnabled={simulateMotion}
-            item={{} as any}
-            actionState={actionState || {}}
-            onSize={onSize || (() => {})}
+            onSize={onSize}
           />
         </AnimatedBustGroup>
         <AnimatedBustGroup basePosition={[14, 0, 0]} enabled={simulateMotion} phaseOffset={Math.PI * 0.45}>

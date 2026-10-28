@@ -15,7 +15,6 @@ import { MannequinHead }  from './MannequinHead';
 import { DroneCell } from './Drona';
 import { Variera80136622 } from './Variera80136622';
 import { MeubleT }        from './MeubleT';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_NW_DRONA_POSITIONS, DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
@@ -65,13 +64,13 @@ export function KallaxNWMannequins() {
         rotation-y={(3 * Math.PI) / 4}
         userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 1', actions: ['mannequin-kallax-nw-random', 'mannequin-kallax-nw-wig', 'mannequin-kallax-nw-color', 'mannequin-kallax-nw-wind'] } }}
       >
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-nw" />
+        <MannequinHead mannequinId="kallax-nw" />
       </group>
 
       {/* Tête de mannequin 3 sur MeubleT */}
       <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
         <group position={[0, 55, 0]} rotation-y={-Math.PI / 8} userData={{ skipMerge: true, hoverAction: { label: 'Tête de mannequin 3', actions: ['mannequin-meubleT-random', 'mannequin-meubleT-wig', 'mannequin-meubleT-color', 'mannequin-meubleT-wind'] } }}>
-          <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="meubleT" />
+          <MannequinHead mannequinId="meubleT" />
         </group>
       </group>
     </>

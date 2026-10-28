@@ -17,7 +17,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 import { LAYER_DECOR } from '@config';
 import { Wig, HAIR_COLORS, LARA_WIG_PREVIEW_SCALE, LARA_WIG_HEAD_OFFSET } from './Wig';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
@@ -25,7 +25,7 @@ import { applyLaraVariantStyles, disposeLaraVariantMaterials, type LaraVariant }
 import { extractCharacterParts, isHeadMesh } from '@features/scene/characterParts';
 import { CharacterPendant, type CharacterPendantHandle } from '@features/scene/character/CharacterPendant';
 
-interface MannequinHeadProps extends SceneItemProps {
+interface MannequinHeadProps extends SceneModelProps {
   mannequinId?: string;
   wigId?: string;
   wigIndex?: number;
@@ -68,7 +68,6 @@ export function MannequinHead({
   hairColor: initialHairColor,
   windEnabled: initialWindEnabled
 }: MannequinHeadProps) {
-  const ref = useRef<THREE.Group>(null!);
   const { scene } = useGLTFClone('characters/accessories/wig_mannequin.glb');
 
   const resolvedInitialIndex = wigId
@@ -170,7 +169,7 @@ export function MannequinHead({
   const MANNEQUIN_WIG_OFFSET: [number, number, number] = [0, 31.0, 0];
 
   return (
-    <group ref={ref} userData={{ sceneItemRoot: true, itemName: 'Tête de mannequin' }}>
+    <group userData={{ sceneItemRoot: true, itemName: 'Tête de mannequin' }}>
       <primitive object={scene} />
       <Wig 
         id={cleanWigId}

@@ -311,7 +311,7 @@ export function DeskDecor() {
               ]
             }
           }}>
-            <Laptop item={{} as any} actionState={{}} onSize={() => {}} />
+            <Laptop />
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Smartphone' }}>
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
@@ -595,7 +595,7 @@ export function LivingRoomFurnishings() {
 
       {/* Google Nest Mini */}
       <group position={[7, 105, 90.5]} rotation={[-Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Google Nest Mini' }}>
-        <GoogleNestMini item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <GoogleNestMini />
       </group>
     </MergedStaticGroup>
   );
@@ -612,17 +612,17 @@ export function LivingRoomDecor() {
 
       {/* Tête de mannequin 2 sur Kallax NE */}
       <group position={[KALLAX_NE_POSITION[0] + KALLAX_DEPTH / 2 - 14, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="kallax-ne" />
+        <MannequinHead mannequinId="kallax-ne" />
       </group>
 
       {/* Tête de mannequin 4 sur étagère Lack */}
       <group position={[lackCX, lackTopY, lackCZ]} rotation={[0, mannRot, 0]} userData={{ skipMerge: true, itemName: 'Tête de mannequin 4', hoverAction: { label: 'Tête de mannequin 4', actions: ['mannequin-lack-random', 'mannequin-lack-wig', 'mannequin-lack-color', 'mannequin-lack-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lack" />
+        <MannequinHead mannequinId="lack" />
       </group>
 
       {/* Tête de mannequin 5 sur meuble OLA */}
       <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z + 10]} rotation-y={LAMP_ROT_Y - Math.PI / 8} userData={{ skipMerge: true, itemName: 'Tête de mannequin 5', hoverAction: { label: 'Tête de mannequin 5', actions: ['mannequin-lamp-random', 'mannequin-lamp-wig', 'mannequin-lamp-color', 'mannequin-lamp-wind'] } }}>
-        <MannequinHead item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} mannequinId="lamp" />
+        <MannequinHead mannequinId="lamp" />
       </group>
 
       {/* Coussins Lagerpoppel mur Est */}

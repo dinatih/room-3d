@@ -34,7 +34,7 @@ function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz:
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-export function Laptop({ onSize, actionState, isPreview = false }: SceneItemProps) {
+export function Laptop({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTF(GLB_PATH);
   const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
 
@@ -101,32 +101,22 @@ export function Laptop({ onSize, actionState, isPreview = false }: SceneItemProp
       mesh.geometry = filteredGeo;
     };
 
-    // 1. Écran : ne garder que les faces avant (normal.z > -0.5), priorité sur le fond du bezel
-    const screenMesh = c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_1') as THREE.Mesh | undefined;
-    if (screenMesh && screenMesh.material) {
-      filterMeshFaces(screenMesh, avgZ => avgZ > -0.5);
-      const origMat = Array.isArray(screenMesh.material) ? screenMesh.material[0] : screenMesh.material;
-      const screenMat = (origMat as THREE.MeshStandardMaterial).clone();
-      screenMat.side = THREE.FrontSide;
-      screenMat.polygonOffset = true;
-      screenMat.polygonOffsetFactor = -1;
-      screenMat.polygonOffsetUnits = -1;
-      screenMesh.material = screenMat;
-      screenMesh.renderOrder = 1;
-    }
-
-    // 2. Logo au dos : ne garder que les faces arrière (normal.z < 0.5), priorité sur le capot
-    const logoMesh = c.getObjectByName('GFW00_3H_NB_ID_COVER_LOGO_1') as THREE.Mesh | undefined;
-    if (logoMesh && logoMesh.material) {
-      filterMeshFaces(logoMesh, avgZ => avgZ < 0.5);
-      const origMat = Array.isArray(logoMesh.material) ? logoMesh.material[0] : logoMesh.material;
-      const logoMat = (origMat as THREE.MeshStandardMaterial).clone();
-      logoMat.side = THREE.FrontSide;
-      logoMat.polygonOffset = true;
-      logoMat.polygonOffsetFactor = -1;
-      logoMat.polygonOffsetUnits = -1;
-      logoMesh.material = logoMat;
-      logoMesh.renderOrder = 1;
+    // L'écran garde les faces avant ; le logo garde les faces arrière.
+    for (const [name, keep] of [
+      ['GFW00_3H_NB_ID_BEZEL_1_1', (avgZ: number) => avgZ > -0.5],
+      ['GFW00_3H_NB_ID_COVER_LOGO_1', (avgZ: number) => avgZ < 0.5],
+    ] as const) {
+      const mesh = c.getObjectByName(name) as THREE.Mesh | undefined;
+      if (!mesh?.material) continue;
+      filterMeshFaces(mesh, keep);
+      const original = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      const material = (original as THREE.MeshStandardMaterial).clone();
+      material.side = THREE.FrontSide;
+      material.polygonOffset = true;
+      material.polygonOffsetFactor = -1;
+      material.polygonOffsetUnits = -1;
+      mesh.material = material;
+      mesh.renderOrder = 1;
     }
 
     mergeGlbByMaterial(c);
@@ -134,8 +124,8 @@ export function Laptop({ onSize, actionState, isPreview = false }: SceneItemProp
   }, [scene]);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));
-  }, []);
+    onSize?.(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));
+  }, [onSize]);
 
   return (
     <group>
@@ -151,7 +141,7 @@ export function Laptop({ onSize, actionState, isPreview = false }: SceneItemProp
           side={THREE.DoubleSide}
           map={isVideoActive ? videoTex : null}
           color={isVideoActive ? 0xffffff : 0x080808}
-          emissive={isVideoActive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000)}
+          emissive={isVideoActive ? 0xffffff : 0x000000}
           emissiveMap={isVideoActive ? videoTex : null}
           emissiveIntensity={isVideoActive ? 0.85 : 0}
           roughness={0.08}

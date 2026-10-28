@@ -29,7 +29,7 @@ const GOOGLE_COLORS = [
 // Positions X des 4 LEDs (ligne horizontale centrée, ~1.5 cm d'espacement)
 const DOT_X = [-2.25, -0.75, 0.75, 2.25];
 
-export function GoogleNestMini({ onSize, actionState, isPreview = false }: SceneItemProps) {
+export function GoogleNestMini({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene }    = useGLTFClone('items/google-nest/google-nest.glb');
   const dotsGroupRef = useRef<THREE.Group>(null!);
   const dotMatsRef   = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -49,7 +49,7 @@ export function GoogleNestMini({ onSize, actionState, isPreview = false }: Scene
       -(box.min.y + box.max.y) / 2,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
 
     scene.userData.hoverAction = { label: 'Google Nest Mini', actions: getObjectActionIds('google-nest-mini') };
 
@@ -57,7 +57,7 @@ export function GoogleNestMini({ onSize, actionState, isPreview = false }: Scene
     const frontX = (box.max.x - box.min.x) / 2;
     dotsGroupRef.current.position.set(frontX + DOT_R + 0.2, 0, 0);
     dotsGroupRef.current.rotation.set(0, Math.PI / 2, 0);
-  }, [scene]);
+  }, [scene, onSize]);
 
   useEffect(() => {
     if (isPreview) return;
