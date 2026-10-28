@@ -17,14 +17,12 @@ export const FRIDGE_LOCAL_POSITION: [number, number, number] = [70, 0, 30];
 export const FRIDGE_DOOR_DURATION = (Math.PI / 2) / (2 * Math.atan2(0.9130040407180786, 0.40795058012008667));
 export const FRIDGE_CRISPER_DURATION = 1;
 
-export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProps) {
+export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const sceneOpen = useSceneStore(s => s.furniture.fridge);
   const sceneCrisper = useSceneStore(s => s.extraStates['fridge-crisper-toggle']);
   const wantCrisper = isPreview ? !!actionState['fridge-crisper-toggle'] : sceneCrisper;
   const wantDoor = (isPreview ? !!actionState['fridge'] : sceneOpen) || wantCrisper;
-  const target = useRef({ door: false, crisper: false });
-  target.current = { door: wantDoor, crisper: wantCrisper };
   const runtime = useRef<{
     mixer: THREE.AnimationMixer;
     door: THREE.AnimationAction;
@@ -85,7 +83,7 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
     });
     anchor.add(bulb);
     runtime.current = { mixer, door, crisper, bulb, intensity };
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     invalidate();
     return () => {
       runtime.current = null;
@@ -101,17 +99,16 @@ export function Fridge({ actionState, onSize, isPreview = false }: SceneItemProp
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r || (isPreview && actionState.previewPaused)) return;
-    const desired = target.current;
-    const doorEnd = desired.door ? FRIDGE_DOOR_DURATION : 0;
-    const drawerEnd = desired.crisper ? r.crisper.getClip().duration : 0;
+    const doorEnd = wantDoor ? FRIDGE_DOOR_DURATION : 0;
+    const drawerEnd = wantCrisper ? r.crisper.getClip().duration : 0;
     const move = (a: THREE.AnimationAction, end: number) => {
       a.time = a.time < end ? Math.min(end, a.time + delta) : Math.max(end, a.time - delta);
     };
-    if (!desired.crisper && r.crisper.time > 0) move(r.crisper, 0);
+    if (!wantCrisper && r.crisper.time > 0) move(r.crisper, 0);
     else if (r.door.time !== doorEnd) move(r.door, doorEnd);
     else if (r.crisper.time !== drawerEnd) move(r.crisper, drawerEnd);
     r.mixer.update(0);
-    const lit = desired.door || r.door.time > 0;
+    const lit = wantDoor || r.door.time > 0;
     r.bulb.intensity = lit ? r.intensity : 0;
     if (r.door.time !== doorEnd || r.crisper.time !== drawerEnd) invalidate();
   });

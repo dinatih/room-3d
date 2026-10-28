@@ -11,7 +11,7 @@ const GLB = 'items/ninja-sp101/ninja-sp101-animated.glb';
 export const NINJA_DOOR_DURATION = 0.8;
 const LIGHT_FADE_DURATION = 0.25;
 
-export function NinjaSP101({ actionState, onSize, isPreview = false }: SceneItemProps) {
+export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const wantRack = !!actionState['ninja-rack'];
   const wantDoor = !!actionState.ninja || wantRack;
@@ -77,7 +77,7 @@ export function NinjaSP101({ actionState, onSize, isPreview = false }: SceneItem
     });
     runtime.current = { mixer, door, rack, light, material, intensity: anchor.userData.lumens / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
     invalidate();
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     return () => {
       runtime.current = null;
       mixer.stopAllAction();

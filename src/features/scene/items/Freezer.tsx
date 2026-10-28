@@ -15,12 +15,10 @@ const GLB = 'items/tillreda_anim/TILLREDA_anim.glb';
 /** Duration of the source GLB's door_open clip, in seconds. */
 export const FREEZER_DOOR_DURATION = 1;
 
-export function Freezer({ actionState, onSize, isPreview = false }: SceneItemProps) {
+export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB);
   const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);
   const wantOpen = isPreview ? !!actionState['freezer'] : sceneOpen;
-  const target = useRef(wantOpen);
-  target.current = wantOpen;
   const runtime = useRef<{ mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);
   const { invalidate } = useThree();
 
@@ -56,7 +54,7 @@ export function Freezer({ actionState, onSize, isPreview = false }: SceneItemPro
       }
     });
     runtime.current = { mixer, door };
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     invalidate();
     return () => {
       runtime.current = null;
@@ -70,7 +68,7 @@ export function Freezer({ actionState, onSize, isPreview = false }: SceneItemPro
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r) return;
-    const end = target.current ? r.door.getClip().duration : 0;
+    const end = wantOpen ? r.door.getClip().duration : 0;
     r.door.time = r.door.time < end ? Math.min(end, r.door.time + delta) : Math.max(end, r.door.time - delta);
     r.mixer.update(0);
     if (r.door.time !== end) invalidate();

@@ -17,7 +17,6 @@ import { SlidingDrona } from './SlidingDrona';
 import { LaserDistanceMaster } from './LaserDistanceMaster';
 import { KALLAX_CUISINE_DRONA_POSITIONS, KITCHEN_DRONA_ITEMS } from './kallaxCuisineDrona';
 import { SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
-import { NOOP_ITEM, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 
 // ── Constantes Kallax ─────────────────────────────────────────────────────────
@@ -80,7 +79,7 @@ export function KallaxCuisine({ onSize, actionState, noDrona, isPreview = false 
 
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true }}>
-        <NinjaSP101 item={NOOP_ITEM} actionState={actionState} onSize={NOOP_SIZE} isPreview={isPreview} />
+        <NinjaSP101 actionState={actionState} isPreview={isPreview} />
       </group>
     </group>
   );

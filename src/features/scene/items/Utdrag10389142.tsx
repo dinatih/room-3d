@@ -16,7 +16,7 @@ const RETRACT_OFFSET = -0.16; // Course de 16 cm (en mètres dans l'espace local
  * Réf : IKEA 103.891.42
  * Modèle articulé : caisson fixe (Utdrag_Base) + tiroir télescopique (Utdrag_Drawer)
  */
-export function Utdrag10389142({ onSize, actionState, isPreview = false }: SceneItemProps) {
+export function Utdrag10389142({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone('/items/utdrag10389142/Utdrag10389142.glb');
   const drawerRef = useRef<THREE.Object3D | null>(null);
   const open = useDoorOpen(ACTION_KEY, isPreview, actionState);

@@ -21,7 +21,7 @@ const GLB        = 'items/metod39537986/Metod39537986.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
-export function KitchenCabinet({ actionState, onSize, isPreview = false }: SceneItemProps) {
+export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
   const { scene: handle } = useGLTFClone(HANDLE_GLB);
@@ -41,7 +41,7 @@ export function KitchenCabinet({ actionState, onSize, isPreview = false }: Scene
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
 
     const cabHalfW  = (box.max.x - box.min.x) / 2;
     const cabFrontZ = -(box.max.z - box.min.z) / 2;

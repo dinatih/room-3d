@@ -13,7 +13,6 @@ import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_SE_DRONA_POSITIONS, DRONA_SE_ITEMS } from './kallaxSeDrona';
@@ -29,8 +28,6 @@ const FREEZER_H = 50; // Hauteur du congélateur CHIQ au sol
 
 // Positions en espace root (rotY=π/2).
 // k1 center Y = FREEZER_H + w2/2 ; k2 center Y = FREEZER_H + w2 + w2/2 ; cells ±17.5
-
-function k(id: string) { return { id } as any; }
 
 const DRONA_ITEMS = Object.entries({ ...DRONA_SE_ITEMS, 'drona-se-care': { ...DRONA_SPECIAL_ITEMS['drona-se-care'], duration: SPECIAL_DRONA_SLIDE_DURATION } });
 
@@ -65,7 +62,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
       {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, pivoté de +90°) */}
       <group position={[0, 0, 0]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true }}>
-        <Freezer item={k('freezer')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <Freezer />
       </group>
 
       {/* k1 — premier 2×1 pivoté, posé sur le congélateur Y ∈ [FREEZER_H, FREEZER_H + w2] */}

@@ -22,7 +22,6 @@ import { Fornuft40428482 } from './Fornuft40428482';
 import { Fornuft10428488 } from './Fornuft10428488';
 import { Fornuft90428489 } from './Fornuft90428489';
 import { Fornuft80428475 } from './Fornuft80428475';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import type { SceneModelProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
@@ -118,14 +117,14 @@ export function CuisineGroup({ onSize, noDrona }: SceneModelProps & { noDrona?: 
       {/* Meuble sous évier */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W / 2, 10, KIT_D / 2]}>
-          <KitchenCabinet item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <KitchenCabinet />
         </group>
       </group>
 
       {/* Réfrigérateur */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={FRIDGE_LOCAL_POSITION}>
-          <Fridge item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Fridge />
         </group>
       </group>
 
@@ -139,7 +138,7 @@ export function CuisineGroup({ onSize, noDrona }: SceneModelProps & { noDrona?: 
       {/* Hotte aspirante UTDRAG intégrée dans le meuble haut au-dessus des plaques */}
       <group userData={{ sceneItemRoot: true }}>
         <group position={[CABINET_W + FRIDGE_W / 2, 148.5, 32]} rotation-y={Math.PI}>
-          <Utdrag10389142 item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+          <Utdrag10389142 />
         </group>
       </group>
 
