@@ -5,7 +5,8 @@ import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
-import { CAMERA_SUBJECTS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
+import { CAMERA_SUBJECTS, CHARACTER_CONTROL_ANIMATIONS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
+import { getAnimationDef } from './animations/animationResolver';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import './Controller.scss';
 
@@ -195,7 +196,9 @@ export function Controller({ visible = false }: { visible?: boolean }) {
         {(['character', 'camera'] as const).map(inputControl => {
           const isCamera = inputControl === 'camera';
           const extras = !isCamera
-            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: `${piloting || isFlyingSubject(animal) ? button.key === 'Elevate' ? 'Monter' : 'Descendre' : button.key === 'Elevate' ? 'Action haute' : 'Action basse'} : ${piloting ? 'Hornet' : subject.label}` }))
+            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: !piloting && !animal
+              ? getAnimationDef(CHARACTER_CONTROL_ANIMATIONS[button.key])!.label
+              : `${piloting || isFlyingSubject(animal) ? button.key === 'Elevate' ? 'Monter' : 'Descendre' : button.key === 'Elevate' ? 'Action haute' : 'Action basse'} : ${piloting ? 'Hornet' : subject.label}` }))
             : EXTRA_CAMERA_CONTROLS;
           const buttons = [...DIRECTIONS, ...extras];
           return (

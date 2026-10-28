@@ -2498,6 +2498,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'miley-armature-cheer-feminine-jump',
+    loop: 'once',
     path: 'animations/miley/miley_armature_cheer_feminine_jump.glb',
     category: 'locomotion',
     label: `[MILEY] Cheer Feminine Jump (382f / 6.4s, 782KB)`,
@@ -2774,6 +2775,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'miley-armature-fall-down-f',
+    loop: 'once',
     path: 'animations/miley/miley_armature_fall_down_f.glb',
     category: 'locomotion',
     label: `[MILEY] Fall Down F (579f / 9.6s, 1214KB)`,

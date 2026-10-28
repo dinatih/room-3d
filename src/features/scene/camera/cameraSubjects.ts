@@ -1,5 +1,10 @@
 import type { CameraMode, CameraTarget } from './types';
 
+export const CHARACTER_CONTROL_ANIMATIONS = {
+  Elevate: 'miley-armature-cheer-feminine-jump',
+  Descend: 'miley-armature-fall-down-f',
+} as const;
+
 /** IDs match the poses published by animals and RobotPlacements. */
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },

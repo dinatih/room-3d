@@ -75,6 +75,23 @@ function world(id = 'native') {
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
 
+it('joue les actions de la manette sur place et attend la fin réelle du clip avant de reprendre', () => {
+  for (const id of ['native', 'rosanna']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {
+    const w = world(id);
+    w.controller.playControlAnimation(animation);
+    assert(w.controller.hasPendingDynamicTask());
+    w.tick(1, false);
+    assert.equal(w.controller.state.animation, animation);
+    assert.equal(w.controller.state.x, 10);
+    assert.equal(w.controller.state.z, 10);
+    w.tick(30, false);
+    assert.equal(w.controller.state.animation, animation, 'Le chargement asynchrone ne doit pas consommer le clip');
+    w.controller.reportAnimationPlayback(animation, 1, true);
+    w.tick(1, false);
+    assert(!w.controller.hasPendingDynamicTask());
+  }
+});
+
 it('attend un calcul sans conserver le sad de l’action précédente, puis reprend', () => {
   const w = world('rosanna');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });

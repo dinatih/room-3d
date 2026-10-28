@@ -1753,6 +1753,14 @@ export function createAgentController(
   };
 
   return {
+    playControlAnimation(animation: string) {
+      const position = getRealPosition();
+      setPosition(position.x, position.y, position.z);
+      manualOverride = false;
+      dynamicNavQueue = [{ type: 'WAIT', animation, waitForAnimation: true, targetPos: [position.x, position.y, position.z] }];
+      dynamicNavIndex = 0;
+      agentStatus = 'IDLE';
+    },
     update, setPosition, setRotation, hasPendingDynamicTask, getStatus, getPostureAnimations, setPostureDistance, reportAnimationPlayback, connect,
     get state() { return state; },
     get initialPos() { return startPos; },
