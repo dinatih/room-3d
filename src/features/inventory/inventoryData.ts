@@ -235,7 +235,7 @@ export const INVENTORY: InventoryItem[] = [
 
   { id: 'assiette',         name: 'Assiette',                       brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 26,   d: 26,   h: 2    }, notes: 'Placard cuisine — plate plate Ø 26 cm' },
   { id: 'mug-set',          name: 'Mug',                            brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 9,    d: 12,   h: 9.5  }, notes: 'Placard cuisine — anse incluse' },
-  { id: 'trash-bin',        name: 'Poubelle TATAY Smart Deco 25L',  brand: 'TATAY',    category: 'kitchen',   qty: 1,  dims: { w: 26,   d: 36,   h: 47   }, notes: 'Effet bois, pédale, B0BJQS1P6C' },
+  { id: 'trash-bin',        name: 'Poubelle TATAY Smart Deco 25L',  brand: 'TATAY',    category: 'kitchen',   qty: 1,  dims: { w: 26,   d: 36,   h: 47   }, notes: 'Effet bois, pédale, B0BJQS1P6C', glbPath: 'items/trash-bin/tatay-smart-deco.glb', photos: ['items/trash-bin/tatay-smart-deco_3d_preview.png'] },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
   { id: 'bathroom-cabinet-west', name: 'METOD Structure élément mural, blanc, 40x37x60 cm (ouest)', brand: 'IKEA', category: 'storage', qty: 1, dims: { w: 40, d: 37.6, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'items/metod10205534/Metod10205534.glb', url: 'https://www.ikea.com/fr/fr/p/metod-rangement-mural-blanc-10205534/', price: '24', photos: ['items/metod10205534/Metod10205534.jpg', 'items/metod10205534/Metod10205534_1.jpg'] },
