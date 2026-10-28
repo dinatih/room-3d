@@ -265,6 +265,8 @@ export const INVENTORY: InventoryItem[] = [
     price: '38,97',
     glbPath: 'items/jordan-hex-mule/JordanHexMule.glb',
     photos: [
+      'items/jordan-hex-mule/hex_mule_top.png',
+      'items/jordan-hex-mule/hex_mule_sole.png',
       'items/jordan-hex-mule/hex_mule_0.jpg',
       'items/jordan-hex-mule/stockx-Product.jpg',
       'items/jordan-hex-mule/stockx_angle_01.jpg',
