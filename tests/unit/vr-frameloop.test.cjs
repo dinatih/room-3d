@@ -43,3 +43,21 @@ export ${source.slice(source.indexOf('function FrameloopController('), source.in
     global.window = previousWindow;
   }
 });
+
+it('le Canvas conserve le rendu VR lorsque la rotation reconfigure sa propriété frameloop', () => {
+  const cameraState = { isXR: false, isIntroRunning: false };
+  const { canvasLoop } = load('src/features/scene/Studio.tsx', {
+    './cameraState': { cameraState },
+  }, source => {
+    const expression = source.match(/frameloop=\{([^\n]+)\}/)[1];
+    return `import { cameraState } from './cameraState';
+export function canvasLoop({ showInventory, isCvModalOpen, isPhotoModeOpen, isIdle, cameraMovement }) { return ${expression}; }`;
+  });
+  const props = { showInventory: false, isCvModalOpen: false, isPhotoModeOpen: false, isIdle: true, cameraMovement: 'follow' };
+  assert.equal(canvasLoop(props), 'never');
+  cameraState.isXR = true;
+  assert.equal(canvasLoop(props), 'always');
+  assert.equal(canvasLoop({ ...props, showInventory: true }), 'always');
+  cameraState.isXR = false;
+  assert.equal(canvasLoop(props), 'never');
+});

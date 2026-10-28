@@ -822,7 +822,7 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (cameraMovement === 'orbit' ? 'always' : 'demand')}
+        frameloop={cameraState.isXR || cameraState.isIntroRunning ? 'always' : showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (cameraMovement === 'orbit' ? 'always' : 'demand')}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
