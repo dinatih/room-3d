@@ -14,6 +14,7 @@ import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Middagsmat60463714 } from '../items/Middagsmat60463714';
+import { SyckRc003a } from '../items/SyckRc003a';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
 import { Lillviken20317852 } from '../items/Lillviken20317852';
 import { Pepprig70567650 } from '../items/Pepprig70567650';
@@ -88,7 +89,7 @@ export function KitchenTrashBin() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function KitchenFurnishings() {
-  const as = useFurnitureToggles(['lamp-kitchen-toggle']);
+  const as = useFurnitureToggles(['lamp-kitchen-toggle', ...getObjectActionIds('syck-rc003a')]);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
   const { name, color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
   const isKitchenLampOn = Boolean(as['lamp-kitchen-toggle']);
@@ -125,6 +126,11 @@ export function KitchenFurnishings() {
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Cuisine' }}>
         <Tackan />
+      </group>
+
+      {/* Cuiseur à riz Senya SYCK-RC003/A — sur les plaques contre le mur sud */}
+      <group position={[KITCHEN_WEST_WALL + 70, 93.8, KITCHEN_SOUTH_WALL - 11]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
+        <SyckRc003a item={stub('syck-rc003a')} actionState={as} onSize={NOOP_SIZE} />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}
