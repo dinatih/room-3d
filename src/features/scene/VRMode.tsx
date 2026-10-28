@@ -58,7 +58,7 @@ export function VRMode() {
         const sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking', 'layers'] };
         const session = await navXr.requestSession('immersive-vr', sessionInit);
         previousCamera = get().camera;
-        camera.near = previousCamera.near;
+        camera.near = 5; // Plan proche de la scène : 5 cm, indépendamment de la vue précédente.
         camera.far = previousCamera.far;
         camera.layers.mask = previousCamera.layers.mask;
         currentSession = session;
