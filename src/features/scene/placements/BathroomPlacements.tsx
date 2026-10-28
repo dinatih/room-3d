@@ -19,6 +19,7 @@ import { Vathult40467548 } from '../items/Vathult40467548';
 import { GrassRug } from '../items/GrassRug';
 import { Tackan } from '../items/Tackan';
 import { Tisken40381253 } from '../items/Tisken40381253';
+import { OneBlade } from '../items/OneBlade';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell } from '../items/Drona';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
@@ -174,6 +175,11 @@ export function BathroomFurnishings() {
       {/* TISKEN sur miroir vasque */}
       <group position={[BATH_EAST_WALL - 98, 129, BATH_NORTH_WALL + 2.1]} rotation={[Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Crochet Tisken' }}>
         <Tisken40381253 />
+      </group>
+
+      {/* Rasoir OneBlade dans le panier Tisken (penché sur le rebord) */}
+      <group position={[BATH_EAST_WALL - 94, 128, BATH_NORTH_WALL + 7]} rotation={[-0.4, 0.2, 1.3]} userData={{ sceneItemRoot: true, itemName: 'Rasoir OneBlade' }}>
+        <OneBlade />
       </group>
     </MergedStaticGroup>
   );
