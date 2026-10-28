@@ -89,8 +89,13 @@ if (process.argv[2] === '--characters') {
 }
 if (['--browser', '--browser-crowd'].includes(process.argv[2])) {
   const crowd = process.argv[2] === '--browser-crowd';
+  const minutes = Number(process.argv.find(arg => arg.startsWith('--minutes='))?.split('=')[1] ?? 2);
+  const seed = Number(process.argv.find(arg => arg.startsWith('--seed='))?.split('=')[1] ?? 20261019);
+  const preset = process.argv.find(arg => arg.startsWith('--preset='))?.split('=')[1] ?? 'mid';
+  if (!(minutes > 0) || !Number.isFinite(minutes) || !Number.isSafeInteger(seed)) throw Error('Invalid duration or seed');
+  if (!['low', 'mid', 'high'].includes(preset)) throw Error('Invalid graphics preset');
   const fixture = { ...require('../tests/fixtures/cases.cjs').navigation.find(fixture => fixture.id === 'autonomous-all'), id: crowd ? 'navmesh-crowd' : 'navmesh-seven',
-    ...(crowd ? { sessionMs: 120000, timeoutMs: 180000 } : { count: 7 }), captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: `node scripts/temp_navmesh_audit.cjs ${process.argv[2]}` };
+    seed, preset, ...(crowd ? { sessionMs: minutes * 60000, timeoutMs: (minutes + 1) * 60000, readinessTimeoutMs: (minutes + 1) * 60000 } : { count: 7 }), captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: `node scripts/temp_navmesh_audit.cjs ${process.argv.slice(2).join(' ')}` };
   process.env.ROOM_TEST_RESULTS = '/tmp/room-navmesh-browser';
   fs.mkdirSync(process.env.ROOM_TEST_RESULTS, { recursive: true });
   require('../tests/support/browser.cjs').withBrowser(fixture, async (page, result) => {

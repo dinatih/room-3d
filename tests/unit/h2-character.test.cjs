@@ -140,6 +140,14 @@ it('anime le H2 avec ses 31 moteurs URDF, face au déplacement (+Z), sans dépla
     const direction = new THREE.Vector3().fromArray(head.userData.lookForward).transformDirection(head.matrixWorld);
     assert(direction.z > 0.8, 'le repos Miley conserve le même avant (+Z) que la marche Mixamo');
   }
+  const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
+  const contactDef = ANIMATION_DEFINITIONS.find(animation => animation.id === 'snake-hip-hop-dance');
+  const contactBytes = fs.readFileSync(`public/${contactDef.path}`);
+  const contactSource = await sourceLoader.parseAsync(contactBytes.buffer.slice(contactBytes.byteOffset, contactBytes.byteOffset + contactBytes.byteLength), '');
+  assert(contactSource.scene.userData.footContacts.length > 0);
+  contactSource.animations[0].name = contactDef.id;
+  const contactClip = retargetClip(contactSource.animations[0], restoreAnimationRig(structuredClone(captureAnimationRig(scene))), contactSource.scene, contactDef.rootMotionSpace);
+  assert(contactClip.tracks.every(track => Array.from(track.values).every(Number.isFinite)), 'Authored human contacts must remain playable on the H2 motor rig');
   t.diagnostic(`H2 : ${height.toFixed(2)} cm, rayon ${profile.radius.toFixed(2)} cm, marche ${speed.toFixed(2)} cm/s`);
 });
 

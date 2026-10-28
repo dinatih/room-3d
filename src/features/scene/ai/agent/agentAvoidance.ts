@@ -1,7 +1,7 @@
 import { cameraState } from '../../cameraState';
 import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from '../navigation/obstacles';
-import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, GEOMETRY_EPSILON, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
+import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
 import { duoSessionManager } from '../duoSessionManager';
 import { devLog } from '@/devLog';
 
@@ -125,29 +125,30 @@ export function limitAgentMovement(id: string, start: Point, proposed: Point): P
     const radius = actorClearance(profile, body);
     if (distance(other, projectToSegment(other, start, proposed)) > radius + CLEARANCE_ERROR + Math.SQRT2 * BOOLEAN_PRECISION) continue;
     const polygon = inflate([{ x: other.x, z: other.z }], radius);
-    // Existing overlaps may separate; inward motion cannot exceed grid precision.
-    if (pointInRing(start, polygon)) {
-      // Clipped detour tangents are rounded to the boolean grid before routing.
-      if (dx * vx + dz * vz < -Math.hypot(dx, dz) * Math.SQRT2 * BOOLEAN_PRECISION) { fraction = 0; observedBlockers.get(id)?.set(otherId, actorState(otherId)); }
-      continue;
-    }
     // Clip the step against the very same convex footprint as the planner.
     // Boundary tangents are permitted; a transverse entry stops at contact.
-    let enter = 0, leave = 1;
+    let enter = 0, leave = 1, overlapping = true;
     for (let i = 0; i < polygon.length; i++) {
       const a = polygon[i], b = polygon[(i + 1) % polygon.length];
       const ex = b.x - a.x, ez = b.z - a.z;
       const side = ex * (start.z - a.z) - ez * (start.x - a.x);
       const slope = ex * vz - ez * vx;
-      if (Math.abs(slope) <= GEOMETRY_EPSILON) {
-        if (side <= GEOMETRY_EPSILON) { leave = 0; break; }
+      // The worker snaps detour vertices: use its positional error bound here too.
+      const tolerance = Math.hypot(ex, ez) * Math.SQRT2 * BOOLEAN_PRECISION;
+      overlapping &&= side > tolerance;
+      if (Math.abs(slope) <= tolerance) {
+        if (side <= tolerance) { leave = 0; break; }
       } else {
-        // Match pointInRing: contact within the geometry tolerance is on the
-        // boundary, so an outward step exits immediately instead of re-entering.
-        const contact = Math.abs(side) <= GEOMETRY_EPSILON ? 0 : -side / slope;
+        // Contact within the worker's rounding bound is a boundary point.
+        const contact = Math.abs(side) <= tolerance ? 0 : -side / slope;
         if (slope > 0) enter = Math.max(enter, contact);
         else leave = Math.min(leave, contact);
       }
+    }
+    if (overlapping) {
+      // Genuine overlaps may separate, but movement into the other body cannot deepen.
+      if (dx * vx + dz * vz < -Math.hypot(dx, dz) * Math.SQRT2 * BOOLEAN_PRECISION) { fraction = 0; observedBlockers.get(id)?.set(otherId, actorState(otherId)); }
+      continue;
     }
     if (enter < leave && leave > 0 && enter < fraction) {
       fraction = Math.max(0, enter);
@@ -174,7 +175,9 @@ export function getAgentObstacles(id: string, start?: Point): Polygon[] {
       // Dropping this obstacle plans straight through a body that movement rejects.
       const dx = other.x - start.x, dz = other.z - start.z;
       const nx = dx || dz ? dx : id < otherId ? 1 : -1;
-      const side = (p: Point) => (p.x - start.x) * nx + (p.z - start.z) * dz;
+      // Leave the start outside even after the worker rounds intersection vertices.
+      const rounding = Math.hypot(nx, dz) * Math.SQRT2 * BOOLEAN_PRECISION;
+      const side = (p: Point) => (p.x - start.x) * nx + (p.z - start.z) * dz - rounding;
       polygon = polygon.flatMap((a, i) => {
         const b = polygon[(i + 1) % polygon.length], sa = side(a), sb = side(b);
         const points = sa >= 0 ? [a] : [];

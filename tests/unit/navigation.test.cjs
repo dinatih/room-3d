@@ -65,6 +65,67 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('recule dans la pièce précédente pour laisser passer un PNJ dans un couloir étroit', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.splice(0, architecture.architectureObstacles.length,
+            ...[-155, 155].map(x => ({ id: `neck-${x}`, polygon: g.rectangle(x, 0, 290, 80), yMin: 0, yMax: 250 })));
+        const avoidance = loadAvoidance(), { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies,
+            '../agent/agentAvoidance': avoidance, './pathfindingClient': { ...navigationDependencies['./pathfindingClient'],
+                prepareNavigationGraph: definition => {
+                    const graph = 'solids' in definition ? queries.buildNavigationGraph(definition) : new NavigationMesh(g.mergeObstacles(definition.obstacles), definition.surfaces);
+                    return { pending: false, read: () => graph, retain: () => () => {}, cancel() {} };
+                },
+            },
+        });
+        const route = crowded.createRouteState(), target = { x: 0, z: -100 };
+        let position = { x: 0, z: 100 }, yielded = false;
+        obstacles.setAgentProfile('blocker', obstacles.getAgentProfile('walker'));
+        cameraState.positions.blocker = { x: 0, y: 0, z: 0 };
+        cameraState.positions.walker = { ...position, y: 0 };
+        try {
+            for (let frame = 0; frame < 1000 && (g.distance(position, target) > 0 || cameraState.positions.blocker.z < 100); frame++) {
+                const before = position;
+                position = crowded.followRoute(route, 'walker', position, target, 3);
+                assert(g.distance(before, position) <= 3 + g.BOOLEAN_PRECISION, 'Yielding must never teleport to the destination');
+                cameraState.positions.walker = { ...position, y: 0 };
+                yielded ||= !!route.crowd?.yielding;
+                if (yielded) {
+                    const other = cameraState.positions.blocker;
+                    cameraState.positions.blocker = { ...avoidance.limitAgentMovement('blocker', other, { x: 0, z: Math.min(100, other.z + 3) }), y: 0 };
+                }
+                assert(g.distance(position, cameraState.positions.blocker) >= 2 * obstacles.NAVIGATION_RADIUS_CM - Math.SQRT2 * g.BOOLEAN_PRECISION, 'Yielding must preserve the shared navigation radius');
+            }
+            assert(yielded, 'An impossible detour must give way along the already travelled approach');
+            assert.deepEqual(position, target, JSON.stringify({ wait: route.waitReason, error: route.error, path: route.path, index: route.index, target: route.target, crowd: route.crowd && { yielding: route.crowd.yielding, resume: route.crowd.resume }, other: cameraState.positions.blocker }));
+            assert.equal(cameraState.positions.blocker.z, 100);
+        } finally { crowded.resetRoute(route, 'walker'); delete cameraState.positions.walker; delete cameraState.positions.blocker; obstacles.removeAgentProfile('blocker'); }
+    });
+    it('laisse Vivida et Ybot suivre leurs tangentes sans enfermer les départs au contact après arrondi', () => {
+        setup({}, 83);
+        const avoidance = loadAvoidance();
+        const cases = [
+            [{ x: -211.06665584452736, z: -206.72909010546846 }, { x: -216.83606, z: -217.32803 }, { x: -216.83606, z: -204.33932 }, true],
+            [{ x: -216.83606, z: -217.32803 }, { x: -211.06665584452736, z: -206.72909010546846 }, { x: -211.06666, z: -219.7178 }, true],
+            [{ x: 228.0614667015447, z: -83.23971738885206 }, { x: 239.70823511084012, z: -80 }, { x: 227.55645, z: -80 }, false],
+        ];
+        obstacles.setAgentProfile('encounter', obstacles.getAgentProfile('walker'));
+        try {
+            for (const [position, other, tangent, traversable] of cases) {
+                cameraState.positions.walker = { ...position, y: 0 };
+                cameraState.positions.encounter = { ...other, y: 0 };
+                const next = avoidance.limitAgentMovement('walker', position, tangent);
+                const footprints = avoidance.getAgentObstacles('walker', position).map(polygon => [polygon]);
+                const { NavigationMesh } = require('../../src/features/scene/ai/navigation/mesh.ts');
+                const graph = new NavigationMesh(g.mergeObstacles(footprints), [[g.rectangle(0, 0, 2000, 2000)]]);
+                assert(graph.canReach(position, position), 'Rounded overlap contours must not enclose the departure');
+                if (traversable) assert(g.distance(next, position) > 0, `The computed tangent must remain usable at ${JSON.stringify(position)}`);
+                else assert.deepEqual(next, position, 'An obsolete inward detour must still be rejected');
+                assert(g.distance(other, g.projectToSegment(other, position, next)) >= avoidance.actorClearance(obstacles.getAgentProfile('walker'), obstacles.getAgentProfile('encounter')) - Math.SQRT2 * g.BOOLEAN_PRECISION);
+                assert.deepEqual(avoidance.limitAgentMovement('walker', position, other), position, 'Inward movement must still stop');
+            }
+        } finally { delete cameraState.positions.walker; delete cameraState.positions.encounter; obstacles.removeAgentProfile('encounter'); }
+    });
     it('utilise le même rayon pour les PNJ, murs, meubles et portes malgré un modèle plus large', () => {
         const gap = 4 * obstacles.NAVIGATION_RADIUS_CM;
         setup({ living: { ...leaf, length: gap, thickness: 1, pivot: { x: -gap / 2, z: 0 } } }, gap);

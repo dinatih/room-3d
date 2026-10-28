@@ -55,6 +55,11 @@ Chaque pas reste contrôlé avec la géométrie réelle, les battants et les aut
 acteurs. Un contournement en préparation laisse avancer les pas encore libres ;
 sa publication conserve le pas déjà contrôlé. Les tangentes aux PNJ utilisent
 la même précision numérique que les contours du planificateur.
+Les contours de sortie d'un chevauchement gardent le départ libre après l'arrondi
+du worker ; les contrôles des tangentes utilisent cette même borne d'erreur.
+Si aucun détour ne permet le croisement, un PNJ peut revenir au début de son
+approche pour libérer le passage, selon une priorité stable entre identifiants.
+Ce recul suit un vrai chemin contrôlé avant de reprendre la destination initiale.
 Un détour terminé est renouvelé si les acteurs qui bloquent le trajet ont bougé ;
 un calcul en cours termine son instantané avant ce renouvellement.
 Les pièces pleines deviennent des obstacles de transit : le trajet peut utiliser

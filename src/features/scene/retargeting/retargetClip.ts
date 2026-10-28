@@ -779,5 +779,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
       targetInstance.updateMatrixWorld(true);
     }
   }
-  return animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
+  // H2 uses its constrained motors and mesh sole bounds, without humanoid toe joints.
+  return supportBone === 'ToeBase' && animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
 }

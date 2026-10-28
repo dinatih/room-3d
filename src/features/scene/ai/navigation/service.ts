@@ -176,8 +176,9 @@ export interface RouteState {
   index: number;
   target: Point | null;
   destination?: Point;
+  origin?: Point;
   graph: NavigationGraph | null;
-  crowd?: { base: NavigationGraph; graph: NavigationGraph | null; planning?: NavigationGraph; preparation?: ReturnType<typeof prepareNavigationGraph>; preparing?: boolean; signature: string; resume: { start: Point; next: Point } };
+  crowd?: { base: NavigationGraph; graph: NavigationGraph | null; planning?: NavigationGraph; preparation?: ReturnType<typeof prepareNavigationGraph>; preparing?: boolean; yielding?: boolean; signature: string; resume: { start: Point; next: Point; retreat: Point } };
   error: string | null;
   waitReason?: string;
   doors: Set<DoorKey>;
@@ -219,7 +220,7 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
       shutter: glassShutterState, requests: getDoorRequestDiagnostics() },
     failure: route.failure && { ...route.failure, graph: route.failure.graph.id },
     crowd: route.crowd && { baseId: route.crowd.base.id, graphId: route.crowd.graph?.id, planningId: route.crowd.planning?.id,
-      preparationId: route.crowd.preparation?.id, preparing: route.crowd.preparing, resume: route.crowd.resume, signature: route.crowd.signature },
+      preparationId: route.crowd.preparation?.id, preparing: route.crowd.preparing, yielding: route.crowd.yielding, resume: route.crowd.resume, signature: route.crowd.signature },
   };
 }
 function clearCrowd(route: RouteState): void {
@@ -245,6 +246,7 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
   releaseAgentDoors(agentId, keepProtectedDoor);
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.destination = undefined;
+  route.origin = undefined;
   route.approach = undefined; route.interactionTarget = undefined;
   route.occupiedTarget = undefined;
   route.exit = undefined;
@@ -269,6 +271,7 @@ export function planRoute(route: RouteState, agentId: string, start: Point, targ
       path = findPath(graph, start, target);
     }
     if (path) {
+      route.origin = { ...start };
       route.path = path; route.index = 0; route.target = { ...target }; route.graph = graph; route.error = null;
       navigationDebug.set(agentId, { path: [start, ...path], target });
       return true;
@@ -398,7 +401,10 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
     route.waitReason = 'Trajet coupé par la géométrie actuelle';
     return start;
   }
-  let limited = limitAgentMovement(agentId, start, position);
+  beginActorBlockCheck(agentId);
+  let limited: Point, contacts: ActorBlockers;
+  try { limited = limitAgentMovement(agentId, start, position); }
+  finally { contacts = endActorBlockCheck(agentId); }
   for (const room of LIMITED_ROOMS) {
     if (!isInRoom(room, start) && isInRoom(room, limited) && !OccupancyManager.hasRoomCapacity(room, agentId)) {
       route.waitReason = `${{ living: 'Séjour complet', bathroom: 'Salle de bains complète', corridor: 'Couloir complet' }[room]} (${ROOM_CAPACITIES[room]} ${room === 'living' ? 'PNJ' : 'personnages'})`;
@@ -418,15 +424,15 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined);
     const actors = getAgentObstacles(agentId, start), obstacles = [...actors, ...roomPolygons];
     const signature = JSON.stringify(obstacles);
-    if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature)) {
+    if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature || !progressing && !route.crowd.graph)) {
       // Finish the current crowd snapshot instead of restarting for every
       // moving actor. Live movement collision checks still protect every step.
       let crowd = route.crowd;
-      if ((!crowd?.planning && !crowd?.preparing) || crowd.base !== base) {
+      if (!crowd || crowd.base !== base || !crowd.planning && !crowd.preparing && crowd.signature !== signature) {
         crowd?.preparation?.cancel();
         const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])], surfaces: walkableSurfaces });
         crowd = { base, graph: null, preparation, preparing: true, signature,
-          resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
+          resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target, retreat: route.origin ?? { ...start } } };
         route.crowd = crowd;
       }
       // A future obstruction must not stop an already collision-checked step.
@@ -434,7 +440,15 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       const graph = crowd.planning ??= crowd.preparation!.read();
       crowd.preparing = false;
       const goal = route.target ?? target;
-      const path = findPath(graph, start, goal);
+      crowd.yielding = false;
+      let path = findPath(graph, start, goal);
+      // One actor yields along its already travelled approach when a body seals
+      // the passage. Stable ID priority prevents both actors retreating together.
+      if (!path && !progressing && contacts.size && [...contacts.keys()].every(id => agentId > id)
+        && distance(start, crowd.resume.retreat) > 0 && !insideObstacle(goal, actors.map(polygon => [polygon]))) {
+        path = findPath(graph, start, crowd.resume.retreat);
+        crowd.yielding = !!path;
+      }
       crowd.planning = undefined;
       crowd.graph = path ? graph : null;
       if (path) {
@@ -442,7 +456,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
         navigationDebug.set(agentId, { path: [start, ...path], target: goal });
         // Keep the safe step already checked above; follow the new corridor next frame.
         if (progressing) { route.waitReason = undefined; return limited; }
-        route.waitReason = fullTransitRooms.length ? 'Contournement d’une pièce complète calculé' : 'Contournement d’un autre PNJ calculé';
+        route.waitReason = crowd.yielding ? 'Recul pour libérer le passage' : fullTransitRooms.length ? 'Contournement d’une pièce complète calculé' : 'Contournement d’un autre PNJ calculé';
         return start;
       }
       if (insideObstacle(goal, actors.map(polygon => [polygon]))) {
@@ -500,12 +514,14 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
         navigationDebug.set(agentId, { path: [], target: goal, error: route.error });
         return start;
       }
+      route.origin = { ...start };
       route.path = path; route.index = 0; route.target = { ...goal }; route.graph = localGraph;
       navigationDebug.set(agentId, { path: [start, ...path], target: goal });
     }
     route.error = null;
     while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
     const next = route.path[route.index];
+    if (!next && route.crowd?.yielding) { clearCrowd(route); route.graph = null; return localMove(goal, id); }
     if (!next) return goal;
     const length = distance(start, next);
     const step = Math.min(travel, length);
@@ -550,6 +566,7 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   if (route.error) return start;
   while (route.index < route.path.length && distance(start, route.path[route.index]) === 0) route.index++;
   let next = route.path[route.index];
+  if (!next && route.crowd?.yielding) { clearCrowd(route); route.graph = null; return advanceRoute(route, agentId, start, target, travel, steer, owner, interaction, protectedDoor); }
   if (!next) { resetRoute(route, agentId, protectedDoor); return target; }
   // A displaced agent must regain a valid route before continuing toward an old vertex.
   if (!segmentFree(start, next, graph.obstacles)) {
