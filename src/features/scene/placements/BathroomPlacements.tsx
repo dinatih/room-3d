@@ -75,7 +75,7 @@ export function BathroomEquipment() {
         rotation={[Math.PI, 0, 0]}
         userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Lumière Salle de bain', hoverAction: { label: name ?? 'Lumière Salle de bain', actions: getObjectActionIds('tradfri-bulb-sdb') } }}
       >
-        <TradfriBulb item={stub('tradfri-bulb-sdb')} actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} onSize={NOOP_SIZE} />
+        <TradfriBulb actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} />
         <pointLight
           position={[0, 20, 0]}
           intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) * brightness : 0}

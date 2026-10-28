@@ -11,7 +11,6 @@ import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
-import { NOOP_ITEM, NOOP_SIZE } from '@features/scene/sceneItem';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
@@ -416,7 +415,7 @@ function LampOla_() {
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
       userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
-      <LampOla item={NOOP_ITEM} actionState={{ on: lampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
+      <LampOla actionState={{ on: lampOn, lightColor: color, brightness }} />
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (
         <spotLight
@@ -581,7 +580,7 @@ export function LivingRoomFurnishings() {
             actions: getObjectActionIds('tv')
           }
         }}>
-        <NavigationObstacle id="tv"><TV item={NOOP_ITEM} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="tv"><TV actionState={as} /></NavigationObstacle>
       </group>
 
       {/* Mini PC */}

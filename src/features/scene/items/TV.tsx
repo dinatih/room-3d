@@ -2,8 +2,9 @@
  * TV.tsx — CHiQ L32H7A 32" (items/tv/tv.glb).
  * Scaled to TV_W=73 cm. Action 'tv-toggle' : écran ON/OFF.
  */
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useGLTF, useTexture } from '@react-three/drei';
+import { useGLTFClone } from '../useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -14,9 +15,8 @@ import { TV_W, TV_H } from '../tvData';
 
 const ACTION_KEY = 'tv-toggle';
 
-export function TV({ actionState, onSize, isPreview = false }: SceneItemProps) {
-  const { scene: gltfScene } = useGLTF('items/tv/tv.glb');
-  const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
+export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene } = useGLTFClone('items/tv/tv.glb');
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
@@ -44,8 +44,8 @@ export function TV({ actionState, onSize, isPreview = false }: SceneItemProps) {
     );
     // Après rotation π Y : screen side = bbox.min.z (-Z), dos = +Z
     setScreenZ(-(size.z / 2 + 0.15));
-    onSize(size);
-  }, [scene]);
+    onSize?.(size);
+  }, [scene, onSize]);
 
   return (
     <group userData={{ hoverAction: { label: 'TV CHiQ L32H7A', actions: getObjectActionIds('tv') } }}>
@@ -57,7 +57,7 @@ export function TV({ actionState, onSize, isPreview = false }: SceneItemProps) {
           side={THREE.DoubleSide}
           map={activeTex}
           color={isDisplaying ? 0xffffff : 0x060606}
-          emissive={isVideoActive ? new THREE.Color(0xffffff) : (isTvOn ? new THREE.Color(0x111111) : new THREE.Color(0x000000))}
+          emissive={isVideoActive ? 0xffffff : (isTvOn ? 0x111111 : 0x000000)}
           emissiveMap={isVideoActive ? videoTex : null}
           emissiveIntensity={isVideoActive ? 0.8 : (isTvOn ? 0.15 : 0)}
           roughness={0.05}

@@ -32,7 +32,7 @@ const WATER_Y = BATHTUB.waterHeight;
 const MAX_BALL_SPEED = 80; // Vitesse maximale en cm/s pour éviter les emballements physiques
 const MAX_PHYSICS_DT = 0.05; // Seuil max de 50ms par frame pour absorber les pauses/inventaire
 
-export function BeachBall({ onSize, isPreview = false }: SceneItemProps) {
+export function BeachBall({ onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item' | 'actionState'>>) {
   const { invalidate } = useThree();
   const { scene } = useGLTFClone('items/beach_ball.glb');
   const groupRef = useRef<THREE.Group>(null);

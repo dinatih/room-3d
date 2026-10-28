@@ -9,8 +9,8 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = '/items/syck-rc003a/syck-rc003a.glb';
 
-export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: SceneItemProps) {
-  const { scene, animations } = useGLTFClone(GLB, true);
+export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene, animations } = useGLTFClone(GLB);
   const wantPot = !!actionState['syck-rc003a-pot'];
   const wantLid = !!actionState['syck-rc003a-lid'] || wantPot;
   const paused = isPreview && !!actionState.previewPaused;

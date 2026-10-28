@@ -4,7 +4,7 @@ import type { SceneItemProps } from '@shared/types';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { DOG_BOWL, dogFeedingStation } from './dogBowlData';
 
-export function DogBowl({ onSize, isPreview = false, feedingStation = false }: SceneItemProps & { feedingStation?: boolean }) {
+export function DogBowl({ onSize, isPreview = false, feedingStation = false }: Partial<Omit<SceneItemProps, 'item' | 'actionState'>> & { feedingStation?: boolean }) {
   const root = useRef<THREE.Group>(null);
   const navigationEnabled = useNavigationEnabled();
   const profile = useMemo(() => [
@@ -13,7 +13,7 @@ export function DogBowl({ onSize, isPreview = false, feedingStation = false }: S
   ], []);
   useLayoutEffect(() => {
     if (feedingStation && !isPreview && navigationEnabled) dogFeedingStation.position = root.current!.getWorldPosition(new THREE.Vector3());
-    onSize(new THREE.Vector3(DOG_BOWL.radius * 2, DOG_BOWL.height, DOG_BOWL.radius * 2));
+    onSize?.(new THREE.Vector3(DOG_BOWL.radius * 2, DOG_BOWL.height, DOG_BOWL.radius * 2));
     return () => { if (feedingStation && !isPreview && navigationEnabled) dogFeedingStation.position = null; };
   }, [feedingStation, isPreview, navigationEnabled, onSize]);
   return <group ref={root} name="ulotte-bowl" userData={{ itemName: 'Gamelle d’Ulotte' }}>

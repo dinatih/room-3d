@@ -136,7 +136,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
         hoverAction: { label: name ?? 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
       }}
     >
-      <TradfriBulb item={stub('tradfri-bulb-couloir')} actionState={{ on: isOn }} onSize={NOOP_SIZE} />
+      <TradfriBulb actionState={{ on: isOn }} />
       <pointLight
         ref={lightRef}
         position={[0, 20, 0]}

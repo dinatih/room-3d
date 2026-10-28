@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
-import { SceneItemProps } from '@shared/types';
+import type { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 
 /**
@@ -10,7 +10,7 @@ import { useGLTFClone } from '@features/scene/useGLTFClone';
  * Price: 
  * URL: https://www.ikea.com/fr/fr/p/koelvatten-eclairage-led-avec-capteur-gris-a-pile-00594176/
  */
-export function Kolvatten00594176({ actionState, onSize, ...props }: SceneItemProps) {
+export function Kolvatten00594176({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone('/items/kolvatten00594176/Kolvatten00594176.glb', true);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
@@ -52,7 +52,7 @@ export function Kolvatten00594176({ actionState, onSize, ...props }: SceneItemPr
   }, [scene, isOn, actionState?.lightColor, actionState?.brightness]);
 
   return (
-    <group {...props}>
+    <group>
       <primitive object={scene} />
     </group>
   );

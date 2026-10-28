@@ -12,8 +12,8 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/trådfri ampoule led e27 1055 lumen connecté sans fil variateur intensité-spectre blanc globe/TRÅDFRI Ampoule LED E27 1055 lumen connecté sans fil variateur intensité-spectre blanc globe.glb';
 
-export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB);
+export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene } = useGLTFClone(GLB, true);
   const isOn = actionState?.on !== undefined
     ? Boolean(actionState.on)
     : Boolean(actionState?.['lamp-bath-toggle'] || actionState?.['lamp-corridor-toggle'] || actionState?.['lamp-sdb-toggle'] || actionState?.['lamp-couloir-toggle']);
@@ -23,24 +23,13 @@ export function TradfriBulb({ actionState, onSize }: SceneItemProps) {
     scene.scale.set(1, 1, 1);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
-    // Clone materials per instance so toggling one bulb doesn't affect other instances
-    scene.traverse((obj) => {
-      const mesh = obj as THREE.Mesh;
-      if (mesh.isMesh && mesh.material) {
-        if (Array.isArray(mesh.material)) {
-          mesh.material = mesh.material.map(m => m.clone());
-        } else {
-          mesh.material = mesh.material.clone();
-        }
-      }
-    });
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   useLayoutEffect(() => {

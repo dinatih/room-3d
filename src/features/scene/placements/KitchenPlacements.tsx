@@ -4,8 +4,6 @@ import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairCl
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_SIZE } from '@features/scene/sceneItem';
-import type { Item } from '@shared/types';
 
 import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGroup';
 import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
@@ -29,9 +27,6 @@ import {
   KITCHEN_WEST_WALL,
   KITCHEN_SOUTH_WALL,
 } from '../wallData';
-
-const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 const w2 = 75.5;
 const KALLAX_DEPTH = 39;
@@ -130,7 +125,7 @@ export function KitchenFurnishings() {
 
       {/* Cuiseur à riz Senya SYCK-RC003/A — sur les plaques contre le mur sud */}
       <group position={[KITCHEN_WEST_WALL + 70, 93.8, KITCHEN_SOUTH_WALL - 11]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
-        <SyckRc003a item={stub('syck-rc003a')} actionState={as} onSize={NOOP_SIZE} />
+        <SyckRc003a actionState={as} />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}
@@ -166,7 +161,7 @@ export function KitchenFurnishings() {
           hoverAction: { label: name ?? 'Barre · Cuisine', actions: getObjectActionIds('kolvatten00594176') },
         }}
       >
-        <Kolvatten00594176 item={stub('kolvatten00594176')} actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} onSize={NOOP_SIZE} />
+        <Kolvatten00594176 actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} />
         <pointLight
           position={[0, 5, 0]}
           intensity={isKitchenLampOn ? (lightsHD ? 80 : 2.5) * brightness : 0}

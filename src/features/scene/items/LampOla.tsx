@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
-export function LampOla({ actionState, onSize }: SceneItemProps) {
+export function LampOla({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone('items/lamp-ola/lamp-ola.glb');
   const diffuserMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const isOn = actionState?.on !== undefined
@@ -192,7 +192,10 @@ export function LampOla({ actionState, onSize }: SceneItemProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+  }, [scene]);
+
+  useLayoutEffect(() => {
+    onSize?.(glbLocalBBox(scene).getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   useLayoutEffect(() => {

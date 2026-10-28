@@ -2,8 +2,6 @@ import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
-import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 import { ArmrestSofa } from '../items/ArmrestSofa';
@@ -29,9 +27,6 @@ import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
 import { HumanSkeleton } from '../items/HumanSkeleton';
 import { FemaleAnatomyTrio } from '../items/FemaleAnatomyTrio';
 import { BeachBall } from '../items/BeachBall';
-
-const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 // Pass 1 — Furniture (Structure & gros volumes)
 export function GardenFurniture() {
@@ -59,7 +54,7 @@ export function GardenFurniture() {
       <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
         <NavigationObstacle id="bathtub-garden"><Bathtub /></NavigationObstacle>
         {/* Ballon de plage flottant sur l'eau de la baignoire avec physique */}
-        <BeachBall item={stub('beach-ball')} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <BeachBall />
       </group>
 
       {/* Boîte de rangement Vättersö */}
@@ -76,7 +71,7 @@ export function GardenDecor() {
   return (
     <MergedStaticGroup name="merged-garden-decor">
       <group position={ULOTTE_BOWL_POSITION} userData={{ skipMerge: true, itemName: 'Gamelle d’Ulotte — jardin voisin Est' }}>
-        <NavigationObstacle id="ulotte-bowl"><DogBowl item={stub('ulotte-bowl')} actionState={NOOP_STATE} onSize={NOOP_SIZE} feedingStation /></NavigationObstacle>
+        <NavigationObstacle id="ulotte-bowl"><DogBowl feedingStation /></NavigationObstacle>
       </group>
       {/* Mangeoire / nid à oiseaux sous le balcon */}
       <group position={[95, 214, -165]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'feeder', kind: 'feeder' }, itemName: 'Mangeoire à Oiseaux' }}>

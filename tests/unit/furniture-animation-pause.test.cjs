@@ -25,6 +25,7 @@ for (const [name, key, clipName, scale] of [
     '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
     '../objectActions': { getObjectActionIds: () => [key] },
   };
+  dependencies['./createLidGlbItem'] = load('src/features/scene/items/createLidGlbItem.tsx', dependencies);
   const component = load(`src/features/scene/items/${name}.tsx`, dependencies)[name];
   component({ actionState, isPreview: true, onSize() {} });
   frame({}, 1);

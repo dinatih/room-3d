@@ -346,3 +346,47 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
   render({});
   assert.throws(() => effects.pop()(), /missing lid_open animation/);
 });
+
+it('TRÅDFRI et OLA conservent leur géométrie et leurs matériaux lors des nouvelles mesures', async () => {
+  for (const name of ['TradfriBulb', 'LampOla']) {
+    const sourceMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+    const scene = new THREE.Group(), refs = [], deps = [], effects = [], sizes = [];
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), sourceMaterial);
+    scene.add(mesh);
+    let refCursor, effectCursor, clonedMaterials = false;
+    const module = load(`src/features/scene/items/${name}.tsx`, {
+      three: THREE, 'react/jsx-runtime': jsx,
+      react: {
+        useRef: value => refs[refCursor++] ??= { current: value },
+        useLayoutEffect: (fn, next) => {
+          const index = effectCursor++, previous = deps[index];
+          if (!previous || next.some((value, i) => value !== previous[i])) effects.push(fn);
+          deps[index] = next;
+        },
+      },
+      '@react-three/drei': { useGLTF: { preload() {} } },
+      '@features/scene/useGLTFClone': { useGLTFClone: (_, ownMaterials) => {
+        if (ownMaterials && !clonedMaterials) { mesh.material = sourceMaterial.clone(); clonedMaterials = true; }
+        return { scene };
+      } },
+      '@features/scene/glbUtils': await glbUtils(),
+    });
+    const render = (on, onSize) => {
+      refCursor = effectCursor = 0;
+      module[name]({ actionState: { on, lightColor: 0xff0000, brightness: .5 }, onSize });
+      effects.splice(0).forEach(fn => fn());
+    };
+    const materials = () => scene.children.flatMap(mesh => Array.isArray(mesh.material) ? mesh.material : [mesh.material]);
+    render(true, size => sizes.push(size.toArray()));
+    const children = [...scene.children], preparedMaterials = materials();
+    assert(preparedMaterials.some(mat => mat.emissiveIntensity > 0));
+    render(true, size => sizes.push(size.toArray()));
+    assert.deepEqual(scene.children, children, name);
+    assert.deepEqual(materials(), preparedMaterials, name);
+    assert.deepEqual(sizes[0], sizes[1], name);
+    render(false, undefined);
+    assert(materials().every(mat => mat.emissiveIntensity === 0 || mat.emissive.getHex() === 0), name);
+    assert.equal(sourceMaterial.emissiveIntensity, 1);
+    assert.equal(sourceMaterial.emissive.getHex(), 0);
+  }
+});
