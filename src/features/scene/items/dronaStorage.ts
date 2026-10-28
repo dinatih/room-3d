@@ -15,27 +15,27 @@ export const DRONA_SPECIAL_ITEMS = {
   'drona-se-care': {
     shelf: 'se', index: 0, position: KALLAX_SE_DRONA_POSITIONS[0],
     label: 'Dröna Parfum/Crème', interaction: 'Prendre un parfum ou une crème',
-    action: 'drona-se-care-slide', approach: 50 + 38 * 2 / 3 - 10,
+    approach: 50 + 38 * 2 / 3 - 10,
   },
   'drona-nw-upper': {
     shelf: 'nw', index: 3, position: KALLAX_NW_DRONA_POSITIONS[3],
     label: 'Dröna supérieur NW', interaction: 'Prendre un objet dans le Dröna supérieur',
-    action: 'drona-nw-upper-slide', approach: 80,
+    approach: 80,
   },
   'drona-nw-trousers': {
     shelf: 'nw', index: 2, position: KALLAX_NW_DRONA_POSITIONS[2],
     label: 'Dröna Pantalons', interaction: 'Prendre un pantalon',
     // Box extension clearance, adjusted 10 cm closer for the reach gesture.
-    action: 'drona-nw-trousers-slide', approach: 50 + 38 * 2 / 3 - 10,
+    approach: 50 + 38 * 2 / 3 - 10,
   },
   'drona-ne-catchall2': {
     shelf: 'ne', index: 0, position: [-17.5, 41 - 20.5, 0],
     label: 'Dröna Fourre-tout 2', interaction: 'Prendre un objet dans le fourre-tout 2',
-    action: 'drona-ne-catchall2-slide', approach: 50 + 38 * 2 / 3 - 10,
+    approach: 50 + 38 * 2 / 3 - 10,
   },
 } satisfies Record<string, {
   shelf: string; index: number; position: [number, number, number];
-  label: string; interaction: string; action: string; approach: number;
+  label: string; interaction: string; approach: number;
 }>;
 
 export const SPECIAL_DRONA_SLIDE_DURATION = getAnimationDef('opening')!.duration! / 4;

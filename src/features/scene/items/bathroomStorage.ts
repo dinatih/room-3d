@@ -5,12 +5,12 @@ const CABINET_HEIGHT = 60;
 const DRONA_HEIGHT = 33;
 export const BATHROOM_STORAGE_ITEMS = {
   'bathroom-cabinet-west': {
-    label: 'Armoire SDB Ouest', action: 'cbnWest',
+    label: 'Armoire SDB Ouest',
     position: [BATH_WEST_WALL + 20, 0, BATH_NORTH_WALL + 19.5] as [number, number, number],
     rotationY: 0, cabinetId: 'bathroom-cabinet-west', kind: 'cabinet',
   },
   'bathroom-cabinet-east': {
-    label: 'Armoire SDB Est', action: 'cbnEast',
+    label: 'Armoire SDB Est',
     position: [BATH_EAST_WALL - 23, 0, BATH_NORTH_WALL + 19.5] as [number, number, number],
     rotationY: 0, cabinetId: 'bathroom-cabinet-east', kind: 'cabinet',
   },

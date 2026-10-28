@@ -7,13 +7,13 @@ export const KALLAX_SE_DRONA_POSITIONS: [number, number, number][] = [
   [3, 50 + 75.5 + 75.5 / 2 + 17.5, 0],
 ];
 
-export const DRONA_SE_ITEMS: Record<string, { index: number; label: string; action: string; duration: number }> = {
+export const DRONA_SE_ITEMS: Record<string, { index: number; label: string; duration: number }> = {
   'drona-se-pyjama': {
-    index: 2, label: 'Dröna pyjama', action: 'drona-se-pyjama-slide',
+    index: 2, label: 'Dröna pyjama',
     duration: getAnimationDef('pick-fruit')!.duration! / 2,
   },
   'drona-se-linen': {
-    index: 1, label: 'Dröna linge de maison', action: 'drona-se-linen-slide',
+    index: 1, label: 'Dröna linge de maison',
     duration: getAnimationDef('opening')!.duration! / 2,
   },
 };
