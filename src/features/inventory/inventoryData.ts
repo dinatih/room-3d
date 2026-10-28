@@ -121,7 +121,24 @@ export const INVENTORY: InventoryItem[] = [
   { id: 'anneland60481727', name: "ÅNNELAND matelas hybride, mi-ferme/blanc, 80x200 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 80, d: 200, h: 24 }, glbPath: 'items/anneland70481722/Anneland70481722.glb', photos: ['items/anneland70481722/Anneland70481722.jpg', 'items/anneland70481722/Anneland70481722_1.jpg', 'items/anneland70481722/Anneland70481722_2.jpg', 'items/anneland70481722/Anneland70481722_3.jpg', 'items/anneland70481722/Anneland70481722_4.jpg', 'items/anneland70481722/Anneland70481722_5.jpg', 'items/anneland70481722/Anneland70481722_6.jpg', 'items/anneland70481722/Anneland70481722_7.jpg', 'items/anneland70481722/Anneland70481722_8.jpg', 'items/anneland70481722/Anneland70481722_9.jpg', 'items/anneland70481722/Anneland70481722_10.jpg', 'items/anneland70481722/Anneland70481722_11.jpg', 'items/anneland70481722/Anneland70481722_12.jpg', 'items/anneland70481722/Anneland70481722_13.jpg', 'items/anneland70481722/Anneland70481722_3d_preview.png'], url: 'https://www.ikea.com/fr/fr/p/anneland-matelas-hybride-mi-ferme-blanc-60481727/', price: '349', notes: "Lit principal/haut/Ouest. Les lits peuvent s'empiler mais sont en mode canapé/séparé par défaut pour faire un lit et un canapé/plan de travail." },
   { id: 'vestmarka90470195', name: "VESTMARKA matelas à ressorts, ferme/bleu clair, 80x200 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 80, d: 200, h: 18 }, glbPath: 'items/vestmarka90470195/Vestmarka90470195.glb', photos: ['items/vestmarka90470195/Vestmarka90470195.jpg', 'items/vestmarka90470195/Vestmarka90470195_1.jpg', 'items/vestmarka90470195/Vestmarka90470195_2.jpg', 'items/vestmarka90470195/Vestmarka90470195_3.jpg', 'items/vestmarka90470195/Vestmarka90470195_4.jpg', 'items/vestmarka90470195/Vestmarka90470195_5.jpg', 'items/vestmarka90470195/Vestmarka90470195_6.jpg', 'items/vestmarka90470195/Vestmarka90470195_7.jpg', 'items/vestmarka90470195/Vestmarka90470195_8.jpg', 'items/vestmarka90470195/Vestmarka90470195_3d_preview.png'], url: 'https://www.ikea.com/fr/fr/p/vestmarka-matelas-a-ressorts-ferme-bleu-clair-90470195/', price: '99', notes: "Lit secondaire/bas/Est/Amour. Les lits peuvent s'empiler mais sont en mode canapé/séparé par défaut." },
   { id: 'nasfjallet10558045', name: "NÄSFJÄLLET surmatelas, blanc, 80x200 cm", brand: 'IKEA', category: 'furniture', qty: 1, dims: { w: 80, d: 200, h: 4 }, glbPath: 'items/nasfjallet10558045/Nasfjallet10558045.glb', photos: ['items/nasfjallet10558045/Nasfjallet10558045.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_1.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_2.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_3.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_4.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_5.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_6.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_7.jpg', 'items/nasfjallet10558045/Nasfjallet10558045_3d_preview.png'], url: 'https://www.ikea.com/fr/fr/p/naesfjaellet-surmatelas-blanc-10558045/', price: '35', notes: 'Sur-matelas pour lit principal (haut/Ouest).' },
-  { id: 'kin-fine-camera', name: "Video-Surveillance OpenEye 12MP Cloud IP Fisheye Camera", brand: 'OpenEye', category: 'decor', qty: 1, dims: { w: 10, d: 10, h: 5 }, glbPath: 'items/kin-fine-camera/kin-fine-camera.glb', notes: 'Plafond' },
+  {
+    id: 'reolink-fe-w',
+    name: 'Reolink Caméra Fisheye FE-W 6MP 360°',
+    brand: 'Reolink',
+    category: 'tech',
+    qty: 1,
+    dims: { w: 12.6, d: 12.6, h: 4.92 },
+    notes: 'Caméra de surveillance Fisheye 360° Wi-Fi 2.4/5GHz 2K+ 6MP, vision nocturne, plafond',
+    glbPath: 'items/reolink-fe-w/reolink-fe-w.glb',
+    url: 'https://www.amazon.fr/Reolink-Int%C3%A9rieure-Correction-Distorsion-Bidirectionne/dp/B0CDZS7TX9',
+    photos: [
+      'items/reolink-fe-w/reolink-fe-w-1.jpg',
+      'items/reolink-fe-w/reolink-fe-w-2.jpg',
+      'items/reolink-fe-w/reolink-fe-w-3.jpg',
+      'items/reolink-fe-w/reolink-fe-w-4.jpg',
+      'items/reolink-fe-w/reolink-fe-w_3d_preview.png',
+    ],
+  },
 
   // ── STORAGE ──────────────────────────────────────────────────────────────────
   { id: 'kallax-2x1',       name: 'KALLAX étagère, blanc, 77x41 cm',brand: 'IKEA',     category: 'storage',   qty: 5,  dims: { w: 76.5, d: 39, h: 41 }, notes: 'NE (1), SE (2 pivotées), NW (1 pivotée), cuisine (1)', glbPath: 'items/kallax90301555/Kallax90301555.glb', photos: ['items/kallax90301555/Kallax90301555.jpg', 'items/kallax90301555/Kallax90301555_1.jpg', 'items/kallax90301555/Kallax90301555_2.jpg', 'items/kallax90301555/Kallax90301555_3.jpg'], url: 'https://www.ikea.com/fr/fr/p/kallax-etagere-blanc-90301555/', price: '29,99' },
