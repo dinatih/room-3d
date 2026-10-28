@@ -1,3 +1,5 @@
+import { AIR_PERFORMER_CONTROLS, isAirPerformerAction } from '../../home-assistant/airPerformer';
+import { APPLIANCES, applianceValue } from '../../home-assistant/appliances';
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
 import { GRAPHICS_PRESETS } from './graphicsPresets';
@@ -535,6 +537,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
+    if (isAirPerformerAction(key)) return useSceneStore.getState().triggerAction(key, undefined, 'user');
     if (isHomeAssistantAction(key) && isHomeAssistantLinked(useHomeAssistant.getState())) {
       const value = key === 'glassDoorV2ShutterPos' ? getNextActionValue(key, useSceneStore.getState().furniture[key]) : undefined;
       void requestHomeAssistantAction(key, value);
@@ -781,6 +784,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
       return;
     }
 
+    if (isAirPerformerAction(key)) {
+      set(state => ({ extraStates: toggleObjectAction(key, state.extraStates, targetState ?? getNextActionValue(key, getSceneActionValue(key, state))) }));
+      cameraState.invalidate?.();
+      return;
+    }
     const resolved = resolveStoreKey(key);
     if (resolved.type === 'furniture') {
       const fKey = resolved.name as keyof FurnitureState;
@@ -854,6 +862,10 @@ if (typeof window !== 'undefined') {
 
 /** Read the scene's value using the same action ID as components and previews. */
 export function getSceneActionValue(id: string, state = useSceneStore.getState()): any {
+  if (isAirPerformerAction(id)) {
+    const ha = useHomeAssistant.getState();
+    return isHomeAssistantLinked(ha) ? applianceValue(id, ha.entities[APPLIANCES[id].entity]) : state.extraStates[id] ?? AIR_PERFORMER_CONTROLS[id].initialValue;
+  }
   if (id === 'desk2-screen-toggle') return state.desk2ScreenActive || state.extraStates.desk2Screen;
   const key = resolveStoreKey(id);
   if (key.type === 'furniture') return state.furniture[key.name as keyof FurnitureState];

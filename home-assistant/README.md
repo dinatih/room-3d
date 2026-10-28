@@ -229,3 +229,26 @@ Le Player Pop est exclu à la demande de l’utilisateur. Aucune entité du rout
 n’est ajoutée à l’exposition Google ni aux commandes Room-3D.
 
 Source : [intégration officielle Freebox](https://www.home-assistant.io/integrations/freebox/).
+
+### Air Performer AMF870/15
+
+Les capacités ont été relues sur l'appareil le 28 octobre 2026, sans commande
+physique. Les actions scène et preview proposent alimentation, fonction
+(ventilation/circulation/chauffage), mode Auto/Sleep/Turbo, vitesses 1–10,
+oscillation arrêt/45°/90°/180°/270°/350°, consigne 1–37 °C, minuterie, luminosité
+de l'écran, indice affiché, Auto Plus, bip, verrouillage enfant et capteurs en
+veille. Le panneau HA utilise les options et limites reçues de l'appareil ;
+l'angle y est réglable de 0 à 350° par pas de 5°.
+
+L'oscillation passe par `number.living_room` : cette installation n'expose pas
+`fan.oscillate`. La fonction passe par `select.living_room_function`, les modes
+par `fan.set_preset_mode`, et la vitesse par `fan.set_percentage` (conversion de
+1–10 vers 10–100 %). Les états HA confirmés restent la source de vérité ; les
+commandes PNJ et previews ne pilotent aucun équipement réel.
+
+L'angle 3D représente l'amplitude sélectionnée, avec une vitesse visuelle
+constante indépendante de la ventilation ; HA ne fournit pas la position
+instantanée du moteur. La télécommande posée sur l'appareil suit son mouvement.
+Les mesures PM2.5, gaz, humidité, température, allergènes et filtres sont lues
+sur les entités réelles. Hors liaison, aucune mesure de qualité d'air n'est
+inventée et la minuterie éteint la simulation locale.

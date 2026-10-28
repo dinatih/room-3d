@@ -9,7 +9,7 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/trash-bin/tatay-smart-deco.glb';
 
-export function TrashBin({ actionState, onSize }: SceneItemProps) {
+export function TrashBin({ actionState, onSize, isPreview }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const isOpen = !!actionState?.['bin-toggle'];
   const { invalidate } = useThree();
@@ -28,11 +28,12 @@ export function TrashBin({ actionState, onSize }: SceneItemProps) {
     rt.current = { mixer, actions, dur };
     mixer.setTime(0);
     onSize(box.getSize(new THREE.Vector3()));
+    return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); rt.current = null; };
   }, [scene, animations, onSize]);
 
   useFrame((_, dt) => {
     const r = rt.current;
-    if (!r) return;
+    if (!r || (isPreview && actionState.previewPaused)) return;
     const cur = r.actions[0]?.time ?? 0;
     const target = isOpen ? r.dur : 0;
     if (cur === target) return;

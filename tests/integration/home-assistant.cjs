@@ -18,8 +18,17 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
   }]));
   entities['light.principale_porte'] = { ...entities['light.porte'], entity_id: 'light.principale_porte', state: 'on' };
   for (const [id, state, attributes] of [
-    ['fan.living_room', 'off', { supported_features: 57, percentage: 20, percentage_step: 10 }],
+    ['fan.living_room', 'off', { supported_features: 57, percentage: 20, percentage_step: 10, preset_modes: ['auto', 'sleep', 'turbo'], preset_mode: 'auto' }],
     ['select.living_room_function', 'heating', { options: ['fan', 'circulation', 'heating'] }],
+    ['number.living_room', '0', { min: 0, max: 350, step: 5 }],
+    ['number.living_room_temperature', '24', { min: 1, max: 37, step: 1 }],
+    ['select.living_room_timer', 'Off', { options: ['Off', '30min', '1h'] }],
+    ['select.living_room_preferred_index', 'pm25', { options: ['pm25', 'gas_level', 'indoor_allergen_index'] }],
+    ['light.living_room_display_backlight', 'on', { brightness: 26 }],
+    ['switch.living_room_auto_plus', 'on', {}],
+    ['switch.living_room_beep', 'on', {}],
+    ['switch.living_room_child_lock', 'off', {}],
+    ['switch.living_room_standby_sensors', 'on', {}],
     ['cover.volet', 'open', { supported_features: 7, current_position: 50 }],
     ['media_player.tele', 'on', { supported_features: 384 }],
   ]) entities[id] = { entity_id: id, state, attributes };
@@ -187,8 +196,30 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     assert.equal(await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos), 50, 'Cover waits for HA confirmation');
     publish('cover.volet', 'open', { supported_features: 7, current_position: 25 });
     await page.waitForFunction(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos === 75);
+    for (const [key, value, domain, service, data] of [
+      ['airPerformerOscillation', 270, 'number', 'set_value', { entity_id: 'number.living_room', value: 270 }],
+      ['airPerformerTemperature', 26, 'number', 'set_value', { entity_id: 'number.living_room_temperature', value: 26 }],
+      ['airPerformerPreset', 'sleep', 'fan', 'set_preset_mode', { entity_id: 'fan.living_room', preset_mode: 'sleep' }],
+      ['airPerformerTimer', '30min', 'select', 'select_option', { entity_id: 'select.living_room_timer', option: '30min' }],
+      ['airPerformerIndex', 'gas_level', 'select', 'select_option', { entity_id: 'select.living_room_preferred_index', option: 'gas_level' }],
+      ['airPerformerDisplay', 50, 'light', 'turn_on', { entity_id: 'light.living_room_display_backlight', brightness_pct: 50 }],
+      ['airPerformerChildLock', true, 'switch', 'turn_on', { entity_id: 'switch.living_room_child_lock' }],
+      ['airPerformerAutoPlus', false, 'switch', 'turn_off', { entity_id: 'switch.living_room_auto_plus' }],
+      ['airPerformerBeep', false, 'switch', 'turn_off', { entity_id: 'switch.living_room_beep' }],
+      ['airPerformerStandbySensors', false, 'switch', 'turn_off', { entity_id: 'switch.living_room_standby_sensors' }],
+    ]) {
+      const before = calls.length;
+      await page.evaluate(([key, value]) => window.haTest.useSceneStore.getState().triggerAction(key, value, 'user'), [key, value]);
+      await page.waitForFunction(key => !window.haTest.useHomeAssistant.getState().applianceCommands[key]?.pending, {}, key);
+      assert.equal(calls.length, before + 1, key);
+      assert.equal(calls.at(-1).domain, domain);
+      assert.equal(calls.at(-1).service, service);
+      assert.deepEqual(calls.at(-1).service_data, data);
+    }
+    publish('number.living_room', '270', { min: 0, max: 350, step: 5 });
+    await page.waitForFunction(() => document.querySelector('input[aria-label="Oscillation"]').value === '270');
     const expectedCalls = calls.length;
-    for (const key of ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'tv-toggle', 'glassDoorV2ShutterPos']) {
+    for (const key of ['airPerformerPower', 'airPerformerMode', 'airPerformerSpeed', 'airPerformerOscillation', 'airPerformerTemperature', 'airPerformerPreset', 'airPerformerTimer', 'airPerformerDisplay', 'airPerformerChildLock', 'tv-toggle', 'glassDoorV2ShutterPos']) {
       await page.evaluate(key => window.haTest.useSceneStore.getState().triggerAction(key), key);
     }
     assert.equal(calls.length, expectedCalls, 'NPC actions must never command real appliances');
@@ -212,6 +243,16 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
       store.toggleFurniture('glassDoorV2ShutterPos');
       store.triggerAction('airPerformerPower', undefined, 'user');
     });
+    const localPurifier = await page.evaluate(() => {
+      const { getSceneActionValue } = window.haTest;
+      const store = window.haTest.useSceneStore.getState();
+      store.triggerAction('airPerformerOscillation', undefined, 'user');
+      store.triggerAction('airPerformerAutoPlus', undefined, 'user');
+      store.triggerAction('airPerformerMode', undefined, 'user');
+      store.triggerAction('airPerformerSpeed', 7, 'user');
+      return ['airPerformerPower', 'airPerformerOscillation', 'airPerformerAutoPlus', 'airPerformerMode', 'airPerformerSpeed'].map(id => getSceneActionValue(id));
+    });
+    assert.deepEqual(localPurifier, [true, 45, false, 'circulation', 7], 'Unlinked simulation uses the same action defaults and explicit values');
     assert.equal((await read('lampCorridor')).on, false, 'Paused lights must simulate locally');
     const localCover = await page.evaluate(() => window.haTest.useSceneStore.getState().furniture.glassDoorV2ShutterPos);
     publish('light.entree_entree', 'on');

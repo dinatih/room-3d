@@ -273,17 +273,21 @@ it('lit les actions Air Performer directement dans la preview et accepte un plac
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
     '../useGLTFClone': { useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene }; } },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => [] },
-    '../objectActionRegistry': {}, '../../home-assistant/appliances': {},
-    '../../home-assistant/connection': { isHomeAssistantLinked: () => false, useHomeAssistant: select => select({ entities: {} }) },
+    '../utils/useFurnitureToggles': { useFurnitureToggles: () => ({}) }, '../store/useSceneStore': {},
+    '../../home-assistant/airPerformer': load('src/features/home-assistant/airPerformer.ts', {}),
+    '../../home-assistant/appliances': {},
+    '../../home-assistant/connection': { isHomeAssistantLinked: () => false, useHomeAssistant: () => ({ entities: {} }) },
   });
   for (const power of [true, false, true]) {
-    const item = AirPerformer({ isPreview: true, actionState: { airPerformerPower: power, airPerformerMode: 'cool' } });
+    const item = AirPerformer({ isPreview: true, actionState: { airPerformerPower: power, airPerformerMode: 'fan', airPerformerOscillation: 90 } });
     effects.splice(0).forEach(fn => fn()); layouts.pop()();
     assert.equal(remote.visible, true);
-    assert(item.props.userData.hoverAction.label.includes(power ? 'Mode COOL' : 'Éteint'));
+    assert(item.props.userData.hoverAction.label.includes(power ? 'fan' : 'Éteint'));
     rotatingGroup.rotation.y = 0; frame(null, 1);
     assert.equal(rotatingGroup.rotation.y !== 0, power);
   }
   AirPerformer({}); layouts.pop()();
+  assert.equal(remote.visible, true);
+  AirPerformer({ remoteDocked: false }); layouts.pop()();
   assert.equal(remote.visible, false);
 });

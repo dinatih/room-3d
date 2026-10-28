@@ -1,3 +1,4 @@
+import { AIR_PERFORMER_CONTROLS } from '../home-assistant/airPerformer';
 import { positionState } from './positionState';
 import { DOUBLE_BED_POSITIONS } from './furniturePositions';
 import { getSmartObject } from './ai/smartObjectRegistry';
@@ -10,7 +11,7 @@ export interface ActionDef {
   icon?: string;
   sceneOnly?: boolean;
   values?: readonly (string | number)[];
-  initialValue?: string | number;
+  initialValue?: string | number | boolean;
   type?: 'select';
   options?: { value: string; label: string }[];
 }
@@ -214,10 +215,11 @@ const ACTIONS: Record<string, ActionConfig> = {
   nestMini: { label: 'Ok Google 🎙️' },
   'tv-toggle': { label: ['Allumer', 'Éteindre'] },
   'bin-toggle': { label: ['Ouvrir', 'Fermer'] },
-  airPerformerPower: { label: ['Allumer', 'Éteindre'] },
-  airPerformerOscillation: { label: ['Activer oscillation', 'Arrêter oscillation'] },
-  airPerformerMode: { label: 'Changer Mode', values: ['auto', 'cool', 'heat', 'sleep'], initialValue: 'auto' },
-  airPerformerSpeed: { label: 'Vitesse +/-', values: [3, 6, 10], initialValue: 5 },
+  ...Object.fromEntries(Object.entries(AIR_PERFORMER_CONTROLS).map(([id, config]) => [id, {
+    label: (value: unknown) => `${config.label} : ${value === undefined ? '—' : typeof value === 'boolean' ? value ? 'Oui' : 'Non' : value}${id === 'airPerformerOscillation' ? '°' : id === 'airPerformerTemperature' ? ' °C' : id === 'airPerformerDisplay' ? ' %' : ''}`,
+    initialValue: config.initialValue,
+    ...('values' in config ? { values: config.values } : {}),
+  }])),
   'character-meshes': { label: 'Meshes' },
   'sofa-arm-left': { label: ['Mettre à plat G', 'Relever G'] },
   'sofa-arm-right': { label: ['Mettre à plat D', 'Relever D'] },
@@ -254,11 +256,12 @@ export function getActionLabel(id: string, value?: any): string {
 export function getNextActionValue(id: string, value?: any): any {
   const action = getActionDef(id);
   if (!action) throw new Error(`Action inconnue : ${id}`);
-  return action.values ? action.values[(action.values.indexOf(value ?? action.initialValue) + 1) % action.values.length] : !value;
+  return action.values ? action.values[(action.values.indexOf(value ?? action.initialValue) + 1) % action.values.length] : !(value ?? action.initialValue);
 }
 
 export function toggleObjectAction(id: string, state: Record<string, any>, value = getNextActionValue(id, state[id])): Record<string, any> {
   const next = { ...state, [id]: value };
+  if (id === 'airPerformerSpeed') next.airPerformerPreset = 'manual';
   if (id === 'fridge' && !value) next['fridge-crisper-toggle'] = false;
   if (id === 'fridge-crisper-toggle' && value) next.fridge = true;
   if (id === 'ninja' && !value) next['ninja-rack'] = false;

@@ -1,3 +1,4 @@
+import { AIR_PERFORMER_ACTION_IDS, AIR_PERFORMER_CONTROLS } from '../../../home-assistant/airPerformer';
 import { AIRCRAFT_MODELS } from '../../aircraftModels';
 import { useSceneStore, getSceneActionValue } from '../../store/useSceneStore';
 import { positionState } from '@features/scene/positionState';
@@ -145,9 +146,7 @@ export function InteractiveSection({
       {triggerBtn('Bureau 2 (Assis/Debout)', 'desk2-toggle')}
       {triggerBtn('Bureau 2 (Position)', 'desk2-position')}
       {triggerBtn('Smorkull (Position)', 'smorkull-position')}
-      {triggerBtn('Air Performer (Power)', 'airPerformerPower')}
-      {triggerBtn('Air Performer (Mode)', 'airPerformerMode')}
-      {triggerBtn('Air Performer (Vitesse)', 'airPerformerSpeed')}
+      {AIR_PERFORMER_ACTION_IDS.map(id => <div key={id}>{triggerBtn(`Air Performer · ${AIR_PERFORMER_CONTROLS[id].label}`, id, getActionLabel(id, getSceneActionValue(id)))}</div>)}
       {triggerBtn('Air Performer (Position)', 'airperformer-position')}
       {triggerBtn('WC Couvercle', 'wc-lid-toggle')}
       {triggerBtn('WC Siège', 'wc-seat-toggle')}

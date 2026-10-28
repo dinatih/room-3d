@@ -4,7 +4,7 @@ useGLTF.setDecoderPath('/draco/');
 const { HomeAssistantSync } = await import('../../src/features/home-assistant/HomeAssistant');
 const { InteractiveSection } = await import('../../src/features/scene/sidepanel/sections/InteractiveSection');
 export const { useHomeAssistant } = await import('../../src/features/home-assistant/connection');
-export const { useSceneStore } = await import('../../src/features/scene/store/useSceneStore');
+export const { useSceneStore, getSceneActionValue } = await import('../../src/features/scene/store/useSceneStore');
 const root = createRoot(document.getElementById('root')!);
 root.render(<><HomeAssistantSync /><InteractiveSection isMobile={false} /></>);
 export const unmount = () => root.unmount();

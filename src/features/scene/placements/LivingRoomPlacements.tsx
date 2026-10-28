@@ -395,20 +395,17 @@ function AirPerformerPlacement() {
 
   const p = AIRPERFORMER_POSITIONS[posIdx];
   const rp = AIRPERFORMER_REMOTE_POSITIONS[remoteIdx];
-  const remotePos = remoteIdx === 0
-    ? { x: p.x, y: 105.5, z: p.z, ry: p.ry }
-    : { x: rp.x, y: rp.y ?? 0, z: rp.z, ry: rp.ry };
 
   return (
     <>
       <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
         <group userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
-          <NavigationObstacle id="air-performer"><AirPerformer /></NavigationObstacle>
+          <NavigationObstacle id="air-performer"><AirPerformer remoteDocked={remoteIdx === 0} /></NavigationObstacle>
         </group>
       </PositionTransition>
-      <PositionTransition furnitureKey="airperformer-remote-position" x={remotePos.x} y={remotePos.y} z={remotePos.z} ry={remotePos.ry}>
+      {remoteIdx !== 0 && <PositionTransition furnitureKey="airperformer-remote-position" x={rp.x} y={rp.y ?? 0} z={rp.z} ry={rp.ry}>
         <AirPerformerRemote />
-      </PositionTransition>
+      </PositionTransition>}
     </>
   );
 }

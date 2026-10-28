@@ -1,3 +1,4 @@
+import { AIR_PERFORMER_ACTION_IDS } from '../home-assistant/airPerformer';
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'raph-rover': ['raph-rover-motion', 'raph-rover-replay', 'raph-rover-autonomous'],
   'unitree-h2': ['unitree-h2-motion', 'unitree-h2-replay'],
@@ -70,8 +71,8 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'laptop': ['desk2-screen-toggle'],
   'desk-bollsidan-1': ['desk1-toggle', 'desk1-position'],
   'desk-bollsidan-2': ['desk2-toggle', 'desk2-position', 'desk2-screen-toggle'],
-  'air-performer': ['airPerformerPower', 'airPerformerOscillation', 'airPerformerMode', 'airPerformerSpeed', 'airperformer-position'],
-  'air-performer-remote': ['airperformer-remote-position', 'airPerformerPower', 'airPerformerMode', 'airPerformerOscillation'],
+  'air-performer': [...AIR_PERFORMER_ACTION_IDS, 'airperformer-position'],
+  'air-performer-remote': ['airperformer-remote-position', ...AIR_PERFORMER_ACTION_IDS],
 };
 
 /** Shared by scene hover menus, inventory filters and 3D previews. */

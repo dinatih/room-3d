@@ -12,9 +12,8 @@ import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/chest-bench/chest-bench-animated.glb';
-const LID_DURATION = 0.8;
 
-export function ChestBench({ actionState, onSize }: SceneItemProps) {
+export function ChestBench({ actionState, onSize, isPreview }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const isOpen = !!actionState['chest-bench-open'];
   const { invalidate } = useThree();
@@ -36,15 +35,16 @@ export function ChestBench({ actionState, onSize }: SceneItemProps) {
     scene.userData.hoverAction = { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') };
     runtime.current = { mixer, action };
     onSize(box.getSize(new THREE.Vector3()));
-  }, []);
+    return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); runtime.current = null; };
+  }, [scene, animations, onSize]);
 
   useFrame((_, dt) => {
     const rt = runtime.current;
-    if (!rt) return;
-    const target = isOpen ? LID_DURATION : 0;
+    if (!rt || (isPreview && actionState.previewPaused)) return;
+    const duration = rt.action.getClip().duration;
+    const target = isOpen ? duration : 0;
     if (rt.action.time === target) return;
-    const step = dt / LID_DURATION;
-    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isOpen ? step : -step) * LID_DURATION, 0, LID_DURATION);
+    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isOpen ? dt : -dt), 0, duration);
     rt.mixer.update(0);
     invalidate();
   });

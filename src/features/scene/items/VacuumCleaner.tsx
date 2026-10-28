@@ -12,9 +12,8 @@ import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/rowenta-rh2079wo/rowenta-rh2079wo.glb';
-const ANIM_DURATION = 1.0;
 
-export function VacuumCleaner({ actionState, onSize }: SceneItemProps) {
+export function VacuumCleaner({ actionState, onSize, isPreview }: SceneItemProps) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const isDetached = !!actionState?.['vacuum-detach-tube'];
   const { invalidate } = useThree();
@@ -46,15 +45,16 @@ export function VacuumCleaner({ actionState, onSize }: SceneItemProps) {
     };
     runtime.current = { mixer, action };
     onSize(box.getSize(new THREE.Vector3()));
+    return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); runtime.current = null; };
   }, [scene, animations, onSize]);
 
   useFrame((_, dt) => {
     const rt = runtime.current;
-    if (!rt) return;
-    const target = isDetached ? ANIM_DURATION : 0;
+    if (!rt || (isPreview && actionState.previewPaused)) return;
+    const duration = rt.action.getClip().duration;
+    const target = isDetached ? duration : 0;
     if (rt.action.time === target) return;
-    const step = dt / ANIM_DURATION;
-    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isDetached ? step : -step) * ANIM_DURATION, 0, ANIM_DURATION);
+    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isDetached ? dt : -dt), 0, duration);
     rt.mixer.update(0);
     invalidate();
   });

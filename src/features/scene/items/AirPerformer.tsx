@@ -1,116 +1,79 @@
-/**
- * AirPerformer.tsx — Philips Air Performer AMF870/15 (32.5×32.5×106.4cm).
- * Modèle GLB avec oscillation et télécommande séparable.
- */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
-import { getNextActionValue } from '../objectActionRegistry';
+import { useFurnitureToggles } from '../utils/useFurnitureToggles';
+import { useSceneStore } from '../store/useSceneStore';
 import { isHomeAssistantLinked, useHomeAssistant } from '../../home-assistant/connection';
-import { entityAvailable } from '../../home-assistant/appliances';
+import { applianceValue } from '../../home-assistant/appliances';
+import { AIR_PERFORMER_ACTION_IDS, AIR_PERFORMER_CONTROLS } from '../../home-assistant/airPerformer';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/philips-amf870/philips-amf870.glb';
+// Visual sweep rate, independent of ventilation speed. HA reports the arc, not motor position.
+const SWEEP_RADIANS_PER_SECOND = Math.PI / 12;
 
-export function AirPerformer({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+export function AirPerformer({ onSize, actionState = {}, isPreview = false, remoteDocked = true }: Partial<Omit<SceneItemProps, 'item'>> & { remoteDocked?: boolean }) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
-
-  const [scenePower, setPower] = useState(false);
-  const [sceneOscillating, setOscillating] = useState(true);
-  const [sceneMode, setMode] = useState<string>('auto');
-  const [sceneSpeed, setSpeed] = useState(5);
-  const [pm25, setPm25] = useState(8);
-  const power = isPreview ? !!actionState.airPerformerPower : scenePower;
-  const oscillating = isPreview ? !!(actionState.airPerformerOscillation ?? true) : sceneOscillating;
-  const mode = isPreview ? actionState.airPerformerMode ?? 'auto' : sceneMode;
-  const speed = isPreview ? actionState.airPerformerSpeed ?? 5 : sceneSpeed;
-
+  const local = useFurnitureToggles(AIR_PERFORMER_ACTION_IDS);
+  const ha = useHomeAssistant();
+  const remote = !isPreview && isHomeAssistantLinked(ha);
+  const values = isPreview ? actionState : remote ? Object.fromEntries(AIR_PERFORMER_ACTION_IDS.map(id => [id, applianceValue(id, ha.entities[AIR_PERFORMER_CONTROLS[id].entity])])) : local;
+  const value = (id: keyof typeof AIR_PERFORMER_CONTROLS) => values[id] ?? (remote ? undefined : AIR_PERFORMER_CONTROLS[id].initialValue);
+  const power = value('airPerformerPower') === true;
+  const arc = Number(value('airPerformerOscillation') ?? 0);
+  const mode = value('airPerformerMode');
+  const preset = value('airPerformerPreset');
+  const speed = value('airPerformerSpeed');
+  const temperature = value('airPerformerTemperature');
+  const timer = value('airPerformerTimer');
   const groupRef = useRef<THREE.Group>(null!);
-  const oscAngleRef = useRef(0);
+  const direction = useRef(1);
 
-  const remote = useHomeAssistant(state => isHomeAssistantLinked(state) && !isPreview);
-  const entities = useHomeAssistant(state => state.entities);
-
+  useEffect(() => { invalidate(); }, [actionState, local, ha.entities, invalidate]);
   useEffect(() => {
-    if (!remote) return;
-    const fan = entities['fan.living_room'];
-    if (entityAvailable(fan)) {
-      setPower(fan.state === 'on');
-      if (typeof fan.attributes.percentage === 'number') setSpeed(fan.attributes.percentage / 10);
-    }
-    const fn = entities['select.living_room_function'];
-    if (entityAvailable(fn)) setMode(fn.state);
-    const pm = entities['sensor.living_room_pm2_5'];
-    if (entityAvailable(pm) && Number.isFinite(Number(pm.state))) setPm25(Number(pm.state));
-    invalidate();
-  }, [remote, entities, invalidate]);
-
-  useEffect(() => {
-    if (isPreview || remote) return;
-    const handler = (e: Event) => {
-      const { key } = (e as CustomEvent<{ key: string }>).detail;
-      if (key === 'airPerformerPower') {
-        setPower(p => !p);
-      } else if (key === 'airPerformerOscillation') {
-        setOscillating(o => !o);
-      } else if (key === 'airPerformerMode') {
-        setMode(m => getNextActionValue(key, m));
-      } else if (key === 'airPerformerSpeed') {
-        setSpeed(s => getNextActionValue(key, s));
-      } else return;
-      invalidate();
-    };
-    document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
-  }, [invalidate, isPreview, remote]);
+    if (isPreview || remote || !power || timer === 'Off') return;
+    const duration = timer === '30min' ? 30 * 60 : Number(String(timer).replace('h', '')) * 3600;
+    if (!Number.isFinite(duration) || duration <= 0) throw new Error(`Minuterie Air Performer invalide : ${timer}`);
+    const timeout = window.setTimeout(() => useSceneStore.getState().triggerAction('airPerformerPower', false, 'user'), duration * 1000);
+    return () => window.clearTimeout(timeout);
+  }, [isPreview, remote, power, timer]);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
-
     const remoteObj = scene.getObjectByName('RemoteControl');
-    if (remoteObj) {
-      remoteObj.visible = !!isPreview;
-    }
-
+    if (!remoteObj) throw new Error('AirPerformer: missing RemoteControl');
+    remoteObj.visible = isPreview || remoteDocked;
+    remoteObj.userData.hoverAction = { label: 'Télécommande Air Performer', actions: getObjectActionIds('air-performer-remote') };
     scene.scale.setScalar(100);
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
-
     onSize?.(box.getSize(new THREE.Vector3()));
-  }, [scene, isPreview, onSize]);
+  }, [scene, isPreview, remoteDocked, onSize]);
 
   useFrame((_, dt) => {
-    if (!oscillating || !power) return;
-    const oscSpeed = 0.5 + (speed / 10) * 1.5;
-    oscAngleRef.current += dt * oscSpeed;
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(oscAngleRef.current) * 0.7; // ~40 deg oscillation
-      invalidate();
-    }
+    if (!power || arc === 0 || (isPreview && actionState.previewPaused)) return;
+    const halfArc = THREE.MathUtils.degToRad(arc) / 2;
+    const angle = THREE.MathUtils.clamp(groupRef.current.rotation.y, -halfArc, halfArc);
+    // Triangle wave keeps a constant angular speed and handles frames crossing a turnaround.
+    const phase = ((direction.current > 0 ? angle + halfArc : 3 * halfArc - angle) + dt * SWEEP_RADIANS_PER_SECOND) % (4 * halfArc);
+    direction.current = phase < 2 * halfArc ? 1 : -1;
+    groupRef.current.rotation.y = phase < 2 * halfArc ? phase - halfArc : 3 * halfArc - phase;
+    invalidate();
   });
 
-  return (
-    <group
-      userData={{
-        hoverAction: {
-          label: power
-            ? `Air Performer (ON - Mode ${mode.toUpperCase()}${oscillating ? ' - Oscillant' : ''} - PM2.5: ${Math.round(pm25)} µg/m³)`
-            : 'Air Performer (Éteint)',
-          actions: getObjectActionIds('air-performer')
-        }
-      }}
-    >
-      <group ref={groupRef}>
-        <primitive object={scene} />
-      </group>
-    </group>
-  );
+  const pm25 = remote ? ha.entities['sensor.living_room_pm2_5']?.state ?? '—' : '—';
+  return <group userData={{ hoverAction: {
+    label: `Air Performer · ${power ? `${mode ?? '—'} · ${preset ?? 'manuel'} · vitesse ${speed ?? '—'}/10 · ${arc}°${mode === 'heating' ? ` · cible ${temperature ?? '—'} °C` : ''} · PM2.5 ${pm25}` : 'Éteint'}`,
+    actions: getObjectActionIds('air-performer'),
+  } }}>
+    <group ref={groupRef}><primitive object={scene} /></group>
+  </group>;
 }
 
 useGLTF.preload(GLB);

@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 
 const actions = load('src/features/scene/objectActionRegistry.ts', {
+  '../home-assistant/airPerformer': load('src/features/home-assistant/airPerformer.ts', {}),
   './positionState': { positionState: {} },
   './furniturePositions': { DOUBLE_BED_POSITIONS: [] },
   './ai/smartObjectRegistry': {},
@@ -10,6 +11,14 @@ const actions = load('src/features/scene/objectActionRegistry.ts', {
   '@features/inventory/inventoryData': { WIGS_ITEMS: [] },
 });
 const scene = {};
+
+it('Air Performer : régler la vitesse passe en manuel sans changer la fonction chauffage', () => {
+  const next = actions.toggleObjectAction('airPerformerSpeed', { airPerformerMode: 'heating', airPerformerPreset: 'auto' }, 7);
+  assert.equal(next.airPerformerSpeed, 7);
+  assert.equal(next.airPerformerPreset, 'manual');
+  assert.equal(next.airPerformerMode, 'heating');
+  assert.equal(actions.getNextActionValue('airPerformerPreset', next.airPerformerPreset), 'auto');
+});
 
 it('Ninja : sortir la grille ouvre la porte ; fermer rentre la grille sans éteindre la lumière', () => {
   const extended = actions.toggleObjectAction('ninja-rack', { 'ninja-light': true });
