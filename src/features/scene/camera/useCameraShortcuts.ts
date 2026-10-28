@@ -440,13 +440,8 @@ export function useCameraShortcuts({
       if (e.key === 'y' || e.key === 'Y') {
         if (e.repeat) return;
         e.preventDefault();
-        if (modeRef.current === 'top' && topFollowRef.current) {
-          exitTop();
-          appLog('system', '🎥 Mode Vue Libre (Orbit)');
-        } else {
-          enterTop(true);
-          appLog('system', '🎥 Mode 2D Top (Suivi Perso)');
-        }
+        enterTop(true);
+        appLog('system', '🎥 Mode 2D Top (Suivi Perso)');
         return;
       }
 
