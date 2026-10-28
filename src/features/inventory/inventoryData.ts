@@ -263,6 +263,17 @@ export const INVENTORY: InventoryItem[] = [
     qty: 2,
     dims: { w: 20.4, d: 28.5, h: 4.8 },
     price: '38,97',
+    glbPath: 'items/jordan-hex-mule/JordanHexMule.glb',
+    photos: [
+      'items/jordan-hex-mule/hex_mule_0.jpg',
+      'items/jordan-hex-mule/stockx-Product.jpg',
+      'items/jordan-hex-mule/stockx_angle_01.jpg',
+      'items/jordan-hex-mule/stockx_angle_10.jpg',
+      'items/jordan-hex-mule/stockx_angle_19.jpg',
+      'items/jordan-hex-mule/stockx_angle_28.jpg',
+      'items/jordan-hex-mule/JordanHexMule_3d_preview.png',
+    ],
+    url: 'https://www.kickscrew.com/en-FR/products/wmns-air-jordan-hex-mule-sp-university-red-fj0603-600',
     description: "Jordan Hex Mule SP — Chaussure pour femme, coloris University Red/University Red, taille 44.5, modèle FJ0603-600. Prix d'origine : 64,99 €, remisé à 38,97 €.",
     notes: `Paire, University Red, taille 44.5, FJ0603-600.
 
