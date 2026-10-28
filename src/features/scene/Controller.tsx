@@ -1,5 +1,5 @@
 /** Commandes communes au clavier, à la souris et au tactile. */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
@@ -122,8 +122,8 @@ export function Controller({ visible = false }: { visible?: boolean }) {
   const moving = piloting || !animal && (mode === 'fpv' || control === 'character');
   const orbiting = mode === 'orbit' || mode === 'follow' || Boolean(animal);
   const targets = [
-    { target: 'studio', label: 'Appartement', icon: 'bi-building' },
     { target: 'character', label: 'Personnage', icon: 'bi-person' },
+    { target: 'studio', label: 'Appartement', icon: 'bi-building' },
   ] as const;
   const subjectId = animal ?? (mode === 'follow' || mode === 'fpv' ? 'character' : '');
   const subject = CAMERA_SUBJECTS.find(choice => choice.id === subjectId) ?? CAMERA_SUBJECTS[0];
@@ -173,11 +173,10 @@ export function Controller({ visible = false }: { visible?: boolean }) {
           })}
         </div>
         <div className="position-absolute bottom-0 start-50 translate-middle-x glass-card d-flex align-items-center gap-1 p-1 rounded-2" role="group" aria-label="Cible de la caméra">
-          <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>
-          <div className="btn-group btn-group-sm">
-            {targets.map(choice => (
+          {targets.map(choice => (
+            <Fragment key={choice.target}>
+              {choice.target === 'studio' && <span className="small px-1" title="Cible de la caméra"><i className="bi bi-bullseye" aria-hidden="true" /><span className="visually-hidden">Cible caméra</span></span>}
               <button
-                key={choice.target}
                 type="button"
                 className={`btn btn-sm py-0 px-1 ${!animal && target === choice.target ? 'btn-primary' : 'btn-outline-secondary'}`}
                 aria-label={`Cibler : ${choice.label}`}
@@ -190,15 +189,15 @@ export function Controller({ visible = false }: { visible?: boolean }) {
               >
                 <i className={`bi ${choice.icon}`} aria-hidden="true" />
               </button>
-            ))}
-          </div>
+            </Fragment>
+          ))}
         </div>
         {(['character', 'camera'] as const).map(inputControl => {
           const isCamera = inputControl === 'camera';
           const extras = !isCamera
-            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: `${button.key === 'Elevate' ? 'Monter' : 'Descendre'} : ${piloting ? 'Hornet' : subject.label}` }))
+            ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: `${piloting || isFlyingSubject(animal) ? button.key === 'Elevate' ? 'Monter' : 'Descendre' : button.key === 'Elevate' ? 'Action haute' : 'Action basse'} : ${piloting ? 'Hornet' : subject.label}` }))
             : EXTRA_CAMERA_CONTROLS;
-          const buttons = isCamera || piloting || isFlyingSubject(animal) ? [...DIRECTIONS, ...extras] : DIRECTIONS;
+          const buttons = [...DIRECTIONS, ...extras];
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
               <div className={`virtual-dpad ${!isCamera ? 'virtual-dpad--subject' : ''}`} role="group" aria-label={isCamera ? 'Déplacement de la caméra' : `Déplacement : ${piloting ? 'Hornet' : subject.label}`}>
