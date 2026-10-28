@@ -187,6 +187,16 @@ export function BathroomFurnishings() {
       <group position={[BATH_EAST_WALL - 104, 121, BATH_NORTH_WALL + 13]} rotation={[-0.15, 0.1, -0.2]} userData={{ sceneItemRoot: true, itemName: 'Brosse à dents Oral-B' }}>
         <OralBToothbrush />
       </group>
+
+      {/* Second TISKEN sur mur douche Ouest (à 1cm du mur douche Sud, 66cm du plafond) */}
+      <group position={[BATH_WEST_WALL + 2.1, WALL_H - 66, SHOWER_SOUTH_WALL - 15.3]} rotation={[Math.PI / 2, 0, -Math.PI / 2]} userData={{ sceneItemRoot: true, itemName: 'Panier Tisken Douche' }}>
+        <Tisken40381253 />
+      </group>
+
+      {/* Deuxième Oral-B dans le panier Tisken douche */}
+      <group position={[BATH_WEST_WALL + 13, WALL_H - 66 - 8, SHOWER_SOUTH_WALL - 15.3]} rotation={[0.1, -Math.PI / 2 + 0.15, -0.2]} userData={{ sceneItemRoot: true, itemName: 'Brosse à dents Oral-B Douche' }}>
+        <OralBToothbrush />
+      </group>
     </MergedStaticGroup>
   );
 }
