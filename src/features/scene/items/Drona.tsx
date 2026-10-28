@@ -1,6 +1,6 @@
 /**
  * Drona.tsx — Boîte de rangement IKEA DRONA.
- * Coordonnées locales : centré par bbox, Y=0 = sol, rouge.
+ * Coordonnées locales : pivot au centre de la boîte sur les trois axes, rouge.
  * Le GLB officiel IKEA est en mètres → scale ×100 pour la scène (1 unité = 1 cm).
  *
  * Supporte 4 modes (commutable via useSceneStore / Calques) :
@@ -40,8 +40,7 @@ function createProceduralDronaGeo(): THREE.BufferGeometry {
   // Dimensions DRONA : 33 x 38 x 33 cm (Largeur x Profondeur x Hauteur)
   // L'orientation standard : X=33, Y=33, Z=38
   const geo = new THREE.BoxGeometry(DF, DF, 38);
-  // Décalage pour avoir l'origine au centre au niveau du sol (Y=0)
-  geo.translate(0, DF / 2, 0);
+  geo.computeBoundingBox();
   return geo;
 }
 
@@ -51,14 +50,9 @@ function prepareDronaGeometry(source: THREE.BufferGeometry): THREE.BufferGeometr
   const geo = source.clone();
 
   // Preserve the GLB's existing scale, orientation and centering exactly.
-  const scale = 99.5;
-  geo.applyMatrix4(new THREE.Matrix4().makeScale(scale, scale, scale));
-  geo.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
-  const box = new THREE.Box3().setFromBufferAttribute(
-    geo.getAttribute('position') as THREE.BufferAttribute
-  );
-  const center = box.getCenter(new THREE.Vector3());
-  geo.applyMatrix4(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
+  geo.scale(99.5, 99.5, 99.5);
+  geo.rotateY(Math.PI / 2);
+  geo.center();
 
   preparedGeometries.set(source, geo);
   return geo;
@@ -87,27 +81,14 @@ function DronaContent({ onSize }: SceneModelProps) {
   const geo = useDronaGeo();
 
   useLayoutEffect(() => {
-    geo.computeBoundingBox();
-    const size = new THREE.Vector3();
-    if (geo.boundingBox) {
-      geo.boundingBox.getSize(size);
-    }
-    onSize?.(size);
+    onSize?.(geo.boundingBox!.getSize(new THREE.Vector3()));
   }, [geo, onSize]);
 
-  if (mode === 'hidden') return null;
-  return <mesh key={mode} geometry={geo} material={dronaMat} dispose={null} castShadow receiveShadow />;
-}
-
-/** Boîte Drona unique — à placer dans un <group position rotation>. */
-export function DroneCell() {
-  return <Suspense fallback={null}><DroneCellContent /></Suspense>;
-}
-
-function DroneCellContent() {
-  const mode = useSceneStore(state => state.furniture.dronaMode) ?? 'high';
-  const geo = useDronaGeo();
   if (mode === 'hidden') return null;
   return <mesh key={mode} geometry={geo} material={dronaMat} dispose={null} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
 
+/** Boîte Drona unique — à placer dans un <group position rotation>. */
+export function DroneCell() {
+  return <Suspense fallback={null}><DronaContent /></Suspense>;
+}

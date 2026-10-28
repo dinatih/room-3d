@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { DroneCell, useDronaGeo } from './Drona';
 import { useSceneStore } from '../store/useSceneStore';
 import { getObjectActionIds } from '../objectActions';
@@ -14,21 +14,16 @@ export function SlidingDrona({ objectId, label, actionId, duration, isPreview = 
 }) {
   const ref = useRef<THREE.Group>(null!);
   const progress = useRef(0);
-  const travel = useRef(0);
   const geometry = useDronaGeo();
   const sceneOpen = useSceneStore(s => !!s.extraStates[actionId]);
   const open = isPreview ? !!actionState[actionId] : sceneOpen;
   const { invalidate } = useThree();
-  useLayoutEffect(() => {
-    geometry.computeBoundingBox();
-    travel.current = geometry.boundingBox!.getSize(new THREE.Vector3()).z * 2 / 3;
-    invalidate();
-  }, [geometry, invalidate]);
-  useEffect(() => { invalidate(); }, [open, invalidate]);
+  const travel = (geometry.boundingBox!.max.z - geometry.boundingBox!.min.z) * 2 / 3;
+  useEffect(() => { invalidate(); }, [open, geometry, invalidate]);
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
     progress.current = (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));
-    ref.current.position.z = -travel.current * progress.current;
+    ref.current.position.z = -travel * progress.current;
     if (progress.current !== target) invalidate();
   });
   return (
