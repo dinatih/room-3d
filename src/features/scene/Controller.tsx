@@ -229,9 +229,9 @@ export function Controller({ visible = false }: { visible?: boolean }) {
                     </div>
                   </PanelPopover>
                 </div>}
-                <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={piloting ? isCamera ? 'Orienter le Hornet' : 'Déplacer le Hornet' : inputControl === 'character' ? 'Déplacer le PNJ' : 'Déplacer la caméra'}>
-                  <i className={`bi ${inputControl === 'character' ? (piloting ? 'bi-controller' : 'bi-person-walking') : 'bi-camera-video'}`} aria-hidden="true" />
-                </span>
+                {isCamera && <span className="virtual-dpad__center d-flex align-items-center justify-content-center" title={piloting ? 'Orienter le Hornet' : 'Déplacer la caméra'}>
+                  <i className="bi bi-camera-video" aria-hidden="true" />
+                </span>}
                 {buttons.map(({ key, icon, label: defaultLabel, position }) => {
                   const inputKey = `${inputControl}:${key}`;
                   const isAlt = pressedKeys.has('Alt' + key);
