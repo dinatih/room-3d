@@ -161,6 +161,8 @@ const ACTIONS: Record<string, ActionConfig> = {
   'drona-ne-catchall2-slide': { label: ['Sortir le fourre-tout 2', 'Ranger le fourre-tout 2'] },
   fridge: { label: ['Ouvrir', 'Fermer'] },
   'fridge-crisper-toggle': { label: ['Sortir le bac', 'Rentrer le bac'] },
+  'syck-rc003a-lid': { label: ['Ouvrir le couvercle', 'Fermer le couvercle'] },
+  'syck-rc003a-pot': { label: ['Sortir la cuve', 'Remettre la cuve'] },
   ninja: { label: ['Ouvrir', 'Fermer'] },
   'ninja-rack': { label: ['Sortir la grille', 'Rentrer la grille'] },
   'ninja-light': { label: ['Allumer la lumière', 'Éteindre la lumière'], icon: 'bi-lightbulb' },

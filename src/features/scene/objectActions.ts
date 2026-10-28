@@ -35,6 +35,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'vacuum-cleaner': ['vacuum-detach-tube'],
   'vatterso20562909': ['vatterso-open'],
   'fridge': ['fridge', 'fridge-crisper-toggle'],
+  'syck-rc003a': ['syck-rc003a-lid', 'syck-rc003a-pot'],
   'ninja-sp101': ['ninja', 'ninja-rack', 'ninja-light'],
   'freezer': ['freezer'],
   'drona-ne-catchall': ['drona-ne-catchall-slide'],
