@@ -5018,7 +5018,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     id: 'guitar-playing',
     path: 'animations/mixamo/anim_guitar_playing.glb',
     category: 'poses_idles',
-    label: `Guitar Playing (144f / 4.8s, 169KB)`,
+    label: `Guitar Playing (144f / 4.8s, 149KB)`,
     tags: ['dance-tight', 'musical'],
     duration: 4.8,
   },
