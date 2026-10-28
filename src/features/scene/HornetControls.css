@@ -1,6 +1,6 @@
 .hornet-controls {
   z-index: 1000;
-  width: min(28rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
   max-height: calc(100dvh - 1rem);
   overflow-y: auto;
 }
