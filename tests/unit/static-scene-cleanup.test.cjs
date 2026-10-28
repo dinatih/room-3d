@@ -291,3 +291,24 @@ it('lit les actions Air Performer directement dans la preview et accepte un plac
   AirPerformer({ remoteDocked: false }); layouts.pop()();
   assert.equal(remote.visible, false);
 });
+
+it('les deux cadres UTÅKER conservent leur matelas et leur literie avec ou sans surmatelas', () => {
+  const Anneland = () => null, Vestmarka = () => null;
+  const { UtakerFrame } = load('src/features/scene/items/UtakerFrame.tsx', {
+    three: THREE, 'react/jsx-runtime': jsx,
+    react: { useRef: () => ({ current: null }), useLayoutEffect() {} },
+    '@react-three/drei': { useGLTF: { preload() {} } },
+    '@features/scene/useGLTFClone': {}, '@features/scene/glbUtils': {},
+    './Anneland70481722': { Anneland70481722: Anneland },
+    './Vestmarka90470195': { Vestmarka90470195: Vestmarka }, './Blaskata50569513': {},
+  });
+  for (const [upper, hasTopper, topY, drop] of [
+    [false, false, 29, 14], [false, true, 33, 17], [true, false, 35, 16], [true, true, 39, 20],
+  ]) {
+    const [frame, mattress, duvet, bolsters] = UtakerFrame({ upper, hasTopper }).props.children;
+    assert(frame.props.glbPath.endsWith(upper ? '-2.glb' : '-1.glb'));
+    assert.equal(mattress.props.children.type, upper ? Anneland : Vestmarka);
+    assert.deepEqual(duvet.props, { topY, drop });
+    assert.deepEqual(bolsters.props, { topY, zOffset: upper ? -26 : 26 });
+  }
+});

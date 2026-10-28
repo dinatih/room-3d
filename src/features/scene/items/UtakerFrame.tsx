@@ -1,15 +1,15 @@
 /**
  * UtakerFrame.tsx — Cadre lit IKEA Utåker (GLB) + matelas et housses procéduraux.
- * id 'utaker-lower' → cadre bas GLB, matelas Vestmarka
- * id 'utaker-upper' → cadre haut GLB, matelas Anneland + surmatelas Nasfjallet
+ * upper=false → cadre bas GLB, matelas Vestmarka
+ * upper=true → cadre haut GLB, matelas Anneland + surmatelas Nasfjallet
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
 import { useGLTF, RoundedBox } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
-import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
+import { removeGlbLines, mergeGlbByMaterial, glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
 import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
@@ -32,14 +32,8 @@ const redFabricMat = new THREE.MeshPhysicalMaterial({
 import { Blaskata50569513 } from './Blaskata50569513';
 
 function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: number }) {
-  // Blaskata is originally 80cm. Scale 1.25 gives 100cm.
-  // We place two of them side by side.
   return (
     <group position={[0, topY + 5, zOffset]}>
-      {/* Blaskata is typically along X or Z. Assuming it's along Z, we might need rotation. 
-          The Utaker bed is 80x200. We want the bolsters across the width? Or along the length?
-          "traversins ... sur le lit" they were at X=-50 and X=50 with rotation Z=PI/2.
-          Let's place Blaskata at the same spots. */}
       <group position={[-50, 0, 0]} rotation={[0, 0, 0]}>
         <Blaskata50569513 />
       </group>
@@ -78,13 +72,13 @@ function Cadre({ glbPath }: { glbPath: string }) {
   return <primitive object={scene} />;
 }
 
-interface UtakerFrameProps extends SceneItemProps {
+interface UtakerFrameProps extends SceneModelProps {
+  upper?: boolean;
   hasTopper?: boolean;
 }
 
-export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerFrameProps) {
+export function UtakerFrame({ upper: isUpper = false, onSize, hasTopper: explicitTopper }: UtakerFrameProps) {
   const groupRef = useRef<THREE.Group>(null!);
-  const isUpper  = item.id === 'utaker-upper';
   const glbPath  = isUpper ? HAUT_GLB : BAS_GLB;
 
   // Par défaut : lit haut (Ouest) a le surmatelas, lit bas (Est) ne l'a pas.
@@ -92,9 +86,8 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
   const hasTopper = explicitTopper !== undefined ? explicitTopper : isUpper;
 
   useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, [hasTopper]);
+    onSize?.(glbLocalBBox(groupRef.current).getSize(new THREE.Vector3()));
+  }, [hasTopper, isUpper, onSize]);
 
   // Matelas base :
   // - Lit Ouest (isUpper) : ÅNNELAND 24cm, pos Y = 11 -> sommet matelas = 11 + 24 = 35cm
@@ -114,23 +107,11 @@ export function UtakerFrame({ item, onSize, hasTopper: explicitTopper }: UtakerF
   return (
     <group ref={groupRef}>
       <Cadre glbPath={glbPath} />
-      {isUpper ? (
-        <>
-          <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
-            <Anneland70481722 />
-          </group>
-          <RealisticDuvet topY={topY} drop={drop} />
-          <RealisticBolsters topY={topY} />
-        </>
-      ) : (
-        <>
-          <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
-            <Vestmarka90470195 />
-          </group>
-          <RealisticDuvet topY={topY} drop={drop} />
-          <RealisticBolsters topY={topY} zOffset={26} />
-        </>
-      )}
+      <group position={[0, 11, 0]} rotation-y={Math.PI / 2}>
+        {isUpper ? <Anneland70481722 /> : <Vestmarka90470195 />}
+      </group>
+      <RealisticDuvet topY={topY} drop={drop} />
+      <RealisticBolsters topY={topY} zOffset={isUpper ? -26 : 26} />
     </group>
   );
 }

@@ -11,7 +11,7 @@ import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { NOOP_ITEM, NOOP_SIZE } from '@features/scene/sceneItem';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
@@ -165,13 +165,13 @@ export function Beds() {
     <>
       <PositionTransition furnitureKey="bed-west-position" x={westPos.x} z={westPos.z} ry={Math.PI / 2}>
         <group userData={{ sceneItemRoot: true, hoverAction: { label: hoverLabel, actions: westHoverActions } }}>
-          <NavigationObstacle id="bed-west" owner={isDouble ? 'bed-double' : 'bed-west'}><UtakerFrame item={{ id: 'utaker-upper' } as any} hasTopper={!isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+          <NavigationObstacle id="bed-west" owner={isDouble ? 'bed-double' : 'bed-west'}><UtakerFrame upper hasTopper={!isDouble} /></NavigationObstacle>
         </group>
       </PositionTransition>
 
       <PositionTransition furnitureKey="bed-east-position" x={eastPos.x} z={eastPos.z} ry={Math.PI / 2}>
         <group userData={{ sceneItemRoot: true, hoverAction: { label: hoverLabel, actions: eastHoverActions } }}>
-          <NavigationObstacle id="bed-east" owner={isDouble ? 'bed-double' : 'bed-east'}><UtakerFrame item={{ id: 'utaker-lower' } as any} hasTopper={isDouble} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+          <NavigationObstacle id="bed-east" owner={isDouble ? 'bed-double' : 'bed-east'}><UtakerFrame hasTopper={isDouble} /></NavigationObstacle>
         </group>
       </PositionTransition>
 

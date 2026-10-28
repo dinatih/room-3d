@@ -7,13 +7,13 @@
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { UtakerFrame } from './UtakerFrame';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
+import { glbLocalBBox } from '../glbUtils';
 import type { SceneItemProps } from '@shared/types';
 
 const BED_WIDTH_Z = 83;
 const SEPARATED_GAP = 100; // espace visible entre les lits en mode simple
 
-export function UtakerStack({ actionState, onSize }: SceneItemProps) {
+export function UtakerStack({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const groupRef = useRef<THREE.Group>(null!);
   const isDouble = !!actionState['bed-double'];
 
@@ -24,16 +24,14 @@ export function UtakerStack({ actionState, onSize }: SceneItemProps) {
     : [0, 0, -(BED_WIDTH_Z + SEPARATED_GAP)];
 
   useLayoutEffect(() => {
-    if (!groupRef.current) return;
-    groupRef.current.updateMatrixWorld(true);
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, [isDouble]);
+    onSize?.(glbLocalBBox(groupRef.current).getSize(new THREE.Vector3()));
+  }, [isDouble, onSize]);
 
   return (
     <group ref={groupRef}>
-      <UtakerFrame item={{ id: 'utaker-lower' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+      <UtakerFrame />
       <group position={upperPos}>
-        <UtakerFrame item={{ id: 'utaker-upper' } as any} actionState={NOOP_STATE} onSize={NOOP_SIZE} />
+        <UtakerFrame upper />
       </group>
     </group>
   );
