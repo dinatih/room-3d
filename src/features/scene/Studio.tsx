@@ -152,34 +152,29 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
   useEffect(() => {
     if (!active || readyRef.current) return;
     let cancelled = false;
-    let interval: ReturnType<typeof setInterval> | undefined;
-
-    // 1. Précharger en mémoire l'animation d'atterrissage, de chute et toutes les animations de marche aléatoires
-    const animPreloads = Promise.allSettled(
-      WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path))
-    );
+    let frame: number | undefined;
 
     const prepare = async () => {
-      // Attendre les shaders avant de rendre les frames de warm-up : un rendu
-      // anticipé pourrait forcer leur compilation synchrone et bloquer le shiba.
-      await gl.compileAsync(scene, camera);
+      // Télécharger les animations et compiler les shaders en parallèle.
+      await Promise.all([
+        gl.compileAsync(scene, camera),
+        ...WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)),
+      ]);
       if (cancelled) return;
 
       let frames = 0;
-      interval = setInterval(() => {
+      const warmup = () => {
         frames++;
         gl.shadowMap.needsUpdate = true;
         invalidate();
-        if (frames >= 7) {
-          clearInterval(interval);
-          void animPreloads.then(() => {
-            if (!cancelled && !readyRef.current) {
-              readyRef.current = true;
-              onReady();
-            }
-          });
+        if (frames < 7) {
+          frame = requestAnimationFrame(warmup);
+        } else if (!readyRef.current) {
+          readyRef.current = true;
+          onReady();
         }
-      }, 350);
+      };
+      frame = requestAnimationFrame(warmup);
     };
     void prepare().catch(error => {
       if (!cancelled) setWarmupError(error instanceof Error ? error : new Error(String(error)));
@@ -187,7 +182,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (frame !== undefined) cancelAnimationFrame(frame);
     };
   }, [active, gl, scene, camera, invalidate, onReady]);
 
@@ -833,8 +828,10 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <LoadingProgress skipIntro={parseUrlSkipIntro()} sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
-      {showLoadingShiba && <LoadingShiba countdownStarted={loadingCountdownStarted} countdownSeconds={loadingCountdown} />}
+      {showLoadingShiba && <>
+        <LoadingProgress skipIntro={parseUrlSkipIntro()} sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
+        <LoadingShiba countdownStarted={loadingCountdownStarted} countdownSeconds={loadingCountdown} />
+      </>}
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
