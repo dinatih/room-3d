@@ -57,8 +57,8 @@ function SpatialZonePreviewOnDemand({ zone, onStats }: {
   }
 
   return (
-    <div className="ratio ratio-1x1 bg-light">
-      <div className="d-flex flex-column align-items-center justify-content-center gap-3 p-3 text-center">
+    <div className="inventory-preview-canvas-wrap bg-light">
+      <div className="d-flex flex-column align-items-center justify-content-center gap-3 p-3 text-center h-100">
         <span className="text-muted small">L’aperçu 3D de cette zone se charge à la demande.</span>
         <button type="button" className="btn btn-sm btn-primary" onClick={() => setLoaded(true)}>
           Charger l’aperçu 3D

@@ -414,7 +414,7 @@ export function SpatialZonePreview({
   ];
 
   return (
-    <div style={{ width: '100%', height, aspectRatio: '1 / 1', maxHeight: '65vh', position: 'relative', background: '#0b1120', borderRadius: 8, overflow: 'hidden' }}>
+    <div className="inventory-preview-canvas-wrap rounded" style={{ height: height === '100%' ? undefined : height, background: '#0b1120' }}>
       <Canvas
         camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
         key={zone.id}
