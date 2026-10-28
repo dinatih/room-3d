@@ -230,7 +230,6 @@ export function Character({
   useEffect(() => () => postureClipsRef.current.clear(), [scene]);
   const prevFirstPersonRef = useRef<boolean | null>(null);
   const lastLoggedAnimRef = useRef<string>('');
-  const navigationSadRef = useRef(false);
   const loadingAnimationRef = useRef<string | null>(null);
   const [isFalling, setIsFalling] = useState<boolean>(false);
 
@@ -921,7 +920,7 @@ export function Character({
           animOriginRef.current.rotation.y = postureOriginRef.current.rotY;
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
-        const blendDuration = navigationSadRef.current ? 0 : getCrossfadeDuration(activeActionName.current, target);
+        const blendDuration = getCrossfadeDuration(activeActionName.current, target);
         if (from) retireAction(from, characterGrid || !animCrossfade ? 0 : (isPreview ? Math.min(blendDuration, 0.15) : blendDuration));
 
         const isOnceAnim = isPostureTransition(target) || getAnimationDef(target)?.loop === 'once' ||
@@ -970,7 +969,6 @@ export function Character({
           }
         }
         activeActionName.current = target;
-        navigationSadRef.current = !isPreview && !characterGrid && target === resolveAnimationId('sad-idle') && getAgentStatus() !== 'INTERACTING';
 
         const isControlledByStore = isPreview || characterGrid;
         if (isPreview) {

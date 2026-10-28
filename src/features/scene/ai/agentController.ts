@@ -32,7 +32,6 @@ export { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation };
 
 export const NAVIGATION_WAIT_ANIMATION = resolveAnimationId('idle');
 const NAVIGATION_BLOCKED_ANIMATION = resolveAnimationId('sad-idle');
-const NAVIGATION_SAD_LIMIT_MS = 250; // User-requested maximum for navigation failures.
 
 interface AgentDeploymentState {
   hasStarted: boolean;
@@ -140,7 +139,6 @@ export function createAgentController(
     useLaraLifeStore.setState({ activity: 'Commande utilisateur', reason, needs: { ...nativeLife.needs } });
   };
   let route = createRouteState();
-  let navigationStopStartedAt: number | undefined;
   let routeInstruction: AgentInstruction | null = null;
   let navigationError: string | null = null;
   let diagnosticStop: { reason: string; startedAt: number } | undefined;
@@ -1686,13 +1684,6 @@ export function createAgentController(
       const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
       const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
       if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = NAVIGATION_WAIT_ANIMATION;
-      const stopped = agentStatus !== 'INTERACTING' && agentStatus !== 'TRANSITIONING' && agentStatus !== 'FINISHED'
-        && state.x === x && state.z === z && (navigationError || waitingForNavigation || route.error);
-      if (!stopped) navigationStopStartedAt = undefined;
-      else {
-        navigationStopStartedAt ??= performance.now();
-        if (state.animation === NAVIGATION_BLOCKED_ANIMATION && performance.now() - navigationStopStartedAt >= NAVIGATION_SAD_LIMIT_MS) state.animation = NAVIGATION_WAIT_ANIMATION;
-      }
       if (pendingReason) {
         const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
         const objId = instruction?.smartObjectId;

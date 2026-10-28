@@ -1,4 +1,91 @@
 const fs = require('node:fs');
+if (process.argv[2] === '--trace') {
+  const file = process.argv[3], buffer = fs.readFileSync(file);
+  const trace = JSON.parse(file.endsWith('.gz') ? require('node:zlib').gunzipSync(buffer) : buffer);
+  const profiles = new Map(), threads = new Map();
+  for (const e of trace.traceEvents) {
+    const thread = `${e.pid}:${e.tid}`;
+    if (e.name === 'thread_name') threads.set(thread, e.args.name);
+    if (e.name !== 'ProfileChunk') continue;
+    const key = `${thread}:${e.id}`, d = e.args.data;
+    let p = profiles.get(key);
+    if (!p) { p = { thread, nodes: new Map(), parents: new Map(), samples: [] }; profiles.set(key, p); }
+    for (const n of d.cpuProfile.nodes ?? []) {
+      p.nodes.set(n.id, n.callFrame);
+      if (n.parent !== undefined) p.parents.set(n.id, n.parent);
+      for (const child of n.children ?? []) p.parents.set(child, n.id);
+    }
+    for (const [i, id] of (d.cpuProfile.samples ?? []).entries()) p.samples.push([id, (d.timeDeltas?.[i] ?? 0) / 1000]);
+  }
+  const results = [...profiles].map(([key, p]) => {
+    const self = new Map(), inclusive = new Map(), groups = { navigation: 0, rendering: 0 };
+    for (const [id, ms] of p.samples) {
+      self.set(id, (self.get(id) ?? 0) + ms);
+      let navigation = false, rendering = false;
+      for (let node = id; node !== undefined; node = p.parents.get(node)) {
+        inclusive.set(node, (inclusive.get(node) ?? 0) + ms);
+        const frame = p.nodes.get(node);
+        navigation ||= /features\/scene\/ai\//.test(frame?.url ?? '');
+        rendering ||= /WebGLRenderer|renderObject|texSubImage|getProgramInfoLog/.test(frame?.functionName ?? '');
+      }
+      if (navigation) groups.navigation += ms;
+      if (rendering) groups.rendering += ms;
+    }
+    const top = scores => [...scores].sort((a, b) => b[1] - a[1]).slice(0, 25).map(([id, ms]) => ({ ms, ...p.nodes.get(id) }));
+    return { key, thread: threads.get(p.thread), durationMs: p.samples.reduce((sum, s) => sum + s[1], 0), groups, self: top(self), inclusive: top(inclusive) };
+  });
+  console.log(JSON.stringify(results, null, 2));
+  return;
+}
+if (process.argv[2] === '--benchmark') {
+  (async () => {
+    const file = process.argv[3], runs = Number(process.argv.find(a => a.startsWith('--runs='))?.split('=')[1] ?? 5);
+    if (!file || !Number.isSafeInteger(runs) || runs <= 0) throw Error('Expected log or fixture and positive --runs');
+    let fixture;
+    if (file.endsWith('.json')) fixture = JSON.parse(fs.readFileSync(file));
+    else {
+      const definitions = new Map(), worst = new Map(), jobs = [];
+      for await (const line of require('node:readline').createInterface({ input: fs.createReadStream(file), crlfDelay: Infinity })) {
+        if (!line) continue;
+        const { entry: { action, data: d } } = JSON.parse(line);
+        if (action === 'nav_graph_created') definitions.set(d.graphId, d.definition);
+        if (action !== 'nav_job_completed' || d.kind !== 'build' || !d.ok) continue;
+        jobs.push(d);
+        const definition = definitions.get(d.graphId);
+        if (!definition) continue;
+        const kind = definition.solids ? 'static' : 'crowd';
+        if (!worst.has(kind) || d.workerMs > worst.get(kind).workerMs) worst.set(kind, { kind, definition, graphId: d.graphId, workerMs: d.workerMs });
+      }
+      fixture = { source: file, cases: [...worst.values()], recorded: Object.fromEntries(['workerMs', 'queueMs', 'deliveryMs'].map(key => {
+        const values = jobs.map(j => j[key]).sort((a, b) => a - b);
+        return [key, { median: values[Math.floor(values.length / 2)], max: values.at(-1), sum: values.reduce((a, b) => a + b, 0) }];
+      })) };
+      fs.writeFileSync('/tmp/room-navigation-benchmark.json', JSON.stringify(fixture));
+    }
+    require('../tests/support/load-ts.cjs');
+    const g = require('../src/features/scene/ai/navigation/geometry.ts'), { NavigationMesh } = require('../src/features/scene/ai/navigation/mesh.ts');
+    const results = [];
+    for (const item of fixture.cases) {
+      const samples = [];
+      let snapshot;
+      for (let run = 0; run < runs; run++) {
+        const d = item.definition, start = performance.now();
+        const inflated = d.solids?.map(o => g.inflate(o.polygon, o.radius));
+        const comforts = d.comfortDistance === undefined ? undefined : d.solids.filter(o => o.comfort).map(o => g.inflate(o.polygon, o.radius + d.comfortDistance));
+        const expanded = performance.now();
+        const obstacles = inflated ? g.union(inflated) : g.mergeObstacles(d.obstacles);
+        const comfort = comforts && { distance: d.comfortDistance, obstacles: g.union(comforts) };
+        const merged = performance.now();
+        snapshot = new NavigationMesh(obstacles, d.surfaces, comfort).snapshot();
+        samples.push({ inflate: expanded - start, union: merged - expanded, mesh: performance.now() - merged, total: performance.now() - start });
+      }
+      results.push({ kind: item.kind, graphId: item.graphId, solids: item.definition.solids?.length, obstacleVertices: snapshot.vertices.length, cells: snapshot.cells.length,
+        medianMs: Object.fromEntries(Object.keys(samples[0]).map(key => [key, samples.map(s => s[key]).sort((a, b) => a - b)[Math.floor(runs / 2)]])) });
+    }
+    console.log(JSON.stringify({ source: fixture.source, recorded: fixture.recorded, results }, null, 2));
+  })().catch(error => { console.error(error); process.exitCode = 1; });
+  return;
+}
 if (process.argv[2] === '--actor') {
   (async () => {
     let previous;
@@ -100,6 +187,13 @@ if (['--browser', '--browser-crowd'].includes(process.argv[2])) {
   if (!['low', 'mid', 'high'].includes(preset)) throw Error('Invalid graphics preset');
   const fixture = { ...require('../tests/fixtures/cases.cjs').navigation.find(fixture => fixture.id === 'autonomous-all'), id: crowd ? 'navmesh-crowd' : 'navmesh-seven',
     seed, preset, ...(crowd ? { sessionMs: minutes * 60000, timeoutMs: (minutes + 1) * 60000, readinessTimeoutMs: (minutes + 1) * 60000 } : { count: 7 }), captureFreezeStack: process.argv.includes('--capture-freeze'), reproduction: `node scripts/temp_navmesh_audit.cjs ${process.argv.slice(2).join(' ')}` };
+  const count = process.argv.find(arg => arg.startsWith('--count='))?.split('=')[1];
+  if (count !== undefined) {
+    const maximum = require('../tests/fixtures/cases.cjs').navigation.find(f => f.id === 'autonomous-all').count;
+    if (!Number.isSafeInteger(Number(count)) || Number(count) < 0 || Number(count) > maximum) throw Error(`Invalid count: ${count}`);
+    fixture.count = Number(count);
+  }
+  if (process.argv.includes('--characters-only')) fixture.query = { ...fixture.query, debug: 'characters-only' };
   process.env.ROOM_TEST_RESULTS = '/tmp/room-navmesh-browser';
   fs.mkdirSync(process.env.ROOM_TEST_RESULTS, { recursive: true });
   require('../tests/support/browser.cjs').withBrowser(fixture, async (page, result) => {

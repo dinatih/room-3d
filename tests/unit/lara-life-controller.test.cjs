@@ -34,7 +34,8 @@ function world(id = 'native') {
       followRoute: (route, actor, start, goal) => {
         attempts.push(goal.x); route.crowd = crowdWait ? {} : undefined;
         if (crowdWait) { route.error = crowdWait === 'blocked' ? 'sealed' : null; return start; }
-        if (goal.x === objects[failedId]?.position[0]) { route.error = 'sealed'; return start; } return goal;
+        if (goal.x === objects[failedId]?.position[0]) { route.error = 'sealed'; return start; }
+        route.error = null; return goal;
       },
       getInteractionOwner: value => value, getContainingObjectOwner: noop, getNavigationGraph: () => graph,
       describeNavigationBlock: () => 'sealed', navigationDiagnostics: noop,
@@ -106,30 +107,22 @@ it('attend un calcul sans conserver le sad de l’action précédente, puis repr
   assert.equal(w.controller.state.x, 100);
 });
 
-it('attend un contournement sans sad et limite un échec à 250 ms sans cacher son état bloqué', () => {
-  const previousClock = globalThis.performance;
-  let now = 0;
-  globalThis.performance = { now: () => now };
-  try {
-    const w = world('rosanna');
-    w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
-    w.pauseCrowd(true); w.tick();
-    assert.equal(w.controller.getStatus(), 'MOVING');
-    assert.equal(w.controller.state.animation, 'idle');
-    assert(w.logs.some(log => log.action === 'nav_blocked'), 'The wait must remain visible in diagnostics');
-    w.pauseCrowd('blocked'); w.tick();
-    assert.equal(w.controller.getStatus(), 'BLOCKED');
-    assert.equal(w.controller.state.animation, 'sad-idle');
-    now = 249; w.tick();
-    assert.equal(w.controller.state.animation, 'sad-idle');
-    now = 250; w.tick();
-    assert.equal(w.controller.state.animation, 'idle');
-    now = 1000; w.tick();
-    assert.equal(w.controller.state.animation, 'idle', 'Repeated failures must not restart sad while still stopped');
-    assert.equal(w.controller.getStatus(), 'BLOCKED');
-    w.pauseCrowd(false); w.tick();
-    assert.equal(w.controller.state.x, 100, 'Clearing the other actor must resume the route');
-  } finally { globalThis.performance = previousClock; }
+it('attend un contournement sans sad et laisse un vrai échec visible jusqu’à sa résolution', () => {
+  const w = world('rosanna');
+  w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
+  w.pauseCrowd(true); w.tick();
+  assert.equal(w.controller.getStatus(), 'MOVING');
+  assert.equal(w.controller.state.animation, 'idle');
+  assert(w.logs.some(log => log.action === 'nav_blocked'), 'The wait must remain visible in diagnostics');
+  w.pauseCrowd('blocked'); w.tick();
+  assert.equal(w.controller.getStatus(), 'BLOCKED');
+  assert.equal(w.controller.state.animation, 'sad-idle');
+  for (let i = 0; i < 10; i++) w.tick();
+  assert.equal(w.controller.state.animation, 'sad-idle', 'A stalled route must not be hidden by an animation deadline');
+  assert.equal(w.controller.getStatus(), 'BLOCKED');
+  w.pauseCrowd(false); w.tick();
+  assert.equal(w.controller.state.x, 100, 'Clearing the other actor must resume the route');
+  assert.notEqual(w.controller.getStatus(), 'BLOCKED');
 });
 
 it('préserve une animation sad explicitement demandée par une interaction', () => {

@@ -22,11 +22,30 @@ function withWorker(exercise) {
   try {
     load('src/features/scene/ai/navigation/pathfinding.worker.ts', { './geometry': geometry, './queries': queries, './mesh': meshModule });
     let id = 0;
-    exercise(request => { globalThis.self.onmessage({ data: { id: ++id, ...request } }); return messages.pop(); });
+    exercise(request => { globalThis.self.onmessage({ data: { id: ++id, sentAt: performance.timeOrigin + performance.now(), ...request } }); return messages.pop(); });
   } finally { if (previous === undefined) delete globalThis.self; else globalThis.self = previous; }
 }
 
 describe('Construction du réseau et requêtes géométriques dans le worker', () => {
+  it('envoie les constructions indépendantes sans attendre un aller-retour de la page', () => {
+    const previous = globalThis.Worker, sent = [];
+    let worker;
+    globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
+    try {
+      const client = clientModule();
+      const definitions = Array.from({ length: 25 }, (_, i) => ({ ...definition, solids: [{ polygon: geometry.rectangle(i * 10, 0, 4, 4), radius: 1, comfort: false }] }));
+      const readers = definitions.map(d => client.prepareNavigationGraph(d));
+      const builds = sent.filter(message => message.query?.kind === 'build');
+      assert.equal(builds.length, definitions.length, 'All work must reach the worker before the first response is delivered');
+      readers[0].cancel();
+      for (const build of builds) worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, queueMilliseconds: 0, result: queries.buildNavigationGraph(build.definition).snapshot() } });
+      assert.equal(client.pathfindingStats.running, false);
+      assert.equal(client.pathfindingStats.queued, 0);
+      assert.equal(client.pathfindingStats.cancelled, 1);
+      assert(readers.slice(1).every(reader => reader.read().id === reader.id));
+      readers.forEach(reader => reader.cancel());
+    } finally { if (previous === undefined) delete globalThis.Worker; else globalThis.Worker = previous; }
+  });
   it('partage une seule construction entre 25 lecteurs et ne libère le réseau qu’au dernier départ', () => {
     const previous = globalThis.Worker, sent = [];
     let worker;
@@ -37,7 +56,7 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
       assert.equal(sent.length, 1, 'Identical geometry must be built once, including concurrent requests');
       const build = sent.shift();
       assert(readers.every(reader => reader.pending && reader.id === build.graphId));
-      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, result: snapshot() } });
+      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, queueMilliseconds: 0, result: snapshot() } });
       const graph = readers[0].read();
       assert(readers.every(reader => !reader.pending && reader.read() === graph));
       for (const reader of readers.slice(0, -1)) { reader.cancel(); reader.cancel(); }
@@ -64,11 +83,11 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
   it('sépare calcul, file, messages et reprise sans compter deux fois une lecture', () => {
     const previousWorker = globalThis.Worker, previousClock = globalThis.performance, sent = [];
     let worker, now = 10;
-    globalThis.performance = { now: () => now };
+    globalThis.performance = { timeOrigin: 0, now: () => now };
     globalThis.Worker = class { constructor() { worker = this; } postMessage(message) { sent.push(message); } };
     try {
       const journal = [], client = clientModule(journal);
-      const answer = (request, milliseconds, result) => worker.onmessage({ data: { id: request.id, graphId: request.graphId, ok: true, milliseconds, result } });
+      const answer = (request, milliseconds, result, queueMilliseconds = 0) => worker.onmessage({ data: { id: request.id, graphId: request.graphId, ok: true, milliseconds, queueMilliseconds, result } });
       const preparation = client.prepareNavigationGraph(definition), build = sent.shift();
       assert.equal(preparation.pending, true);
       assert(!journal.some(entry => entry.action === 'nav_job_wait'), 'Checking preparation must not count as a blocked actor');
@@ -81,10 +100,10 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
       assert.throws(() => first.run(readFirst), scopes.NavigationPending);
       const pendingApproach = sent.shift();
       now = 50; assert.throws(() => second.run(readDuo), scopes.NavigationPending);
-      assert.equal(sent.length, 0, 'The duo request waits behind the running geometric query');
-      now = 70; answer(pendingApproach, 20, duo.anchor);
+      assert.equal(sent.length, 1, 'The worker must receive the next request before the main thread consumes the previous response');
       const pendingDuo = sent.shift();
-      now = 90; answer(pendingDuo, 5, duo.anchor);
+      now = 70; answer(pendingApproach, 20, duo.anchor);
+      now = 90; answer(pendingDuo, 5, duo.anchor, 20);
       now = 95; assert.deepEqual(first.run(readFirst), duo.anchor);
       now = 100; assert.deepEqual(second.run(readDuo), duo.anchor);
       const completed = journal.find(entry => entry.action === 'nav_job_completed' && entry.data.jobId === pendingApproach.id);
@@ -111,14 +130,14 @@ describe('Construction du réseau et requêtes géométriques dans le worker', (
     try {
       const client = clientModule(), preparation = client.prepareNavigationGraph(definition), release = preparation.retain();
       const build = sent.shift();
-      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, result: snapshot() } });
+      worker.onmessage({ data: { id: build.id, graphId: build.graphId, ok: true, milliseconds: 0, queueMilliseconds: 0, result: snapshot() } });
       const graph = preparation.read(), scope = new scopes.NavigationScope();
       const operation = () => client.readDuoAnchor(graph, duo);
       assert.throws(() => scope.run(operation), scopes.NavigationPending);
       const pending = sent.shift();
       preparation.cancel();
       assert.equal(sent.length, 0, 'Cache replacement must not cancel an active reader');
-      worker.onmessage({ data: { id: pending.id, graphId: pending.graphId, ok: true, milliseconds: 0, result: duo.anchor } });
+      worker.onmessage({ data: { id: pending.id, graphId: pending.graphId, ok: true, milliseconds: 0, queueMilliseconds: 0, result: duo.anchor } });
       assert.deepEqual(scope.run(operation), duo.anchor);
       assert(graph.canReach({ x: 0, z: 0 }, { x: 20, z: 0 }));
       assert.deepEqual(graph.findReachable({ x: 0, z: 0 }, [{ x: 500, z: 0 }, { x: 20, z: 0 }]), { x: 20, z: 0 });

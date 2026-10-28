@@ -30,19 +30,19 @@ const queue = new Map<number, Job>();
 const navigationEpoch = DEV_LOG_ENABLED ? crypto.randomUUID() : '';
 let nextGraphId = 0, nextJobId = 0;
 let worker: Worker | undefined;
-let running: Job | undefined;
 const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
 
 function traceJob(action: string, job: Job, data: object = {}) {
   devLog({ tag: 'navigation', category: 'nav', action, data: { epoch: navigationEpoch, jobId: job.id, graphId: job.graphId, kind: job.query.kind,
-    status: job.status, queued: queue.size, runningJobId: running?.id, ...data } });
+    status: job.status, queued: Math.max(0, queue.size - 1), runningJobId: queue.values().next().value?.id, ...data } });
 }
 
 export function getNavigationJobDiagnostics() {
   const describe = (job: Job) => ({ jobId: job.id, graphId: job.graphId, kind: job.query.kind, status: job.status,
     ageMs: performance.now() - job.submittedAt, submittedAt: job.submittedAt, dispatchedAt: job.dispatchedAt, waitStartedAt: job.waitStartedAt });
-  return { epoch: navigationEpoch, running: running && describe(running), queued: [...queue.values()].map(describe), failure, stats: pathfindingStats };
+  const jobs = [...queue.values()];
+  return { epoch: navigationEpoch, running: jobs[0] && describe(jobs[0]), queued: jobs.slice(1).map(describe), failure, stats: pathfindingStats };
 }
 
 export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, running: false, queued: 0, lastWorkerMs: 0, maxWorkerMs: 0,
@@ -54,8 +54,7 @@ export const pathfindingStats = { submitted: 0, completed: 0, cancelled: 0, runn
 function fail(error: Error) {
   devLog({ tag: 'error', category: 'nav', action: 'nav_worker_failure', data: { error, jobs: getNavigationJobDiagnostics() } });
   failure = error;
-  const jobs = [...(running ? [running] : []), ...queue.values()];
-  running = undefined;
+  const jobs = [...queue.values()];
   queue.clear();
   pathfindingStats.running = false;
   pathfindingStats.queued = 0;
@@ -68,31 +67,32 @@ function fail(error: Error) {
   }
 }
 
-function dispatch() {
-  if (failure || running || !queue.size) return;
+function dispatch(job: Job) {
+  if (failure) return;
   if (!worker) {
     worker = new Worker(new URL('./pathfinding.worker.ts', import.meta.url), { type: 'module', name: 'room-navigation' });
     worker.onerror = event => fail(new Error(`Navigation worker: ${event.message}`));
     worker.onmessageerror = () => fail(new Error('Navigation worker response could not be decoded'));
     worker.onmessage = (event: MessageEvent<PathResponse>) => {
-      const response = event.data, job = running;
+      const response = event.data, job = queue.get(response.id);
       if (!job || job.id !== response.id || job.graphId !== response.graphId) {
         fail(new Error('Navigation worker response does not match the running request'));
         return;
       }
-      running = undefined;
-      pathfindingStats.running = false;
+      queue.delete(job.id);
+      pathfindingStats.running = queue.size > 0;
+      pathfindingStats.queued = Math.max(0, queue.size - 1);
       pathfindingStats.completed++;
       pathfindingStats.lastWorkerMs = response.milliseconds;
       pathfindingStats.maxWorkerMs = Math.max(pathfindingStats.maxWorkerMs, response.milliseconds);
       job.receivedAt = performance.now();
       const timing = pathfindingStats.timings[job.query.kind];
       timing.completed++;
-      timing.queueMs += job.dispatchedAt - job.submittedAt;
+      timing.queueMs += job.dispatchedAt - job.submittedAt + response.queueMilliseconds;
       timing.workerMs += response.milliseconds;
-      timing.deliveryMs += job.receivedAt - job.dispatchedAt - response.milliseconds;
+      timing.deliveryMs += job.receivedAt - job.dispatchedAt - response.milliseconds - response.queueMilliseconds;
       traceJob('nav_job_completed', job, { ok: response.ok, workerMs: response.milliseconds,
-        queueMs: job.dispatchedAt - job.submittedAt, deliveryMs: job.receivedAt - job.dispatchedAt - response.milliseconds,
+        queueMs: job.dispatchedAt - job.submittedAt + response.queueMilliseconds, deliveryMs: job.receivedAt - job.dispatchedAt - response.milliseconds - response.queueMilliseconds,
         result: response.ok ? job.query.kind === 'build' ? { cells: (response.result as GraphSnapshot).cells.length, vertices: (response.result as GraphSnapshot).vertices.length } : response.result : response.error });
       if (response.ok && job.status !== 'cancelled') workerGraphIds.add(job.graphId);
       else workerGraphIds.delete(job.graphId);
@@ -105,17 +105,13 @@ function dispatch() {
         // Cancellation never hides invalid geometry or an algorithm failure.
         console.error(response.error);
       }
-      dispatch();
     };
   }
-  const job = queue.values().next().value!;
-  queue.delete(job.id);
-  running = job;
   pathfindingStats.running = true;
-  pathfindingStats.queued = queue.size;
-  const request: PathRequest = { id: job.id, graphId: job.graphId, query: job.query };
-  if (!workerGraphIds.has(job.graphId)) request.definition = job.definition;
+  pathfindingStats.queued = Math.max(0, queue.size - 1);
   job.dispatchedAt = performance.now();
+  const request: PathRequest = { id: job.id, graphId: job.graphId, query: job.query, sentAt: performance.timeOrigin + job.dispatchedAt };
+  if (!workerGraphIds.has(job.graphId)) request.definition = job.definition;
   traceJob('nav_job_dispatched', job, { queueMs: job.dispatchedAt - job.submittedAt });
   try { worker.postMessage(request); }
   catch (error) { fail(error instanceof Error ? error : new Error(String(error))); }
@@ -145,17 +141,14 @@ function request(graphId: number, definition: WorkerDefinition, query: Navigatio
       if (job.status !== 'pending') return;
       job.status = 'cancelled';
       job.settle();
-      queue.delete(job.id);
-      pathfindingStats.queued = queue.size;
       pathfindingStats.cancelled++;
       traceJob('nav_job_cancelled', job, { ageMs: performance.now() - job.submittedAt });
     },
   };
   pathfindingStats.submitted++;
   queue.set(job.id, job);
-  pathfindingStats.queued = queue.size;
   traceJob('nav_job_queued', job, { query });
-  dispatch();
+  dispatch(job);
   return job;
 }
 
@@ -175,7 +168,6 @@ export function findPath(graph: NavigationGraph, start: Point, target: Point): P
 
 function releaseGraph(id: number): void {
   for (const job of queue.values()) if (job.graphId === id) job.cancel();
-  if (running?.graphId === id) running.cancel();
   workerGraphIds.delete(id);
   worker?.postMessage({ release: id });
   devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
