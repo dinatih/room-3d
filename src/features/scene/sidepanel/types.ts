@@ -77,7 +77,6 @@ export interface FurnitureState {
   sofaArmRight:   boolean;
   glassDoorV2ShutterPos: number;
   mackaparDoors: boolean;
-  dronaMode: 'high' | 'low' | 'procedural' | 'hidden';
 }
 
 export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine';

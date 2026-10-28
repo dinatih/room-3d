@@ -181,28 +181,7 @@ if (process.argv.includes('--inspect')) {
           }}finally{for(const {bone,quaternion} of saved)bone.quaternion.copy(quaternion);root.updateMatrixWorld(true);}
           if(maxError>1e-8)throw Error(`Real Robin feet changed: ${maxError}`);return {poses:20,maxError};
         },code);
-        const modes=[];let count;
-        for(const mode of ['high','low','procedural','hidden','high','low']){
-          await page.evaluate(async mode=>{
-            window.previousCheckedDronaMode=window.checkedDronaMode;window.checkedDronaMode=mode;
-            window.previousDronaGeometries=new Set();window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8)window.previousDronaGeometries.add(o.geometry);});
-            const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');useSceneStore.setState(s=>({furniture:{...s.furniture,dronaMode:mode}}));
-          },mode);
-          await page.waitForFunction(({mode,count})=>{
-            let cells=0,geometry;window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8){cells++;geometry=o.geometry;}});
-            if(mode==='hidden')return cells===0;
-            return (count===undefined?cells>0:cells===count)&&(!window.previousCheckedDronaMode||window.previousCheckedDronaMode===mode||!window.previousDronaGeometries.has(geometry));
-          },{timeout:30000},{mode,count});
-          const result=await page.evaluate(mode=>{
-            const geometries=new Set();let cells=0;
-            window.__THREE_SCENE__.traverse(o=>{if(o.isMesh&&o.userData.skipMerge&&o.material?.color?.getHex()===0xcc0000&&o.material.roughness===.8){cells++;geometries.add(o.geometry);}});
-            window.checkedDronaGeometries??=new Map();const previous=window.checkedDronaGeometries.get(mode);const geometry=geometries.values().next().value;
-            if(mode!=='hidden'&&(geometries.size!==1||(previous&&previous!==geometry)))throw Error('Dröna geometry is not shared / reused');
-            if(geometry){window.checkedDronaGeometries.set(mode,geometry);geometry.addEventListener('dispose',()=>{throw Error('Shared Dröna geometry was disposed');});}
-            return {mode,cells,geometries:geometries.size};
-          },mode);count??=result.cells;modes.push(result);
-        }
-        run.validation={bird,modes};console.log('OPTIMIZATION CHECKS',JSON.stringify(run.validation));
+        run.validation={bird};console.log('OPTIMIZATION CHECKS',JSON.stringify(run.validation));
       }
       if(run.errors.length)throw Error(run.errors.join('\n'));
       save();console.log('RUN COMPLETE',count);

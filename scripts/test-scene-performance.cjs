@@ -20,27 +20,6 @@ function load(source, filename, overrides) {
   });
   return mod.exports;
 }
-function drona() {
-  let mode = 'high'; const requests = [];
-  const high = new THREE.BoxGeometry(.33, .33, .38), low = new THREE.BoxGeometry(.32, .34, .37);
-  const models = { 'items/dröna/DRÖNA_high.glb': { nodes: { box:new THREE.Mesh(high) } }, 'items/dröna/DRÖNA_low.glb': { nodes: { box:new THREE.Mesh(low) } } };
-  const useGLTF = input => { const paths = Array.isArray(input) ? input : [input]; requests.push(...paths); const result = paths.map(p => models[p]); return Array.isArray(input) ? result : result[0]; };
-  useGLTF.preload = () => {};
-  const dependencies = { react: {useMemo: fn=>fn(),useLayoutEffect:()=>{}}, three:THREE, 'react/jsx-runtime':require('react/jsx-runtime'), '@react-three/drei':{useGLTF}, '../store/useSceneStore':{useSceneStore:selector=>selector({furniture:{dronaMode:mode}})} };
-  const current=load(fs.readFileSync('src/features/scene/items/Drona.tsx','utf8'),'Drona.tsx',dependencies);
-  const original=load(execFileSync('git',['show','becb2030:src/features/scene/items/Drona.tsx'],{encoding:'utf8'}),'Drona.tsx',dependencies);
-  const originalVertices=[...high.attributes.position.array];
-  const first=current.useDronaGeo(); assert.deepEqual(requests,['items/dröna/DRÖNA_high.glb']);
-  for(let i=0;i<100;i++)assert.equal(current.useDronaGeo(),first);
-  const expected=original.useDronaGeo();
-  for(const name of Object.keys(expected.attributes)) assert.deepEqual(first.attributes[name].array,expected.attributes[name].array,`Exact transformed ${name}`);
-  assert.deepEqual(first.index.array,expected.index.array);
-  assert.deepEqual([...high.attributes.position.array],originalVertices,'Shared source must stay untouched');
-  mode='low';requests.length=0;const reduced=current.useDronaGeo();assert.notEqual(reduced,first);assert.deepEqual(requests,['items/dröna/DRÖNA_low.glb']);
-  mode='procedural';requests.length=0;const procedural=current.useDronaGeo();assert.equal(current.useDronaGeo(),procedural);assert.deepEqual(requests,[],'Procedural mode must not request either GLB');
-  mode='high';assert.equal(current.useDronaGeo(),first);mode='low';assert.equal(current.useDronaGeo(),reduced);
-  console.log('Dröna: exact geometry, immutable GLB source, 100 shared instances, lazy modes and reuse passed');
-}
 function navigation() {
   const obstacles=require('../src/features/scene/ai/navigation/obstacles.ts');
   const g=require('../src/features/scene/ai/navigation/geometry.ts');
@@ -87,4 +66,4 @@ function robin() {
   measure(current);measure(original);const before=measure(original),after=measure(current);
   console.log('Robin: 100,000 posed foot vertices with morphs/nonuniform parent transforms matched; maximum error',maxError,'benchmark ms',JSON.stringify({before,after}));
 }
-drona();navigation();robin();
+navigation();robin();

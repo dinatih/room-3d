@@ -132,7 +132,6 @@ export function InteractiveSection({
         onClick={() => triggerAction('fridge-crisper-toggle')}>
         Bac à légumes — Sortir / Rentrer
       </button>
-      {furnitureBtn('Boîtes DRÖNA', 'dronaMode', 'HIGH', 'LOW', v => v === 'high' ? 'High (45k)' : v === 'low' ? 'Low (1.6k)' : v === 'hidden' ? 'Caché (0t)' : 'Procédural (12t)')}
       {furnitureBtn('TV Allumée', 'tvOn')}
       <button
         type="button"
