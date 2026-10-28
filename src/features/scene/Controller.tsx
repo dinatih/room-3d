@@ -7,7 +7,7 @@ import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
 import { CAMERA_SUBJECTS, selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { PanelPopover } from './sidepanel/PanelPopover';
-import './VirtualDPad.scss';
+import './Controller.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
 
@@ -27,7 +27,7 @@ function fire(key: string, pressed: boolean) {
   document.dispatchEvent(new CustomEvent('camera-direction-input', { detail: { key, pressed } }));
 }
 
-export function VirtualDPad({ visible = false }: { visible?: boolean }) {
+export function Controller({ visible = false }: { visible?: boolean }) {
   const piloting = useDroneControlStore(state => state.piloting);
   const mode = useSceneStore(state => state.cameraMode);
   const target = useSceneStore(state => state.cameraTarget);
@@ -130,7 +130,7 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
   const refreshSubjects = () => setAvailableSubjects(Object.keys(cameraState.animalViews));
 
   return (
-    <div className="virtual-controls d-flex flex-column align-items-center gap-1">
+    <div className="game-controller d-flex flex-column align-items-center gap-1">
       {wigGrid && (
         <div className="glass-card d-flex align-items-center gap-2 p-2 mb-4 rounded-2" role="toolbar" aria-label="Perruques">
           <label htmlFor="wig-grid-color" className="small text-nowrap">Couleur</label>
@@ -148,8 +148,8 @@ export function VirtualDPad({ visible = false }: { visible?: boolean }) {
           </select>
         </div>
       )}
-      <div className="position-relative d-flex align-items-start gap-3">
-        <div className="position-absolute top-0 start-50 translate-middle-x virtual-controls__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
+      <div className="position-relative d-flex justify-content-between align-items-start gap-3 w-100">
+        <div className="position-absolute top-0 start-50 translate-middle-x game-controller__modes glass-card btn-group btn-group-sm p-1 rounded-2" role="group" aria-label="Zoom caméra">
           {(['in', 'out'] as const).map(direction => {
             const isPressed = (direction === 'in'
               ? pressedKeys.has('CtrlArrowUp') || pressedKeys.has('PageUp')

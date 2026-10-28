@@ -40,7 +40,7 @@ import { getUnusedShadows } from './utils/visibleShadowReceivers';
 import { VRMode }                       from '@features/scene/VRMode';
 import { ImmersiveMode }                from '@features/scene/ImmersiveMode';
 import { FloorPlan }                    from '@features/scene/FloorPlan';
-import { VirtualDPad }                  from '@features/scene/VirtualDPad';
+import { Controller }                  from '@features/scene/Controller';
 import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { PresenceLightController }       from './PresenceLightController';
@@ -1016,7 +1016,7 @@ export function Studio() {
           showCharacterModes
           hideUI={hideUI}
           onToggleHideUI={toggleHideUI}
-          directionalControls={<VirtualDPad visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />}
+          directionalControls={<Controller visible={!hideUI && !planeMode && !showInventory && !characterGridActive} />}
         >
           {characterGridActive && (
             <AnimFrameController

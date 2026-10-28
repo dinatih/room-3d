@@ -1,9 +1,9 @@
-.virtual-controls {
+.game-controller {
   position: absolute;
   right: 0;
+  width: 100%;
   bottom: calc(100% + 0.5rem);
   z-index: 1001;
-  max-width: calc(100vw - 2rem);
 }
 
 .virtual-dpad {
@@ -37,7 +37,7 @@
 
 .virtual-dpad__button.is-pressed,
 .virtual-dpad__button[aria-expanded="true"],
-.virtual-controls__modes .btn.is-pressed {
+.game-controller__modes .btn.is-pressed {
   color: #fff;
   background-color: #d32f2f !important;
   border-color: #b71c1c !important;
