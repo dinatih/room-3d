@@ -1,6 +1,27 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
+it('retrouve les smart actions des produits et conserve les associations directes', () => {
+  const { INVENTORY_SMART_OBJECT_IDS } = load('src/features/scene/objectActions.ts', {
+    '../home-assistant/airPerformer': { AIR_PERFORMER_ACTION_IDS: [] },
+  });
+  const objects = Object.fromEntries([
+    ...Object.values(INVENTORY_SMART_OBJECT_IDS).flat(), 'toilet', 'shower',
+  ].map(id => [id, { id, slots: [{ slotId: 'use' }] }]));
+  objects['chair-office'].itemId = 'chair-office';
+  const { getInventorySmartObjects } = load('src/features/inventory/InventorySmartActions.tsx', {
+    '@features/scene/ai/smartObjectRegistry': { SMART_OBJECTS: objects },
+    '@features/scene/objectActions': { INVENTORY_SMART_OBJECT_IDS },
+  }, source => `import { SMART_OBJECTS } from '@features/scene/ai/smartObjectRegistry';
+    import { INVENTORY_SMART_OBJECT_IDS } from '@features/scene/objectActions';
+    ${source.slice(source.indexOf('export function getInventorySmartObjects'), source.indexOf('export function InventorySmartActions'))}`);
+  for (const [itemId, ids] of Object.entries(INVENTORY_SMART_OBJECT_IDS)) {
+    assert.deepEqual(getInventorySmartObjects(itemId).map(object => object.id), ids);
+  }
+  assert.equal(getInventorySmartObjects('toilet')[0].id, 'toilet');
+  assert.equal(getInventorySmartObjects('shower')[0].id, 'shower');
+  assert.deepEqual(getInventorySmartObjects('unknown'), []);
+});
 const slots = {
   toilet: { slots: [{ slotId: 'use', animation: 'sit-idle', duration: 6 }] },
   'vasque-sdb': { slots: [{ slotId: 'wash-hands', animation: 'fab-daily-life-wash-hands', duration: 4, triggerEventKey: 'water', triggerEventValue: true }] },

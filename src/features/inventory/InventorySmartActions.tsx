@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SMART_OBJECTS } from '@features/scene/ai/smartObjectRegistry';
 import { CHARACTERS } from '@features/scene/characterConfig';
 import { getActionLabel } from '@features/scene/objectActionRegistry';
+import { INVENTORY_SMART_OBJECT_IDS } from '@features/scene/objectActions';
 
 export interface SmartActionPreviewRequest {
   objectId: string;
@@ -12,7 +13,7 @@ export interface SmartActionPreviewRequest {
 }
 
 export function getInventorySmartObjects(itemId: string) {
-  return Object.values(SMART_OBJECTS).filter(object => (object.itemId ?? object.id) === itemId);
+  return Object.values(SMART_OBJECTS).filter(object => (object.itemId ?? object.id) === itemId || INVENTORY_SMART_OBJECT_IDS[itemId]?.includes(object.id));
 }
 
 export function InventorySmartActions({ itemId, request, onPreview }: {
@@ -26,7 +27,10 @@ export function InventorySmartActions({ itemId, request, onPreview }: {
   return (
     <div className="card p-2 mb-3 gap-2">
       <h4 className="small fw-bold mb-0">SmartActions dans la preview 3D</h4>
-      <select className="form-select form-select-sm" aria-label="PNJ de la preview" value={agentId} onChange={event => setAgentId(event.target.value)}>
+      <select className="form-select form-select-sm" aria-label="PNJ de la preview" value={agentId} onChange={event => {
+        setAgentId(event.target.value);
+        if (request) onPreview({ ...request, characterId: event.target.value, runId: request.runId + 1 });
+      }}>
         {CHARACTERS.map(agent => <option key={agent.id} value={agent.id}>{agent.emoji} {agent.name}</option>)}
       </select>
       {objects.flatMap(object => object.slots.map(slot => (

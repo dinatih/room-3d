@@ -17,6 +17,7 @@ import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
+import { BATHTUB } from '../bathtubData';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -354,7 +355,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'bathtub-garden',
     name: 'Baignoire Jardin',
     category: 'hygiene',
-    position: [120, 0, -300],
+    position: BATHTUB.position,
+    rotationY: BATHTUB.rotation[1],
     slots: [
       {
         slotId: 'center',
@@ -388,6 +390,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Canapé Jardin Est',
     category: 'seating',
     position: [270, 0, -110],
+    rotationY: -Math.PI / 2,
     slots: [
       {
         slotId: 'seat-1',
@@ -416,6 +419,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Canapé Jardin Ouest',
     category: 'seating',
     position: [100, 0, -80],
+    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'seat-1',

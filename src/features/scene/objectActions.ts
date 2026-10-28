@@ -1,4 +1,15 @@
 import { AIR_PERFORMER_ACTION_IDS } from '../home-assistant/airPerformer';
+
+/** Inventory products whose scene interactions use a placement identifier. */
+export const INVENTORY_SMART_OBJECT_IDS: Record<string, readonly string[]> = {
+  'utaker-stack': ['bed-west', 'bed-east', 'bed-double'],
+  'smorkull-chair': ['chair-office'],
+  'bollsidan30574370': ['desk-bollsidan-1', 'desk-bollsidan-2'],
+  'armrest-sofa': ['sofa-garden-east'],
+  'armless-sofa': ['sofa-garden-west'],
+  'bathtub': ['bathtub-garden'],
+  'havback49514017': ['vasque-sdb'],
+};
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'microduck': ['microduck-motion', 'microduck-replay', 'microduck-autonomous'],
   'raph-rover': ['raph-rover-motion', 'raph-rover-replay', 'raph-rover-autonomous'],
