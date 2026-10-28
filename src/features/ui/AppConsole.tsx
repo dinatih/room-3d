@@ -207,11 +207,6 @@ export function AppConsole({
   const isIdle = useAppIdle();
 
   const [logs, setLogs] = useState<AppLogEntry[]>(() => [...APP_LOG_HISTORY]);
-  const latestLog = logs[logs.length - 1];
-  const latestLogTag = latestLog?.tag.split('+').map(part => {
-    const character = findCharacter(part.trim());
-    return character ? `${character.emoji} ${character.name}` : part.trim();
-  }).join(' + ');
   const [open, setOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [filterBubbleOnly, setFilterBubbleOnly] = useState(false);
@@ -274,7 +269,7 @@ export function AppConsole({
         setCycleStep(prev => {
           const next = (prev + 1) % 3;
           setOpen(next === 1 || next === 2);
-          setFilterBubbleOnly(next === 2);
+          if (next !== 0) setFilterBubbleOnly(next === 2);
           setIsMaximized(next === 1 || next === 2);
           return next;
         });
@@ -306,6 +301,11 @@ export function AppConsole({
     if (actionFilter && entry.action !== actionFilter) return false;
     return true;
   });
+  const latestLog = displayedLogs[displayedLogs.length - 1];
+  const latestLogTag = latestLog?.tag.split('+').map(part => {
+    const character = findCharacter(part.trim());
+    return character ? `${character.emoji} ${character.name}` : part.trim();
+  }).join(' + ');
 
   // Réserver l'espace et aligner les dimensions/espacements sur le menu principal du bas.
   useLayoutEffect(() => {
@@ -348,7 +348,6 @@ export function AppConsole({
       const next = !prev;
       if (!next) {
         setCycleStep(0);
-        setFilterBubbleOnly(false);
         setIsMaximized(false);
       } else {
         setCycleStep(filterBubbleOnly ? 2 : 1);
@@ -370,7 +369,6 @@ export function AppConsole({
     } else {
       setOpen(false);
       setIsMaximized(false);
-      setFilterBubbleOnly(false);
       setCycleStep(0);
     }
   };
