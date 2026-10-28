@@ -6,7 +6,7 @@
  * Placement monde : wrapper group dans Furniture.tsx  → rotY=+π/2
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
@@ -26,52 +26,20 @@ const W2_HALF = 37.75; // 2×Kallax half-width (w2/2)
 const DEP_HALF = 19.5; // Kallax depth/2
 const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
 
+const DRONA_POSITIONS = [
+  ...[-17.5, 17.5].map(x => new THREE.Vector3(x, h1 - 20.5, 0)),
+  ...[-17.5, 17.5].flatMap(x => [-20.5, -56].map(y => new THREE.Vector3(x, h1 + h2 + y, 0))),
+  // La boîte sur la VARIERA est la seule tournée de 180°.
+  new THREE.Vector3(W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10),
+];
+
 export function KallaxNEDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
-  const dronaMatrices = useMemo(() => {
-    const matrices: THREE.Matrix4[] = [];
-    const p = new THREE.Vector3();
-    const q = new THREE.Quaternion();
-    const s = new THREE.Vector3(1, 1, 1);
-    
-    // 2×1 bas
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
-    for (const x of [-17.5, 17.5]) {
-      p.set(x, h1 - 20.5, 0);
-      matrices.push(new THREE.Matrix4().compose(p, q, s));
-    }
-    
-    // 2×2 haut
-    for (const x of [-17.5, 17.5]) {
-      for (const y of [-20.5, -56]) {
-        p.set(x, h1 + h2 + y, 0);
-        matrices.push(new THREE.Matrix4().compose(p, q, s));
-      }
-    }
-    
-    // Sur la VARIERA
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-    p.set(W2_HALF - VAR2_W / 2 - 4, h1 + h2 + VAR2_H + DF / 2, DEP_HALF - VAR2_D / 2 - 10);
-    matrices.push(new THREE.Matrix4().compose(p, q, s));
-    
-    return matrices;
-  }, []);
-
-  const dronaTransforms = useMemo(() => {
-    return dronaMatrices.map(m => {
-      const p = new THREE.Vector3();
-      const q = new THREE.Quaternion();
-      const s = new THREE.Vector3();
-      m.decompose(p, q, s);
-      return { p, q, s };
-    });
-  }, [dronaMatrices]);
-
   return (
     <>
       {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => (
-        <group key={i} name={`drona-ne-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
-          {t.p.x === DRONA_CATCHALL_POSITION[0] && t.p.y === DRONA_CATCHALL_POSITION[1]
+      {DRONA_POSITIONS.map((position, i) => (
+        <group key={i} name={`drona-ne-cell-${i}`} position={position} rotation-y={i === DRONA_POSITIONS.length - 1 ? Math.PI : 0} userData={{ sceneItemRoot: true }}>
+          {position.x === DRONA_CATCHALL_POSITION[0] && position.y === DRONA_CATCHALL_POSITION[1]
             ? <SlidingDrona objectId="drona-ne-catchall" label="Dröna fourre-tout — Nord-Est" actionId={DRONA_CATCHALL_ACTION} duration={DRONA_CATCHALL_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />
             : i === DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].index
               ? <SlidingDrona objectId="drona-ne-catchall2" label={DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].label} actionId={DRONA_SPECIAL_ITEMS['drona-ne-catchall2'].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState} />

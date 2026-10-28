@@ -6,7 +6,7 @@
  * Placement monde : wrapper group dans Furniture.tsx.
  * Utilisé aussi dans l'inventaire (Espaces de rangement) via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
@@ -29,40 +29,18 @@ const PIZZA_Y = h2 + h2 / 2 + TI / 2;  // 115.5 — position four pizza
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
+const DRONA_ITEMS = Object.entries(KITCHEN_DRONA_ITEMS);
+
 export function KallaxCuisineDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
-  const dronaMatrices = useMemo(() => {
-    const matrices: THREE.Matrix4[] = [];
-    const p = new THREE.Vector3();
-    const q = new THREE.Quaternion();
-    const s = new THREE.Vector3(1, 1, 1);
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
-    
-    for (const [x, y, z] of KALLAX_CUISINE_DRONA_POSITIONS) {
-      p.set(x, y, z);
-      matrices.push(new THREE.Matrix4().compose(p, q, s));
-    }
-    return matrices;
-  }, []);
-
-  const dronaTransforms = useMemo(() => {
-    return dronaMatrices.map(m => {
-      const p = new THREE.Vector3();
-      const q = new THREE.Quaternion();
-      const s = new THREE.Vector3();
-      m.decompose(p, q, s);
-      return { p, q, s };
-    });
-  }, [dronaMatrices]);
-
   return (
     <>
       {/* DRONA Instances individuelles pour animation (6 Drona : 4 dans le 2x2 bas + 2 sur le dessus) */}
-      {dronaTransforms.map((t, i) => {
-        const target = Object.entries(KITCHEN_DRONA_ITEMS).find(([, item]) => item.index === i);
+      {KALLAX_CUISINE_DRONA_POSITIONS.map((position, i) => {
+        const target = DRONA_ITEMS.find(([, item]) => item.index === i);
         return (
-          <group key={i} name={`drona-kitchen-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
+          <group key={i} name={`drona-kitchen-cell-${i}`} position={position} userData={{ sceneItemRoot: true }}>
             {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={SPECIAL_DRONA_SLIDE_DURATION} isPreview={isPreview} actionState={actionState}>
-              {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - t.p.y, -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Télémètre Laserliner' }}>
+              {target[0] === 'drona-kitchen-old-it' && <group name="drona-kitchen-old-it-laser" position={[0, 6.25 - position[1], -5]} rotation={[Math.PI / 2, 0, 0]} userData={{ sceneItemRoot: true, itemName: 'Télémètre Laserliner' }}>
                 <LaserDistanceMaster />
               </group>}
             </SlidingDrona> : <DroneCell />}

@@ -7,7 +7,7 @@
  * Placement monde : wrapper group dans Furniture.tsx  → rotY=+π/2
  * Utilisé aussi dans l'inventaire via registry.ts.
  */
-import { useRef, useLayoutEffect, useMemo } from 'react';
+import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
@@ -32,29 +32,16 @@ const FREEZER_H = 50; // Hauteur du congélateur CHIQ au sol
 
 function k(id: string) { return { id } as any; }
 
+const DRONA_ITEMS = Object.entries({ ...DRONA_SE_ITEMS, 'drona-se-care': { ...DRONA_SPECIAL_ITEMS['drona-se-care'], duration: SPECIAL_DRONA_SLIDE_DURATION } });
+
 export function KallaxSEDrona({ isPreview = false, actionState = {} }: { isPreview?: boolean; actionState?: Record<string, any> } = {}) {
-  const dronaMatrices = useMemo(() => {
-    const rot = new THREE.Matrix4(); // Identité
-    return KALLAX_SE_DRONA_POSITIONS.map(([x, y, z]) => rot.clone().setPosition(x, y, z));
-  }, []);
-
-  const dronaTransforms = useMemo(() => {
-    return dronaMatrices.map(m => {
-      const p = new THREE.Vector3();
-      const q = new THREE.Quaternion();
-      const s = new THREE.Vector3();
-      m.decompose(p, q, s);
-      return { p, q, s };
-    });
-  }, [dronaMatrices]);
-
   return (
     <>
       {/* DRONA Instances individuelles pour animation */}
-      {dronaTransforms.map((t, i) => {
-        const target = Object.entries({ ...DRONA_SE_ITEMS, 'drona-se-care': { ...DRONA_SPECIAL_ITEMS['drona-se-care'], duration: SPECIAL_DRONA_SLIDE_DURATION } }).find(([, item]) => item.index === i);
+      {KALLAX_SE_DRONA_POSITIONS.map((position, i) => {
+        const target = DRONA_ITEMS.find(([, item]) => item.index === i);
         return (
-          <group key={i} name={`drona-se-cell-${i}`} position={t.p} quaternion={t.q} scale={t.s} userData={{ sceneItemRoot: true }}>
+          <group key={i} name={`drona-se-cell-${i}`} position={position} userData={{ sceneItemRoot: true }}>
             {target ? <SlidingDrona objectId={target[0]} label={target[1].label} actionId={target[1].action} duration={target[1].duration} isPreview={isPreview} actionState={actionState} /> : <DroneCell />}
           </group>
         );
