@@ -250,6 +250,7 @@ const initialExtraStates: Record<string, boolean> = {
   'wc-seat-toggle': false,
   'vihals-toggle': false,
   'chest-bench-open': false,
+  'vacuum-detach-tube': false,
   'vatterso-open': false,
   'character-meshes': false,
   aiGoToilet: false,

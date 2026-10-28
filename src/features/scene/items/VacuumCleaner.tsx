@@ -1,23 +1,36 @@
 /**
  * VacuumCleaner.tsx — Rowenta X-Force Flex 9.60 RH2038WO / RH2079WO (112×24.8×23.4 cm).
- * Modèle officiel Amazon AR avec textures PBR d'origine.
+ * Modèle officiel Amazon AR découpé avec animation de détachement de la rallonge.
  */
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
+import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/rowenta-rh2079wo/rowenta-rh2079wo.glb';
+const ANIM_DURATION = 1.0;
 
-export function VacuumCleaner({ onSize }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB, true);
+export function VacuumCleaner({ actionState, onSize }: SceneItemProps) {
+  const { scene, animations } = useGLTFClone(GLB, true);
+  const isDetached = !!actionState?.['vacuum-detach-tube'];
+  const { invalidate } = useThree();
+  const runtime = useRef<{ mixer: THREE.AnimationMixer; action: THREE.AnimationAction } | null>(null);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
+
+    const mixer = new THREE.AnimationMixer(scene);
+    const clip = animations.find(a => a.name === 'detach_tube');
+    if (!clip) throw new Error('VacuumCleaner: missing detach_tube animation');
+    const action = mixer.clipAction(clip).play();
+    action.paused = true;
+    mixer.update(0);
 
     scene.scale.setScalar(100);
     const box = glbLocalBBox(scene);
@@ -27,14 +40,26 @@ export function VacuumCleaner({ onSize }: SceneItemProps) {
       -(box.min.z + box.max.z) / 2,
     );
     scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
+    scene.userData.hoverAction = {
+      label: 'Aspirateur Rowenta X-Force Flex',
+      actions: getObjectActionIds('vacuum-cleaner'),
+    };
+    runtime.current = { mixer, action };
     onSize(box.getSize(new THREE.Vector3()));
-  }, [scene, onSize]);
+  }, [scene, animations, onSize]);
 
-  return (
-    <group userData={{ hoverAction: { label: 'Aspirateur Rowenta X-Force Flex' } }}>
-      <primitive object={scene} />
-    </group>
-  );
+  useFrame((_, dt) => {
+    const rt = runtime.current;
+    if (!rt) return;
+    const target = isDetached ? ANIM_DURATION : 0;
+    if (rt.action.time === target) return;
+    const step = dt / ANIM_DURATION;
+    rt.action.time = THREE.MathUtils.clamp(rt.action.time + (isDetached ? step : -step) * ANIM_DURATION, 0, ANIM_DURATION);
+    rt.mixer.update(0);
+    invalidate();
+  });
+
+  return <primitive object={scene} />;
 }
 
 useGLTF.preload(GLB);

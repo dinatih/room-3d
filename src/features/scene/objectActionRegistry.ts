@@ -166,6 +166,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'ninja-light': { label: ['Allumer la lumière', 'Éteindre la lumière'], icon: 'bi-lightbulb' },
   cabinet: { label: ['Ouvrir', 'Fermer'] },
   'chest-bench-open': { label: ['Ouvrir', 'Fermer'] },
+  'vacuum-detach-tube': { label: ['Détacher la rallonge', 'Remettre la rallonge'] },
   'vatterso-open': { label: ['Ouvrir', 'Fermer'] },
   'wc-lid-toggle': { label: ['Ouvrir Couvercle', 'Fermer Couvercle'] },
   'wc-seat-toggle': { label: ['Ouvrir Siège', 'Fermer Siège'] },
