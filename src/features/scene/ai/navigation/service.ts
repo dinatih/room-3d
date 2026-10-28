@@ -2,7 +2,7 @@ import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
 import { architectureObstacles, walkableSurfaces } from './architecture';
 import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, NAVIGATION_RADIUS_CM, type AgentProfile } from './obstacles';
-import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, type Point, type Polygon } from './geometry';
+import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, CLEARANCE_ERROR, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, glassDoorState, getDoorLimitDiagnostics, doorPolygon } from '../../doorObstacles';
 import { requestDoor, releaseDoor, releaseAgentDoors, doorOpeningKey, getAgentDoorProtection, protectDoor, getDoorRequestDiagnostics, type DoorKey, type DoorProtection } from './doorRequests';
 import { limitAgentMovement, isAgentDestinationFree, getAgentObstacles, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, getActorNavigationDiagnostics, type ActorBlockers } from '../agent/agentAvoidance';
@@ -177,6 +177,8 @@ export interface RouteState {
   target: Point | null;
   destination?: Point;
   origin?: Point;
+  doorEscape?: { key: DoorKey; target: Point; path?: Point[] };
+  doorRecovery?: ReturnType<typeof prepareNavigationGraph>;
   graph: NavigationGraph | null;
   crowd?: { base: NavigationGraph; graph: NavigationGraph | null; planning?: NavigationGraph; preparation?: ReturnType<typeof prepareNavigationGraph>; preparing?: boolean; yielding?: boolean; signature: string; resume: { start: Point; next: Point; retreat: Point } };
   error: string | null;
@@ -229,6 +231,68 @@ function clearCrowd(route: RouteState): void {
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 
+/** Leave a leaf's swing before asking it to open; never cross static geometry. */
+export function recoverDoorContact(route: RouteState, agentId: string, start: Point, travel: number): Point | undefined {
+  const profile = getAgentProfile(agentId);
+  const leaves = doorKeys.filter(key => DOOR_CONFIGS[key].yMin < profile.height && DOOR_CONFIGS[key].yMax > 0);
+  const actual = leaves.map(key => doorFootprint(profile, key, doorCollisionState[key].angle));
+  const swingRadius = (key: DoorKey) => {
+    const d = DOOR_CONFIGS[key];
+    return NAVIGATION_RADIUS_CM + Math.max(Math.hypot(d.length, d.thickness / 2) + CLEARANCE_ERROR, d.length + d.thickness / 2) + BOOLEAN_PRECISION;
+  };
+  const blocking = route.doorEscape?.key ?? leaves.find((key, i) => insideObstacle(start, actual[i])
+    || insideObstacle(start, doorFootprint(profile, key, computeDoorAllowedAngle(DOOR_CONFIGS[key])))
+    || route.waitReason === `Battant ${key} sur le trajet, attente d'ouverture` && distance(start, DOOR_CONFIGS[key].pivot) < swingRadius(key) - BOOLEAN_PRECISION);
+  if (!route.doorEscape && !blocking) return undefined;
+  if (route.doorEscape && distance(limitAgentMovement(agentId, start, route.doorEscape.path?.[0] ?? route.doorEscape.target), route.doorEscape.path?.[0] ?? route.doorEscape.target) !== 0) route.doorEscape = undefined;
+  const solids = [...architectureObstacles, ...furnitureObstacles.values()]
+    .filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, NAVIGATION_RADIUS_CM)]);
+  for (const rings of walkableSurfaces) for (const ring of rings) for (let i = 0; i < ring.length; i++) {
+    solids.push([inflate([ring[i], ring[(i + 1) % ring.length]], NAVIGATION_RADIUS_CM)]);
+  }
+  // An existing penetration may leave its convex leaf, but cannot enter another leaf.
+  const barriers = [...solids, ...actual.flatMap(rings => insideObstacle(start, rings) ? [] : rings),
+    ...LIMITED_ROOMS.filter(room => !isInRoom(room, start) && !OccupancyManager.hasRoomCapacity(room, agentId)).map(room => [ROOM_FOOTPRINTS[room]])];
+  if (!route.doorEscape) {
+    const key = blocking!, d = DOOR_CONFIGS[key];
+    const radius = swingRadius(key);
+    const length = distance(start, d.pivot);
+    const directions = [length ? { x: (start.x - d.pivot.x) / length, z: (start.z - d.pivot.z) / length } : d.closedDir,
+      d.closedDir, d.openNormal, { x: -d.closedDir.x, z: -d.closedDir.z }, { x: -d.openNormal.x, z: -d.openNormal.z }];
+    const candidates = directions.map(v => ({ x: d.pivot.x + v.x * radius, z: d.pivot.z + v.z * radius }))
+      .filter(p => distance(start, p) > BOOLEAN_PRECISION && inSurface(p) && !insideObstacle(p, barriers) && isAgentDestinationFree(agentId, p))
+      .sort((a, b) => distance(start, a) - distance(start, b));
+    let target = candidates.find(p => segmentFree(start, p, barriers) && distance(limitAgentMovement(agentId, start, p), p) === 0);
+    let path: Point[] | undefined;
+    if (!target) {
+      const preparation = route.doorRecovery ??= prepareNavigationGraph({ obstacles: [...barriers, ...getAgentObstacles(agentId, start).map(p => [p])], surfaces: walkableSurfaces });
+      const graph = preparation.read();
+      const exits = [...candidates, ...graph.vertices.filter(p => inSurface(p) && distance(p, d.pivot) >= radius && isAgentDestinationFree(agentId, p))];
+      exits.sort((a, b) => distance(start, a) - distance(start, b));
+      target = graph.findReachable(start, exits) ?? undefined;
+      if (target) path = findPath(graph, start, target) ?? undefined;
+      preparation.cancel(); route.doorRecovery = undefined;
+      if (!path) return undefined;
+    }
+    if (!target) return undefined;
+    route.doorEscape = { key, target, path };
+    devLog({ tag: agentId, category: 'nav', action: 'nav_door_escape', data: { key, start, target, reason: route.waitReason } });
+  }
+  const { key, target } = route.doorEscape;
+  const path = route.doorEscape.path;
+  while (path?.length && distance(start, path[0]) === 0) path.shift();
+  const waypoint = path?.[0] ?? target;
+  const remaining = distance(start, waypoint), step = Math.min(travel, remaining);
+  const proposed = remaining <= travel ? waypoint : { x: start.x + (waypoint.x - start.x) * step / remaining, z: start.z + (waypoint.z - start.z) * step / remaining };
+  if (!segmentFree(start, proposed, barriers)) { route.doorEscape = undefined; return undefined; }
+  const next = limitAgentMovement(agentId, start, proposed);
+  route.waitReason = `Dégagement du battant ${key}`;
+  if (distance(next, target) === 0) resetRoute(route, agentId, route.protectedDoor);
+  requestDoor(key, agentId);
+  route.doors.add(doorOpeningKey(key));
+  return next;
+}
+
 /** Animation-driven furniture transition: keep its trajectory, wait if it becomes blocked. */
 export function movePostureTransition(route: RouteState, agentId: string, start: Point, target: Point, owner: string): Point {
   const graph = getNavigationGraph(getAgentProfile(agentId), owner);
@@ -247,6 +311,8 @@ export function resetRoute(route: RouteState, agentId: string, keepProtectedDoor
   route.path = []; route.index = 0; route.target = null; route.graph = null; route.error = null; route.doors.clear();
   route.destination = undefined;
   route.origin = undefined;
+  route.doorEscape = undefined;
+  route.doorRecovery?.cancel(); route.doorRecovery = undefined;
   route.approach = undefined; route.interactionTarget = undefined;
   route.occupiedTarget = undefined;
   route.exit = undefined;

@@ -29,7 +29,7 @@ function world(id = 'native') {
     './occupancyManager': { OccupancyManager: occupancy },
     './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop } },
     '../animations/duoAnimations': { getDuoAnimationForClip: noop },
-    './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; },
+    './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; }, recoverDoorContact: () => undefined,
       followRoute: (route, actor, start, goal) => { attempts.push(goal.x); if (goal.x === objects[failedId]?.position[0]) { route.error = 'sealed'; return start; } return goal; },
       getInteractionOwner: value => value, getContainingObjectOwner: noop, getNavigationGraph: () => graph,
       describeNavigationBlock: () => 'sealed', navigationDiagnostics: noop,

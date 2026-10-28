@@ -65,6 +65,94 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('calcule un détour de dégagement quand le mobilier interdit toutes les sorties directes', () => {
+        setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+        const furniture = { id: 'escape-screen', polygon: g.rectangle(0, 25, 100, 4), yMin: 0, yMax: 200 };
+        obstacles.registerObstacle(furniture);
+        const route = nav.createRouteState();
+        route.waitReason = "Battant living sur le trajet, attente d'ouverture";
+        let position = { x: -5, z: 15 }, detoured = false;
+        try {
+            for (let frame = 0; frame < 150; frame++) {
+                const next = nav.recoverDoorContact(route, 'walker', position, 3);
+                if (!next) break;
+                detoured ||= !!route.doorEscape?.path?.length;
+                assert(g.segmentFree(position, next, [[g.inflate(furniture.polygon, obstacles.NAVIGATION_RADIUS_CM)], [g.inflate(doors.doorPolygon('living', 0), obstacles.NAVIGATION_RADIUS_CM)]]));
+                position = next;
+            }
+            assert(detoured, 'The escape must use a path around the furniture');
+            assert(g.distance(position, { x: -41.5, z: 0 }) > leaf.length);
+        } finally { obstacles.unregisterObstacle(furniture.id); nav.resetRoute(route, 'walker'); }
+    });
+    it('ne dégage pas un battant en entrant dans une pièce déjà pleine', () => {
+        setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+        checkedRoom = 'bathroom'; roomFull = true;
+        navigationDependencies['../occupancyManager'].ROOM_FOOTPRINTS.bathroom = g.rectangle(150, 0, 300, 600);
+        const route = nav.createRouteState();
+        route.waitReason = "Battant living sur le trajet, attente d'ouverture";
+        let position = { x: -5, z: 15 };
+        try {
+            for (let frame = 0; frame < 100; frame++) {
+                const next = nav.recoverDoorContact(route, 'walker', position, 3);
+                if (!next) break;
+                assert(next.x < 0, 'Recovery entered a full room');
+                position = next;
+            }
+            assert(g.distance(position, { x: -41.5, z: 0 }) > leaf.length, 'A safe escape must still be available');
+        } finally { checkedRoom = undefined; roomFull = false; delete navigationDependencies['../occupancyManager'].ROOM_FOOTPRINTS.bathroom; nav.resetRoute(route, 'walker'); }
+    });
+    it('dégage trois PNJ du battant sans traverser les corps ni le mur, puis reprend les trajets', () => {
+        setup({ living: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+        const avoidance = loadAvoidance();
+        const recovery = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        const ids = ['escape-a', 'escape-b', 'escape-c'];
+        const actors = ids.map((id, i) => {
+            obstacles.setAgentProfile(id, obstacles.getAgentProfile('walker'));
+            const position = { x: -5 + i * 16, z: 15 + i * 12 };
+            cameraState.positions[id] = { ...position, y: 0 };
+            const route = recovery.createRouteState();
+            route.waitReason = "Battant living sur le trajet, attente d'ouverture";
+            return { id, position, route, escaped: false };
+        });
+        try {
+            for (let frame = 0; frame < 150; frame++) for (const actor of actors) {
+                if (actor.escaped) continue;
+                const before = actor.position;
+                const next = recovery.recoverDoorContact(actor.route, actor.id, before, 3);
+                assert(next, `No escape for ${actor.id}`);
+                assert(g.distance(before, next) <= 3 + g.BOOLEAN_PRECISION, 'Recovery must walk, never teleport');
+                assert(g.segmentFree(before, next, architecture.architectureObstacles.map(o => [g.inflate(o.polygon, obstacles.NAVIGATION_RADIUS_CM)])), 'Recovery crossed a wall');
+                assert(g.segmentFree(before, next, [[g.inflate(doors.doorPolygon('living', 0), obstacles.NAVIGATION_RADIUS_CM)]]), 'Recovery crossed the leaf');
+                actor.position = next;
+                cameraState.positions[actor.id] = { ...next, y: 0 };
+                actor.escaped = !actor.route.doorEscape;
+            }
+            assert(actors.every(a => a.escaped), JSON.stringify(actors));
+            assert.equal(doors.computeDoorDynamics(doors.DOOR_CONFIGS.living, 0).allowed, Math.PI / 2, 'Escaped actors must no longer hold the opening stop');
+            for (const actor of actors) {
+                assert(requests.doorRequested('living'), 'Keep the opening request while resuming the route');
+                actor.route.waitReason = "Battant living sur le trajet, attente d'ouverture";
+                assert.equal(recovery.recoverDoorContact(actor.route, actor.id, actor.position, 3), undefined, 'An actor outside the swing must not restart a zero-length escape');
+            }
+            doors.doorCollisionState.living.angle = Math.PI / 2;
+            for (const actor of actors) {
+                const target = { x: actor.position.x, z: actor.position.z + 30 };
+                for (let frame = 0; frame < 60 && g.distance(actor.position, target); frame++) actor.position = nav.followRoute(actor.route, actor.id, actor.position, target, 3);
+                assert.equal(g.distance(actor.position, target), 0, 'The interrupted route must resume');
+            }
+            doors.doorCollisionState.living.angle = 0;
+            const trapped = recovery.createRouteState();
+            let position = { x: 0, z: 0 };
+            assert(g.pointInRing(position, g.inflate(doors.doorPolygon('living', 0), obstacles.NAVIGATION_RADIUS_CM)));
+            for (let frame = 0; frame < 100; frame++) {
+                const next = recovery.recoverDoorContact(trapped, 'walker', position, 3);
+                if (!next) break;
+                assert(g.distance(position, next) <= 3 + g.BOOLEAN_PRECISION);
+                position = next;
+            }
+            assert(!g.pointInRing(position, g.inflate(doors.doorPolygon('living', 0), obstacles.NAVIGATION_RADIUS_CM)), 'An actor already inside a leaf must also escape');
+        } finally { for (const id of ids) { delete cameraState.positions[id]; obstacles.removeAgentProfile(id); requests.releaseAgentDoors(id); } }
+    });
     it('recule dans la pièce précédente pour laisser passer un PNJ dans un couloir étroit', () => {
         setup({}, 83);
         architecture.architectureObstacles.splice(0, architecture.architectureObstacles.length,

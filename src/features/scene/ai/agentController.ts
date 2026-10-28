@@ -3,10 +3,10 @@ import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isD
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
 import { chooseLifeActivity, evolveLife, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
-import { OccupancyManager } from './occupancyManager';
+import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
-import { createRouteState, followRoute, resetRoute, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation, navigationDiagnostics } from './navigation/service';
+import { createRouteState, followRoute, resetRoute, recoverDoorContact, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation, navigationDiagnostics } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -751,6 +751,10 @@ export function createAgentController(
     }
 
     if (agentStatus === 'FALLING') {
+      if (LIMITED_ROOMS.some(room => isInRoom(room, startPos ?? state) && !OccupancyManager.hasRoomCapacity(room, _characterId))) {
+        state.animation = 'falling-idle';
+        return state;
+      }
       if (!deployment.hasLoggedFalling) {
         deployment.hasLoggedFalling = true;
         appLog(_characterId, `🪂 Déploiement : Tombée du ciel en parachute`, {
@@ -1525,6 +1529,18 @@ export function createAgentController(
         pickNewAutonomousActivity(interruptedSmartObjectId);
       }
       interruptedSmartObjectId = undefined;
+    }
+    if (deployment.hasCompleted && hasAgentProfile(_characterId) && (agentStatus === 'MOVING' || agentStatus === 'BLOCKED' || agentStatus === 'IDLE')) {
+      const escape = recoverDoorContact(route, _characterId, state, getWalkSpeedForAnimation(currentWalkAnim) * dt);
+      if (escape) {
+        state.rotY = computeRotYStep(state.rotY, Math.atan2(escape.x - state.x, escape.z - state.z), ROT_SPEED, dt);
+        state.x = escape.x; state.z = escape.z;
+        state.animation = currentWalkAnim;
+        blockedCoords = null;
+        cachedCoords = null; cachedCoordsInstruction = null;
+        if (!route.doorEscape) agentStatus = 'IDLE';
+        return state;
+      }
     }
     const instruction = dynamicNavIndex < dynamicNavQueue.length
       ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];

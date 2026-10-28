@@ -38,6 +38,9 @@ it('attend le départ du PNJ bloquant puis termine le déploiement avant de choi
       let startPos = { x:500,y:0,z:100 }, revision = 1, occupied = true, checks, resolutions = 0, retries = 0;
       const cameraState = { isSceneLaunched:true }, hasSkyDrop = true, landingPhaseDuration = .2, landingAnimId = 'landing';
       const graph = {}, getNavigationGraph = () => graph, getAgentProfile = () => ({}), hasAgentProfile = () => true;
+      const recoverDoorContact = () => undefined, currentWalkAnim = 'walk', getWalkSpeedForAnimation = () => 100;
+      let fullRoom = false;
+      const LIMITED_ROOMS = ['bathroom'], isInRoom = () => true, OccupancyManager = { hasRoomCapacity: () => !fullRoom };
       const getObstacleRevision = () => revision;
       const beginActorBlockCheck = () => { checks = new Map(); };
       const endActorBlockCheck = () => { const result = checks ?? new Map(); checks = undefined; return result; };
@@ -53,7 +56,7 @@ it('attend le départ du PNJ bloquant puis termine le déploiement avant de choi
       const advance = dt => { ${source.slice(begin, end)} return state; };
       ${source.slice(update, updateEnd)}
       return { update:updateCurrent, state, deployment, status:()=>agentStatus, resolutions:()=>resolutions, retries:()=>retries,
-        release() { occupied = false; }, revise() { revision++; } };
+        release() { occupied = false; }, revise() { revision++; }, roomFull(value) { fullRoom = value; } };
     }`;
   });
   const agent = harness();
@@ -64,6 +67,10 @@ it('attend le départ du PNJ bloquant puis termine le déploiement avant de choi
   for (let frame = 0; frame < 10; frame++) agent.update(.1);
   assert.equal(agent.resolutions(), 1, 'An unchanged blocking actor must not restart the landing query');
   agent.release();
+  agent.roomFull(true);
+  agent.update(.1);
+  assert.equal(agent.status(), 'FALLING', 'A free landing point must not admit a fourth actor into a full room');
+  agent.roomFull(false);
   agent.update(.1);
   assert.equal(agent.status(), 'LANDING');
   assert.equal(agent.state.y, 0);
