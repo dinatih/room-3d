@@ -38,6 +38,7 @@ function getCategoryEmoji(cat: string) {
     case 'consumable': return '🛒';
     case 'characters': return '🚶';
     case 'robots': return '🤖';
+    case 'animals': return '🐾';
     case 'doors': return '🚪';
     case 'glbs': return <i className="bi bi-shuffle" aria-hidden="true" />;
     default: return '📦';
