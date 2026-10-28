@@ -373,7 +373,7 @@ export function OfficeChair() {
   );
 }
 
-function AirPerformer_() {
+function AirPerformerPlacement() {
   const [posIdx, setPosIdx] = useState(0);
   const [remoteIdx, setRemoteIdx] = useState(0);
 
@@ -381,17 +381,9 @@ function AirPerformer_() {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'airperformer-position') {
-        setPosIdx(i => {
-          const next = (i + 1) % AIRPERFORMER_POSITIONS.length;
-          positionState['airperformer-position'] = { idx: next, total: AIRPERFORMER_POSITIONS.length };
-          return next;
-        });
+        setPosIdx(i => (i + 1) % AIRPERFORMER_POSITIONS.length);
       } else if (key === 'airperformer-remote-position') {
-        setRemoteIdx(i => {
-          const next = (i + 1) % AIRPERFORMER_REMOTE_POSITIONS.length;
-          positionState['airperformer-remote-position'] = { idx: next, total: AIRPERFORMER_REMOTE_POSITIONS.length };
-          return next;
-        });
+        setRemoteIdx(i => (i + 1) % AIRPERFORMER_REMOTE_POSITIONS.length);
       }
     };
     document.addEventListener('furniture-toggle', handler);
@@ -411,7 +403,7 @@ function AirPerformer_() {
     <>
       <PositionTransition furnitureKey="airperformer-position" x={p.x} z={p.z} ry={p.ry}>
         <group userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Air Performer', hoverAction: { label: 'Air Performer', actions: getObjectActionIds('air-performer') } }}>
-          <NavigationObstacle id="air-performer"><AirPerformer item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} /></NavigationObstacle>
+          <NavigationObstacle id="air-performer"><AirPerformer /></NavigationObstacle>
         </group>
       </PositionTransition>
       <PositionTransition furnitureKey="airperformer-remote-position" x={remotePos.x} y={remotePos.y} z={remotePos.z} ry={remotePos.ry}>
@@ -501,7 +493,7 @@ export function LivingRoomFurniture() {
       <OfficeChair />
 
       {/* Purificateur Air Performer */}
-      <AirPerformer_ />
+      <AirPerformerPlacement />
 
       {/* Meuble Mackapär (structure sans Drona ni cintres) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Meuble Mackapär' }}>

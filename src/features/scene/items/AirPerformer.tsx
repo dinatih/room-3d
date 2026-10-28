@@ -1,6 +1,6 @@
 /**
  * AirPerformer.tsx — Philips Air Performer AMF870/15 (32.5×32.5×106.4cm).
- * Modèle GLB officiel avec oscillation, télécommande séparable, et écran dynamique.
+ * Modèle GLB avec oscillation et télécommande séparable.
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
@@ -16,15 +16,19 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/philips-amf870/philips-amf870.glb';
 
-export function AirPerformer({ onSize, actionState, isPreview = false }: SceneItemProps) {
-  const { scene } = useGLTFClone(GLB, true);
+export function AirPerformer({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
 
-  const [power, setPower] = useState(false);
-  const [oscillating, setOscillating] = useState(true);
-  const [mode, setMode] = useState<string>('auto');
-  const [speed, setSpeed] = useState(5);
+  const [scenePower, setPower] = useState(false);
+  const [sceneOscillating, setOscillating] = useState(true);
+  const [sceneMode, setMode] = useState<string>('auto');
+  const [sceneSpeed, setSpeed] = useState(5);
   const [pm25, setPm25] = useState(8);
+  const power = isPreview ? !!actionState.airPerformerPower : scenePower;
+  const oscillating = isPreview ? !!(actionState.airPerformerOscillation ?? true) : sceneOscillating;
+  const mode = isPreview ? actionState.airPerformerMode ?? 'auto' : sceneMode;
+  const speed = isPreview ? actionState.airPerformerSpeed ?? 5 : sceneSpeed;
 
   const groupRef = useRef<THREE.Group>(null!);
   const oscAngleRef = useRef(0);
@@ -58,25 +62,15 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
         setMode(m => getNextActionValue(key, m));
       } else if (key === 'airPerformerSpeed') {
         setSpeed(s => getNextActionValue(key, s));
-      }
+      } else return;
       invalidate();
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
   }, [invalidate, isPreview, remote]);
 
-  useEffect(() => {
-    if (!isPreview) return;
-    setPower(!!actionState.airPerformerPower);
-    if (actionState.airPerformerOscillation !== undefined) setOscillating(!!actionState.airPerformerOscillation);
-    setMode(actionState.airPerformerMode ?? 'auto');
-    setSpeed(actionState.airPerformerSpeed ?? 5);
-    invalidate();
-  }, [isPreview, actionState.airPerformerPower, actionState.airPerformerOscillation, actionState.airPerformerMode, actionState.airPerformerSpeed, invalidate]);
-
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
-    scene.position.set(0, 0, 0);
 
     const remoteObj = scene.getObjectByName('RemoteControl');
     if (remoteObj) {
@@ -88,7 +82,7 @@ export function AirPerformer({ onSize, actionState, isPreview = false }: SceneIt
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
 
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, isPreview, onSize]);
 
   useFrame((_, dt) => {

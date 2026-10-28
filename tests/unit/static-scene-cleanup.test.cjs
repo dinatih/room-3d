@@ -255,3 +255,35 @@ it('conserve les hauteurs assis/debout BOLLSIDAN et la priorité de la hauteur e
     assert(Math.abs(sizes[0].y - expected) < 1e-4);
   }
 });
+
+it('lit les actions Air Performer directement dans la preview et accepte un placement sans propriétés factices', async () => {
+  const scene = new THREE.Group(), remote = new THREE.Mesh(new THREE.BoxGeometry(.02, .01, .1));
+  remote.name = 'RemoteControl'; scene.add(remote);
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(.325, 1.064, .325)));
+  const rotatingGroup = new THREE.Group(), effects = [], layouts = [];
+  let frame;
+  const { AirPerformer } = load('src/features/scene/items/AirPerformer.tsx', {
+    three: THREE, 'react/jsx-runtime': jsx,
+    react: {
+      useState: value => [value, () => assert.fail('La preview ne doit pas recopier ses propriétés dans un état local')],
+      useRef: value => ({ current: value === null ? rotatingGroup : value }),
+      useEffect: fn => effects.push(fn), useLayoutEffect: fn => layouts.push(fn),
+    },
+    '@react-three/drei': { useGLTF: { preload() {} } },
+    '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
+    '../useGLTFClone': { useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene }; } },
+    '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => [] },
+    '../objectActionRegistry': {}, '../../home-assistant/appliances': {},
+    '../../home-assistant/connection': { isHomeAssistantLinked: () => false, useHomeAssistant: select => select({ entities: {} }) },
+  });
+  for (const power of [true, false, true]) {
+    const item = AirPerformer({ isPreview: true, actionState: { airPerformerPower: power, airPerformerMode: 'cool' } });
+    effects.splice(0).forEach(fn => fn()); layouts.pop()();
+    assert.equal(remote.visible, true);
+    assert(item.props.userData.hoverAction.label.includes(power ? 'Mode COOL' : 'Éteint'));
+    rotatingGroup.rotation.y = 0; frame(null, 1);
+    assert.equal(rotatingGroup.rotation.y !== 0, power);
+  }
+  AirPerformer({}); layouts.pop()();
+  assert.equal(remote.visible, false);
+});
