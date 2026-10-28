@@ -781,9 +781,59 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     let sampleStartTime = performance.now();
     let lastSampleUpdate = 0;
 
+    // Ticker d'arrière-plan pour continuer le calcul quand l'onglet ou la fenêtre n'est plus actif (document.hidden)
+    const workerBlob = new Blob([
+      'let timer = null; self.onmessage = e => { if (e.data.action === "start") { clearInterval(timer); timer = setInterval(() => postMessage(0), e.data.ms || 25); } else { clearInterval(timer); } };'
+    ], { type: 'application/javascript' });
+    const bgWorker = new Worker(URL.createObjectURL(workerBlob));
+    let bgActive = false;
+
+    const scheduleStep = (delay = 0) => {
+      if (document.hidden) {
+        if (!bgActive) {
+          bgWorker.postMessage({ action: 'start', ms: Math.max(10, delay || GPU_COOLDOWN_MS) });
+          bgActive = true;
+        }
+      } else {
+        if (bgActive) {
+          bgWorker.postMessage({ action: 'stop' });
+          bgActive = false;
+        }
+        if (delay > 0) {
+          timeoutId = setTimeout(() => {
+            animFrameId = requestAnimationFrame(renderStep);
+          }, delay);
+        } else {
+          animFrameId = requestAnimationFrame(renderStep);
+        }
+      }
+    };
+
+    bgWorker.onmessage = () => {
+      if (document.hidden && isRunning) {
+        renderStep();
+      }
+    };
+
+    const onVisibilityChange = () => {
+      if (!isRunning) return;
+      if (!document.hidden && bgActive) {
+        bgWorker.postMessage({ action: 'stop' });
+        bgActive = false;
+        animFrameId = requestAnimationFrame(renderStep);
+      } else if (document.hidden && !bgActive) {
+        scheduleStep(GPU_COOLDOWN_MS);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     const renderStep = () => {
       if (!pathTracerRef.current || isPausedRef.current || isDisposed) {
         isRunning = false;
+        if (bgActive) {
+          bgWorker.postMessage({ action: 'stop' });
+          bgActive = false;
+        }
         return;
       }
 
@@ -797,11 +847,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         if (currentSync && glCtx?.clientWaitSync) {
           const status = glCtx.clientWaitSync(currentSync, 0, 0);
           if (status === glCtx.TIMEOUT_EXPIRED) {
-            // Le GPU est encore en train de calculer le tracé précédent :
-            // Ne SURTOUT PAS envoyer de nouvelle commande, attendre 15ms
-            timeoutId = setTimeout(() => {
-              animFrameId = requestAnimationFrame(renderStep);
-            }, 15);
+            // Le GPU est encore en train de calculer le tracé précédent : attendre 15ms
+            scheduleStep(15);
             return;
           }
           // Le GPU a terminé la tuile précédente
@@ -815,9 +862,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         // 2. Cooldown GPU : garantir au moins GPU_COOLDOWN_MS de repos complet pour le GPU et l'OS
         if (now - lastFinishTime < GPU_COOLDOWN_MS) {
           const waitTime = Math.max(5, GPU_COOLDOWN_MS - (now - lastFinishTime));
-          timeoutId = setTimeout(() => {
-            animFrameId = requestAnimationFrame(renderStep);
-          }, waitTime);
+          scheduleStep(waitTime);
           return;
         }
 
@@ -837,6 +882,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
           setIsPaused(true);
           isRunning = false;
+          if (bgActive) {
+            bgWorker.postMessage({ action: 'stop' });
+            bgActive = false;
+          }
           return;
         }
 
@@ -854,14 +903,17 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         }
 
         // Programmer la vérification de la prochaine tuile après le délai de repos
-        timeoutId = setTimeout(() => {
-          animFrameId = requestAnimationFrame(renderStep);
-        }, GPU_COOLDOWN_MS);
+        scheduleStep(GPU_COOLDOWN_MS);
       } else {
         // Cible atteinte : nettoyer tout sync résiduel
         if (currentSync && glCtx?.deleteSync) {
           glCtx.deleteSync(currentSync);
           currentSync = null;
+        }
+
+        if (bgActive) {
+          bgWorker.postMessage({ action: 'stop' });
+          bgActive = false;
         }
 
         // Échantillonnage cible atteint : appliquer la passe finale de débruitage si activée
@@ -876,7 +928,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
         setCurrentSamples(currentTarget);
         setFps(0);
-        // ARRET COMPLET : pas de nouvel appel rAF ni de setTimeout quand le rendu est terminé !
         isRunning = false;
       }
     };
@@ -885,7 +936,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if (isDisposed || isPausedRef.current || isRunning) return;
       if (pathTracerRef.current && pathTracerRef.current.samples < targetSamplesRef.current) {
         isRunning = true;
-        animFrameId = requestAnimationFrame(renderStep);
+        scheduleStep(0);
       }
     };
     wakeRenderLoopRef.current = wakeRenderLoop;
@@ -911,6 +962,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     return () => {
       isDisposed = true;
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      bgWorker.terminate();
       clearTimeout(timer);
       if (timeoutId) clearTimeout(timeoutId);
       if (animFrameId) cancelAnimationFrame(animFrameId);
