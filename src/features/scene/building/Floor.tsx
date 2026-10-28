@@ -3,7 +3,7 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { NEIGHBOR_OFFSETS, EXTERIOR_CORRIDOR } from '../environmentData';
+import { NEIGHBOR_OFFSETS, EXTERIOR_CORRIDOR, SLAB_OUTLINE } from '../environmentData';
 import { useSceneStore } from '../store/useSceneStore';
 import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
@@ -501,15 +501,9 @@ export function Floor() {
   const wireframeStructure = useSceneStore(state => state.layers.wireframeStructure);
   const globalWireframe = useSceneStore(state => state.layers.wireframe);
 
-  const slabShape = useMemo(() => new THREE.Shape([
-    new THREE.Vector2(-20, 30),
-    new THREE.Vector2(316, 30),
-    new THREE.Vector2(316, 230),
-    new THREE.Vector2(326, 230),
-    new THREE.Vector2(326, 220),
-    new THREE.Vector2(326, -547.77),
-    new THREE.Vector2(-20, -747.53),
-  ]), []);
+  const slabShape = useMemo(() => new THREE.Shape(
+    SLAB_OUTLINE.map(([x, z]) => new THREE.Vector2(x, -z)),
+  ), []);
 
   const slabTopGeo = useMemo(() => {
     const g = new THREE.ShapeGeometry(slabShape);
