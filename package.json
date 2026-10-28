@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/patch-three-webxr.mjs",
     "dev": "vite",
     "dev:studio": "vite --open /studio.html",
     "build": "vite build",
