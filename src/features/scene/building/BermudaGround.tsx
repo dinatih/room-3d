@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { EXTERIOR_GROUND, EXTERIOR_CORRIDOR, NEIGHBOR_OFFSETS, SLAB_OUTLINE } from '../environmentData';
-import polygonClipping, { type Polygon } from 'polygon-clipping';
-import { DiagWall } from '../wallData';
+import { EXTERIOR_GROUND } from '../environmentData';
 import { useTexture } from '@react-three/drei';
 import type { GroundType } from '../sidepanel/types';
 import { CategoryLayerGroup } from '../sceneLayer';
@@ -79,37 +77,6 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = 0 }: Berm
 }
 
 function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: number }) {
-  const geometry = useMemo(() => {
-    const { x, z, width, depth } = EXTERIOR_GROUND;
-    const ground: Polygon = [[
-      [x - width / 2, z - depth / 2], [x + width / 2, z - depth / 2],
-      [x + width / 2, z + depth / 2], [x - width / 2, z + depth / 2],
-    ]];
-    const slabs: Polygon[] = [{ x: 0, z: 0 }, ...NEIGHBOR_OFFSETS].map(offset => [
-      SLAB_OUTLINE.map(([sx, sz]) => [sx + offset.x, sz + offset.z]),
-    ]);
-    const center = DiagWall.p(DiagWall.len / 2, DiagWall.depth / 2 + EXTERIOR_CORRIDOR.width / 2);
-    const corridor: Polygon = [[
-      [-1, -1], [1, -1], [1, 1], [-1, 1],
-    ].map(([u, v]) => {
-      const point = new THREE.Vector2(u * EXTERIOR_CORRIDOR.length / 2, v * EXTERIOR_CORRIDOR.width / 2)
-        .rotateAround(new THREE.Vector2(), -DiagWall.rotY - Math.PI / 2);
-      return [center.x + point.x, center.z + point.y];
-    })];
-    const shapes = polygonClipping.difference(ground, ...slabs, corridor).map(rings => {
-      const [outline, ...holes] = rings.map(ring => ring.map(([px, pz]) => new THREE.Vector2(px - x, z - pz)));
-      const shape = new THREE.Shape(outline);
-      shape.holes = holes.map(hole => new THREE.Path(hole));
-      return shape;
-    });
-    const geo = new THREE.ShapeGeometry(shapes);
-    const positions = geo.attributes.position;
-    const uv = geo.attributes.uv;
-    for (let i = 0; i < positions.count; i++) {
-      uv.setXY(i, positions.getX(i) / width + 0.5, positions.getY(i) / depth + 0.5);
-    }
-    return geo;
-  }, []);
   const textures = useTexture({
     map: config.diffuse,
     normalMap: config.normal,
@@ -142,12 +109,14 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       metalness: 0.02,
       transparent: true,
       opacity: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1,
     });
   }, [textures, config.tileSize]);
 
   return (
     <mesh
-      geometry={geometry}
       material={material}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[EXTERIOR_GROUND.x, yPos, EXTERIOR_GROUND.z]}
@@ -157,7 +126,9 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
               brickType: 'ground',
         itemName: `Terrain Extérieur (${config.label})`,
       }}
-    />
+    >
+      <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
+    </mesh>
   );
 }
 

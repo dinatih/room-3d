@@ -3,7 +3,7 @@
  */
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { NEIGHBOR_OFFSETS, EXTERIOR_CORRIDOR, SLAB_OUTLINE } from '../environmentData';
+import { NEIGHBOR_OFFSETS, EXTERIOR_CORRIDOR } from '../environmentData';
 import { useSceneStore } from '../store/useSceneStore';
 import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
@@ -218,6 +218,8 @@ export function Parquet() {
     const m = new THREE.MeshStandardMaterial({
       map: tex,
       roughness: 0.55,
+      // Priorité de profondeur sur l'herbe coplanaire, sans déplacer le sol.
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
       metalness: 0.04,
       envMapIntensity: 0.6,
     });
@@ -270,6 +272,7 @@ export function Tile() {
     tBath.needsUpdate = true;
     const mBath = new THREE.MeshStandardMaterial({
       map: tBath, roughness: 0.25, metalness: 0.05,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     const brownCanvas = document.createElement('canvas');
@@ -285,6 +288,7 @@ export function Tile() {
     tB.needsUpdate = true;
     const mB = new THREE.MeshStandardMaterial({
       map: tB, roughness: 0.25, metalness: 0.05,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     return { bathGeo: g, bathMat: mBath, closetMat: mB };
@@ -484,7 +488,7 @@ export function RedPVCCorridor() {
 
   return (
     <group position={[center.x, 0, center.z]} rotation-y={DiagWall.rotY + Math.PI / 2}>
-      <mesh position={[0, -0.1, 0]} renderOrder={1} receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
+      <mesh receiveShadow userData={{ brickType: 'floor' }} rotation-x={-Math.PI / 2}>
         <planeGeometry args={[TOTAL_LENGTH, WIDTH]} />
         <primitive object={mat} attach="material" />
       </mesh>
@@ -501,9 +505,15 @@ export function Floor() {
   const wireframeStructure = useSceneStore(state => state.layers.wireframeStructure);
   const globalWireframe = useSceneStore(state => state.layers.wireframe);
 
-  const slabShape = useMemo(() => new THREE.Shape(
-    SLAB_OUTLINE.map(([x, z]) => new THREE.Vector2(x, -z)),
-  ), []);
+  const slabShape = useMemo(() => new THREE.Shape([
+    new THREE.Vector2(-20, 30),
+    new THREE.Vector2(316, 30),
+    new THREE.Vector2(316, 230),
+    new THREE.Vector2(326, 230),
+    new THREE.Vector2(326, 220),
+    new THREE.Vector2(326, -547.77),
+    new THREE.Vector2(-20, -747.53),
+  ]), []);
 
   const slabTopGeo = useMemo(() => {
     const g = new THREE.ShapeGeometry(slabShape);
