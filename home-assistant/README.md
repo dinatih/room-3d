@@ -32,6 +32,11 @@ désactivés dans HA. Les ampoules individuelles `light.douche_douche` et
 Ces groupes proviennent du pont Hue : supprimer des pièces Google ne les retire
 pas de HA. Leur désactivation est réversible et ne modifie pas le pont.
 
+Le tableau de bord serveur `dashboard-maison.yaml` ne référence plus ces trois
+groupes. Les cartes du purificateur, des lampes Séjour/Fenêtre et des quatre
+prises/interrupteurs lisent désormais le nom HA au lieu d’un ancien libellé fixe.
+Sauvegarde : `dashboard-maison.yaml.before-group-cleanup-20261028` dans `/config`.
+
 ## Essayer en local
 
 Aucun push ou déploiement n’est nécessaire. Sur le réseau de la maison :
