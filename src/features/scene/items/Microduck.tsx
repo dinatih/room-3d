@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AnimationMixer, Vector3 } from 'three';
+import { AnimationMixer, LoopOnce, LoopRepeat, Vector3 } from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { useGLTFClone } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
@@ -27,7 +27,10 @@ export function Microduck({ actionState, onSize }: SceneItemProps) {
     if (!clip) throw new Error(`Microduck : animation inconnue : ${motion}`);
     // Restore untracked joints when leaving quack or walk.
     mixer.stopAllAction();
-    const action = mixer.clipAction(clip).reset().play();
+    const looping = motion === 'idle' || motion === 'walk';
+    const action = mixer.clipAction(clip).reset().setLoop(looping ? LoopRepeat : LoopOnce, looping ? Infinity : 1);
+    action.clampWhenFinished = true;
+    action.play();
     mixer.update(0);
     return () => { action.stop(); };
   }, [animations, mixer, motion, replay]);

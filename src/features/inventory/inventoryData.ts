@@ -679,13 +679,15 @@ INVENTORY.push({
 INVENTORY.push({
   id: 'microduck',
   name: 'Microduck — robot canard',
-  brand: 'Microduck',
+  brand: 'Pollen Robotics',
   category: 'robots',
   qty: 1,
   dims: { w: 14.36, d: 12.27, h: 27.45 },
   glbPath: 'models/microduck.glb',
-  description: 'Petit robot bipède blanc et orange, avec bec articulé.',
-  notes: 'Modèle assemblé par Gemini. Animations : repos, marche et coin-coin. Patrouille autonome dans le jardin. Dimensions mesurées en posture de repos.',
+  photos: ['items/microduck/presentation-closeup.webp', 'items/microduck/presentation-desk.webp', 'items/microduck/presentation-kickabout.webp', 'items/microduck/presentation-walkabout.webp'],
+  url: 'https://pollen-robotics.com/microduck/',
+  description: 'Petit robot bipède Pollen Robotics, personnalisé en rouge avec pièces métalliques et noires conservées.',
+  notes: 'Maillages Pollen Robotics (CC BY-NC-SA 4.0), assemblage initial Gemini. Repos, marche, assise/relevé et saisie au sol extraits des politiques officielles dans MuJoCo CPU ; coin-coin visuel recréé (sans son). Photos officielles : coloris du fabricant. Patrouille autonome dans le jardin. Dimensions du modèle debout.',
 });
 
 INVENTORY.push({

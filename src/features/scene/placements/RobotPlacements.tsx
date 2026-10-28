@@ -31,7 +31,7 @@ const PATROL = {
   minZ: -620, maxZ: -420,
 };
 const ROBOTS = [
-  { id: 'microduck', Component: Microduck, position: [320, 0, -440], walk: 'walk', speed: 15, pause: 4, radiusScale: 2 / 3 },
+  { id: 'microduck', Component: Microduck, position: [320, 0, -440], walk: 'walk', speed: 9.917671587151622, pause: 4, radiusScale: 2 / 3 },
   { id: 'unitree-h2', Component: UnitreeH2, position: [120, 0, -520], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-g1', Component: UnitreeG1, position: [50, 0, -450], walk: 'walk', speed: 30, pause: 2, radiusScale: 1 / 2 },
   { id: 'unitree-go2', Component: UnitreeGo2, position: [220, 0, -620], walk: 'trot', speed: 25.2, pause: 4, radiusScale: 2 / 3 },

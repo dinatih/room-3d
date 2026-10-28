@@ -58,7 +58,9 @@ const ACTIONS: Record<string, ActionConfig> = {
     options: [
       { value: 'idle', label: 'Repos' },
       { value: 'walk', label: 'Marche' },
-      { value: 'quack', label: 'Coin-coin' },
+      { value: 'quack', label: 'Coin-coin (visuel)' },
+      { value: 'sit-stand', label: 'S’asseoir et se relever' },
+      { value: 'grab', label: 'Saisir au sol avec le bec' },
     ],
   },
   'raph-rover-replay': { label: 'Rejouer', icon: 'bi-arrow-repeat' },
