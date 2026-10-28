@@ -82,7 +82,7 @@ export function KitchenTrashBin() {
   const p = parking ?? KITCHEN_TRASH_POSITION;
   return <PositionTransition furnitureKey="trash-bin-position" x={p.x} z={p.z} ry={p.ry}>
     <group userData={{ sceneItemRoot: true, itemName: 'Poubelle Tatay' }}>
-      <NavigationObstacle id="trash-bin"><TrashBin item={stub('trash-bin')} actionState={actionState} onSize={NOOP_SIZE} /></NavigationObstacle>
+      <NavigationObstacle id="trash-bin"><TrashBin actionState={actionState} /></NavigationObstacle>
     </group>
   </PositionTransition>;
 }

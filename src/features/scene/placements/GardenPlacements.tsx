@@ -52,7 +52,7 @@ export function GardenFurniture() {
 
       {/* Banc Coffre */}
       <group position={[40, 0, -90]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'chest', kind: 'furniture' }, itemName: 'Banc Coffre Jardin', hoverAction: { label: 'Banc coffre jardin', actions: getObjectActionIds('chest-bench') } }}>
-        <NavigationObstacle id="chest-bench"><ChestBench item={stub('chest-bench')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="chest-bench"><ChestBench actionState={as} /></NavigationObstacle>
       </group>
 
       {/* Baignoire Balnéo */}
@@ -64,7 +64,7 @@ export function GardenFurniture() {
 
       {/* Boîte de rangement Vättersö */}
       <group position={[264, 0, -320]} rotation={[0, -Math.PI / 2, 0]} userData={{ skipMerge: true, sceneItemRoot: true, birdSupport: { id: 'storage', kind: 'lid' }, itemName: 'Boîte de Rangement Vättersö', hoverAction: { label: 'Boîte Vättersö', actions: getObjectActionIds('vatterso20562909') } }}>
-        <NavigationObstacle id="garden-storage"><Vatterso20562909 item={stub('vatterso20562909')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="garden-storage"><Vatterso20562909 actionState={as} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

@@ -9,8 +9,8 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/trash-bin/tatay-smart-deco.glb';
 
-export function TrashBin({ actionState, onSize, isPreview }: SceneItemProps) {
-  const { scene, animations } = useGLTFClone(GLB, true);
+export function TrashBin({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene, animations } = useGLTFClone(GLB);
   const isOpen = !!actionState?.['bin-toggle'];
   const { invalidate } = useThree();
   const rt = useRef<{ mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[]; dur: number } | null>(null);
@@ -27,7 +27,7 @@ export function TrashBin({ actionState, onSize, isPreview }: SceneItemProps) {
     scene.userData.hoverAction = { label: 'Poubelle TATAY 25L', actions: getObjectActionIds('trash-bin') };
     rt.current = { mixer, actions, dur };
     mixer.setTime(0);
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); rt.current = null; };
   }, [scene, animations, onSize]);
 
