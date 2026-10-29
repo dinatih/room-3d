@@ -25,26 +25,29 @@ export function InventorySmartActions({ itemId, request, onPreview }: {
   const objects = getInventorySmartObjects(itemId);
   if (!objects.length) return null;
   return (
-    <div className="card p-2 m-3 gap-2">
-      <h4 className="small fw-bold mb-0">SmartActions dans la preview 3D</h4>
-      <select className="form-select form-select-sm" aria-label="PNJ de la preview" value={agentId} onChange={event => {
+    <div className="d-flex flex-wrap align-items-center gap-1 px-2 py-1 border-bottom" role="group" aria-label="SmartActions">
+      <select className="form-select form-select-sm w-auto" aria-label="PNJ de la preview" value={agentId} onChange={event => {
         setAgentId(event.target.value);
         if (request) onPreview({ ...request, characterId: event.target.value, runId: request.runId + 1 });
       }}>
         {CHARACTERS.map(agent => <option key={agent.id} value={agent.id}>{agent.emoji} {agent.name}</option>)}
       </select>
-      {objects.flatMap(object => object.slots.map(slot => (
-        <button key={`${object.id}:${slot.slotId}`} type="button" className="btn btn-sm btn-outline-primary" disabled={slot.isDuo} title={slot.isDuo ? 'Cette action nécessite deux PNJ' : 'Jouer ou rejouer dans la preview'} onClick={() => {
-          onPreview({ objectId: object.id, slotId: slot.slotId, characterId: agentId, runId: (request?.runId ?? 0) + 1, playing: true });
-        }}>
-          {getActionLabel(`smart-object:::${object.id}:::${slot.slotId}`)}
-        </button>
+      <select className="form-select form-select-sm w-auto mw-100 flex-grow-1" aria-label="Smart action de la preview" value={request ? `${request.objectId}:${request.slotId}` : ''} onChange={event => {
+        const [objectId, slotId] = event.target.value.split(':');
+        onPreview({ objectId, slotId, characterId: agentId, runId: (request?.runId ?? 0) + 1, playing: true });
+      }}>
+        <option value="" disabled>⚡ Smart action…</option>
+        {objects.flatMap(object => object.slots.map(slot => (
+          <option key={`${object.id}:${slot.slotId}`} value={`${object.id}:${slot.slotId}`} disabled={slot.isDuo}>
+            {getActionLabel(`smart-object:::${object.id}:::${slot.slotId}`)}{slot.isDuo ? ' (2 PNJ)' : ''}
+          </option>
       )))}
-      {request && <div className="d-flex gap-2">
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onPreview({ ...request, playing: !request.playing })}>{request.playing ? 'Pause' : 'Reprendre'}</button>
-        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => onPreview(undefined)}>Retirer le PNJ</button>
+      </select>
+      {request && <div className="btn-group btn-group-sm">
+        <button type="button" className="btn btn-outline-secondary" title="Rejouer" aria-label="Rejouer" onClick={() => onPreview({ ...request, runId: request.runId + 1, playing: true })}>↻</button>
+        <button type="button" className="btn btn-outline-secondary" title={request.playing ? 'Pause' : 'Reprendre'} aria-label={request.playing ? 'Pause' : 'Reprendre'} onClick={() => onPreview({ ...request, playing: !request.playing })}>{request.playing ? '⏸' : '▶'}</button>
+        <button type="button" className="btn btn-outline-secondary" title="Retirer le PNJ" aria-label="Retirer le PNJ" onClick={() => onPreview(undefined)}>×</button>
       </div>}
-      <p className="small text-muted mb-0">Objet et PNJ isolés. Cliquez à nouveau sur l’action pour la rejouer.</p>
     </div>
   );
 }

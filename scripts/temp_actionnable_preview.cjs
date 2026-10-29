@@ -20,17 +20,13 @@ const launch = require('./browser-test-options.cjs');
       createRoot(document.getElementById('test-root')).render(React.createElement(Inventory, { initialCategory: 'actionnable', onClose() {} }));
     });
     await page.waitForSelector('[aria-label="PNJ de la preview"]', { timeout: 60000 });
-    assert.equal(await page.$$eval('button[title="Jouer ou rejouer dans la preview"]', buttons => buttons.length), 2);
+    assert.equal(await page.$$eval('[aria-label="Smart action de la preview"] option:not([value=""])', options => options.length), 2);
     assert.ok(await page.$eval('[aria-label="PNJ de la preview"]', select => {
       const rect = select.getBoundingClientRect();
       return rect.top >= 0 && rect.bottom < innerHeight;
     }), 'Le sélecteur PNJ doit être visible sans défiler');
-    await page.$$eval('button', buttons => {
-      const action = buttons.find(button => button.title === 'Jouer ou rejouer dans la preview');
-      if (!action) throw Error('Smart action absente');
-      action.click();
-    });
-    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent === 'Retirer le PNJ'));
+    await page.select('[aria-label="Smart action de la preview"]', 'drona-ne-catchall:pick-item');
+    await page.waitForSelector('[aria-label="Retirer le PNJ"]');
     await page.waitForFunction(async () => {
       const { _roots } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
       for (const root of _roots.values()) {
