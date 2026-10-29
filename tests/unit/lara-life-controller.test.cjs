@@ -34,7 +34,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     getReservations: () => [...reservations].map(([slot, characterId]) => ({ slot, characterId })) };
   const noop = () => {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
-    './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: () => false },
+    './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
       getLaraLifeCandidates: dirty => candidates.filter(c => c.activity !== 'wash-hands' || dirty), buildLaraLifeInstructions: candidate => candidate.activity === 'toilet' ? [
         { ...sequence('toilet', 'use')[0], duration: 3, lifePhase: 'use-toilet' },
@@ -51,7 +51,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
       ] : sequence(candidate.id, candidate.slotId) },
     './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state) } },
     './occupancyManager': { OccupancyManager: occupancy },
-    './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop } },
+    './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop, startDuoSession: () => null } },
     '../animations/duoAnimations': { getDuoAnimationForClip: noop },
     './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; }, recoverDoorContact: () => undefined,
       followRoute: (route, actor, start, goal) => {
@@ -93,7 +93,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations,
+  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations, candidates, objects,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -339,4 +339,19 @@ it('enchaîne toilettes, chasse puis lavage sans soulager les toilettes pendant 
   w.tick();
   assert(!w.nativeLife.handsDirty);
   assert.equal(w.nativeLife.lastActivity, 'toilet');
+});
+
+it('abandonne une conversation sans partenaire sans réessayer en boucle ni satisfaire artificiellement un besoin', () => {
+  const w = world();
+  w.tick(); w.tick();
+  w.nativeLife.elapsedSeconds = 13 * 60;
+  w.nativeLife.needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
+  w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
+    position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
+  w.tick(); w.tick();
+  assert(w.nativeLife.needs.work >= 60, 'An unavailable conversation cannot relieve boredom');
+  for (let i = 0; i < 20; i++) w.tick();
+  assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 1);
+  assert(w.nativeLife.elapsedSeconds > 13 * 60);
 });

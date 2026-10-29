@@ -11,6 +11,8 @@ const apartment = {
     profile: { radius: 13.3, height: 170 },
 };
 exports.navigation = [
+    { id: 'lara-routine', behavior: 'fait lire Lara, regarder la télé puis discuter réellement à deux, avec une horloge en pause pendant le contrôle manuel', activity: 'routine', count: 3,
+        layers: { animals: false }, query: { debug: 'characters-only' }, softwareRendering: true, captureFreezeStack: true, timeoutMs: 240000 },
     { id: 'lara-hygiene', behavior: 'fait utiliser les toilettes, laver les mains après interruption puis prendre une douche', activity: 'hygiene', count: 2,
         layers: { animals: false }, query: { debug: 'characters-only' }, softwareRendering: true, captureFreezeStack: true, timeoutMs: 180000 },
     { id: 'lara-sleep', behavior: 'fait dormir Lara sur un vrai lit, puis la réveille au sol et respecte une interruption manuelle', activity: 'sleep', count: 2,

@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, lifeNeed, lifeEffect, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, lifeNeed, lifeEffect, lifeClock, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -615,7 +615,7 @@ export function createAgentController(
       }
       const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates(nativeLife.handsDirty)
         .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
-          && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, nativeLife.lastActivity);
+          && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, nativeLife.lastActivity, lifeClock(nativeLife.elapsedSeconds).hour);
       lifeActivity = candidate?.activity ?? 'pause';
       const reason = candidate?.activity === 'wash-hands' ? 'Lara se lave les mains après les toilettes.' : candidate
         ? `${LIFE_NEED_LABELS[lifeNeed(candidate.activity)]} : ${Math.round(nativeLife.needs[lifeNeed(candidate.activity)])} %.`
@@ -903,6 +903,10 @@ export function createAgentController(
           let role = duoRole;
           if (!role) {
             const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
+            if (!duoRes && hasLife && loop && lifeActivity === 'social') {
+              retrySmartAction(objId);
+              return state;
+            }
             if ((!duoRes && _characterId === 'xbot') || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
               agentStatus = 'IDLE';
               state.animation = 'idle';
@@ -1398,7 +1402,7 @@ export function createAgentController(
           duoInvited: duoInvited,
           onSessionEnded: () => {
             resetDuoState();
-            stepIndex++;
+            advanceToNextStep(hasNavStep);
             lastDuoEndTime = Date.now();
           },
           setDuoWaitTimer: (t) => { duoWaitTimer = t; },
@@ -1651,7 +1655,8 @@ export function createAgentController(
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
-    const interactionSeconds = interacting ? Math.min(dt, Math.max(0, timer)) : 0;
+    const interactionSeconds = interacting ? lifeActivity === 'social'
+      ? (duoSessionManager.isPlaying(_characterId) ? dt : 0) : Math.min(dt, Math.max(0, timer)) : 0;
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     let pendingJob: NavigationJob<unknown> | undefined;
@@ -1670,6 +1675,7 @@ export function createAgentController(
     } finally {
       setAgentVelocity(_characterId, dt > 0 ? { x: (state.x - x) / dt, z: (state.z - z) / dt } : null);
       if (lifeRunning) {
+        nativeLife.elapsedSeconds += dt;
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) nativeLife.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
         const moving = (wasMoving || agentStatus === 'MOVING') && (state.x !== x || state.z !== z);
@@ -1679,7 +1685,7 @@ export function createAgentController(
         if (lifeSnapshotSeconds >= 1) {
           lifeSnapshotSeconds %= 1;
           const phase = (dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex])?.lifePhase;
-          useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, activity: lifeActivity
+          useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, elapsedSeconds: nativeLife.elapsedSeconds, activity: lifeActivity
             ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
             : 'Commande utilisateur' });
         }

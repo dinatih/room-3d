@@ -1,14 +1,15 @@
-import { getLifeMood, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
+import { getLifeMood, lifeClock, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes' };
 
 export function LaraLifePanel() {
-  const { needs, activity, reason, speed } = useLaraLifeStore();
+  const { needs, elapsedSeconds, activity, reason, speed } = useLaraLifeStore();
   const mood = getLifeMood(needs);
+  const clock = lifeClock(elapsedSeconds);
   return <section className="p-2 border-bottom small lh-sm" aria-label="Vie de Lara Native">
     <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-      <span className="fw-semibold">Vie de Lara Native</span>
+      <span className="fw-semibold" title={`Jour ${clock.day} · ${clock.period}`}>Lara · {clock.time}</span>
       <button type="button" className="btn btn-sm btn-outline-secondary py-0 text-nowrap" aria-label="Vitesse de la vie de Lara"
         title="Accélérer la vie de Lara : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>

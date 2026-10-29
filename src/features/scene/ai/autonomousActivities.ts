@@ -61,9 +61,11 @@ export function getLaraLifeCandidates(handsDirty: boolean): LifeCandidate[] {
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native')));
   return objects.flatMap(object =>
-    object.slots.filter(slot => !slot.isDuo && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native'))
+    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation') && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native'))
       .flatMap(slot => {
         const activity = object.id === 'desk-bollsidan-2' ? 'work'
+          : object.id === 'tv-view' ? 'watch-tv'
+          : object.id === 'garden-conversation' ? 'social'
           : object.id === 'garden-fresh-air' ? 'walk'
           : object.id === 'toilet' && slot.slotId === 'use' ? 'toilet'
           : object.id === 'shower' ? 'shower'
@@ -72,7 +74,8 @@ export function getLaraLifeCandidates(handsDirty: boolean): LifeCandidate[] {
           : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
         const position = slot.offset ?? object.position;
         const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2] };
-        return activity ? [{ ...candidate, activity }, ...(activity === 'rest' && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
+        return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
+          ...(activity === 'rest' && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
       }));
 }
 
@@ -84,6 +87,7 @@ export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activi
       duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
   ];
   const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native');
+  if (candidate.activity === 'social') return sequence.map(instruction => ({ ...instruction, lifePhase: 'social' }));
   if (candidate.activity === 'toilet' || candidate.activity === 'wash-hands' || candidate.activity === 'shower') return sequence.map((instruction): AgentInstruction => {
     if (instruction.type !== 'USE_OBJECT') return instruction;
     if (instruction.smartObjectId === 'toilet' && instruction.slotId === 'use') return {
@@ -101,9 +105,10 @@ export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activi
   const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');
   const instructions = sequence.map((instruction, index): AgentInstruction => instruction.type === 'USE_OBJECT'
     ? { ...instruction, duration: candidate.activity === 'sleep' ? LIFE_SETTINGS.sleepSeconds : LIFE_SETTINGS.activitySeconds,
-      repeatCount: 1, repeatVariation: false, lifePhase: candidate.activity === 'sleep' ? 'sleep' : undefined,
+      repeatCount: 1, repeatVariation: false, lifePhase: candidate.activity === 'sleep' ? 'sleep'
+        : candidate.activity === 'read' || candidate.activity === 'watch-tv' ? candidate.activity : undefined,
       animation: candidate.activity === 'sleep' ? 'laying-sleeping' : candidate.activity === 'rest' ? 'sitting-idle'
-        : candidate.activity === 'walk' ? 'looking' : 'standing-using-touchscreen-tablet' }
+        : candidate.activity === 'walk' || candidate.activity === 'watch-tv' ? 'looking' : 'standing-using-touchscreen-tablet' }
     : { ...instruction, ...(candidate.activity === 'sleep' && index > sleepStep ? { lifePhase: 'wake-up' as const } : {}) });
   // A stroll has a real itinerary even when Lara is already at the far end.
   return candidate.activity === 'walk' ? [{ type: 'MOVE_TO', targetZoneId: 'garden' }, ...instructions] : instructions;

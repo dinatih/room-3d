@@ -19,6 +19,7 @@ interface RawDuoAnimationDef extends Omit<DuoAnimationDef, 'duration'> {
 }
 
 const RAW_DUO_ANIMATIONS: RawDuoAnimationDef[] = [
+  { id: 'conversation', isCombat: false, label: 'Discussion', icon: '💬', animA: 'conversation-gestures', animB: 'talking-1', offsetB: [0, 0, 100], rotB: Math.PI, duration: 60 },
   ...INTERX_DUO_ANIMATIONS,
   { id: 'cuddle_kiss', isCombat: false, label: 'Sit Cuddle Kiss', icon: '😘', animA: 'miley-armature-cuddle-kiss-m', animB: 'miley-armature-cuddle-kiss-f', offsetB: [10, 0, 20] },
   { id: 'sit-cuddle', isCombat: false, label: 'Sit Cuddle Hug', icon: '🛋️', animA: 'miley-armature-sit-cuddle-hug-m', animB: 'miley-armature-sit-cuddle-hug-f', offsetB: [0, 0, 20] },

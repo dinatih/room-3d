@@ -32,17 +32,17 @@ describe('Besoins de Lara Native', () => {
   });
 
   it('choisit selon l’urgence, puis la mémoire, la proximité et un ordre stable', () => {
-    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 80, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null).activity, 'rest');
-    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, 'work').activity, 'rest');
-    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null).activity, 'work');
+    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 80, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null, 8).activity, 'rest');
+    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, 'work', 8).activity, 'rest');
+    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null, 8).activity, 'work');
     const seats = ['b', 'a'].map(id => ({ ...candidates[1], id }));
-    assert.equal(chooseLifeActivity({ rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, seats, position, null).id, 'a');
+    assert.equal(chooseLifeActivity({ rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, seats, position, null, 8).id, 'a');
   });
 
   it('fait une pause si les besoins sont faibles ou les activités indisponibles', () => {
-    assert.equal(chooseLifeActivity({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null), null);
-    assert.equal(chooseLifeActivity({ rest: 90, work: 90, walk: 90, meal: 90, hygiene: 0, toilet: 0 }, [], position, null), null);
-    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, [candidates[0]], position, null).activity, 'work');
+    assert.equal(chooseLifeActivity({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, candidates, position, null, 8), null);
+    assert.equal(chooseLifeActivity({ rest: 90, work: 90, walk: 90, meal: 90, hygiene: 0, toilet: 0 }, [], position, null, 8), null);
+    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 }, [candidates[0]], position, null, 8).activity, 'work');
   });
 
   it('borne les besoins et signale explicitement les données invalides', () => {
@@ -100,17 +100,17 @@ it('fait monter la faim pendant la marche et les autres activités, puis la réd
   for (const activity of [null, 'rest', 'work', 'walk', 'pause']) assert(evolveLife(initial, 10, activity, true).meal > initial.meal);
   assert.equal(evolveLife(initial, 10, 'meal', false).meal, 35);
   assert.equal(evolveLife(initial, 60, 'meal', false).meal, 0);
-  assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null).activity, 'meal');
+  assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null, 8).activity, 'meal');
 });
 
 it('réserve le lit à la grande fatigue et choisit une pause assise si tous les lits sont indisponibles', () => {
   const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 1000, z: 0 };
   const mild = { rest: LIFE_SETTINGS.sleepPriority - 1, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
-  assert.equal(chooseLifeActivity(mild, [...candidates, bed], position, null).activity, 'rest');
+  assert.equal(chooseLifeActivity(mild, [...candidates, bed], position, null, 8).activity, 'rest');
   const tired = { ...mild, rest: LIFE_SETTINGS.sleepPriority };
-  assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null).activity, 'sleep', 'The nearer sofa must not replace an available bed');
-  assert.equal(chooseLifeActivity(tired, candidates, position, null).activity, 'rest');
-  assert.equal(chooseLifeActivity(tired, [], position, null), null);
+  assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null, 8).activity, 'sleep', 'The nearer sofa must not replace an available bed');
+  assert.equal(chooseLifeActivity(tired, candidates, position, null, 8).activity, 'rest');
+  assert.equal(chooseLifeActivity(tired, [], position, null, 8), null);
   const rested = evolveLife(tired, LIFE_SETTINGS.sleepSeconds, 'sleep', false);
   assert.equal(rested.rest, 0);
   assert(rested.meal > tired.meal);
@@ -122,7 +122,7 @@ it('finit par choisir le sommeil au cours d’une vie autonome, malgré les paus
   let needs = createLife().needs, last = 'work', slept = false;
   needs = evolveLife(needs, LIFE_SETTINGS.activitySeconds, 'work', false);
   for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 15 * 60;) {
-    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last);
+    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, 8);
     if (selected?.activity === 'sleep') { slept = true; break; }
     const activity = selected?.activity ?? 'pause';
     if (activity === 'walk') needs = evolveLife(needs, 8, null, true);
@@ -172,7 +172,7 @@ it('distingue toilettes, douche et lavage des mains, sans récupération pendant
   assert.equal(lifeEffect('toilet', 'use-toilet'), 'toilet');
   assert.equal(lifeEffect('toilet', 'wash-hands'), 'wash-hands');
   const wash = { activity: 'wash-hands', id: 'sink', slotId: 'wash-hands', x: 100, z: 0 };
-  assert.equal(chooseLifeActivity({ ...needs, rest: 100 }, [...candidates, wash], position, null), wash);
+  assert.equal(chooseLifeActivity({ ...needs, rest: 100 }, [...candidates, wash], position, null, 8), wash);
 });
 
 it('préserve la chaîne sanitaire et les événements des objets, et interdit un repas avec les mains sales', () => {
@@ -232,4 +232,50 @@ it('fait évoluer l’humeur avec le besoin dominant puis retrouve son bien-êtr
     assert(mood.cause.includes('80 %'));
   }
   assert.deepEqual(hungry, { ...satisfied, meal: 90, rest: 40 }, 'Deriving a mood must preserve needs');
+});
+
+it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urgences', () => {
+  const { lifeClock, routineActivities, lifeEffect } = require('../../src/features/scene/ai/laraLife.ts');
+  assert.deepEqual(lifeClock(0), { day: 1, hour: 8, time: '08:00', period: 'Matin' });
+  assert.equal(lifeClock(16 * 60).day, 2);
+  assert.equal(lifeClock(16 * 60).time, '00:00');
+  assert(routineActivities(12).includes('meal'));
+  const options = ['work', 'read', 'watch-tv', 'social', 'meal', 'sleep', 'rest'].map(activity => ({ ...candidates[0], activity, id: activity }));
+  const needs = { rest: 50, work: 50, walk: 0, meal: 40, hygiene: 0, toilet: 0 };
+  assert.equal(chooseLifeActivity(needs, options, position, null, 10).activity, 'work');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 12).activity, 'meal');
+  assert.equal(chooseLifeActivity(needs, options, position, 'read', 21).activity, 'social');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 23).activity, 'sleep');
+  assert.equal(chooseLifeActivity({ ...needs, meal: 100 }, options, position, null, 23).activity, 'meal');
+  for (const activity of ['read', 'watch-tv', 'social']) {
+    assert(evolveLife(needs, 10, activity, false).work < needs.work);
+    assert.equal(lifeEffect(activity), null, 'Travelling to leisure must not relieve boredom');
+    assert.equal(lifeEffect(activity, activity), activity);
+  }
+});
+
+it('propose les loisirs libres et conserve leurs phases et les actions de la télé', () => {
+  const objects = [
+    { id: 'desk-bollsidan-2', slots: [{ slotId: 'work-standing' }] },
+    { id: 'tv-view', slots: [{ slotId: 'watch', triggerEventKey: 'tv-toggle', triggerEventValue: true }] },
+    { id: 'garden-conversation', slots: [{ slotId: 'chat', isDuo: true }] },
+  ].map(object => ({ ...object, position: [0, 0, 0] }));
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => objects,
+      buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, ...objects.find(object => object.id === id).slots.find(slot => slot.slotId === slotId) }] },
+    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: () => false } },
+  });
+  const options = getLaraLifeCandidates(false);
+  for (const activity of ['read', 'watch-tv', 'social']) {
+    const candidate = options.find(c => c.activity === activity);
+    assert(candidate);
+    const [step] = buildLaraLifeInstructions(candidate);
+    assert.equal(step.lifePhase, activity);
+    if (activity === 'watch-tv') {
+      assert.equal(step.triggerEventKey, 'tv-toggle');
+      assert.equal(step.triggerEventValue, true);
+    }
+    if (activity === 'read') assert.equal(step.animation, 'standing-using-touchscreen-tablet');
+  }
 });

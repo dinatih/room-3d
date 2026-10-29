@@ -174,3 +174,58 @@ export async function hygiene(fixture) {
     check(nativeLife.needs.hygiene < 10, 'A full shower must restore cleanliness');
     return { observations };
 }
+
+export async function routine(fixture) {
+    const { observations, check, waitFor, openPanel } = observeLife(fixture);
+    const { duoSessionManager } = await import('/src/features/scene/ai/duoSessionManager.ts');
+    const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+    await openPanel();
+    useLaraLifeStore.setState({ speed: 10 });
+    const startEvening = async (lastActivity, blocked = []) => {
+        cameraState.recordUserControl();
+        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle avant le loisir');
+        const clock = nativeLife.elapsedSeconds;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        check(nativeLife.elapsedSeconds === clock, 'Manual control must pause the simulated clock');
+        nativeLife.elapsedSeconds = 13 * 60; // 21:00, with all physiological needs fulfilled.
+        nativeLife.needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+        nativeLife.lastActivity = lastActivity;
+        for (const [id, slot] of blocked) reserve(id, slot);
+        cameraState.lastUserControlTime = 0;
+    };
+    const reserved = [];
+    const reserve = (id, slot) => {
+        check(OccupancyManager.claimSlot(id, slot, 'test-routine'), `Cannot reserve ${id}:${slot}`);
+        reserved.push([id, slot]);
+    };
+    try {
+        reserve('garden-conversation', 'chat');
+        reserve('tv-view', 'watch');
+        await startEvening('work');
+        await waitFor(() => useLaraLifeStore.getState().activity === 'Lire sur sa tablette'
+            && cameraState.positions.native?.anim === resolveAnimationId('standing-using-touchscreen-tablet'), 'Lara lit sur sa tablette');
+        const boredom = nativeLife.needs.work;
+        await waitFor(() => nativeLife.needs.work < boredom - 2, 'La lecture réduit son ennui');
+        OccupancyManager.releaseSlot('tv-view', 'watch', 'test-routine');
+        await startEvening('read', [['desk-bollsidan-2', 'work-standing']]);
+        await waitFor(() => useLaraLifeStore.getState().activity === 'Regarder la télé'
+            && cameraState.positions.native?.anim === resolveAnimationId('looking'), 'Lara rejoint la télé');
+        check(useSceneStore.getState().furniture.tvOn, 'Watching must turn on the actual TV');
+        const beforeTv = nativeLife.needs.work;
+        await waitFor(() => nativeLife.needs.work < beforeTv - 2, 'La télé réduit son ennui');
+        OccupancyManager.releaseSlot('garden-conversation', 'chat', 'test-routine');
+        await startEvening('watch-tv');
+        reserve('tv-view', 'watch');
+        await waitFor(() => duoSessionManager.isPlaying('native'), 'Lara retrouve un vrai partenaire pour discuter');
+        const session = duoSessionManager.getSessionFor('native');
+        check(session.playlist[0].id === 'conversation', 'The session must be a conversation');
+        check(session.participantA.isReady && session.participantB.isReady, 'Both people must have arrived');
+        const beforeSocial = nativeLife.needs.work;
+        await waitFor(() => nativeLife.needs.work < beforeSocial - 2, 'La discussion réduit son ennui');
+        await waitFor(() => nativeLife.lastActivity === 'social', 'La discussion se termine et Lara reprend sa routine');
+        check(!duoSessionManager.getSessionFor('native'), 'The conversation must release both participants');
+        return { observations };
+    } finally {
+        for (const [id, slot] of reserved) OccupancyManager.releaseSlot(id, slot, 'test-routine');
+    }
+}

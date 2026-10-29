@@ -1,13 +1,15 @@
-export type LifeActivity = 'rest' | 'work' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number };
 export const LIFE_PHASE_LABELS = {
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
+  read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter',
 };
 export type LifePhase = keyof typeof LIFE_PHASE_LABELS;
 const LIFE_PHASE_EFFECTS: Record<LifePhase, LifeActivity | null> = {
   'prepare-meal': null, 'eat-meal': 'meal', sleep: 'sleep', 'wake-up': null,
   'use-toilet': 'toilet', flush: null, 'wash-hands': 'wash-hands', shower: 'shower',
+  read: 'read', 'watch-tv': 'watch-tv', social: 'social',
 };
 export interface LifeCandidate {
   activity: Exclude<LifeActivity, 'pause'>;
@@ -24,6 +26,7 @@ const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of 
 export const LIFE_LABELS: Record<LifeActivity, string> = {
   rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
   toilet: 'Aller aux toilettes puis se laver les mains', shower: 'Prendre une douche', 'wash-hands': 'Se laver les mains',
+  read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter avec un voisin',
 };
 export const LIFE_NEED_LABELS: Record<keyof LifeNeeds, string> = {
   rest: 'Besoin de repos', work: 'Besoin de stimulation', walk: 'Envie de bouger', meal: 'Faim',
@@ -52,11 +55,30 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   toilet: { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: 0.12, toilet: -3 },
   shower: { rest: -0.1, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -1.5, toilet: 0.18 },
   'wash-hands': { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18 },
+  read: { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
+  'watch-tv': { rest: 0.1, work: -1, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
+  social: { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
 };
 
 export function createLife() {
   return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5 } as LifeNeeds,
-    handsDirty: false, lastActivity: null as LifeActivity | null };
+    elapsedSeconds: 0, handsDirty: false, lastActivity: null as LifeActivity | null };
+}
+
+// One simulation second represents one clock minute; a day lasts 24 minutes at ×1.
+export function lifeClock(elapsedSeconds: number) {
+  const minutes = Math.floor(8 * 60 + elapsedSeconds);
+  const hour = Math.floor(minutes / 60) % 24;
+  return { day: Math.floor(minutes / (24 * 60)) + 1, hour,
+    time: `${String(hour).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`,
+    period: hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée' };
+}
+
+export function routineActivities(hour: number): LifeActivity[] {
+  if (hour < 6 || hour >= 22) return ['sleep'];
+  if (hour < 9) return ['shower', 'meal'];
+  if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
+  return hour < 18 ? ['work', 'walk'] : ['read', 'watch-tv', 'social'];
 }
 
 /** Activity effects require an actual interaction; only real walking relieves movement. */
@@ -71,12 +93,18 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
   })) as LifeNeeds;
 }
 
-export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null): LifeCandidate | null {
+export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
-  const wantsSleep = needs.rest >= LIFE_SETTINGS.sleepPriority && candidates.some(candidate => candidate.activity === 'sleep');
+  const routine = routineActivities(hour);
+  const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
+    && candidates.some(candidate => candidate.activity === 'sleep');
+  const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(candidate.activity === 'rest' && wantsSleep) && needs[lifeNeed(candidate.activity)] >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
+      || (Math.max(needs[lifeNeed(a.activity)], needs[lifeNeed(b.activity)]) >= LIFE_SETTINGS.sleepPriority
+        ? needs[lifeNeed(b.activity)] - needs[lifeNeed(a.activity)] : 0)
+      || routineScore(b) - routineScore(a)
       || needs[lifeNeed(b.activity)] - needs[lifeNeed(a.activity)]
       || Number(a.activity === last) - Number(b.activity === last)
       || distance(a) - distance(b) || a.id.localeCompare(b.id) || a.slotId.localeCompare(b.slotId))[0] ?? null;
@@ -84,7 +112,8 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
 
 /** A short rest and a night in bed answer the same fatigue, with different recovery rates. */
 export const lifeNeed = (activity: LifeCandidate['activity']): keyof LifeNeeds => activity === 'sleep' ? 'rest'
-  : activity === 'shower' || activity === 'wash-hands' ? 'hygiene' : activity;
+  : activity === 'shower' || activity === 'wash-hands' ? 'hygiene'
+  : activity === 'read' || activity === 'watch-tv' || activity === 'social' ? 'work' : activity;
 
 export const lifeEffect = (activity: LifeActivity | null, phase?: LifePhase): LifeActivity | null => phase
   ? LIFE_PHASE_EFFECTS[phase] : ['rest', 'work', 'walk', 'pause'].includes(activity ?? '') ? activity : null;

@@ -18,6 +18,7 @@ import { positionState } from '../positionState';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
+import { TV_POSITION } from '../tvData';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -41,6 +42,15 @@ const INTERX_AFFECTION_DUO_IDS = INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.s
  * Chaque meuble déclare ses slots d'interaction, ses animations, ses positions et ses orientations.
  */
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
+  'tv-view': {
+    id: 'tv-view', name: 'Regarder la télé', category: 'appliance',
+    position: [ROOM_W / 2, 0, TV_POSITION[2]],
+    slots: [{ slotId: 'watch', name: 'Regarder la télé', rotY: Math.PI / 2, animation: 'looking', triggerEventKey: 'tv-toggle', triggerEventValue: true }],
+  },
+  'garden-conversation': {
+    id: 'garden-conversation', name: 'Discussion au jardin', category: 'outdoor', position: [150, 0, -300],
+    slots: [{ slotId: 'chat', name: 'Discuter', offset: [150, 0, -300], isDuo: true, duoAnimId: 'conversation', duoCount: 1 }],
+  },
   // ── LITS ───────────────────────────────────────────────────────────────────
   'bed-double': {
     id: 'bed-double',
