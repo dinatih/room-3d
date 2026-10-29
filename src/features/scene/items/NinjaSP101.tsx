@@ -95,12 +95,13 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     const advance = (time: number, end: number) => time < end ? Math.min(end, time + delta) : Math.max(end, time - delta);
     const doorEnd = wantDoor ? r.door.getClip().duration : 0;
     const rackEnd = wantRack ? r.rack.getClip().duration : 0;
+    const lightEnd = lightOn ? LIGHT_FADE_DURATION : 0;
+    if (r.door.time === doorEnd && r.rack.time === rackEnd && r.lightTime === lightEnd) return;
     // Retract the rack before closing; open the door fully before extending it.
     if (!wantRack && r.rack.time > 0) r.rack.time = advance(r.rack.time, 0);
     else if (r.door.time !== doorEnd) r.door.time = advance(r.door.time, doorEnd);
     else if (r.rack.time !== rackEnd) r.rack.time = advance(r.rack.time, rackEnd);
     r.mixer.update(0);
-    const lightEnd = lightOn ? LIGHT_FADE_DURATION : 0;
     r.lightTime = advance(r.lightTime, lightEnd);
     const brightness = r.lightTime / LIGHT_FADE_DURATION;
     r.light.intensity = r.intensity * brightness;

@@ -7,10 +7,16 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   ['Freezer', 'freezer', null, ['door_open']],
   ['Fridge', 'fridge', 'fridge-crisper-toggle', ['door_open', 'crisper_slide']],
   ['SyckRc003a', 'syck-rc003a-lid', 'syck-rc003a-pot', ['lid_open', 'pot_extract']],
+  ['NinjaSP101', 'ninja', 'ninja-rack', ['door_open', 'rack_slide']],
 ]) it(`${name}: ne recalcule plus au repos, respecte la pause et termine les deux sens`, () => {
   const scene = new THREE.Group(), primary = new THREE.Object3D(), secondary = new THREE.Object3D(), anchor = new THREE.Object3D();
   primary.name = 'Primary'; secondary.name = 'Secondary'; anchor.name = 'LampAnchor'; anchor.userData.powerWatts = 5;
   scene.add(primary, secondary, anchor);
+  if (name === 'NinjaSP101') {
+    anchor.name = 'NinjaLampAnchor'; anchor.userData.lumens = 45;
+    const bulb = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial());
+    bulb.name = 'NinjaLampBulb'; scene.add(bulb);
+  }
   const animations = clipNames.map((name, index) => new THREE.AnimationClip(name, 1, [
     new THREE.NumberKeyframeTrack(`${index ? 'Secondary' : 'Primary'}.position[x]`, [0, 1], [0, 10]),
   ]));
@@ -33,6 +39,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   render();
   const initial = updates; frame(null, 2); assert.equal(updates, initial);
   actionState[primaryKey] = true;
+  if (name === 'NinjaSP101') actionState['ninja-light'] = true;
   if (secondaryKey) actionState[secondaryKey] = true;
   actionState.previewPaused = true; render(); frame(null, 2);
   assert.equal(updates, initial); assert.equal(primary.position.x, 0);
@@ -41,14 +48,27 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   assert(primary.position.x > 0);
   if (secondaryKey) assert.equal(secondary.position.x, 10);
   if (name === 'Fridge') assert(anchor.children[0].intensity > 0);
+  if (name === 'NinjaSP101') {
+    assert(anchor.children[0].intensity > 0);
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
+  }
   const open = updates; frame(null, 2); assert.equal(updates, open);
   actionState[primaryKey] = false;
+  if (name === 'NinjaSP101') actionState['ninja-light'] = false;
   if (secondaryKey) actionState[secondaryKey] = false;
   render();
   for (let i = 0; i < 3; i++) frame(null, 2);
   assert.equal(primary.position.x, 0); assert.equal(secondary.position.x, 0);
   if (name === 'Fridge') assert.equal(anchor.children[0].intensity, 0);
+  if (name === 'NinjaSP101') assert.equal(anchor.children[0].intensity, 0);
   const closed = updates; frame(null, 2); assert.equal(updates, closed);
+  if (name === 'NinjaSP101') {
+    actionState['ninja-light'] = true; render(); frame(null, .125);
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 1.5, 'le fondu fonctionne aussi avec la porte fermée');
+    frame(null, .125);
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
+    const lit = updates; frame(null, 2); assert.equal(updates, lit);
+  }
   cleanup();
 });
 
