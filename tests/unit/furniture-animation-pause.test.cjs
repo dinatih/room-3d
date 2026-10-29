@@ -11,7 +11,9 @@ for (const [name, key, clipName, scale] of [
 ]) test(`${name}: pause, resume, endpoint, reversal and mixer disposal`, () => {
   const scene = new THREE.Group();
   const moving = new THREE.Object3D(); moving.name = 'Moving'; scene.add(moving);
+  const pedal = new THREE.Object3D(); pedal.name = 'Pedal'; scene.add(pedal);
   const clip = new THREE.AnimationClip(clipName, 2, [new THREE.NumberKeyframeTrack('Moving.position[x]', [0, 2], [0, 10])]);
+  const animations = name === 'TrashBin' ? [clip, new THREE.AnimationClip('pedal_press', 2, [new THREE.NumberKeyframeTrack('Pedal.position[y]', [0, 2], [0, 4])])] : [clip];
   const actionState = { [key]: true, previewPaused: true };
   let frame, cleanup, invalidations = 0, mounted = false;
   const runtimeRef = { current: null };
@@ -21,20 +23,23 @@ for (const [name, key, clipName, scale] of [
     '@react-three/drei': { useGLTF: { preload() {} } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate: () => invalidations++ }) },
     three: THREE,
-    '../useGLTFClone': { useGLTFClone: () => ({ scene, animations: [clip] }) },
+    '../useGLTFClone': { useGLTFClone: () => ({ scene, animations }) },
     '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
     '../objectActions': { getObjectActionIds: () => [key] },
   };
-  dependencies['./createLidGlbItem'] = load('src/features/scene/items/createLidGlbItem.tsx', dependencies);
+  dependencies['./createAnimatedGlbItem'] = load('src/features/scene/items/createAnimatedGlbItem.tsx', dependencies);
   const component = load(`src/features/scene/items/${name}.tsx`, dependencies)[name];
   component({ actionState, isPreview: true, onSize() {} });
+  assert.deepEqual(scene.userData.hoverAction.actions, [key]);
   frame({}, 1);
   assert.equal(moving.position.x, 0);
   actionState.previewPaused = false;
   frame({}, 1);
   assert.equal(moving.position.x, 5);
+  if (name === 'TrashBin') assert.equal(pedal.position.y, 2, 'la pédale avance avec le couvercle');
   frame({}, 1);
   assert.equal(moving.position.x, 10, 'uses clip duration, not a hardcoded endpoint');
+  if (name === 'TrashBin') assert.equal(pedal.position.y, 4);
   const count = invalidations;
   frame({}, 1);
   assert.equal(invalidations, count, 'settled animation does not request continuous rendering');
@@ -43,6 +48,7 @@ for (const [name, key, clipName, scale] of [
   component({ actionState, isPreview: true, onSize() {} });
   frame({}, 1);
   assert.equal(moving.position.x, 5, 'closing resumes from the open pose');
+  if (name === 'TrashBin') assert.equal(pedal.position.y, 2, 'la pédale revient avec le couvercle');
   frame({}, 1);
   assert.equal(moving.position.x, 0);
   cleanup();

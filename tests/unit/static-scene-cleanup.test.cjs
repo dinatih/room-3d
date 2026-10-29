@@ -318,7 +318,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
   const lid = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1)); lid.name = 'lid'; scene.add(lid);
   const animations = [new THREE.AnimationClip('lid_open', 1, [new THREE.NumberKeyframeTrack('lid.rotation[y]', [0, 1], [0, 1])])];
   let cursor = 0, frame;
-  const { createLidGlbItem } = load('src/features/scene/items/createLidGlbItem.tsx', {
+  const { createAnimatedGlbItem } = load('src/features/scene/items/createAnimatedGlbItem.tsx', {
     three: THREE, 'react/jsx-runtime': jsx,
     react: { useRef: value => refs[cursor++] ??= { current: value }, useLayoutEffect: fn => effects.push(fn) },
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },
@@ -326,7 +326,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
     '../useGLTFClone': { useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene, animations }; } },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => ['open'] },
   });
-  const Item = createLidGlbItem('/chest.glb', 'chest', 'Coffre');
+  const Item = createAnimatedGlbItem('/chest.glb', 'chest', 'Coffre');
   const render = props => { cursor = 0; return Item(props); };
   assert.equal(render({}).props.object, scene);
   const cleanup = effects.pop()();
