@@ -8,7 +8,7 @@ import { isAppIdle } from '../idleState';
 import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 
 /** Rigid articulated robot: each GLB link rotates about its original URDF pivot. */
-export function Jumper({ actionState, onSize }: SceneItemProps) {
+export function Jumper({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone('items/jumper/jumper.glb', true);
   const mixer = useMemo(() => new AnimationMixer(scene), [scene]);
   const motion = actionState['jumper-motion'] ?? 'idle';
@@ -31,7 +31,7 @@ export function Jumper({ actionState, onSize }: SceneItemProps) {
         }
       }
     });
-    onSize(glbLocalBBox(scene).getSize(new Vector3()));
+    onSize?.(glbLocalBBox(scene).getSize(new Vector3()));
   }, [scene, onSize]);
 
   useLayoutEffect(() => {

@@ -8,6 +8,7 @@ import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { createDoorHandleGeometry } from './doorHandleGeometry';
 import type { SceneItemProps } from '@shared/types';
 import { WALL_THICKNESS, PARTITION_THICKNESS, DOOR_WHITE_WIDTH, DOOR_FRAME_OVERLAP } from '../wallData';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState, type DoorConfig } from '../doorObstacles';
@@ -17,7 +18,6 @@ import { useDoorSpring } from './useDoorSpring';
 const W  = DOOR_WHITE_WIDTH;     // Largeur panneau (ouvrant de 83 cm)
 const H  = 204;    // Hauteur standard
 const T  = 4;      // Épaisseur panneau
-const R  = 1.3;    // Rayon poignée
 
 
 
@@ -91,44 +91,6 @@ function useDoorFrameGeo(wallThickness: number = 10.0) {
   }, [wallThickness]);
 }
 
-function useHandleGeo(mancheDir: number = 1) {
-  return useMemo(() => {
-    const geos: THREE.BufferGeometry[] = [];
-    const addGeo = (geo: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
-      if (rx) geo.rotateX(rx);
-      if (ry) geo.rotateY(ry);
-      if (rz) geo.rotateZ(rz);
-      geo.translate(x, y, z);
-      geos.push(geo);
-    };
-
-    const halfT = T / 2;
-
-    for (const sign of [-1, 1]) {
-      const zBase = sign * (halfT + 0.5);
-      const zMid  = sign * (halfT + 3.5);
-      const zEnd  = sign * (halfT + 6);
-
-      // Rose (circular plate)
-      addGeo(new THREE.CylinderGeometry(3, 3, 1, 12), 0, 0, zBase, Math.PI / 2, 0, 0);
-
-      // Tige
-      addGeo(new THREE.CylinderGeometry(R, R, 5, 8), 0, 0, zMid, Math.PI / 2, 0, 0);
-
-      // Manche (horizontal lever)
-      addGeo(new THREE.CylinderGeometry(R, R, 14, 8), mancheDir * 7, 0, zEnd, 0, 0, Math.PI / 2);
-
-      // Spheres (rounded ends)
-      addGeo(new THREE.SphereGeometry(R, 8, 6), 0, 0, zEnd);
-      addGeo(new THREE.SphereGeometry(R, 8, 6), mancheDir * 14, 0, zEnd);
-    }
-
-    const merged = mergeGeometries(geos, false);
-    geos.forEach(g => g.dispose());
-    return merged;
-  }, [mancheDir]);
-}
-
 interface DoorImplProps {
   actionKey: string;
   actionState: SceneItemProps['actionState'];
@@ -137,7 +99,7 @@ interface DoorImplProps {
   handleX: number;
   mancheDir: number;
   openAngle: number;
-  onSize: (v: THREE.Vector3) => void;
+  onSize?: SceneItemProps['onSize'];
   wallThickness?: number;
   doorConfig: DoorConfig;
   doorStateKey: 'living' | 'bath';
@@ -152,7 +114,7 @@ const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.
 
 function DoorImpl({
   actionKey,
-  actionState,
+  actionState = {},
   pivotX,
   panelX,
   handleX,
@@ -171,11 +133,11 @@ function DoorImpl({
   const spring = useDoorSpring();
   const open = useDoorOpen(actionKey, isPreview, actionState);
 
-  const handleGeo = useHandleGeo(mancheDir);
+  const handleGeo = useMemo(() => createDoorHandleGeometry(T, mancheDir), [mancheDir]);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W, H, wallThickness + 2));
-  }, [wallThickness]);
+    onSize?.(new THREE.Vector3(W, H, wallThickness + 2));
+  }, [wallThickness, onSize]);
 
   useFrame((_, delta) => {
     const currentSigned = doorRef.current.rotation.y;
@@ -211,7 +173,7 @@ function DoorImpl({
   );
 }
 
-export function DoorLiving({ onSize, isPreview = false, actionState, showFrame = true }: SceneItemProps & { showFrame?: boolean }) {
+export function DoorLiving({ onSize, isPreview = false, actionState = {}, showFrame = true }: Partial<Omit<SceneItemProps, 'item'>> & { showFrame?: boolean }) {
   return (
     <DoorImpl
       actionKey="livingDoor"
@@ -228,7 +190,7 @@ export function DoorLiving({ onSize, isPreview = false, actionState, showFrame =
   );
 }
 
-export function DoorBath({ onSize, isPreview = false, actionState, showFrame = true }: SceneItemProps & { showFrame?: boolean }) {
+export function DoorBath({ onSize, isPreview = false, actionState = {}, showFrame = true }: Partial<Omit<SceneItemProps, 'item'>> & { showFrame?: boolean }) {
   return (
     <DoorImpl
       actionKey="bathroomDoor"

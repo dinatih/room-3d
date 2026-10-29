@@ -7,7 +7,7 @@ import { doorRequested } from '../ai/navigation/doorRequests';
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { createDoorHandleGeometry } from './doorHandleGeometry';
 import type { SceneItemProps } from '@shared/types';
 import { DOOR_CONFIGS, computeDoorDynamics, doorCollisionState } from '../doorObstacles';
 import { useDoorOpen } from './useDoorOpen';
@@ -18,51 +18,25 @@ export const ENTRY_W = 90;
 const W  = ENTRY_W;
 const H  = 204;   // DOOR_H
 const T  = 4;     // épaisseur panneau
-const R  = 1.3;
 
 const WW = 10;    // épaisseur du mur (profondeur Z)
-
-function useHandleGeo() {
-  return useMemo(() => {
-    const geos: THREE.BufferGeometry[] = [];
-    const addGeo = (geo: THREE.BufferGeometry, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
-      if (rx) geo.rotateX(rx);
-      if (ry) geo.rotateY(ry);
-      if (rz) geo.rotateZ(rz);
-      geo.translate(x, y, z);
-      geos.push(geo);
-    };
-
-    const fZ = T / 2;
-    // Poignée intérieure
-    addGeo(new THREE.CylinderGeometry(3, 3, 1, 12), 0, 0, fZ + 0.5, Math.PI / 2);
-    addGeo(new THREE.CylinderGeometry(R, R, 5, 8),  0, 0, fZ + 3.5, Math.PI / 2);
-    addGeo(new THREE.CylinderGeometry(R, R, 14, 8), -7, 0, fZ + 6, 0, 0, Math.PI / 2);
-    addGeo(new THREE.SphereGeometry(R, 8, 6), 0, 0, fZ + 6);
-    addGeo(new THREE.SphereGeometry(R, 8, 6), -14, 0, fZ + 6);
-
-    const merged = mergeGeometries(geos, false);
-    geos.forEach(g => g.dispose());
-    return merged;
-  }, []);
-}
 
 const redPanelMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', roughness: 0.5, metalness: 0.1 });
 const metalHandleMaterial = new THREE.MeshStandardMaterial({ color: '#999999', metalness: 0.85, roughness: 0.15 });
 const knobMaterial = new THREE.MeshStandardMaterial({ color: '#cc0000', metalness: 0.3, roughness: 0.4 });
 const wallMat = new THREE.MeshStandardMaterial({ color: '#f5f4ef', roughness: 0.85, metalness: 0.05 });
 
-export function DoorEntry({ onSize, isPreview = false, showFrame = true, ...props }: SceneItemProps & { showFrame?: boolean }) {
+export function DoorEntry({ onSize, isPreview = false, showFrame = true, actionState = {} }: Partial<Omit<SceneItemProps, 'item'>> & { showFrame?: boolean }) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const doorRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const spring = useDoorSpring();
-  const open = useDoorOpen('entryDoor', isPreview, props.actionState);
+  const open = useDoorOpen('entryDoor', isPreview, actionState);
 
-  const handle = useHandleGeo();
+  const handle = useMemo(() => createDoorHandleGeometry(T, -1, [1]), []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W + 5, H + 1, WW + 2));
+    onSize?.(new THREE.Vector3(W + 5, H + 1, WW + 2));
   }, [onSize]);
 
   useFrame((_, delta) => {

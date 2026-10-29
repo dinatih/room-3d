@@ -122,7 +122,7 @@ const metalMaterial = new THREE.MeshStandardMaterial({ color: '#cccccc', metalne
 const darkMetalMaterial = new THREE.MeshStandardMaterial({ color: '#555555', metalness: 0.7, roughness: 0.3 });
 const shutterMaterial = new THREE.MeshStandardMaterial({ color: '#dcdcdc', roughness: 0.4, metalness: 0.1 });
 
-export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemProps) {
+export function GlassDoor({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const navigationEnabled = useNavigationEnabled() && !isPreview;
   const { invalidate } = useThree();
   const rightDoorRef = useRef<THREE.Group>(null!);
@@ -141,15 +141,14 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
   const panelFrameGeo = usePanelFrameGeo(W_TOTAL / 2 - FRAME, 190);
   const hingeGeo = useHingeGeo();
 
-  const stateRef = useRef({ targetShutter: 0 });
-  stateRef.current.targetShutter = actionState['glassDoorV2ShutterPos'] ?? 0;
+  const shutterValue = actionState['glassDoorV2ShutterPos'] ?? 0;
+  const targetShutter = typeof shutterValue === 'number' ? shutterValue : (shutterValue ? 100 : 0);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(W_TOTAL, GLASS_TOP, WW));
+    onSize?.(new THREE.Vector3(W_TOTAL, GLASS_TOP, WW));
   }, [onSize]);
 
   useFrame((_, delta) => {
-    const s = stateRef.current;
     const dynRight = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassRight, rightRotRef.current) : { allowed: DOOR_CONFIGS.glassRight.maxAngle, push: 0, minimum: 0 };
     const dynLeft = navigationEnabled ? computeDoorDynamics(DOOR_CONFIGS.glassLeft, leftRotRef.current) : { allowed: DOOR_CONFIGS.glassLeft.maxAngle, push: 0, minimum: 0 };
     const leftPush = Math.max(dynLeft.minimum, dynLeft.push, leftOpen ? dynLeft.allowed : 0, navigationEnabled && doorRequested('glassLeft') ? dynLeft.allowed : 0);
@@ -159,7 +158,6 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
     );
     const rightClearsLeft = rightRotRef.current >= Math.atan2(FRAME_D_V2, PANEL_W);
     const leftTarget = -Math.min(dynLeft.allowed, Math.max(dynLeft.minimum, rightClearsLeft ? leftPush : 0));
-    const targetShutter = typeof s.targetShutter === 'number' ? s.targetShutter : (s.targetShutter ? 100 : 0);
 
     if (navigationEnabled) doorCollisionState.glassRight.angle = rightRotRef.current;
     if (navigationEnabled) doorCollisionState.glassLeft.angle = leftRotRef.current;
@@ -222,9 +220,7 @@ export function GlassDoor({ actionState, onSize, isPreview = false }: SceneItemP
       instancedShutterRef.current.setMatrixAt(i, dummy.matrix);
     }
     instancedShutterRef.current.instanceMatrix.needsUpdate = true;
-    const initialPos = typeof stateRef.current.targetShutter === 'number'
-      ? stateRef.current.targetShutter
-      : (stateRef.current.targetShutter ? 100 : 0);
+    const initialPos = targetShutter;
     shutterPercentRef.current = initialPos;
     const initialHeight = (200 * initialPos) / 100;
     instancedShutterRef.current.count = Math.max(0, Math.min(50, Math.ceil(initialHeight / 4)));

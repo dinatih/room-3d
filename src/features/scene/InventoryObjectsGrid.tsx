@@ -30,7 +30,6 @@ import * as THREE from 'three';
 import { INVENTORY, WIGS_ITEMS, type InventoryItem } from '@features/inventory/inventoryData';
 import { useGLTFClone } from './useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from './glbUtils';
-import { NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
 import { findCharacter } from './characterConfig';
@@ -122,7 +121,7 @@ function createRoundedCardGeometry() {
 }
 
 const CARD_BACKGROUND_GEOMETRY = createRoundedCardGeometry();
-const GRID_ACTION_STATE = { ...NOOP_STATE, 'bed-double': true };
+const GRID_ACTION_STATE = { 'bed-double': true };
 
 const ShoeHatRackGrid: React.ComponentType<any> = props => <ShoeHatRack {...props} noCaps />;
 
@@ -382,7 +381,6 @@ function ProceduralItemInner({ item }: { item: UnifiedGridItem }) {
         item={{ id: item.id } as any}
         actionState={GRID_ACTION_STATE}
         isPreview
-        onSize={NOOP_SIZE}
       />
     </group>
   );

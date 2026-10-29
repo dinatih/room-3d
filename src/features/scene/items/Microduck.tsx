@@ -7,7 +7,7 @@ import { glbLocalBBox } from '../glbUtils';
 import { isAppIdle } from '../idleState';
 import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 
-export function Microduck({ actionState, onSize }: SceneItemProps) {
+export function Microduck({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone('models/microduck.glb');
   const mixer = useMemo(() => new AnimationMixer(scene), [scene]);
   const motion = actionState['microduck-motion'] ?? 'idle';
@@ -19,7 +19,7 @@ export function Microduck({ actionState, onSize }: SceneItemProps) {
     scene.rotation.y = -Math.PI / 2;
     scene.scale.setScalar(100);
     scene.traverse(node => { if ('isMesh' in node && node.isMesh) node.castShadow = node.receiveShadow = true; });
-    onSize(glbLocalBBox(scene).getSize(new Vector3()));
+    onSize?.(glbLocalBBox(scene).getSize(new Vector3()));
   }, [scene, onSize]);
 
   useLayoutEffect(() => {
