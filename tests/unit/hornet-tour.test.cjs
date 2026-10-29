@@ -7,8 +7,9 @@ const obstacles = require('../../src/features/scene/ai/navigation/obstacles.ts')
 const requests = require('../../src/features/scene/ai/navigation/doorRequests.ts');
 const walls = require('../../src/features/scene/wallData.ts');
 const architecture = require('../../src/features/scene/ai/navigation/architecture.ts');
+const cameraState = { positions: {} };
 const doors = load('src/features/scene/doorObstacles.ts', {
-  './cameraState': { cameraState: { positions: {} } }, './ai/navigation/obstacles': obstacles,
+  './cameraState': { cameraState }, './ai/navigation/obstacles': obstacles,
   './ai/navigation/geometry': geometry, './ai/navigation/doorRequests': requests, './wallData': walls,
 });
 const { HornetTour, HornetSpace, HORNET_BOB_CM } = load('src/features/scene/hornetTour.ts', {
@@ -109,6 +110,32 @@ it('attend loin des portes fermées puis reprend la traversée après ouverture'
   assert(waited, messages.join('\n'));
   for (let frame = 0; frame < 60 * 30 && tour.state !== 'observing'; frame++) { openRequested(); tour.tick(position, quaternion, 1 / 60); }
   assert.equal(tour.state, 'observing', messages.join('\n'));
+});
+
+it('remonte au-dessus du battant séjour au lieu de le retenir à la position des logs', () => {
+  const id = 'dji-neo', tour = new HornetTour(10.99532, () => {}, () => .37, id);
+  const position = new Vector3(242.6, 182.00936, 371.26765), quaternion = new Quaternion();
+  const door = doors.DOOR_CONFIGS.living;
+  obstacles.setAgentProfile(id, { radius: tour.radius, height: tour.radius * 2 });
+  cameraState.positions[id] = position;
+  doors.doorCollisionState.living.angle = -.57064;
+  tour.observation = tour.observations.find(o => o.id === 'entry');
+  tour.path = tour.route(position, tour.observation.position);
+  tour.state = 'travelling';
+  try {
+    assert(tour.path);
+    assert(doors.computeDoorDynamics(door, -.57064).allowed < doors.computeDoorAllowedAngle(door));
+    for (let frame = 0; frame < 120 && !tour.space.safeStop(position); frame++) {
+      const before = position.clone();
+      tour.tick(position, quaternion, 1 / 60);
+      assert(position.y > before.y, 'A drone trapped in the swing must rise immediately');
+      assert(position.distanceTo(before) <= 100 / 60 + geometry.GEOMETRY_EPSILON, 'Recovery must fly without teleporting');
+      assert(!tour.space.blocker(before, position), 'Climbing must respect furniture, lintels and ceiling');
+    }
+    assert(tour.space.safeStop(position));
+    assert(position.y - tour.radius > door.yMax);
+    assert.equal(doors.computeDoorDynamics(door, -.57064).allowed, doors.computeDoorAllowedAngle(door));
+  } finally { tour.release(); delete cameraState.positions[id]; obstacles.removeAgentProfile(id); }
 });
 
 it('abandonne un passage durablement fermé et poursuit les observations accessibles', () => {

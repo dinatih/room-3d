@@ -301,6 +301,16 @@ export class HornetTour {
     }
     if (blocked) {
       this.speed = 0;
+      // A door can move after departure: leave its sweep vertically instead of
+      // hovering against the leaf and preventing it from opening indefinitely.
+      this.next.copy(position).setY(WALL_H - this.radius - CLEARANCE_ERROR);
+      if (!this.space.safeStop(position) && this.next.y > position.y && this.space.safeStop(this.next) && !this.space.blocker(position, this.next)) {
+        if (this.waitReason !== 'dégagement vertical') this.log('Visite : montée au-dessus du battant pour libérer le passage.');
+        this.waitReason = 'dégagement vertical';
+        position.y = Math.min(this.next.y, position.y + CRUISE_SPEED * delta);
+        this.wait = 0;
+        return;
+      }
       this.wait += delta;
       if (blocked !== this.waitReason) { this.log(`Visite : attente hors passage (${blocked}).`); this.waitReason = blocked; }
       if (this.wait >= DOOR_WAIT_SECONDS && this.space.safeStop(position)) this.choose(position);
