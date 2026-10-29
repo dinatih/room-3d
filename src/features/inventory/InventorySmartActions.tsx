@@ -25,7 +25,7 @@ export function InventorySmartActions({ itemId, request, onPreview }: {
   const objects = getInventorySmartObjects(itemId);
   if (!objects.length) return null;
   return (
-    <div className="card p-2 mb-3 gap-2">
+    <div className="card p-2 m-3 gap-2">
       <h4 className="small fw-bold mb-0">SmartActions dans la preview 3D</h4>
       <select className="form-select form-select-sm" aria-label="PNJ de la preview" value={agentId} onChange={event => {
         setAgentId(event.target.value);

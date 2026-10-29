@@ -18,6 +18,10 @@ it('retrouve les smart actions des produits et conserve les associations directe
   for (const [itemId, ids] of Object.entries(INVENTORY_SMART_OBJECT_IDS)) {
     assert.deepEqual(getInventorySmartObjects(itemId).map(object => object.id), ids);
   }
+  assert.deepEqual(getInventorySmartObjects('kallax-ne-stack').map(object => object.id), ['drona-ne-catchall', 'drona-ne-catchall2']);
+  assert.equal(getInventorySmartObjects('kallax-nw-stack').length, 2);
+  assert.equal(getInventorySmartObjects('kallax-se-stack').length, 3);
+  assert.equal(getInventorySmartObjects('kallax-sw-stack').length, 4);
   assert.equal(getInventorySmartObjects('toilet')[0].id, 'toilet');
   assert.equal(getInventorySmartObjects('shower')[0].id, 'shower');
   assert.deepEqual(getInventorySmartObjects('unknown'), []);

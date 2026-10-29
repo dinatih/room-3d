@@ -222,6 +222,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTa
 
   return (
     <div className="d-flex flex-column w-100">
+      <InventorySmartActions itemId={item.id} request={smartAction} onPreview={setSmartAction} />
       {/* 3D Preview Canvas / Photo Gallery as Hero (Ratio Carré) */}
       <div className="w-100 position-relative">
         <InventoryPreview
@@ -277,8 +278,6 @@ function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTa
             </span>
           )}
         </div>
-
-        <InventorySmartActions itemId={item.id} request={smartAction} onPreview={setSmartAction} />
 
         <div className="row g-2 mb-3">
           <div className="col-6">

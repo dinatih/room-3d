@@ -69,6 +69,16 @@ function getStaticObjectTransform(itemId: string): ObjectTransform | undefined {
     return { position: [position[0] + x * c + z * s, position[1] + y, position[2] - x * s + z * c], rotationY: ry };
   }
   switch (itemId) {
+    case 'kallax-ne-stack':
+      return { position: KALLAX_NE_POSITION, rotationY: KALLAX_NE_ROTATION };
+    case 'kallax-nw-stack':
+      return { position: KALLAX_NW_POSITION, rotationY: KALLAX_NW_ROTATION };
+    case 'kallax-sw-stack':
+      return { position: KALLAX_CUISINE_POSITION, rotationY: KALLAX_CUISINE_ROTATION };
+    case 'kallax-se-stack': {
+      const freezer = getStaticObjectTransform('kallax-se')!;
+      return { position: freezer.position, rotationY: freezer.rotationY - Math.PI / 2 };
+    }
     case 'drona-se-pyjama':
     case 'drona-se-linen': {
       const freezer = getStaticObjectTransform('kallax-se')!;

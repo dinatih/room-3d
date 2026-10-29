@@ -2,6 +2,10 @@ import { AIR_PERFORMER_ACTION_IDS } from '../home-assistant/airPerformer';
 
 /** Inventory products whose scene interactions use a placement identifier. */
 export const INVENTORY_SMART_OBJECT_IDS: Record<string, readonly string[]> = {
+  'kallax-ne-stack': ['drona-ne-catchall', 'drona-ne-catchall2'],
+  'kallax-nw-stack': ['drona-nw-trousers', 'drona-nw-upper'],
+  'kallax-se-stack': ['drona-se-pyjama', 'drona-se-linen', 'drona-se-care'],
+  'kallax-sw-stack': ['drona-kitchen-diy', 'drona-kitchen-old-it', 'drona-kitchen-main', 'drona-kitchen-electronics'],
   'utaker-stack': ['bed-west', 'bed-east', 'bed-double'],
   'smorkull-chair': ['chair-office'],
   'bollsidan30574370': ['desk-bollsidan-1', 'desk-bollsidan-2'],

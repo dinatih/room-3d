@@ -15,11 +15,16 @@ const launch = require('./browser-test-options.cjs');
       const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
       const { Inventory } = await import('/src/features/inventory/Inventory.tsx');
       await import('/scss/app.scss'); await import('/src/index.css');
-      history.replaceState({}, '', '/studio.html?inventory=actionnable&item=armrest-sofa');
+      history.replaceState({}, '', '/studio.html?inventory=actionnable&item=kallax-ne-stack');
       document.body.innerHTML = '<div id="test-root"></div>';
       createRoot(document.getElementById('test-root')).render(React.createElement(Inventory, { initialCategory: 'actionnable', onClose() {} }));
     });
     await page.waitForSelector('[aria-label="PNJ de la preview"]', { timeout: 60000 });
+    assert.equal(await page.$$eval('button[title="Jouer ou rejouer dans la preview"]', buttons => buttons.length), 2);
+    assert.ok(await page.$eval('[aria-label="PNJ de la preview"]', select => {
+      const rect = select.getBoundingClientRect();
+      return rect.top >= 0 && rect.bottom < innerHeight;
+    }), 'Le sélecteur PNJ doit être visible sans défiler');
     await page.$$eval('button', buttons => {
       const action = buttons.find(button => button.title === 'Jouer ou rejouer dans la preview');
       if (!action) throw Error('Smart action absente');
@@ -44,6 +49,7 @@ const launch = require('./browser-test-options.cjs');
     assert.equal(result.character, 'native');
     assert.ok(result.time > 0);
     assert.deepEqual(errors, []);
-    console.log('PASS: PNJ anime dans la preview du canapé Actionnable', result);
+    await page.screenshot({ path: '/tmp/actionnable-kallax-ne.png' });
+    console.log('PASS: sélecteur visible, deux smart actions et PNJ animé dans Kallax NE', result);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

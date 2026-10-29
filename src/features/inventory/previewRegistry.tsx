@@ -138,6 +138,12 @@ function ShoeHatRackPreview(props: SceneItemProps) {
   );
 }
 
+/** Model rotations applied internally in inventory previews. */
+export const PREVIEW_ROTATION_Y: Record<string, number> = {
+  'kallax-ne-stack': Math.PI, 'kallax-nw-stack': Math.PI,
+  'kallax-se-stack': Math.PI, 'kallax-sw-stack': Math.PI,
+};
+
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'microduck': Microduck,
   'jumper-robot': Jumper,
