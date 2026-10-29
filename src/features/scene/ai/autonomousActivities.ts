@@ -65,6 +65,7 @@ export function getLaraLifeCandidates(): LifeCandidate[] {
       .flatMap(slot => {
         const activity = object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'garden-fresh-air' ? 'walk'
+          : object.category === 'bed' && slot.slotId.startsWith('lie-down') ? 'sleep'
           : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
         const position = slot.offset ?? object.position;
         const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2] };
@@ -79,10 +80,14 @@ export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activi
     { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
       duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
   ];
-  const instructions = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native').map(instruction => instruction.type === 'USE_OBJECT'
-    ? { ...instruction, duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, repeatVariation: false,
-      animation: candidate.activity === 'rest' ? 'sitting-idle' : candidate.activity === 'walk' ? 'looking' : 'standing-using-touchscreen-tablet' }
-    : instruction);
+  const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native');
+  const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');
+  const instructions = sequence.map((instruction, index): AgentInstruction => instruction.type === 'USE_OBJECT'
+    ? { ...instruction, duration: candidate.activity === 'sleep' ? LIFE_SETTINGS.sleepSeconds : LIFE_SETTINGS.activitySeconds,
+      repeatCount: 1, repeatVariation: false, lifePhase: candidate.activity === 'sleep' ? 'sleep' : undefined,
+      animation: candidate.activity === 'sleep' ? 'laying-sleeping' : candidate.activity === 'rest' ? 'sitting-idle'
+        : candidate.activity === 'walk' ? 'looking' : 'standing-using-touchscreen-tablet' }
+    : { ...instruction, ...(candidate.activity === 'sleep' && index > sleepStep ? { lifePhase: 'wake-up' as const } : {}) });
   // A stroll has a real itinerary even when Lara is already at the far end.
   return candidate.activity === 'walk' ? [{ type: 'MOVE_TO', targetZoneId: 'garden' }, ...instructions] : instructions;
 }

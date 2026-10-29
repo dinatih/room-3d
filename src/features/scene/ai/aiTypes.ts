@@ -109,7 +109,7 @@ export interface AgentInstruction {
   /** Wait for real one-shot playback, including asynchronous clip loading. */
   waitForAnimation?: boolean;
   animation?: string; // animation to play
-  lifePhase?: 'prepare-meal' | 'eat-meal'; // Phase of Lara's autonomous meal; preparation never relieves hunger.
+  lifePhase?: 'prepare-meal' | 'eat-meal' | 'sleep' | 'wake-up'; // Only eating and sleeping apply their respective need effects.
   duration?: number; // for WAIT, INTERACT, ROTATE_360 or OBSERVE_OBJECT
   repeatCount?: number; // number of repetitions if duration is not set (default 1)
   repeatVariation?: boolean; // whether to re-randomize animation on each repeat cycle

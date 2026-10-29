@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, lifeNeed, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -519,6 +519,7 @@ export function createAgentController(
 
   const advanceToNextStep = (hasNavStep: boolean) => {
     const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] ?? scenario?.[stepIndex] : scenario?.[stepIndex + 1];
+    if (hasLife && loop && lifeActivity && next?.lifePhase) useLaraLifeStore.setState({ activity: LIFE_PHASE_LABELS[next.lifePhase] });
     resetRoute(route, _characterId, next?.protectedDoor);
     routeInstruction = null;
     cachedCoordsInstruction = null;
@@ -617,7 +618,7 @@ export function createAgentController(
           && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, nativeLife.lastActivity);
       lifeActivity = candidate?.activity ?? 'pause';
       const reason = candidate
-        ? `${LIFE_NEED_LABELS[candidate.activity]} : ${Math.round(nativeLife.needs[candidate.activity])} %.`
+        ? `${LIFE_NEED_LABELS[lifeNeed(candidate.activity)]} : ${Math.round(nativeLife.needs[lifeNeed(candidate.activity)])} %.`
         : 'Lara fait une pause ; ses besoins sont faibles ou les activités adaptées sont indisponibles.';
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(candidate)
         : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
@@ -1645,7 +1646,8 @@ export function createAgentController(
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
-    const previousLifeActivity = lifeActivity === 'meal' && instruction?.lifePhase !== 'eat-meal' ? null : lifeActivity;
+    const previousLifeActivity = (lifeActivity === 'meal' && instruction?.lifePhase !== 'eat-meal')
+      || (lifeActivity === 'sleep' && instruction?.lifePhase !== 'sleep') ? null : lifeActivity;
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;

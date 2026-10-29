@@ -1,6 +1,7 @@
 import { nativeLife, useLaraLifeStore } from '/src/features/scene/ai/laraLifeStore.ts';
 import { cameraState } from '/src/features/scene/cameraState.ts';
 import { resolveAnimationId } from '/src/features/scene/animations/animationResolver.ts';
+import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
 
 function observeLife(fixture) {
     const started = performance.now(), observations = [];
@@ -12,20 +13,22 @@ function observeLife(fixture) {
         }
         observations.push({ message, at: performance.now() - started, needs: { ...nativeLife.needs }, position: { ...cameraState.positions.native } });
     };
-    return { observations, check, waitFor };
+    const openPanel = async () => {
+        const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
+        check(button, 'Character controls button missing');
+        button.click();
+        await waitFor(() => document.querySelector('[aria-label="Vie de Lara Native"]'), 'Panneau de vie visible');
+    };
+    return { observations, check, waitFor, openPanel };
 }
 
 export async function life(fixture) {
-    const { observations, check, waitFor } = observeLife(fixture);
+    const { observations, check, waitFor, openPanel } = observeLife(fixture);
     const animation = key => cameraState.positions.native?.anim === resolveAnimationId(key);
     const decisions = () => window.__testTrace.filter(entry => entry.appLog?.action === 'life_decision' && entry.appLog?.actors?.includes('native'));
     const xbotStart = { ...cameraState.positions.xbot };
 
-    // Open the real character controls, including the subscribed needs panel.
-    const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
-    check(button, 'Character controls button missing');
-    button.click();
-    await waitFor(() => document.querySelector('[aria-label="Vie de Lara Native"]'), 'Panneau de vie visible');
+    await openPanel();
     await waitFor(() => animation('standing-using-touchscreen-tablet'), 'Lara travaille au bureau');
     const beforeWork = nativeLife.needs.work;
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -55,11 +58,8 @@ export async function life(fixture) {
 }
 
 export async function meal(fixture) {
-    const { observations, check, waitFor } = observeLife(fixture);
-    const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
-    check(button, 'Character controls button missing');
-    button.click();
-    await waitFor(() => document.querySelector('[aria-label="Vitesse de la vie de Lara"]'), 'Bouton de vitesse visible');
+    const { observations, check, waitFor, openPanel } = observeLife(fixture);
+    await openPanel();
     const speedButton = document.querySelector('[aria-label="Vitesse de la vie de Lara"]');
     check(useLaraLifeStore.getState().speed === 1, 'The simulation must start at normal speed');
     const normalHunger = nativeLife.needs.meal;
@@ -95,4 +95,43 @@ export async function meal(fixture) {
     check(nativeLife.needs.meal === interrupted, 'An interrupted meal must stop relieving hunger');
     cameraState.lastUserControlTime = 0;
     return { observations, interruptedHunger: interrupted, normalGrowth, fastGrowth };
+}
+
+export async function sleep(fixture) {
+    const { observations, check, waitFor, openPanel } = observeLife(fixture);
+    await openPanel();
+    useLaraLifeStore.setState({ speed: 10 });
+    const startNight = async () => {
+        cameraState.recordUserControl();
+        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
+        nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0 };
+        cameraState.lastUserControlTime = 0;
+        await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping'), 'Lara rejoint le lit et se couche');
+        check(cameraState.positions.native.y === 45, 'Sleeping must take place on the mattress');
+        const beforeSleeping = nativeLife.needs.rest;
+        await waitFor(() => nativeLife.needs.rest < beforeSleeping - 2, 'Lara récupère pendant son sommeil');
+    };
+    const ownsBed = () => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.slot.startsWith('bed-'));
+    let wokeUp = false;
+    const unsubscribe = useLaraLifeStore.subscribe(state => { if (state.activity.includes('Se réveiller')) wokeUp = true; });
+    try {
+        await startNight();
+        check(document.querySelector('[aria-label="Vie de Lara Native"]').textContent.includes('Dormir'), 'The panel must identify sleep');
+        await waitFor(() => nativeLife.lastActivity === 'sleep', 'Lara se réveille et descend du lit');
+        check(wokeUp, 'The wake-up phase must be observable');
+        check(nativeLife.needs.rest < 10, 'A complete night must restore Lara');
+        check(cameraState.positions.native.y === 0, 'Lara must return to ground level after waking');
+        check(!ownsBed(), 'The bed must be released after waking');
+        await startNight();
+        cameraState.recordUserControl();
+        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Le contrôle manuel interrompt le sommeil');
+        const fatigue = nativeLife.needs.rest;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        check(nativeLife.needs.rest === fatigue, 'Sleep recovery must stop after interruption');
+        check(!ownsBed(), 'An interrupted sleep must release the bed');
+        cameraState.lastUserControlTime = 0;
+        await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping')
+            && cameraState.positions.native.y === 45 && nativeLife.needs.rest < fatigue - 2, 'Lara reprend son sommeil après le contrôle manuel');
+        return { observations, wokeUp, interruptedFatigue: fatigue };
+    } finally { unsubscribe(); }
 }

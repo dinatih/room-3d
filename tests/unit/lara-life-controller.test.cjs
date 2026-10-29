@@ -5,7 +5,7 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
-function world(id = 'native', withMeal = false) {
+function world(id = 'native', withMeal = false, withSleep = false) {
   const nativeLife = life.createLife(), logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
@@ -14,6 +14,10 @@ function world(id = 'native', withMeal = false) {
   const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
   objects[MEAL_PREPARATION.id] = { id: MEAL_PREPARATION.id, name: 'Kitchen', position: [40, 0, 10], slots: [{ slotId: MEAL_PREPARATION.slotId, animation: 'cook' }] };
   if (withMeal) candidates.push({ ...candidates[1], activity: 'meal' });
+  if (withSleep) {
+    candidates.push({ activity: 'sleep', id: 'sleep', slotId: 'use', x: 50, z: 10 });
+    objects.sleep = { id: 'sleep', name: 'Bed', position: [50, 45, 10], slots: [{ slotId: 'use', animation: 'laying-sleeping' }] };
+  }
   const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
   let revision = 0, failedId, actorBlockedId, crowdWait, navigationPending, attempts = [], snapshot = {};
   class NavigationBlockedError extends Error { constructor() { super('actor in the approach'); this.target = { x: 20, z: 10 }; } }
@@ -31,6 +35,10 @@ function world(id = 'native', withMeal = false) {
       getLaraLifeCandidates: () => candidates, buildLaraLifeInstructions: candidate => candidate.activity === 'meal' ? [
         { ...sequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId)[0], animation: 'cook', lifePhase: 'prepare-meal' },
         { ...sequence(candidate.id, candidate.slotId)[0], animation: 'eat', lifePhase: 'eat-meal' },
+      ] : candidate.activity === 'sleep' ? [
+        { type: 'MOVE_TO', targetPos: [50, 45, 10] },
+        { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
+        { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
       ] : sequence(candidate.id, candidate.slotId) },
     './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state) } },
     './occupancyManager': { OccupancyManager: occupancy },
@@ -59,8 +67,8 @@ function world(id = 'native', withMeal = false) {
       if (navigationPending) throw new NavigationPending({ description: 'Construction du réseau de navigation' });
       if (actorBlockedId && instruction.smartObjectId === actorBlockedId) throw new NavigationBlockedError();
       const object = objects[instruction.smartObjectId];
-      return object ? { tx: object.position[0], ty: 0, tz: object.position[2], anim: object.slots[0].animation, label: object.id }
-        : { tx: instruction.targetPos?.[0] ?? 0, tz: instruction.targetPos?.[2] ?? 0, label: 'pause' };
+      return object ? { tx: object.position[0], ty: object.position[1], tz: object.position[2], anim: object.slots[0].animation, label: object.id }
+        : { tx: instruction.targetPos?.[0] ?? 0, ty: instruction.targetPos?.[1], tz: instruction.targetPos?.[2] ?? 0, label: 'pause' };
     } },
     './agent/agentAvoidance': { setAgentVelocity: noop, computeRotYStep: (from, to) => to, isAgentDestinationFree: () => true,
       beginActorBlockCheck: noop, endActorBlockCheck: () => new Map([['other', 'position']]), actorBlocksUnchanged: () => Boolean(actorBlockedId) },
@@ -258,5 +266,29 @@ it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim arti
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 40).length, 1);
   assert(w.nativeLife.needs.meal >= 90);
+  assert.equal(w.reservations.size, 0);
+});
+
+it('récupère seulement au lit pendant le sommeil, puis se réveille et libère son lit au sol', () => {
+  const w = world('native', false, true);
+  w.tick(); w.tick();
+  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0 };
+  w.tick(); w.tick();
+  const beforeBed = w.nativeLife.needs.rest;
+  w.tick();
+  assert.equal(w.controller.state.animation, 'laying-sleeping');
+  assert.equal(w.controller.state.y, 45);
+  assert(w.nativeLife.needs.rest > beforeBed, 'Reaching the bed must not satisfy fatigue');
+  const beforeSleep = w.nativeLife.needs.rest;
+  w.tick(1, false);
+  assert(w.nativeLife.needs.rest > beforeSleep, 'Loading the clip must not satisfy fatigue');
+  w.tick();
+  assert(w.nativeLife.needs.rest < beforeSleep);
+  assert(w.snapshot.activity.includes('Se réveiller'));
+  const beforeWaking = w.nativeLife.needs.rest;
+  w.tick();
+  assert(w.nativeLife.needs.rest >= beforeWaking, 'Leaving the bed must stop sleep recovery');
+  assert.equal(w.controller.state.y, 0);
+  assert.equal(w.nativeLife.lastActivity, 'sleep');
   assert.equal(w.reservations.size, 0);
 });

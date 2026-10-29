@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 require('../support/load-ts.cjs');
-const { createLife, evolveLife, chooseLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+const { createLife, evolveLife, chooseLifeActivity, LIFE_SETTINGS } = require('../../src/features/scene/ai/laraLife.ts');
 const { load } = require('../support/load-ts.cjs');
 const position = { x: 0, z: 0 };
 const candidates = [
@@ -101,4 +101,63 @@ it('fait monter la faim pendant la marche et les autres activités, puis la réd
   assert.equal(evolveLife(initial, 10, 'meal', false).meal, 35);
   assert.equal(evolveLife(initial, 60, 'meal', false).meal, 0);
   assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null).activity, 'meal');
+});
+
+it('réserve le lit à la grande fatigue et choisit une pause assise si tous les lits sont indisponibles', () => {
+  const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 1000, z: 0 };
+  const mild = { rest: LIFE_SETTINGS.sleepPriority - 1, work: 0, walk: 0, meal: 0 };
+  assert.equal(chooseLifeActivity(mild, [...candidates, bed], position, null).activity, 'rest');
+  const tired = { ...mild, rest: LIFE_SETTINGS.sleepPriority };
+  assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null).activity, 'sleep', 'The nearer sofa must not replace an available bed');
+  assert.equal(chooseLifeActivity(tired, candidates, position, null).activity, 'rest');
+  assert.equal(chooseLifeActivity(tired, [], position, null), null);
+  const rested = evolveLife(tired, LIFE_SETTINGS.sleepSeconds, 'sleep', false);
+  assert.equal(rested.rest, 0);
+  assert(rested.meal > tired.meal);
+  assert(evolveLife(tired, 60, 'rest', false).rest > evolveLife(tired, 60, 'sleep', false).rest);
+});
+
+it('finit par choisir le sommeil au cours d’une vie autonome, malgré les pauses courtes', () => {
+  const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 0, z: 0 };
+  let needs = createLife().needs, last = 'work', slept = false;
+  needs = evolveLife(needs, LIFE_SETTINGS.activitySeconds, 'work', false);
+  for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 15 * 60;) {
+    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last);
+    if (selected?.activity === 'sleep') { slept = true; break; }
+    const activity = selected?.activity ?? 'pause';
+    if (activity === 'walk') needs = evolveLife(needs, 8, null, true);
+    const duration = activity === 'pause' ? LIFE_SETTINGS.pauseSeconds : LIFE_SETTINGS.activitySeconds;
+    needs = evolveLife(needs, duration, activity, false);
+    seconds += duration;
+    last = activity;
+  }
+  assert(slept, 'Short rests must not prevent sleeping indefinitely');
+});
+
+it('garde la montée et la descente du lit et applique le sommeil uniquement à l’étape couchée', () => {
+  let objects = [{ id: 'bed-west', category: 'bed', position: [0, 0, 0], slots: [{ slotId: 'lie-down' }, { slotId: 'seat-middle' }] }];
+  const occupied = new Set();
+  const route = [
+    { type: 'MOVE_TO' }, { type: 'MOVE_TO', targetLocalPos: [0, 45, 28], navigation: 'interaction' },
+    { type: 'USE_OBJECT' }, { type: 'MOVE_TO', targetLocalPos: [0, 45, 28], navigation: 'interaction' }, { type: 'MOVE_TO' },
+  ];
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => objects,
+      buildSmartObjectInstructionSequence: (id, slotId) => route.map(step => ({ ...step, smartObjectId: id, slotId })) },
+    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
+  });
+  const beds = getLaraLifeCandidates();
+  assert.equal(beds.length, 1);
+  const steps = buildLaraLifeInstructions(beds[0]);
+  assert.deepEqual(steps.map(step => step.type), route.map(step => step.type));
+  assert.deepEqual(steps[1].targetLocalPos, route[1].targetLocalPos);
+  assert.equal(steps[2].animation, 'laying-sleeping');
+  assert.equal(steps[2].lifePhase, 'sleep');
+  assert.equal(steps[2].duration, LIFE_SETTINGS.sleepSeconds);
+  assert(steps.slice(3).every(step => step.lifePhase === 'wake-up'));
+  occupied.add('bed-west:lie-down');
+  assert.equal(getLaraLifeCandidates().length, 0);
+  objects = [{ id: 'bed-double', category: 'bed', position: [0, 0, 0], slots: [{ slotId: 'lie-down-left' }, { slotId: 'lie-down-right' }] }];
+  assert.equal(getLaraLifeCandidates().length, 2);
 });

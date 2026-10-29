@@ -67,7 +67,7 @@ exports.withBrowser = async (fixture, exercise) => {
         await server.listen();
         await server.watcher.close();
         const address = server.httpServer.address();
-        const gpuArgs = process.platform === 'linux' || process.argv.includes('--hardware-gpu')
+        const gpuArgs = process.argv.includes('--hardware-gpu') || (process.platform === 'linux' && !fixture.softwareRendering)
             ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--disable-vulkan-surface']
             : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
         browser = await launch({ args: ['--no-sandbox', ...gpuArgs], protocolTimeout: fixture.readinessTimeoutMs + fixture.timeoutMs });
