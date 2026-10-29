@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, lifeNeed, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, lifeNeed, lifeEffect, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -613,11 +613,11 @@ export function createAgentController(
       for (const [key, failure] of failedLifeTargets) {
         if (failure.environment !== environment || (failure.actors && !actorBlocksUnchanged(failure.actors))) failedLifeTargets.delete(key);
       }
-      const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates()
+      const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates(nativeLife.handsDirty)
         .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
           && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, nativeLife.lastActivity);
       lifeActivity = candidate?.activity ?? 'pause';
-      const reason = candidate
+      const reason = candidate?.activity === 'wash-hands' ? 'Lara se lave les mains après les toilettes.' : candidate
         ? `${LIFE_NEED_LABELS[lifeNeed(candidate.activity)]} : ${Math.round(nativeLife.needs[lifeNeed(candidate.activity)])} %.`
         : 'Lara fait une pause ; ses besoins sont faibles ou les activités adaptées sont indisponibles.';
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(candidate)
@@ -1509,6 +1509,7 @@ export function createAgentController(
         repeatIndex = 0;
         targetRepeats = 1;
 
+        if (hasLife && loop && lifeActivity && (currentInstruction.lifePhase === 'wash-hands' || currentInstruction.lifePhase === 'shower')) nativeLife.handsDirty = false;
         if (!beginSlotExit()) agentStatus = 'IDLE';
         if (currentInstruction.smartObjectId === 'desk-bollsidan-2') {
           setDesk2SmartActionState(_characterId, false);
@@ -1646,8 +1647,7 @@ export function createAgentController(
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
-    const previousLifeActivity = (lifeActivity === 'meal' && instruction?.lifePhase !== 'eat-meal')
-      || (lifeActivity === 'sleep' && instruction?.lifePhase !== 'sleep') ? null : lifeActivity;
+    const previousLifeActivity = lifeEffect(lifeActivity, instruction?.lifePhase);
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
@@ -1670,6 +1670,7 @@ export function createAgentController(
     } finally {
       setAgentVelocity(_characterId, dt > 0 ? { x: (state.x - x) / dt, z: (state.z - z) / dt } : null);
       if (lifeRunning) {
+        if (previousLifeActivity === 'toilet' && interactionSeconds > 0) nativeLife.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
         const moving = (wasMoving || agentStatus === 'MOVING') && (state.x !== x || state.z !== z);
         nativeLife.needs = evolveLife(nativeLife.needs, interactionSeconds, previousLifeActivity, false);

@@ -5,7 +5,7 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
-function world(id = 'native', withMeal = false, withSleep = false) {
+function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false) {
   const nativeLife = life.createLife(), logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
@@ -19,6 +19,10 @@ function world(id = 'native', withMeal = false, withSleep = false) {
     objects.sleep = { id: 'sleep', name: 'Bed', position: [50, 45, 10], slots: [{ slotId: 'use', animation: 'laying-sleeping' }] };
   }
   const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
+  if (withHygiene) for (const activity of ['toilet', 'wash-hands']) {
+    candidates.push({ activity, id: activity, slotId: 'use', x: 60, z: 10 });
+    objects[activity] = { id: activity, name: activity, position: [60, 0, 10], slots: [{ slotId: 'use', animation: activity }] };
+  }
   let revision = 0, failedId, actorBlockedId, crowdWait, navigationPending, attempts = [], snapshot = {};
   class NavigationBlockedError extends Error { constructor() { super('actor in the approach'); this.target = { x: 20, z: 10 }; } }
   class NavigationPending { constructor(job) { this.job = job; } }
@@ -32,7 +36,12 @@ function world(id = 'native', withMeal = false, withSleep = false) {
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: () => false },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
-      getLaraLifeCandidates: () => candidates, buildLaraLifeInstructions: candidate => candidate.activity === 'meal' ? [
+      getLaraLifeCandidates: dirty => candidates.filter(c => c.activity !== 'wash-hands' || dirty), buildLaraLifeInstructions: candidate => candidate.activity === 'toilet' ? [
+        { ...sequence('toilet', 'use')[0], duration: 3, lifePhase: 'use-toilet' },
+        { type: 'WAIT', animation: 'flush', duration: 1, lifePhase: 'flush' },
+        { ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' },
+      ] : candidate.activity === 'wash-hands' ? [{ ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' }]
+      : candidate.activity === 'meal' ? [
         { ...sequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId)[0], animation: 'cook', lifePhase: 'prepare-meal' },
         { ...sequence(candidate.id, candidate.slotId)[0], animation: 'eat', lifePhase: 'eat-meal' },
       ] : candidate.activity === 'sleep' ? [
@@ -176,7 +185,7 @@ it('interrompt une activité autonome pour le contrôle manuel et reprend sans r
 it('ne retente une cible inaccessible qu’après un changement du monde', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
   w.fail('rest');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 20).length, 1);
@@ -196,7 +205,7 @@ it('laisse les autres personnages suivre leur scénario sans simulation de besoi
 it('réexamine une approche lorsque le personnage qui la bloquait s’écarte', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
   w.blockActor('rest');
   for (let i = 0; i < 12; i++) w.tick();
   const restDecisions = () => w.logs.filter(entry => entry.action === 'life_decision' && entry.object?.id === 'rest');
@@ -213,7 +222,7 @@ it('exécute un ordre direct avant de reprendre le choix selon les besoins', () 
   const w = world(), disconnect = w.controller.connect();
   try {
     w.tick();
-    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0 };
+    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
     document.dispatchEvent(new CustomEvent('agent-force-smartobject', { detail: { targetId: 'native', objectId: 'desk-bollsidan-2', slotId: 'use' } }));
     assert.equal(w.controller.hasPendingDynamicTask(), true);
     w.tick();
@@ -239,7 +248,7 @@ it('garde les besoins et la décision en pause quand le personnage est masqué',
 it('prépare puis mange sans satisfaire la faim pendant la préparation ou le chargement', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0 };
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'cook');
   const hungry = w.nativeLife.needs.meal;
@@ -261,7 +270,7 @@ it('prépare puis mange sans satisfaire la faim pendant la préparation ou le ch
 it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim artificiellement satisfaite', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0 };
   w.fail('cuisine-group');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 40).length, 1);
@@ -272,7 +281,7 @@ it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim arti
 it('récupère seulement au lit pendant le sommeil, puis se réveille et libère son lit au sol', () => {
   const w = world('native', false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0 };
+  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
   w.tick(); w.tick();
   const beforeBed = w.nativeLife.needs.rest;
   w.tick();
@@ -291,4 +300,43 @@ it('récupère seulement au lit pendant le sommeil, puis se réveille et libère
   assert.equal(w.controller.state.y, 0);
   assert.equal(w.nativeLife.lastActivity, 'sleep');
   assert.equal(w.reservations.size, 0);
+});
+
+it('conserve les mains sales après interruption et ne les nettoie qu’après le lavage réellement joué', () => {
+  const w = world('native', false, false, true);
+  w.tick(); w.tick();
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90 };
+  w.tick(); w.tick();
+  assert.equal(w.controller.state.animation, 'toilet');
+  w.tick(1, false);
+  assert(!w.nativeLife.handsDirty, 'Loading a clip does not mean using the toilet');
+  w.tick();
+  assert(w.nativeLife.handsDirty);
+  w.controller.setPosition(10, 0, 10);
+  assert(w.nativeLife.handsDirty, 'Manual interruption must preserve the obligation');
+  for (let i = 0; i < 10 && w.controller.state.animation !== 'wash-hands'; i++) w.tick(1, false);
+  assert.equal(w.controller.state.animation, 'wash-hands');
+  w.tick(1, false);
+  assert(w.nativeLife.handsDirty, 'Loading the washing clip must not clean hands');
+  w.tick();
+  assert(!w.nativeLife.handsDirty);
+});
+
+it('enchaîne toilettes, chasse puis lavage sans soulager les toilettes pendant la chasse', () => {
+  const w = world('native', false, false, true);
+  w.tick(); w.tick();
+  w.nativeLife.needs.toilet = 90;
+  w.tick(); w.tick();
+  for (let i = 0; i < 3; i++) w.tick();
+  assert(w.nativeLife.handsDirty);
+  w.tick();
+  assert.equal(w.controller.state.animation, 'flush');
+  const beforeFlush = w.nativeLife.needs.toilet;
+  w.tick();
+  assert(w.nativeLife.needs.toilet > beforeFlush);
+  w.tick();
+  assert.equal(w.controller.state.animation, 'wash-hands');
+  w.tick();
+  assert(!w.nativeLife.handsDirty);
+  assert.equal(w.nativeLife.lastActivity, 'toilet');
 });

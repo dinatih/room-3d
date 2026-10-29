@@ -56,7 +56,7 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(): LifeCandidate[] {
+export function getLaraLifeCandidates(handsDirty: boolean): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, 'native'));
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native')));
@@ -65,11 +65,14 @@ export function getLaraLifeCandidates(): LifeCandidate[] {
       .flatMap(slot => {
         const activity = object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'garden-fresh-air' ? 'walk'
+          : object.id === 'toilet' && slot.slotId === 'use' ? 'toilet'
+          : object.id === 'shower' ? 'shower'
+          : object.id === 'vasque-sdb' && slot.slotId === 'wash-hands' && handsDirty ? 'wash-hands'
           : object.category === 'bed' && slot.slotId.startsWith('lie-down') ? 'sleep'
           : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
         const position = slot.offset ?? object.position;
         const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2] };
-        return activity ? [{ ...candidate, activity }, ...(activity === 'rest' && canPrepare ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
+        return activity ? [{ ...candidate, activity }, ...(activity === 'rest' && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
       }));
 }
 
@@ -81,6 +84,20 @@ export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activi
       duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
   ];
   const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native');
+  if (candidate.activity === 'toilet' || candidate.activity === 'wash-hands' || candidate.activity === 'shower') return sequence.map((instruction): AgentInstruction => {
+    if (instruction.type !== 'USE_OBJECT') return instruction;
+    if (instruction.smartObjectId === 'toilet' && instruction.slotId === 'use') return {
+      ...instruction, duration: LIFE_SETTINGS.toiletSeconds, animation: 'sit-idle', repeatCount: 1, lifePhase: 'use-toilet',
+    };
+    if (instruction.triggerEventKey === 'wc-flush') return { ...instruction, lifePhase: 'flush' };
+    if (instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands') return {
+      ...instruction, duration: LIFE_SETTINGS.handWashingSeconds, animation: 'fab-daily-life-wash-hands', repeatCount: 1, lifePhase: 'wash-hands',
+    };
+    if (instruction.smartObjectId === 'shower') return {
+      ...instruction, duration: LIFE_SETTINGS.activitySeconds, animation: 'taking-shower', repeatCount: 1, repeatVariation: false, lifePhase: 'shower',
+    };
+    return instruction;
+  });
   const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');
   const instructions = sequence.map((instruction, index): AgentInstruction => instruction.type === 'USE_OBJECT'
     ? { ...instruction, duration: candidate.activity === 'sleep' ? LIFE_SETTINGS.sleepSeconds : LIFE_SETTINGS.activitySeconds,

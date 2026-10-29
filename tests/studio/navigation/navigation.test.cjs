@@ -8,7 +8,7 @@ describe('Navigation dans l’appartement chargé', () => {
         it(fixture.behavior, { timeout: fixture.readinessTimeoutMs + fixture.timeoutMs + 30000 }, async () => {
             await withBrowser(fixture, async (page, result) => {
                 result.measurements = await page.evaluate(async (fixture) => {
-                    const scenarios = ['life', 'meal', 'sleep'].includes(fixture.activity) ? await import('/tests/support/lara-life.mjs') : await import('/tests/support/apartment.mjs');
+                    const scenarios = ['life', 'meal', 'sleep', 'hygiene'].includes(fixture.activity) ? await import('/tests/support/lara-life.mjs') : await import('/tests/support/apartment.mjs');
                     return scenarios[({ 'closed-door': 'closedDoor' })[fixture.activity] ?? fixture.activity](fixture);
                 }, fixture);
                 if (result.measurements.actors)
