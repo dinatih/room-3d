@@ -32,6 +32,14 @@ const waterMat = new THREE.MeshStandardMaterial({
   depthWrite: false,
 });
 
+function animateHinge(hinge: THREE.Group | null, open: boolean, delta: number): boolean {
+  if (!hinge) return false;
+  const target = hinge.userData.initialRotation + (open ? -TOILET_HINGE_ANGLE : 0);
+  if (Math.abs(target - hinge.rotation.x) <= TOILET_HINGE_TOLERANCE) return false;
+  hinge.rotation.x = THREE.MathUtils.damp(hinge.rotation.x, target, TOILET_HINGE_SPEED, delta);
+  return true;
+}
+
 export function Toilet({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
@@ -46,21 +54,26 @@ export function Toilet({ onSize, actionState = {}, isPreview = false }: Partial<
 
   useLayoutEffect(() => {
     if (isPreview) return;
-    const handler = (e: any) => {
-      const { key, value } = e.detail;
-      if (key === 'wc-flush') {
-        isFlushingRef.current = value !== undefined ? !!value : true;
-        invalidate();
-        if (isFlushingRef.current) {
-          setTimeout(() => {
-            isFlushingRef.current = false;
-            invalidate();
-          }, 1500);
-        }
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const handler = (event: Event) => {
+      const { key, value } = (event as CustomEvent<{ key: string; value?: boolean }>).detail;
+      if (key !== 'wc-flush') return;
+      clearTimeout(timeout);
+      isFlushingRef.current = value === undefined || !!value;
+      invalidate();
+      if (isFlushingRef.current) {
+        timeout = setTimeout(() => {
+          isFlushingRef.current = false;
+          invalidate();
+        }, 1500);
       }
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      clearTimeout(timeout);
+      isFlushingRef.current = false;
+    };
   }, [invalidate, isPreview]);
 
   useLayoutEffect(() => {
@@ -126,28 +139,8 @@ export function Toilet({ onSize, actionState = {}, isPreview = false }: Partial<
   }, [scene, onSize]);
 
   useFrame((_, delta) => {
-    let active = false;
-    if (lidHingeRef.current && lidHingeRef.current.userData.initialRotation !== undefined) {
-      const targetLidAngle = lidHingeRef.current.userData.initialRotation + (isLidOpen ? -TOILET_HINGE_ANGLE : 0);
-      const diff = targetLidAngle - lidHingeRef.current.rotation.x;
-      if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
-        lidHingeRef.current.rotation.x = THREE.MathUtils.damp(
-          lidHingeRef.current.rotation.x, targetLidAngle, TOILET_HINGE_SPEED, delta,
-        );
-        active = true;
-      }
-    }
-    
-    if (seatHingeRef.current && seatHingeRef.current.userData.initialRotation !== undefined) {
-      const targetSeatAngle = seatHingeRef.current.userData.initialRotation + (isSeatOpen ? -TOILET_HINGE_ANGLE : 0);
-      const diff = targetSeatAngle - seatHingeRef.current.rotation.x;
-      if (Math.abs(diff) > TOILET_HINGE_TOLERANCE) {
-        seatHingeRef.current.rotation.x = THREE.MathUtils.damp(
-          seatHingeRef.current.rotation.x, targetSeatAngle, TOILET_HINGE_SPEED, delta,
-        );
-        active = true;
-      }
-    }
+    let active = animateHinge(lidHingeRef.current, isLidOpen, delta);
+    active = animateHinge(seatHingeRef.current, isSeatOpen, delta) || active;
 
     if (buttonRef.current && buttonRef.current.userData.originalZ !== undefined) {
       const targetZ = isFlushingRef.current ? buttonRef.current.userData.originalZ - 0.03 : buttonRef.current.userData.originalZ;

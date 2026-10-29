@@ -101,6 +101,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     if (!r || (isPreview && actionState.previewPaused)) return;
     const doorEnd = wantDoor ? FRIDGE_DOOR_DURATION : 0;
     const drawerEnd = wantCrisper ? r.crisper.getClip().duration : 0;
+    if (r.door.time === doorEnd && r.crisper.time === drawerEnd) return;
     const move = (a: THREE.AnimationAction, end: number) => {
       a.time = a.time < end ? Math.min(end, a.time + delta) : Math.max(end, a.time - delta);
     };

@@ -18,6 +18,7 @@ export const FREEZER_DOOR_DURATION = 1;
 export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB);
   const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);
+  const paused = isPreview && !!actionState.previewPaused;
   const wantOpen = isPreview ? !!actionState['freezer'] : sceneOpen;
   const runtime = useRef<{ mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);
   const { invalidate } = useThree();
@@ -63,12 +64,13 @@ export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial
     };
   }, [scene, animations, invalidate, isPreview]);
 
-  useEffect(() => { invalidate(); }, [wantOpen, invalidate]);
+  useEffect(() => { invalidate(); }, [wantOpen, paused, invalidate]);
 
   useFrame((_, delta) => {
     const r = runtime.current;
-    if (!r) return;
+    if (!r || paused) return;
     const end = wantOpen ? r.door.getClip().duration : 0;
+    if (r.door.time === end) return;
     r.door.time = r.door.time < end ? Math.min(end, r.door.time + delta) : Math.max(end, r.door.time - delta);
     r.mixer.update(0);
     if (r.door.time !== end) invalidate();

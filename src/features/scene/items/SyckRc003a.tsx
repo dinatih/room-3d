@@ -54,7 +54,7 @@ export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Part
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, isPreview, invalidate, onSize]);
+  }, [scene, animations, invalidate, onSize]);
 
   useEffect(() => {
     invalidate();
@@ -69,6 +69,7 @@ export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Part
 
     const lidEnd = wantLid ? r.lid.getClip().duration : 0;
     const potEnd = wantPot ? r.pot.getClip().duration : 0;
+    if (r.lid.time === lidEnd && r.pot.time === potEnd) return;
 
     // Séquence : rétracter le pot avant de fermer le couvercle ; ouvrir le couvercle à fond avant d'extraire le pot
     if (!wantPot && r.pot.time > 0) {
