@@ -11,12 +11,12 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneItemProps, SceneModelProps } from '@shared/types';
 
 const GLB = 'items/vihals70592744/Vihals70592744.glb';
 
 // ── Open : GLB IKEA ───────────────────────────────────────────────────────────
-function OpenVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
+function OpenVihals({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone(GLB);
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -31,8 +31,8 @@ function OpenVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
-  }, [scene]);
+    onSize?.(box.getSize(new THREE.Vector3()));
+  }, [scene, onSize]);
   return <primitive object={scene} />;
 }
 
@@ -50,7 +50,7 @@ const BAR_HX    = FRAME_W / 2 - TUBE_R - 1;
 const BAR_LEN   = FRAME_H - 4;
 const BAR_Y     = BAR_LEN / 2 + 2;
 
-function FoldedVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
+function FoldedVihals({ onSize }: SceneModelProps) {
   const matSteel = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0xa92218, roughness: 0.5, metalness: 0.4,
   }), []);
@@ -59,7 +59,7 @@ function FoldedVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
   }), []);
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(FRAME_W, FRAME_H, FRAME_D));
+    onSize?.(new THREE.Vector3(FRAME_W, FRAME_H, FRAME_D));
   }, [onSize]);
 
   return (
@@ -115,7 +115,7 @@ function FoldedVihals({ onSize }: { onSize: (v: THREE.Vector3) => void }) {
 }
 
 // ── Composant principal ──────────────────────────────────────────────────────
-export function Vihals({ onSize, actionState, isPreview = false }: SceneItemProps) {
+export function Vihals({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const sceneState = useFurnitureToggles(['vihals-toggle']);
   const folded = Boolean((isPreview ? actionState : sceneState)['vihals-toggle']);
 

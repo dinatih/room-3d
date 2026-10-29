@@ -42,55 +42,27 @@ function createRattanTextures() {
       const x = c * step;
       const y = r * step;
 
-      if ((r + c) % 2 === 0) {
-        // Horizontal rattan strap
-        const colorGrad = colorCtx.createLinearGradient(x, y + pad, x, y + step - pad);
-        colorGrad.addColorStop(0, '#1c1d1e');
-        colorGrad.addColorStop(0.3, '#525558');
-        colorGrad.addColorStop(0.5, '#6a6d70');
-        colorGrad.addColorStop(0.7, '#525558');
-        colorGrad.addColorStop(1, '#1c1d1e');
+      const horizontal = (r + c) % 2 === 0;
+      const gradientAxis = horizontal
+        ? [x, y + pad, x, y + step - pad] as const
+        : [x + pad, y, x + step - pad, y] as const;
+      const colors = horizontal
+        ? ['#1c1d1e', '#525558', '#6a6d70', '#525558', '#1c1d1e']
+        : ['#161718', '#484b4d', '#5d6063', '#484b4d', '#161718'];
+      const colorGrad = colorCtx.createLinearGradient(...gradientAxis);
+      [0, 0.3, 0.5, 0.7, 1].forEach((stop, i) => colorGrad.addColorStop(stop, colors[i]));
+      colorCtx.fillStyle = colorGrad;
+      colorCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
+      colorCtx.strokeStyle = '#121314';
+      colorCtx.lineWidth = 1;
+      colorCtx.strokeRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
 
-        colorCtx.fillStyle = colorGrad;
-        colorCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-
-        // Highlight stroke
-        colorCtx.strokeStyle = '#121314';
-        colorCtx.lineWidth = 1;
-        colorCtx.strokeRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-
-        // Bump height profile
-        const bumpGrad = bumpCtx.createLinearGradient(x, y + pad, x, y + step - pad);
-        bumpGrad.addColorStop(0, '#000000');
-        bumpGrad.addColorStop(0.5, '#ffffff');
-        bumpGrad.addColorStop(1, '#000000');
-        bumpCtx.fillStyle = bumpGrad;
-        bumpCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-      } else {
-        // Vertical rattan strap
-        const colorGrad = colorCtx.createLinearGradient(x + pad, y, x + step - pad, y);
-        colorGrad.addColorStop(0, '#161718');
-        colorGrad.addColorStop(0.3, '#484b4d');
-        colorGrad.addColorStop(0.5, '#5d6063');
-        colorGrad.addColorStop(0.7, '#484b4d');
-        colorGrad.addColorStop(1, '#161718');
-
-        colorCtx.fillStyle = colorGrad;
-        colorCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-
-        // Highlight stroke
-        colorCtx.strokeStyle = '#121314';
-        colorCtx.lineWidth = 1;
-        colorCtx.strokeRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-
-        // Bump height profile
-        const bumpGrad = bumpCtx.createLinearGradient(x + pad, y, x + step - pad, y);
-        bumpGrad.addColorStop(0, '#000000');
-        bumpGrad.addColorStop(0.5, '#ffffff');
-        bumpGrad.addColorStop(1, '#000000');
-        bumpCtx.fillStyle = bumpGrad;
-        bumpCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-      }
+      const bumpGrad = bumpCtx.createLinearGradient(...gradientAxis);
+      bumpGrad.addColorStop(0, '#000000');
+      bumpGrad.addColorStop(0.5, '#ffffff');
+      bumpGrad.addColorStop(1, '#000000');
+      bumpCtx.fillStyle = bumpGrad;
+      bumpCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
     }
   }
 
@@ -139,15 +111,15 @@ function createFabricTexture() {
 
 // ── ArmrestSofa Component ─────────────────────────────────────────────────────
 
-export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
+export function ArmrestSofa({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { invalidate } = useThree();
 
   const leftGroupRef = useRef<THREE.Group>(null);
   const rightGroupRef = useRef<THREE.Group>(null);
 
   // Check if armrests are flat (toggled ON in actionState)
-  const leftFlat = !!(actionState && actionState['sofa-arm-left']);
-  const rightFlat = !!(actionState && actionState['sofa-arm-right']);
+  const leftFlat = !!actionState['sofa-arm-left'];
+  const rightFlat = !!actionState['sofa-arm-right'];
 
   // Angle state refs (in radians)
   // Visual Left (+Z = 57.5): Upright angle is -1.309 rad, Flat is 0
@@ -157,7 +129,7 @@ export function ArmrestSofa({ actionState, onSize }: SceneItemProps) {
 
   // Set sizing bounding box once & initialize armrest rotations
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(157, 89, 61));
+    onSize?.(new THREE.Vector3(157, 89, 61));
     if (leftGroupRef.current) {
       leftGroupRef.current.rotation.x = leftAngleRef.current;
     }

@@ -13,7 +13,7 @@ import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/rowenta-rh2079wo/rowenta-rh2079wo.glb';
 
-export function VacuumCleaner({ actionState, onSize, isPreview }: SceneItemProps) {
+export function VacuumCleaner({ actionState = {}, onSize, isPreview }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB, true);
   const isDetached = !!actionState?.['vacuum-detach-tube'];
   const { invalidate } = useThree();
@@ -44,7 +44,7 @@ export function VacuumCleaner({ actionState, onSize, isPreview }: SceneItemProps
       actions: getObjectActionIds('vacuum-cleaner'),
     };
     runtime.current = { mixer, action };
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); runtime.current = null; };
   }, [scene, animations, onSize]);
 

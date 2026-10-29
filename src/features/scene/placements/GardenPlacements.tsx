@@ -37,7 +37,7 @@ export function GardenFurniture() {
       {/* Canapé Jardin Est avec accoudoirs togglables */}
       <group position={[270, 0, -110]} rotation={[0, -Math.PI / 2, 0]}
              userData={{ skipMerge: true, birdSupport: { id: 'sofa-east', kind: 'furniture' }, itemName: 'Canapé Jardin Est', hoverAction: { label: 'Canapé Jardin Est', actions: [...getObjectActionIds('armrest-sofa'), ...SMART_OBJECTS['sofa-garden-east'].slots.map(slot => `smart-object:::sofa-garden-east:::${slot.slotId}`)] } }}>
-        <NavigationObstacle id="sofa-garden-east"><ArmrestSofa item={{} as any} actionState={as} onSize={() => {}} /></NavigationObstacle>
+        <NavigationObstacle id="sofa-garden-east"><ArmrestSofa actionState={as} /></NavigationObstacle>
       </group>
 
       {/* Canapé Jardin Ouest */}
