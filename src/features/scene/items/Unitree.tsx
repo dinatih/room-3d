@@ -14,7 +14,7 @@ import { advanceH2SoloCycle, createH2SoloCycle } from './h2SoloCycle';
 
 const H2_SOLO_ANIMATIONS = WALKER_ANIM_OPTIONS.filter(animation => animation.value !== 't-pose' && animation.value !== 'idle');
 
-function UnitreeModel({ model, onSize, actionState, isPreview }: SceneItemProps & { model: 'g1' | 'go2' }) {
+function UnitreeModel({ model, onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>> & { model: 'g1' | 'go2' }) {
   const { scene } = useGLTFClone(`items/unitree-${model}/unitree-${model}.glb`);
   const animate = useMemo(() => createUnitreeMotion(scene, model), [scene, model]);
   const time = useRef(0);
@@ -38,7 +38,7 @@ function UnitreeModel({ model, onSize, actionState, isPreview }: SceneItemProps 
         node.receiveShadow = true;
       }
     });
-    onSize(glbLocalBBox(scene).getSize(new Vector3()));
+    onSize?.(glbLocalBBox(scene).getSize(new Vector3()));
   }, [scene, onSize]);
   useFrame((state, delta) => {
     placement.current.getWorldPosition(position);
@@ -50,17 +50,17 @@ function UnitreeModel({ model, onSize, actionState, isPreview }: SceneItemProps 
     const walking = motion === (model === 'g1' ? 'walk' : 'trot');
     gaitTime.current += isPreview || actionState.robotAutonomous === false ? delta : distance / walkSpeed;
     animate(motion, walking ? gaitTime.current : time.current, time.current);
-    if (motion !== 'idle') state.invalidate();
+    state.invalidate();
   });
   const batches = useRigidMeshBatches(scene);
   return <group ref={placement}><primitive object={scene} /><primitive object={batches} /></group>;
 }
 
-export function UnitreeG1(props: SceneItemProps) {
+export function UnitreeG1(props: Partial<Omit<SceneItemProps, 'item'>>) {
   return <UnitreeModel {...props} model="g1" />;
 }
 
-export function UnitreeGo2(props: SceneItemProps) {
+export function UnitreeGo2(props: Partial<Omit<SceneItemProps, 'item'>>) {
   return <UnitreeModel {...props} model="go2" />;
 }
 

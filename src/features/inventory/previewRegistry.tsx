@@ -191,7 +191,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'metod50205532': Metod50205532,
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
-  'fridge':                 props => <Fridge {...props} isPreview />,
+  'fridge':                 Fridge,
   'cabinet-wood':           KitchenCabinet,
   'bathroom-cabinet-west':  BathroomCabinetWest,
   'bathroom-cabinet-east':  BathroomCabinetEast,
@@ -268,11 +268,11 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
 };
 
 CHARACTERS.forEach(char => {
-  SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState, onSize }: { actionState?: any; onSize?: SceneItemProps['onSize'] }) {
+  SCENE_REGISTRY[char.id] = function DynamicPreview({ actionState, onSize }: SceneItemProps) {
     return (
       <>
         <CharacterGroup
-          isPreview={true}
+          isPreview
           previewCharacterId={char.id}
           isPaused={actionState?.isPaused}
           characterAnim={actionState?.characterAnim}
@@ -285,43 +285,28 @@ CHARACTERS.forEach(char => {
           <ShibaInu isPreview dancePreview previewAnim="Dog|Jump" onSize={onSize} />}
       </>
     );
-  } as any;
+  };
 });
 
-SCENE_REGISTRY['ushiro'] = function ShibaPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <ShibaInu isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
+for (const [id, Model] of [
+  ['ushiro', ShibaInu], ['robin-bird', RobinBird], ['black-hornet-drone', BlackHornetDrone],
+  ['dji-neo', DjiNeoDrone], ['dji-avata-2', DjiAvata2Drone], ['dji-fpv', DjiFpvDrone],
+] as const) {
+  SCENE_REGISTRY[id] = function AnimatedPreview({ actionState, onSize }: SceneItemProps) {
+    return <Model isPreview previewAnim={actionState.characterAnim} onSize={onSize} />;
+  };
+}
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 SCENE_REGISTRY['ulotte-bowl'] = DogBowl;
-SCENE_REGISTRY['ulotte'] = function UlottePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+SCENE_REGISTRY['ulotte'] = function UlottePreview({ actionState, onSize }: SceneItemProps) {
   return <Dachshund isPreview previewAnim={actionState?.['ulotte-motion'] ?? actionState?.characterAnim ?? 'idle-1'} onSize={onSize} />;
 };
 
-SCENE_REGISTRY['robin-bird'] = function RobinBirdPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <RobinBird isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
-
-SCENE_REGISTRY['black-hornet-drone'] = function BlackHornetDronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <BlackHornetDrone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
-
-SCENE_REGISTRY['dji-neo'] = function DjiNeoDronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <DjiNeoDrone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
-
-SCENE_REGISTRY['dji-avata-2'] = function DjiAvata2DronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <DjiAvata2Drone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
-
-SCENE_REGISTRY['dji-fpv'] = function DjiFpvDronePreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
-  return <DjiFpvDrone isPreview={true} previewAnim={actionState?.characterAnim} onSize={onSize} />;
-} as any;
-
-SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: SceneItemProps) {
   return <Goldfish isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
 };
 
-SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSize }: SceneItemProps) {
   return <Goldfish species="tosakin" isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
 };
 
@@ -377,7 +362,7 @@ function AnimatedBustGroup({
 }
 
 WIGS_ITEMS.forEach(wig => {
-  SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: { actionState?: any; onSize?: any }) {
+  SCENE_REGISTRY[wig.id] = function WigPreview({ actionState, onSize }: SceneItemProps) {
     const hairColor = actionState?.previewHairColor;
     const laraVariant = actionState?.previewLaraVariant || 'native';
     const simulateMotion = actionState?.simulateMotion !== undefined ? Boolean(actionState.simulateMotion) : true;
@@ -402,12 +387,11 @@ WIGS_ITEMS.forEach(wig => {
         </AnimatedBustGroup>
       </group>
     );
-  } as any;
+  };
 });
-
 
 import { Blaskata50569513 } from '@features/scene/items/Blaskata50569513';
 import { SyckRc003a } from '@features/scene/items/SyckRc003a';
 
-SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513 as any;
-SCENE_REGISTRY['syck-rc003a'] = SyckRc003a as any;
+SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513;
+SCENE_REGISTRY['syck-rc003a'] = SyckRc003a;

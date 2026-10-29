@@ -7,7 +7,7 @@ import { glbLocalBBox } from '../glbUtils';
 import { isAppIdle } from '../idleState';
 import { useRigidMeshBatches } from '../utils/useRigidMeshBatches';
 
-export function WheeledRobot({ onSize, actionState, isPreview, modelId, driveSpeed, createMotion }: SceneItemProps & {
+export function WheeledRobot({ onSize, actionState = {}, isPreview = false, modelId, driveSpeed, createMotion }: Partial<Omit<SceneItemProps, 'item'>> & {
   modelId: string; driveSpeed: number;
   createMotion: (scene: Object3D) => (motion: string, seconds: number, distance: number, yaw: number) => void;
 }) {
@@ -30,7 +30,7 @@ export function WheeledRobot({ onSize, actionState, isPreview, modelId, driveSpe
     scene.traverse(node => {
       if ('isMesh' in node && node.isMesh) { node.castShadow = true; node.receiveShadow = true; }
     });
-    onSize(glbLocalBBox(scene).getSize(new Vector3()));
+    onSize?.(glbLocalBBox(scene).getSize(new Vector3()));
   }, [scene, onSize]);
   useFrame((state, delta) => {
     placement.current.getWorldPosition(position);
