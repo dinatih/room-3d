@@ -29,6 +29,7 @@ import {
 import { LAYER_WALKER_DETAIL } from '@config';
 import { buildGuidedTour, buildConciergeTour } from '../ai/scenarios';
 import { buildAutonomousActivities } from '../ai/autonomousActivities';
+import { useLaraLifeStore } from '../ai/laraLifeStore';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
@@ -670,18 +671,20 @@ export function Character({
   }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
-  const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false, distance: 0 });
+  const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false, distance: 0, lifeSpeed: 1 });
   useCharacterFrame(renderId, { simulate: (_state, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
     const oldX = groupRef.current.position.x, oldZ = groupRef.current.position.z;
     const wasVisible = groupRef.current.visible;
-    const agentDelta = id === 'native' && (cameraState.characterHidden || (!isActive && (!showAllLaraStyles
-      || !isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)))) ? 0 : delta;
-
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
     let agentAnimationPaused = false;
     const hasCharacterControl = cameraState.isXR || !cameraState.animalTarget;
     const isUserManuallyMoving = hasCharacterControl && cameraState.isUserControlling();
+    const lifeSpeed = id === 'native' && isAutonomous && !isGuidedTour && !hasDynamicTask && (!isActive || !isUserManuallyMoving)
+      ? useLaraLifeStore.getState().speed : 1;
+    frameControl.current.lifeSpeed = lifeSpeed;
+    const agentDelta = id === 'native' && (cameraState.characterHidden || (!isActive && (!showAllLaraStyles
+      || !isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)))) ? 0 : delta * lifeSpeed;
 
     if (!navigationEnabled && !isPreview) {
       const pose = cameraState.positions[id];
@@ -785,7 +788,8 @@ export function Character({
     frameControl.current.hasDynamicTask = hasDynamicTask;
   }, animate: (state, delta) => {
     if (!groupRef.current || !mixerRef.current) return;
-    const { agentAnimationPaused, isUserManuallyMoving, hasDynamicTask } = frameControl.current;
+    const { agentAnimationPaused, isUserManuallyMoving, hasDynamicTask, lifeSpeed } = frameControl.current;
+    const lifeDelta = delta * lifeSpeed;
     if (!groupRef.current.visible) {
       if (navigationEnabled && !isPreview) delete cameraState.headPositions[id];
       return;
@@ -1180,9 +1184,9 @@ export function Character({
       const walkingAction = actions[activeActionName.current];
       if (walkingAction) {
         const speed = getWalkCycleSpeed(walkingAction.getClip(), scene);
-        if (speed !== null) walkingAction.setEffectiveTimeScale(walkTimeScale(frameControl.current.distance, delta, speed));
+        if (speed !== null) walkingAction.setEffectiveTimeScale(walkTimeScale(frameControl.current.distance, lifeDelta, speed));
       }
-      mixer.update(agentAnimationPaused && !isTemporaryLoadingFallback ? 0 : delta);
+      mixer.update(agentAnimationPaused && !isTemporaryLoadingFallback ? 0 : lifeDelta);
       recordMixer(performance.now() - mixerStarted);
 
       // Parachute d'atterrissage réactif

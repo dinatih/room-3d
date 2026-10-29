@@ -56,27 +56,43 @@ export async function life(fixture) {
 
 export async function meal(fixture) {
     const { observations, check, waitFor } = observeLife(fixture);
+    const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
+    check(button, 'Character controls button missing');
+    button.click();
+    await waitFor(() => document.querySelector('[aria-label="Vitesse de la vie de Lara"]'), 'Bouton de vitesse visible');
+    const speedButton = document.querySelector('[aria-label="Vitesse de la vie de Lara"]');
+    check(useLaraLifeStore.getState().speed === 1, 'The simulation must start at normal speed');
+    const normalHunger = nativeLife.needs.meal;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const normalGrowth = nativeLife.needs.meal - normalHunger;
+    speedButton.click();
+    await waitFor(() => useLaraLifeStore.getState().speed === 3 && speedButton.textContent.includes('×3'), 'Vitesse ×3');
+    speedButton.click();
+    await waitFor(() => useLaraLifeStore.getState().speed === 10 && speedButton.textContent.includes('×10'), 'Vitesse ×10');
+    const fastHunger = nativeLife.needs.meal;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    const fastGrowth = nativeLife.needs.meal - fastHunger;
+    check(normalGrowth > 0 && fastGrowth > normalGrowth * 4, `Accelerated needs must advance faster: normal=${normalGrowth}, fast=${fastGrowth}`);
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle initiale');
     nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('cooking-stir-pan'), 'Lara rejoint les plaques et prépare le repas');
     const beforePreparation = nativeLife.needs.meal;
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 200));
     check(nativeLife.needs.meal >= beforePreparation, 'Preparing must not relieve hunger');
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('fab-daily-life-eat-with-fork'), 'Lara rejoint une assise pour manger');
     const beforeEating = nativeLife.needs.meal;
     await waitFor(() => nativeLife.needs.meal < beforeEating - 2, 'Manger satisfait réellement la faim');
-    const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
-    check(button, 'Character controls button missing');
-    button.click();
     await waitFor(() => document.querySelector('[aria-label="Faim"]'), 'La jauge de faim est visible');
     check(document.querySelector('[aria-label="Vie de Lara Native"]').textContent.includes('Manger'), 'The panel must show the current meal phase');
+    speedButton.click();
+    await waitFor(() => useLaraLifeStore.getState().speed === 1 && speedButton.textContent.includes('×1'), 'Retour à la vitesse normale');
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Interruption manuelle du repas');
     const interrupted = nativeLife.needs.meal;
     await new Promise(resolve => setTimeout(resolve, 1000));
     check(nativeLife.needs.meal === interrupted, 'An interrupted meal must stop relieving hunger');
     cameraState.lastUserControlTime = 0;
-    return { observations, interruptedHunger: interrupted };
+    return { observations, interruptedHunger: interrupted, normalGrowth, fastGrowth };
 }
