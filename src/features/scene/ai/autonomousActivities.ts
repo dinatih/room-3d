@@ -3,6 +3,8 @@ import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smart
 import { OccupancyManager } from './occupancyManager';
 import { LIFE_SETTINGS, type LifeCandidate } from './laraLife';
 
+export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
+
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
   window.location.search || window.location.hash.split('?')[1]
@@ -55,18 +57,28 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
 }
 
 export function getLaraLifeCandidates(): LifeCandidate[] {
-  return getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, 'native')).flatMap(object =>
+  const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, 'native'));
+  const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
+    && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native')));
+  return objects.flatMap(object =>
     object.slots.filter(slot => !slot.isDuo && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native'))
       .flatMap(slot => {
         const activity = object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'garden-fresh-air' ? 'walk'
           : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
         const position = slot.offset ?? object.position;
-        return activity ? [{ activity, id: object.id, slotId: slot.slotId, x: position[0], z: position[2] } as LifeCandidate] : [];
+        const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2] };
+        return activity ? [{ ...candidate, activity }, ...(activity === 'rest' && canPrepare ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
       }));
 }
 
 export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
+  if (candidate.activity === 'meal') return [
+    { type: 'USE_OBJECT', smartObjectId: MEAL_PREPARATION.id, slotId: MEAL_PREPARATION.slotId, animation: 'cooking-stir-pan',
+      duration: LIFE_SETTINGS.mealPreparationSeconds, repeatCount: 1, lifePhase: 'prepare-meal' },
+    { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
+      duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
+  ];
   const instructions = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native').map(instruction => instruction.type === 'USE_OBJECT'
     ? { ...instruction, duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, repeatVariation: false,
       animation: candidate.activity === 'rest' ? 'sitting-idle' : candidate.activity === 'walk' ? 'looking' : 'standing-using-touchscreen-tablet' }

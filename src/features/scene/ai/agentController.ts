@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
-import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
+import { chooseLifeActivity, evolveLife, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -613,7 +613,8 @@ export function createAgentController(
         if (failure.environment !== environment || (failure.actors && !actorBlocksUnchanged(failure.actors))) failedLifeTargets.delete(key);
       }
       const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates()
-        .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)), state, nativeLife.lastActivity);
+        .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
+          && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, nativeLife.lastActivity);
       lifeActivity = candidate?.activity ?? 'pause';
       const reason = candidate
         ? `${LIFE_NEED_LABELS[candidate.activity]} : ${Math.round(nativeLife.needs[candidate.activity])} %.`
@@ -1644,7 +1645,7 @@ export function createAgentController(
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
-    const previousLifeActivity = lifeActivity;
+    const previousLifeActivity = lifeActivity === 'meal' && instruction?.lifePhase !== 'eat-meal' ? null : lifeActivity;
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
@@ -1674,8 +1675,9 @@ export function createAgentController(
         lifeSnapshotSeconds += dt;
         if (lifeSnapshotSeconds >= 1) {
           lifeSnapshotSeconds %= 1;
+          const phase = (dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex])?.lifePhase;
           useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, activity: lifeActivity
-            ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${LIFE_LABELS[lifeActivity]}`
+            ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
             : 'Commande utilisateur' });
         }
       }

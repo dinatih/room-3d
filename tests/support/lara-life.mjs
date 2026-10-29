@@ -2,7 +2,7 @@ import { nativeLife, useLaraLifeStore } from '/src/features/scene/ai/laraLifeSto
 import { cameraState } from '/src/features/scene/cameraState.ts';
 import { resolveAnimationId } from '/src/features/scene/animations/animationResolver.ts';
 
-export async function life(fixture) {
+function observeLife(fixture) {
     const started = performance.now(), observations = [];
     const check = (condition, message) => { if (!condition) throw Error(message); };
     const waitFor = async (condition, message) => {
@@ -12,6 +12,11 @@ export async function life(fixture) {
         }
         observations.push({ message, at: performance.now() - started, needs: { ...nativeLife.needs }, position: { ...cameraState.positions.native } });
     };
+    return { observations, check, waitFor };
+}
+
+export async function life(fixture) {
+    const { observations, check, waitFor } = observeLife(fixture);
     const animation = key => cameraState.positions.native?.anim === resolveAnimationId(key);
     const decisions = () => window.__testTrace.filter(entry => entry.appLog?.action === 'life_decision' && entry.appLog?.actors?.includes('native'));
     const xbotStart = { ...cameraState.positions.xbot };
@@ -30,7 +35,7 @@ export async function life(fixture) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     check(nativeLife.needs.rest < beforeRest, 'Fatigue must decrease while seated');
     const panel = document.querySelector('[aria-label="Vie de Lara Native"]');
-    check(panel.querySelectorAll('progress').length === 3, 'Three needs must be visible');
+    check(panel.querySelectorAll('progress').length === 4, 'Four needs must be visible');
     const values = [...panel.querySelectorAll('progress')].map(element => element.value);
     Object.values(nativeLife.needs).forEach((value, index) => check(Math.abs(value - values[index]) < 2, 'Needs panel must track the simulation'));
     await waitFor(() => animation('looking') && decisions().some(entry => entry.appLog.object?.id === 'garden-fresh-air'), 'Lara se relève, marche puis observe le jardin');
@@ -47,4 +52,31 @@ export async function life(fixture) {
     const resumed = { ...nativeLife.needs };
     check(Math.abs(resumed.rest - duringManual.rest) < 2, 'Resuming must not reset needs');
     return { observations, decisions: decisions(), manualNeedsPreserved: true, panelValues: values, resumed };
+}
+
+export async function meal(fixture) {
+    const { observations, check, waitFor } = observeLife(fixture);
+    cameraState.recordUserControl();
+    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle initiale');
+    nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90 };
+    cameraState.lastUserControlTime = 0;
+    await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('cooking-stir-pan'), 'Lara rejoint les plaques et prépare le repas');
+    const beforePreparation = nativeLife.needs.meal;
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    check(nativeLife.needs.meal >= beforePreparation, 'Preparing must not relieve hunger');
+    await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('fab-daily-life-eat-with-fork'), 'Lara rejoint une assise pour manger');
+    const beforeEating = nativeLife.needs.meal;
+    await waitFor(() => nativeLife.needs.meal < beforeEating - 2, 'Manger satisfait réellement la faim');
+    const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
+    check(button, 'Character controls button missing');
+    button.click();
+    await waitFor(() => document.querySelector('[aria-label="Faim"]'), 'La jauge de faim est visible');
+    check(document.querySelector('[aria-label="Vie de Lara Native"]').textContent.includes('Manger'), 'The panel must show the current meal phase');
+    cameraState.recordUserControl();
+    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Interruption manuelle du repas');
+    const interrupted = nativeLife.needs.meal;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    check(nativeLife.needs.meal === interrupted, 'An interrupted meal must stop relieving hunger');
+    cameraState.lastUserControlTime = 0;
+    return { observations, interruptedHunger: interrupted };
 }

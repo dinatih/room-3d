@@ -11,6 +11,8 @@ const apartment = {
     profile: { radius: 13.3, height: 170 },
 };
 exports.navigation = [
+    { id: 'lara-meal', behavior: 'fait préparer puis manger Lara sans satisfaire sa faim avant le repas', activity: 'meal', count: 2,
+        layers: { animals: false }, timeoutMs: 180000 },
     { id: 'lara-life', behavior: 'fait travailler, marcher et se reposer Lara Native, puis respecte une interruption manuelle', activity: 'life', count: 2,
         layers: { animals: false }, timeoutMs: 300000 },
     { id: 'autonomous-all', behavior: 'fait vivre tous les personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: CHARACTERS.length, preset: 'mid', sessionMs: 15000, timeoutMs: 60000 },

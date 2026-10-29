@@ -5,12 +5,15 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
-function world(id = 'native') {
+function world(id = 'native', withMeal = false) {
   const nativeLife = life.createLife(), logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
   const objects = Object.fromEntries(candidates.map(candidate => [candidate.id, { id: candidate.id, name: candidate.id,
     position: [candidate.x, 0, candidate.z], slots: [{ slotId: 'use', animation: candidate.activity, duration: 1 }] }]));
+  const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
+  objects[MEAL_PREPARATION.id] = { id: MEAL_PREPARATION.id, name: 'Kitchen', position: [40, 0, 10], slots: [{ slotId: MEAL_PREPARATION.slotId, animation: 'cook' }] };
+  if (withMeal) candidates.push({ ...candidates[1], activity: 'meal' });
   const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
   let revision = 0, failedId, actorBlockedId, crowdWait, navigationPending, attempts = [], snapshot = {};
   class NavigationBlockedError extends Error { constructor() { super('actor in the approach'); this.target = { x: 20, z: 10 }; } }
@@ -24,8 +27,11 @@ function world(id = 'native') {
   const noop = () => {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: () => false },
-    './autonomousActivities': { getAvailableAutonomousActivities: () => candidates,
-      getLaraLifeCandidates: () => candidates, buildLaraLifeInstructions: candidate => sequence(candidate.id, candidate.slotId) },
+    './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
+      getLaraLifeCandidates: () => candidates, buildLaraLifeInstructions: candidate => candidate.activity === 'meal' ? [
+        { ...sequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId)[0], animation: 'cook', lifePhase: 'prepare-meal' },
+        { ...sequence(candidate.id, candidate.slotId)[0], animation: 'eat', lifePhase: 'eat-meal' },
+      ] : sequence(candidate.id, candidate.slotId) },
     './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state) } },
     './occupancyManager': { OccupancyManager: occupancy },
     './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop } },
@@ -70,7 +76,7 @@ function world(id = 'native') {
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, nativeLife, logs, tick, snapshot, attempts,
+  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -162,7 +168,7 @@ it('interrompt une activité autonome pour le contrôle manuel et reprend sans r
 it('ne retente une cible inaccessible qu’après un changement du monde', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0 };
   w.fail('rest');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 20).length, 1);
@@ -182,7 +188,7 @@ it('laisse les autres personnages suivre leur scénario sans simulation de besoi
 it('réexamine une approche lorsque le personnage qui la bloquait s’écarte', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0 };
   w.blockActor('rest');
   for (let i = 0; i < 12; i++) w.tick();
   const restDecisions = () => w.logs.filter(entry => entry.action === 'life_decision' && entry.object?.id === 'rest');
@@ -199,7 +205,7 @@ it('exécute un ordre direct avant de reprendre le choix selon les besoins', () 
   const w = world(), disconnect = w.controller.connect();
   try {
     w.tick();
-    w.nativeLife.needs = { rest: 100, work: 0, walk: 0 };
+    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0 };
     document.dispatchEvent(new CustomEvent('agent-force-smartobject', { detail: { targetId: 'native', objectId: 'desk-bollsidan-2', slotId: 'use' } }));
     assert.equal(w.controller.hasPendingDynamicTask(), true);
     w.tick();
@@ -220,4 +226,37 @@ it('garde les besoins et la décision en pause quand le personnage est masqué',
   for (let i = 0; i < 10; i++) w.tick(0);
   assert.deepEqual(w.nativeLife.needs, needs);
   assert.equal(w.logs.length, count);
+});
+
+it('prépare puis mange sans satisfaire la faim pendant la préparation ou le chargement', () => {
+  const w = world('native', true);
+  w.tick(); w.tick();
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90 };
+  w.tick(); w.tick();
+  assert.equal(w.controller.state.animation, 'cook');
+  const hungry = w.nativeLife.needs.meal;
+  w.nativeLife.needs.rest = 100; // A more urgent need must not replace the meal mid-sequence.
+  w.tick();
+  assert(w.nativeLife.needs.meal > hungry);
+  assert.equal(w.nativeLife.lastActivity, 'work');
+  w.tick();
+  assert.equal(w.controller.state.animation, 'eat');
+  const beforeEating = w.nativeLife.needs.meal;
+  w.tick(1, false);
+  assert(w.nativeLife.needs.meal > beforeEating, 'Loading the eating animation must not feed Lara');
+  w.tick();
+  assert(w.nativeLife.needs.meal < beforeEating);
+  assert.equal(w.nativeLife.lastActivity, 'meal');
+  assert.equal(w.reservations.size, 0);
+});
+
+it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim artificiellement satisfaite', () => {
+  const w = world('native', true);
+  w.tick(); w.tick();
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90 };
+  w.fail('cuisine-group');
+  for (let i = 0; i < 12; i++) w.tick();
+  assert.equal(w.attempts.filter(x => x === 40).length, 1);
+  assert(w.nativeLife.needs.meal >= 90);
+  assert.equal(w.reservations.size, 0);
 });
