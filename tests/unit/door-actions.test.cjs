@@ -56,6 +56,7 @@ it('VIHALS : le pliage de la scène et celui de la preview restent indépendants
     react: {}, three: require('three'), 'react/jsx-runtime': require('react/jsx-runtime'),
     '../objectActions': { getObjectActionIds: () => ['vihals-toggle'] },
     '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
+    '@react-three/fiber': { useFrame() {} },
     '@react-three/drei': { useGLTF: { preload() {} } },
     '@features/scene/useGLTFClone': {}, '@features/scene/glbUtils': {},
   });
