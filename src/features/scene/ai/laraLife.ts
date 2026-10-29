@@ -1,5 +1,7 @@
 export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number };
+export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
+const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social'];
 export const LIFE_PHASE_LABELS = {
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
@@ -62,7 +64,27 @@ const rates: Record<LifeActivity, LifeNeeds> = {
 
 export function createLife() {
   return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5 } as LifeNeeds,
-    elapsedSeconds: 0, handsDirty: false, lastActivity: null as LifeActivity | null };
+    elapsedSeconds: 0, memory: {} as LifeMemory, handsDirty: false, lastActivity: null as LifeActivity | null };
+}
+
+/** Only real need relief builds a taste; even an interrupted activity remains a recent experience. */
+export function rememberLifeActivity(life: { memory: LifeMemory; elapsedSeconds: number }, activity: LifeActivity | null, before: LifeNeeds, after: LifeNeeds) {
+  if (!activity || activity === 'pause') return;
+  const need = lifeNeed(activity);
+  life.memory[activity] = { satisfaction: (life.memory[activity]?.satisfaction ?? 0) + Math.max(0, before[need] - after[need]), lastAt: life.elapsedSeconds };
+}
+
+export function favoriteLifeActivity(memory: LifeMemory): LifeActivity | null {
+  return LEISURE_ACTIVITIES.filter(activity => (memory[activity]?.satisfaction ?? 0) > 0)
+    .sort((a, b) => memory[b]!.satisfaction - memory[a]!.satisfaction)[0] ?? null;
+}
+
+function experienceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number) {
+  const experience = memory[activity];
+  if (!experience) return 1; // An untried activity is a chance to discover a taste.
+  const since = elapsedSeconds - experience.lastAt;
+  const total = Object.values(memory).reduce((sum, entry) => sum + entry.satisfaction, 0);
+  return since / (since + LIFE_SETTINGS.activitySeconds) + (total > 0 ? experience.satisfaction / total : 0);
 }
 
 // One simulation second represents one clock minute; a day lasts 24 minutes at ×1.
@@ -93,7 +115,7 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
   })) as LifeNeeds;
 }
 
-export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number): LifeCandidate | null {
+export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
   const routine = routineActivities(hour);
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
@@ -107,6 +129,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
       || routineScore(b) - routineScore(a)
       || needs[lifeNeed(b.activity)] - needs[lifeNeed(a.activity)]
       || Number(a.activity === last) - Number(b.activity === last)
+      || experienceScore(b.activity, memory, elapsedSeconds) - experienceScore(a.activity, memory, elapsedSeconds)
       || distance(a) - distance(b) || a.id.localeCompare(b.id) || a.slotId.localeCompare(b.slotId))[0] ?? null;
 }
 

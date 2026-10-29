@@ -9,7 +9,7 @@ export interface DuoUpdateContext {
   duoRole: DuoRole | null;
   duoWaitTimer: number;
   duoInvited: boolean;
-  onSessionEnded: () => void;
+  onSessionEnded: (completed: boolean) => void;
   setDuoWaitTimer: (t: number) => void;
   setDuoInvited: (invited: boolean) => void;
 }
@@ -28,7 +28,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   } = ctx;
 
   if (duoSessionManager.isCompletedFor(characterId)) {
-    onSessionEnded();
+    onSessionEnded(Boolean(duoSessionManager.getSessionFor(characterId)?.isSessionComplete));
     return true; // action terminée
   }
 
@@ -48,7 +48,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
         action: 'duo_timeout',
         actors: [characterId],
       });
-      onSessionEnded();
+      onSessionEnded(false);
       return true;
     }
 
@@ -96,7 +96,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   }
 
   if (duoSessionManager.isCompletedFor(characterId)) {
-    onSessionEnded();
+    onSessionEnded(Boolean(duoSessionManager.getSessionFor(characterId)?.isSessionComplete));
     return true;
   }
 

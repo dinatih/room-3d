@@ -355,3 +355,33 @@ it('abandonne une conversation sans partenaire sans réessayer en boucle ni sati
   assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 1);
   assert(w.nativeLife.elapsedSeconds > 13 * 60);
 });
+
+it('mémorise les activités jouées, jamais le chargement, et préserve les goûts après interruption', () => {
+  const w = world();
+  w.tick(1, false); w.tick(1, false);
+  assert.deepEqual(w.nativeLife.memory, {});
+  w.tick();
+  assert(w.nativeLife.memory.work.satisfaction > 0);
+  const memory = structuredClone(w.nativeLife.memory);
+  w.controller.setPosition(50, 0, 50);
+  assert.deepEqual(w.nativeLife.memory, memory);
+  w.tick(0);
+  assert.deepEqual(w.nativeLife.memory, memory);
+});
+
+it('distingue une discussion achevée d’une attente expirée ou d’un partenaire parti', () => {
+  for (const outcome of ['completed', 'timeout', 'cancelled']) {
+    const { handleDuoInteraction } = load('src/features/scene/ai/agent/agentDuoHandler.ts', {
+      '../duoSessionManager': { duoSessionManager: {
+        isCompletedFor: () => outcome !== 'timeout', isPlaying: () => false,
+        getSessionFor: () => outcome === 'completed' ? { isSessionComplete: true } : null,
+        markReady: () => {}, isWaitingPartner: () => true,
+      } },
+      '@features/ui/AppConsole': { appLog: () => {} },
+    });
+    let completed;
+    assert(handleDuoInteraction({ characterId: 'native', dt: 21, state: {}, duoRole: 'roleA', duoWaitTimer: 0,
+      duoInvited: false, setDuoWaitTimer: () => {}, setDuoInvited: () => {}, onSessionEnded: value => { completed = value; } }));
+    assert.equal(completed, outcome === 'completed');
+  }
+});
