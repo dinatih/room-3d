@@ -12,6 +12,7 @@ import { getDebugPreset } from '@features/scene/store/debugPresets';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { Minimap } from '@features/scene/Minimap';
+import { LaraLifePanel } from '@features/scene/sidepanel/sections/LaraLifePanel';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
@@ -164,7 +165,7 @@ function getContrastTextColor(hexColor: string): string {
 }
 
 /** État des panneaux partageable dans la query string, y compris les URL avec hash. */
-function useUrlPanelToggle(key: 'minimap' | 'perfGraph') {
+function useUrlPanelToggle(key: 'minimap' | 'laraLife' | 'perfGraph') {
   const [visible, setVisible] = useState(() => {
     const { search, hash } = window.location;
     const query = search || (hash.includes('?') ? hash.slice(hash.indexOf('?')) : '');
@@ -219,6 +220,7 @@ export function AppConsole({
   const [bottomDockRight, setBottomDockRight] = useState<number | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const [showMinimap, setShowMinimap] = useUrlPanelToggle('minimap');
+  const [showLife, setShowLife] = useUrlPanelToggle('laraLife');
   const [showPerf, setShowPerf] = useUrlPanelToggle('perfGraph');
 
   useEffect(() => {
@@ -665,6 +667,18 @@ export function AppConsole({
           <i className="bi bi-map-fill" aria-hidden="true" />
         </button>
 
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${showLife ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          onClick={() => setShowLife(v => !v)}
+          title="Vie de Lara Native"
+          aria-label="Afficher ou masquer la vie de Lara Native"
+          aria-expanded={showLife}
+          aria-controls="lara-life-panel"
+        >
+          <i className="bi bi-heart-pulse-fill" aria-hidden="true" />
+        </button>
+
         {/* Indicateur de veille */}
         {isIdle && (
           <span
@@ -707,7 +721,7 @@ export function AppConsole({
         )}
       </div>
 
-      {/* Bodies de Minimap et Perf s'ouvrant l'un en dessous de l'autre */}
+      {/* Panneaux empilés sous le menu Mon CV */}
       {showMinimap && (
         <div
           className="glass-card shadow-lg rounded-2 p-1 align-self-end overflow-hidden"
@@ -718,6 +732,16 @@ export function AppConsole({
           }}
         >
           <Minimap embedded showGroup={false} />
+        </div>
+      )}
+
+      {showLife && (
+        <div
+          id="lara-life-panel"
+          className="glass-card shadow-lg rounded-2 align-self-end overflow-hidden"
+          style={{ pointerEvents: 'auto', width: panelWidth, maxWidth: 'calc(100vw - 16px)' }}
+        >
+          <LaraLifePanel />
         </div>
       )}
 

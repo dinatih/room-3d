@@ -14,7 +14,7 @@ function observeLife(fixture) {
         observations.push({ message, at: performance.now() - started, needs: { ...nativeLife.needs }, position: { ...cameraState.positions.native } });
     };
     const openPanel = async () => {
-        const button = [...document.querySelectorAll('button')].find(button => button.title === 'Configuration utilisateur & Personnages');
+        const button = document.querySelector('button[aria-controls="lara-life-panel"]');
         check(button, 'Character controls button missing');
         button.click();
         await waitFor(() => document.querySelector('[aria-label="Vie de Lara Native"]'), 'Panneau de vie visible');

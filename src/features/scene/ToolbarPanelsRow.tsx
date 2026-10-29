@@ -204,7 +204,6 @@ export function ToolbarPanelsRow({
 
   const characterSectionContent = (
     <CharacterSection
-      showLife
       layers={layers}
       onToggleLayer={onToggleLayer}
       isMobile={isMobile}

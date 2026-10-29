@@ -1,10 +1,8 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
 import type { LayerState, LaraClothing } from '../types';
-import { LaraLifePanel } from './LaraLifePanel';
 
 export interface CharacterSectionProps {
-  showLife?: boolean;
   layers: LayerState;
   onToggleLayer: (key: keyof LayerState) => void;
   isMobile: boolean;
@@ -18,7 +16,6 @@ export interface CharacterSectionProps {
 }
 
 export function CharacterSection({
-  showLife = false,
   layers,
   onToggleLayer,
   isMobile: _isMobile,
@@ -31,7 +28,6 @@ export function CharacterSection({
   handleRandomHaircut,
 }: CharacterSectionProps) {
   const extraStates = useSceneStore(state => state.extraStates);
-  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
 
   const iconLabel = (icon: string, label: string) => (
     <span className="d-inline-flex align-items-center gap-1"><i className={`bi ${icon}`} aria-hidden="true" />{label}</span>
@@ -89,7 +85,6 @@ export function CharacterSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
-      {showLife && layers.character && activeCharacterId === 'native' && <LaraLifePanel />}
       {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-2">
           <div className="d-flex flex-column gap-2">
