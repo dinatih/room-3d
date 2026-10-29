@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, rememberLifeActivity, lifeNeed, lifeEffect, lifeClock, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, type LifeActivity } from './laraLife';
 import { nativeLife, useLaraLifeStore } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
@@ -1658,6 +1658,8 @@ export function createAgentController(
       && animationPlayback?.animation === state.animation;
     const interactionSeconds = interacting ? lifeActivity === 'social'
       ? (duoSessionManager.isPlaying(_characterId) ? dt : 0) : Math.min(dt, Math.max(0, timer)) : 0;
+    const conversation = lifeRunning && previousLifeActivity === 'social' && interactionSeconds > 0 ? duoSessionManager.getSessionFor(_characterId) : null;
+    const partnerId = [conversation?.participantA?.characterId, conversation?.participantB?.characterId].find(id => id && id !== _characterId);
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     let pendingJob: NavigationJob<unknown> | undefined;
@@ -1677,6 +1679,7 @@ export function createAgentController(
       setAgentVelocity(_characterId, dt > 0 ? { x: (state.x - x) / dt, z: (state.z - z) / dt } : null);
       if (lifeRunning) {
         nativeLife.elapsedSeconds += dt;
+        if (partnerId) rememberLifeConversation(nativeLife, partnerId, interactionSeconds);
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) nativeLife.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
         const moving = (wasMoving || agentStatus === 'MOVING') && (state.x !== x || state.z !== z);
@@ -1688,7 +1691,7 @@ export function createAgentController(
         if (lifeSnapshotSeconds >= 1) {
           lifeSnapshotSeconds %= 1;
           const phase = (dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex])?.lifePhase;
-          useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, memory: { ...nativeLife.memory }, elapsedSeconds: nativeLife.elapsedSeconds, activity: lifeActivity
+          useLaraLifeStore.setState({ needs: { ...nativeLife.needs }, memory: { ...nativeLife.memory }, relationships: { ...nativeLife.relationships }, elapsedSeconds: nativeLife.elapsedSeconds, activity: lifeActivity
             ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
             : 'Commande utilisateur' });
         }

@@ -311,3 +311,22 @@ it('varie ses loisirs avec la mémoire, garde une affinité pour ses favoris et 
   assert.equal(choose(memory, 600, [...options, { ...candidates[1], activity: 'meal' }], { ...needs, meal: 100 }).activity, 'meal');
   assert.equal(choose(memory, 600, [options[1]]).activity, 'watch-tv', 'An unavailable favorite must not prevent another activity');
 });
+
+it('construit les affinités seulement avec du temps réellement partagé et préserve les nouvelles rencontres', () => {
+  const { rememberLifeConversation, closestLifeFriend, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
+  const life = createLife();
+  assert.equal(closestLifeFriend(life.relationships), null);
+  rememberLifeConversation(life, 'rosanna', 0);
+  assert.deepEqual(life.relationships, {});
+  life.elapsedSeconds = 60;
+  rememberLifeConversation(life, 'rosanna', 30);
+  rememberLifeConversation(life, 'rosanna', 30);
+  assert.deepEqual(life.relationships.rosanna, { seconds: 60, lastAt: 60 });
+  assert.equal(closestLifeFriend(life.relationships), 'rosanna');
+  assert(socialPartnerScore(life.relationships, 'marissa', 60) > socialPartnerScore(life.relationships, 'rosanna', 60), 'A recent conversation must leave room to meet someone else');
+  assert(socialPartnerScore(life.relationships, 'rosanna', 600) > socialPartnerScore(life.relationships, 'marissa', 600), 'Familiar company becomes attractive again after time apart');
+  rememberLifeConversation(life, 'marissa', 90);
+  assert.equal(closestLifeFriend(life.relationships), 'marissa');
+  for (const seconds of [-1, NaN, Infinity]) assert.throws(() => rememberLifeConversation(life, 'rosanna', seconds));
+  assert.throws(() => rememberLifeConversation(life, 'native', 1));
+});

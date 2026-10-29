@@ -1,18 +1,22 @@
-import { favoriteLifeActivity, getLifeMood, lifeClock, LIFE_LABELS, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, lifeClock, LIFE_LABELS, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
+import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes' };
 
 export function LaraLifePanel() {
-  const { needs, memory, elapsedSeconds, activity, reason, speed } = useLaraLifeStore();
+  const { needs, memory, relationships, elapsedSeconds, activity, reason, speed } = useLaraLifeStore();
   const mood = getLifeMood(needs);
   const clock = lifeClock(elapsedSeconds);
   const favorite = favoriteLifeActivity(memory);
   const tastes = favorite ? `Loisir favori : ${LIFE_LABELS[favorite]}` : 'Goûts encore à découvrir';
+  const friend = closestLifeFriend(relationships);
+  const company = friend ? `Compagnie préférée : ${findCharacter(friend)!.name}` : 'Aucune rencontre pour le moment';
   return <section className="p-2 border-bottom small lh-sm" aria-label="Vie de Lara Native">
     <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
       <span className="fw-semibold" title={`Jour ${clock.day} · ${clock.period}`}>Lara · {clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
+      <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
       <button type="button" className="btn btn-sm btn-outline-secondary py-0 text-nowrap" aria-label="Vitesse de la vie de Lara"
         title="Accélérer la vie de Lara : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>

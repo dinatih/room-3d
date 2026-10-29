@@ -1,6 +1,7 @@
 export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number };
 export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
+export type LifeRelationships = Record<string, { seconds: number; lastAt: number }>;
 const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social'];
 export const LIFE_PHASE_LABELS = {
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
@@ -64,7 +65,25 @@ const rates: Record<LifeActivity, LifeNeeds> = {
 
 export function createLife() {
   return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5 } as LifeNeeds,
-    elapsedSeconds: 0, memory: {} as LifeMemory, handsDirty: false, lastActivity: null as LifeActivity | null };
+    elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, lastActivity: null as LifeActivity | null };
+}
+
+export function rememberLifeConversation(life: { relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number) {
+  if (!partnerId || partnerId === 'native' || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life conversation');
+  if (seconds === 0) return;
+  life.relationships[partnerId] = { seconds: (life.relationships[partnerId]?.seconds ?? 0) + seconds, lastAt: life.elapsedSeconds };
+}
+
+export function closestLifeFriend(relationships: LifeRelationships): string | null {
+  return Object.keys(relationships).sort((a, b) => relationships[b].seconds - relationships[a].seconds || a.localeCompare(b))[0] ?? null;
+}
+
+/** Familiar company grows attractive again after time apart; new encounters remain possible. */
+export function socialPartnerScore(relationships: LifeRelationships, partnerId: string, elapsedSeconds: number) {
+  const relationship = relationships[partnerId];
+  if (!relationship) return 1;
+  const since = elapsedSeconds - relationship.lastAt;
+  return relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds) + since / (since + LIFE_SETTINGS.activitySeconds);
 }
 
 /** Only real need relief builds a taste; even an interrupted activity remains a recent experience. */

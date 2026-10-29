@@ -385,3 +385,35 @@ it('distingue une discussion achevée d’une attente expirée ou d’un partena
     assert.equal(completed, outcome === 'completed');
   }
 });
+
+it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou un personnage masqué', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const unavailable of [null, 'player', 'hidden']) {
+      const nativeLife = life.createLife();
+      nativeLife.elapsedSeconds = 600;
+      life.rememberLifeConversation(nativeLife, 'rosanna', 120);
+      nativeLife.relationships.rosanna.lastAt = 0;
+      const positions = { native: { x: 0, z: 0 }, marissa: { x: 20, z: 0 }, rosanna: { x: 200, z: 0 } };
+      const def = { id: 'conversation', label: 'Discussion', animA: 'talk', animB: 'listen', duration: 60 };
+      const { duoSessionManager } = load('src/features/scene/ai/duoSessionManager.ts', {
+        '../animations/duoAnimations': { DUO_ANIMATIONS: [def], canCharacterPerformDuo: () => true },
+        '../animations/duoWorldTransform': { computeWorldTransform: anchor => ({ posA: anchor, posB: [0, 0, 100], rotA: 0, rotB: Math.PI }) },
+        './occupancyManager': { LIMITED_ROOMS: [], OccupancyManager: { canUseObject: () => true, claimSlot: () => true } },
+        '@features/ui/AppConsole': { appLog: () => {} }, '../cameraState': { cameraState: { positions } },
+        '../characterConfig': { AUTONOMOUS_NPC_IDS: new Set(Object.keys(positions)), isCharacterVisibleInMode: id => !(unavailable === 'hidden' && id === 'rosanna') },
+        './smartObjectRegistry': { getSmartObject: () => ({ id: 'garden-conversation', name: 'Discussion', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: 'conversation', duoCount: 1, offset: [0, 0, 0] }] }) },
+        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: {} },
+        '../store/useSceneStore': { useSceneStore: { getState: () => ({ activeCharacterId: unavailable === 'player' ? 'rosanna' : 'native', layers: {} }) } },
+        './navigation/duoPlacement': { findDuoAnchor: anchor => anchor },
+        './navigation/navigationScope': { navigationValue: (key, fn) => fn() },
+        './navigation/service': { getNavigationGraph: () => ({}) }, './navigation/obstacles': { getAgentProfile: () => ({}) },
+        './laraLife': life, './laraLifeStore': { nativeLife },
+      });
+      const result = duoSessionManager.startDuoSession('garden-conversation', 'chat', 'native');
+      assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
+      assert.deepEqual(nativeLife.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
+    }
+  } finally { global.document = originalDocument; }
+});

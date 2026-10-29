@@ -189,6 +189,7 @@ export async function routine(fixture) {
         check(nativeLife.elapsedSeconds === clock, 'Manual control must pause the simulated clock');
         nativeLife.elapsedSeconds = 13 * 60; // 21:00, with all physiological needs fulfilled.
         nativeLife.memory = {};
+        nativeLife.relationships = {};
         nativeLife.needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
         nativeLife.lastActivity = lastActivity;
         for (const [id, slot] of blocked) reserve(id, slot);
@@ -224,9 +225,12 @@ export async function routine(fixture) {
         const session = duoSessionManager.getSessionFor('native');
         check(session.playlist[0].id === 'conversation', 'The session must be a conversation');
         check(session.participantA.isReady && session.participantB.isReady, 'Both people must have arrived');
+        const partnerId = session.participantA.characterId === 'native' ? session.participantB.characterId : session.participantA.characterId;
         const beforeSocial = nativeLife.needs.work;
         await waitFor(() => nativeLife.needs.work < beforeSocial - 2, 'La discussion réduit son ennui');
         check(nativeLife.memory.social?.satisfaction > 0, 'A real conversation must be remembered');
+        check(nativeLife.relationships[partnerId]?.seconds > 0, 'Only the actual conversation partner must gain affinity');
+        await waitFor(() => document.querySelector('[aria-label^="Compagnie préférée :"]'), 'La compagnie préférée est visible dans le panneau');
         await waitFor(() => nativeLife.lastActivity === 'social', 'La discussion se termine et Lara reprend sa routine');
         check(!duoSessionManager.getSessionFor('native'), 'The conversation must release both participants');
         return { observations };
