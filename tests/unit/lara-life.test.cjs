@@ -214,3 +214,22 @@ it('préserve la chaîne sanitaire et les événements des objets, et interdit u
   assert.deepEqual(shower.map(s => s.type), ['MOVE_TO', 'USE_OBJECT', 'MOVE_TO']);
   assert.equal(shower[1].animation, 'taking-shower');
 });
+
+it('fait évoluer l’humeur avec le besoin dominant puis retrouve son bien-être après satisfaction', () => {
+  const { getLifeMood } = require('../../src/features/scene/ai/laraLife.ts');
+  const satisfied = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  assert.equal(getLifeMood(satisfied).label, 'Épanouie');
+  assert.equal(getLifeMood({ ...satisfied, rest: LIFE_SETTINGS.priority - 1 }).uncomfortable, false);
+  assert.equal(getLifeMood({ ...satisfied, rest: LIFE_SETTINGS.priority }).label, 'Fatiguée');
+  const hungry = { ...satisfied, meal: 90, rest: 40 };
+  assert.equal(getLifeMood(hungry).label, 'Affamée');
+  const fed = evolveLife(hungry, 60, 'meal', false);
+  assert.equal(getLifeMood(fed).label, 'Fatiguée', 'Relieving hunger must reveal the remaining fatigue');
+  assert.equal(getLifeMood(evolveLife(fed, 60, 'sleep', false)).label, 'Épanouie');
+  for (const key of Object.keys(satisfied)) {
+    const mood = getLifeMood({ ...satisfied, [key]: 80 });
+    assert(mood.uncomfortable);
+    assert(mood.cause.includes('80 %'));
+  }
+  assert.deepEqual(hungry, { ...satisfied, meal: 90, rest: 40 }, 'Deriving a mood must preserve needs');
+});

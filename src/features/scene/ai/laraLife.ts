@@ -29,6 +29,19 @@ export const LIFE_NEED_LABELS: Record<keyof LifeNeeds, string> = {
   rest: 'Besoin de repos', work: 'Besoin de stimulation', walk: 'Envie de bouger', meal: 'Faim',
   hygiene: 'Besoin de se laver', toilet: 'Toilettes',
 };
+const MOOD_LABELS: Record<keyof LifeNeeds, string> = {
+  rest: 'Fatiguée', work: 'Ennuyée', walk: 'Impatiente', meal: 'Affamée', hygiene: 'Inconfortable', toilet: 'Pressée',
+};
+
+/** Mood follows the most pressing unmet need, using the activity decision threshold. */
+export function getLifeMood(needs: LifeNeeds) {
+  const need = (Object.keys(LIFE_NEED_LABELS) as (keyof LifeNeeds)[])
+    .reduce((highest, key) => needs[key] > needs[highest] ? key : highest);
+  return needs[need] >= LIFE_SETTINGS.priority
+    ? { label: MOOD_LABELS[need], cause: `${LIFE_NEED_LABELS[need]} : ${Math.round(needs[need])} %.`, uncomfortable: true }
+    : { label: 'Épanouie', cause: 'Les besoins de Lara sont satisfaits.', uncomfortable: false };
+}
+
 const rates: Record<LifeActivity, LifeNeeds> = {
   pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
   rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },

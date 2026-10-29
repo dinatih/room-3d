@@ -1,10 +1,11 @@
-import { LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
+import { getLifeMood, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes' };
 
 export function LaraLifePanel() {
   const { needs, activity, reason, speed } = useLaraLifeStore();
+  const mood = getLifeMood(needs);
   return <section className="p-2 border-bottom small lh-sm" aria-label="Vie de Lara Native">
     <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
       <span className="fw-semibold">Vie de Lara Native</span>
@@ -19,7 +20,10 @@ export function LaraLifePanel() {
       <span className="col-6"><progress className="d-block w-100" max={100} value={needs[key]} aria-label={LIFE_NEED_LABELS[key]} /></span>
       <span className="col-2 text-end text-nowrap">{Math.round(needs[key])}%</span>
     </label>)}
-    <div className="fw-semibold text-truncate mt-1" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</div>
+    <div className="d-flex align-items-center gap-2 mt-1">
+      <span className={`badge ${mood.uncomfortable ? 'text-bg-warning' : 'text-bg-success'}`} title={mood.cause} aria-label={`Humeur : ${mood.label}. ${mood.cause}`}>{mood.label}</span>
+      <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
+    </div>
     <div className="visually-hidden">{reason}</div>
   </section>;
 }
