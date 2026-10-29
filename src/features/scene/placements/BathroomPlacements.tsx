@@ -159,7 +159,7 @@ export function BathroomFurnishings() {
       ))}
 
       {/* TACKAN douche */}
-      <group position={[BATH_WEST_WALL + 40, 80, BATH_SOUTH_WALL + 69]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Douche' }}>
+      <group position={[BATH_WEST_WALL + 40, 92.5, SHOWER_SOUTH_WALL - 5.6]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Douche' }}>
         <Tackan />
       </group>
 
