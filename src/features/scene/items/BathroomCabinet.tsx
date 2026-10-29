@@ -9,7 +9,7 @@
  *  West (mirrorHandle=false) : charnière -X, openAngle = -π/2 (porte vers +Z)
  *  East (mirrorHandle=true)  : charnière +X, openAngle = +π/2 (porte vers +Z)
  */
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -18,7 +18,7 @@ import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scen
 import type { SceneItemProps } from '@shared/types';
 import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
-import { useSceneStore } from '../store/useSceneStore';
+import { useDoorOpen } from './useDoorOpen';
 
 const GLB        = 'items/metod10205534/Metod10205534.glb';
 const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
@@ -32,15 +32,14 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
   const { scene: handle } = useGLTFClone(HANDLE_GLB);
   const pivotRef = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
-  const sceneOpen = useSceneStore(s => s.furniture[openKey]);
-  const wantOpen = isPreview ? !!actionState[openKey] : sceneOpen;
+  const wantOpen = useDoorOpen(openKey, isPreview, actionState);
 
   useLayoutEffect(() => {
     // ── Corps du meuble ──────────────────────────────────────────────────────
     scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    scene.rotation.x = Math.PI / 2;
+    if (!scene.userData.merged) scene.rotation.x = Math.PI / 2;
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
@@ -67,7 +66,7 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
     handle.scale.set(1, 1, 1);
     removeGlbLines(handle);
     handle.scale.setScalar(100);
-    handle.rotation.set(0, Math.PI / 2, Math.PI / 2);
+    if (!handle.userData.merged) handle.rotation.set(0, Math.PI / 2, Math.PI / 2);
     mergeGlbByMaterial(handle);
     const hBox = glbLocalBBox(handle);
     const doorFrontZ  = cabFrontZ + (dBox.max.z - dBox.min.z) / 2;
@@ -85,22 +84,15 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
     door.position.set(doorOrigX - hingeX, doorOrigY,   doorOrigZ - cabFrontZ);
     handle.position.set(handleOrigX - hingeX, handleOrigY, handleOrigZ - cabFrontZ);
 
-    if (hoverLabel && hoverObjectId) {
-      const ha = { label: hoverLabel, actions: [
-        ...getObjectActionIds(hoverObjectId),
-        ...(!isPreview ? SMART_OBJECTS[hoverObjectId].slots.map(slot => `smart-object:::${hoverObjectId}:::${slot.slotId}`) : []),
-      ] };
-      scene.userData.hoverAction  = ha;
-      door.userData.hoverAction   = ha;
-      handle.userData.hoverAction = ha;
-      pivot.userData.hoverAction  = ha;
-    }
-  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverObjectId, isPreview]);
-
-  // Réagit à actionState (inventory + scene via useFurnitureToggles dans Placements)
-  useEffect(() => {
-    invalidate();
-  }, [wantOpen, invalidate]);
+    const ha = { label: hoverLabel, actions: [
+      ...getObjectActionIds(hoverObjectId),
+      ...(!isPreview ? SMART_OBJECTS[hoverObjectId].slots.map(slot => `smart-object:::${hoverObjectId}:::${slot.slotId}`) : []),
+    ] };
+    scene.userData.hoverAction  = ha;
+    door.userData.hoverAction   = ha;
+    handle.userData.hoverAction = ha;
+    pivot.userData.hoverAction  = ha;
+  }, [scene, door, handle, mirrorHandle, hoverLabel, hoverObjectId, isPreview, onSize]);
 
   useFrame((_, delta) => {
     const pivot = pivotRef.current;

@@ -33,7 +33,7 @@ const { useDoorOpen } = load('src/features/scene/items/useDoorOpen.ts', {
   '../utils/useFurnitureToggles': { useFurnitureToggles: () => scene },
 });
 
-for (const key of ['wc-lid-toggle', 'wc-seat-toggle', 'cabinet', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
+for (const key of ['wc-lid-toggle', 'wc-seat-toggle', 'cabinet', 'cbnWest', 'cbnEast', 'utdrag', 'entryDoor', 'livingDoor', 'bathroomDoor', 'showerDoor', 'eastGlassDoor', 'glassDoorV2LeftOpen']) {
   it(`${key} : ouvrir, maintenir ouvert puis fermer, sans modifier la scène depuis l’aperçu`, () => {
     scene[key] = false;
     let preview = {};

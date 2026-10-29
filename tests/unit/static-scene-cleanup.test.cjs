@@ -421,3 +421,49 @@ it('le placard SDB suit les nouveaux états des deux portes sans références in
   assert.deepEqual(render({ sdbClosetR: true }), [25, 25]);
   assert.deepEqual(render({}), [-25, 25]);
 });
+
+it('les trois meubles METOD gardent leur géométrie et leurs dimensions après remontage et changement de callback', async () => {
+  const utils = await glbUtils();
+  for (const name of ['KitchenCabinet', 'BathroomCabinetWest', 'BathroomCabinetEast']) {
+    const scenes = new Map(), effects = [], pivot = new THREE.Group(), parent = new THREE.Group();
+    parent.position.set(110, 20, -80); parent.rotation.y = .7; parent.scale.setScalar(1.3); parent.add(pivot);
+    let frame;
+    const exports = load(`src/features/scene/items/${name === 'KitchenCabinet' ? name : 'BathroomCabinet'}.tsx`, {
+      three: THREE, 'react/jsx-runtime': jsx,
+      react: { useRef: () => ({ current: pivot }), useLayoutEffect: fn => effects.push(fn) },
+      '@react-three/drei': { useGLTF: { preload() {} } },
+      '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
+      '@features/scene/useGLTFClone': { useGLTFClone: path => {
+        if (!scenes.has(path)) {
+          const scene = new THREE.Group();
+          scene.add(new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .2).translate(.07, .3, -.02), new THREE.MeshStandardMaterial()));
+          scenes.set(path, scene);
+          (scenes.size === 1 ? parent : pivot).add(scene);
+        }
+        return { scene: scenes.get(path) };
+      } },
+      '@features/scene/glbUtils': utils,
+      '../objectActions': { getObjectActionIds: () => ['open'] },
+      '../ai/smartObjectRegistry': {}, './useDoorOpen': { useDoorOpen: () => true },
+    });
+    const sizes = [];
+    const render = () => {
+      const props = { isPreview: true, onSize: size => sizes.push(size.toArray()) };
+      const element = exports[name](props);
+      if (typeof element.type === 'function') element.type(element.props);
+      effects.splice(0).forEach(effect => effect());
+    };
+    const snapshot = () => {
+      parent.updateMatrixWorld(true);
+      return [...scenes.values()].map(scene => ({
+        matrix: scene.matrixWorld.toArray(), geometry: scene.children[0].geometry.uuid,
+      }));
+    };
+    render(); frame(null, 1);
+    const expected = snapshot();
+    render(); render();
+    assert.deepEqual(snapshot(), expected, name);
+    assert.equal(sizes.length, 3);
+    assert.deepEqual(sizes[1], sizes[0]); assert.deepEqual(sizes[2], sizes[0]);
+  }
+});

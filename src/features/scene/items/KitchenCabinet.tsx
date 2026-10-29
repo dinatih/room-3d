@@ -31,9 +31,10 @@ export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: 
 
   useLayoutEffect(() => {
     // ── Corps du meuble ──────────────────────────────────────────────────────
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     scene.scale.setScalar(100);
-    scene.rotation.y = Math.PI;
+    if (!scene.userData.merged) scene.rotation.y = Math.PI;
     mergeGlbByMaterial(scene);
     const box = glbLocalBBox(scene);
     scene.position.set(
@@ -49,7 +50,7 @@ export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: 
     // ── Porte RINGHULT 40×80 ─────────────────────────────────────────────────
     removeGlbLines(door);
     door.scale.setScalar(100);
-    door.rotation.y = Math.PI;
+    if (!door.userData.merged) door.rotation.y = Math.PI;
     mergeGlbByMaterial(door);
     const dBox = glbLocalBBox(door);
     const doorOrigX = -(dBox.min.x + dBox.max.x) / 2;
@@ -59,7 +60,7 @@ export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: 
     // ── Poignée KALLROR 213 mm ───────────────────────────────────────────────
     removeGlbLines(handle);
     handle.scale.setScalar(100);
-    handle.rotation.set(0, -Math.PI / 2, Math.PI / 2);
+    if (!handle.userData.merged) handle.rotation.set(0, -Math.PI / 2, Math.PI / 2);
     mergeGlbByMaterial(handle);
     const hBox = glbLocalBBox(handle);
     const doorFrontZ  = cabFrontZ - (dBox.max.z - dBox.min.z) / 2;
@@ -80,7 +81,7 @@ export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: 
     door.userData.hoverAction   = ha;
     handle.userData.hoverAction = ha;
     pivot.userData.hoverAction  = ha;
-  }, [scene, door, handle]);
+  }, [scene, door, handle, onSize]);
 
   useFrame((_, delta) => {
     const pivot = pivotRef.current;
