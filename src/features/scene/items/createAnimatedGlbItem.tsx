@@ -20,7 +20,7 @@ export function createAnimatedGlbItem(path: string, objectId: string, label: str
     const { scene, animations } = useGLTFClone(path);
     const isOpen = !!actionState[actionId];
     const { invalidate } = useThree();
-    const runtime = useRef<{ mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[] } | null>(null);
+    const runtime = useRef<{ size: THREE.Vector3; mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[] } | null>(null);
 
     useLayoutEffect(() => {
       scene.scale.set(1, 1, 1);
@@ -39,9 +39,12 @@ export function createAnimatedGlbItem(path: string, objectId: string, label: str
       scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
       scene.userData.sceneItemRoot = scene.userData.skipMerge = true;
       scene.userData.hoverAction = { label, actions: actionIds };
-      runtime.current = { mixer, actions };
-      onSize?.(box.getSize(new THREE.Vector3()));
+      runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, actions };
       return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); runtime.current = null; };
+    }, [scene, animations]);
+
+    useLayoutEffect(() => {
+      onSize?.(runtime.current!.size.clone());
     }, [scene, animations, onSize]);
 
     useFrame((_, dt) => {

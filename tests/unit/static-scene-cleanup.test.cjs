@@ -329,7 +329,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
   const Item = createAnimatedGlbItem('/chest.glb', 'chest', 'Coffre');
   const render = props => { cursor = 0; return Item(props); };
   assert.equal(render({}).props.object, scene);
-  const cleanup = effects.pop()();
+  const cleanup = effects.splice(0).map(effect => effect()).find(result => typeof result === 'function');
   assert.deepEqual(preloads, ['/chest.glb']);
   assert.equal(scene.userData.hoverAction.label, 'Coffre');
   render({ actionState: { open: true } }); frame(null, .25);
@@ -344,7 +344,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
   assert.doesNotThrow(() => frame(null, 1));
   animations.length = 0;
   render({});
-  assert.throws(() => effects.pop()(), /missing lid_open animation/);
+  assert.throws(() => effects.splice(0).forEach(effect => effect()), /missing lid_open animation/);
 });
 
 it('TRÅDFRI et OLA conservent leur géométrie et leurs matériaux lors des nouvelles mesures', async () => {

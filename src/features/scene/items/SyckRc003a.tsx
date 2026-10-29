@@ -17,6 +17,7 @@ export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Part
   const { invalidate } = useThree();
 
   const runtime = useRef<{
+    size: THREE.Vector3;
     mixer: THREE.AnimationMixer;
     lid: THREE.AnimationAction;
     pot: THREE.AnimationAction;
@@ -45,16 +46,19 @@ export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Part
       actions: getObjectActionIds('syck-rc003a'),
     };
 
-    runtime.current = { mixer, lid, pot };
+    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, lid, pot };
     invalidate();
-    onSize?.(box.getSize(new THREE.Vector3()));
 
     return () => {
       runtime.current = null;
       mixer.stopAllAction();
       mixer.uncacheRoot(scene);
     };
-  }, [scene, animations, invalidate, onSize]);
+  }, [scene, animations, invalidate]);
+
+  useLayoutEffect(() => {
+    onSize?.(runtime.current!.size.clone());
+  }, [scene, animations, onSize]);
 
   useEffect(() => {
     invalidate();

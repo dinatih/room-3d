@@ -24,6 +24,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
   const wantCrisper = isPreview ? !!actionState['fridge-crisper-toggle'] : sceneCrisper;
   const wantDoor = (isPreview ? !!actionState['fridge'] : sceneOpen) || wantCrisper;
   const runtime = useRef<{
+    size: THREE.Vector3;
     mixer: THREE.AnimationMixer;
     door: THREE.AnimationAction;
     crisper: THREE.AnimationAction;
@@ -82,8 +83,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
       }
     });
     anchor.add(bulb);
-    runtime.current = { mixer, door, crisper, bulb, intensity };
-    onSize?.(box.getSize(new THREE.Vector3()));
+    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, door, crisper, bulb, intensity };
     invalidate();
     return () => {
       runtime.current = null;
@@ -93,6 +93,10 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
       bulb.dispose();
     };
   }, [scene, animations, invalidate, isPreview]);
+
+  useLayoutEffect(() => {
+    onSize?.(runtime.current!.size.clone());
+  }, [scene, animations, onSize]);
 
   useEffect(() => { invalidate(); }, [wantDoor, wantCrisper, invalidate]);
 

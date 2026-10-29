@@ -20,22 +20,29 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   const animations = clipNames.map((name, index) => new THREE.AnimationClip(name, 1, [
     new THREE.NumberKeyframeTrack(`${index ? 'Secondary' : 'Primary'}.position[x]`, [0, 1], [0, 10]),
   ]));
-  let frame, mounted = false, cleanup, updates = 0;
+  let frame, updates = 0, effectIndex = 0;
+  const effects = [], sizes = [];
+  const invalidate = () => {};
   const ref = { current: null }, actionState = {};
   const clone = { useGLTFClone: () => ({ scene, animations }) };
   const utils = { removeGlbLines() {}, glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(10, 10, 10)) };
   const { [name]: Component } = load(`src/features/scene/items/${name}.tsx`, {
     three: { ...THREE, AnimationMixer: class extends THREE.AnimationMixer { update(delta) { updates++; return super.update(delta); } } },
-    react: { useRef: () => ref, useEffect() {}, useLayoutEffect: fn => { if (!mounted) cleanup = fn(); } },
+    react: { useRef: () => ref, useEffect() {}, useLayoutEffect: (fn, deps) => {
+      const index = effectIndex++, previous = effects[index];
+      if (!previous || deps.some((value, i) => value !== previous.deps[i])) {
+        previous?.cleanup?.(); effects[index] = { deps, cleanup: fn() };
+      }
+    } },
     'react/jsx-runtime': require('react/jsx-runtime'),
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate() {} }) },
+    '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate }) },
     '@features/scene/useGLTFClone': clone, '../useGLTFClone': clone,
     '@features/scene/glbUtils': utils, '../glbUtils': utils,
     '@features/scene/store/useSceneStore': { useSceneStore: select => select({ furniture: { fridge: false, freezerOpen: false }, extraStates: {} }) },
     '../objectActions': { getObjectActionIds: () => [primaryKey] }, '../ai/smartObjectRegistry': {},
   });
-  const render = () => { Component({ actionState, isPreview: true }); mounted = true; };
+  const render = () => { effectIndex = 0; Component({ actionState, isPreview: true, onSize: size => sizes.push(size.toArray()) }); };
   render();
   const initial = updates; frame(null, 2); assert.equal(updates, initial);
   actionState[primaryKey] = true;
@@ -52,6 +59,11 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     assert(anchor.children[0].intensity > 0);
     assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
   }
+  const playing = ref.current, pose = primary.position.x;
+  render();
+  assert.equal(ref.current, playing, 'le callback de mesure ne recrée pas le lecteur');
+  assert.equal(primary.position.x, pose);
+  assert.deepEqual(sizes.at(-1), sizes[0]);
   const open = updates; frame(null, 2); assert.equal(updates, open);
   actionState[primaryKey] = false;
   if (name === 'NinjaSP101') actionState['ninja-light'] = false;
@@ -69,7 +81,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
     const lit = updates; frame(null, 2); assert.equal(updates, lit);
   }
-  cleanup();
+  effects.forEach(effect => effect.cleanup?.());
 });
 
 it('WC: relancer la chasse remplace son délai et le démontage annule les rappels', t => {

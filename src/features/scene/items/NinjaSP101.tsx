@@ -19,6 +19,7 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
   const paused = isPreview && !!actionState.previewPaused;
   const { invalidate } = useThree();
   const runtime = useRef<{
+    size: THREE.Vector3;
     mixer: THREE.AnimationMixer;
     door: THREE.AnimationAction;
     rack: THREE.AnimationAction;
@@ -75,9 +76,8 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
         material.shadowSide = THREE.DoubleSide;
       }
     });
-    runtime.current = { mixer, door, rack, light, material, intensity: anchor.userData.lumens / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
+    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, door, rack, light, material, intensity: anchor.userData.lumens / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
     invalidate();
-    onSize?.(box.getSize(new THREE.Vector3()));
     return () => {
       runtime.current = null;
       mixer.stopAllAction();
@@ -85,7 +85,11 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
       anchor.remove(light);
       light.dispose();
     };
-  }, [scene, animations, isPreview, invalidate, onSize]);
+  }, [scene, animations, isPreview, invalidate]);
+
+  useLayoutEffect(() => {
+    onSize?.(runtime.current!.size.clone());
+  }, [scene, animations, onSize]);
 
   useEffect(() => { invalidate(); }, [wantDoor, wantRack, lightOn, paused, invalidate]);
 

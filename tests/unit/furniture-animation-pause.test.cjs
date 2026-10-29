@@ -15,10 +15,16 @@ for (const [name, key, clipName, scale] of [
   const clip = new THREE.AnimationClip(clipName, 2, [new THREE.NumberKeyframeTrack('Moving.position[x]', [0, 2], [0, 10])]);
   const animations = name === 'TrashBin' ? [clip, new THREE.AnimationClip('pedal_press', 2, [new THREE.NumberKeyframeTrack('Pedal.position[y]', [0, 2], [0, 4])])] : [clip];
   const actionState = { [key]: true, previewPaused: true };
-  let frame, cleanup, invalidations = 0, mounted = false;
+  let frame, invalidations = 0, effectIndex = 0;
+  const effects = [], sizes = [];
   const runtimeRef = { current: null };
   const dependencies = {
-    react: { useRef: () => runtimeRef, useLayoutEffect: fn => { if (!mounted) cleanup = fn(); } },
+    react: { useRef: () => runtimeRef, useLayoutEffect: (fn, deps) => {
+      const index = effectIndex++, previous = effects[index];
+      if (!previous || deps.some((value, i) => value !== previous.deps[i])) {
+        previous?.cleanup?.(); effects[index] = { deps, cleanup: fn() };
+      }
+    } },
     'react/jsx-runtime': require('react/jsx-runtime'),
     '@react-three/drei': { useGLTF: { preload() {} } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate: () => invalidations++ }) },
@@ -29,13 +35,19 @@ for (const [name, key, clipName, scale] of [
   };
   dependencies['./createAnimatedGlbItem'] = load('src/features/scene/items/createAnimatedGlbItem.tsx', dependencies);
   const component = load(`src/features/scene/items/${name}.tsx`, dependencies)[name];
-  component({ actionState, isPreview: true, onSize() {} });
+  const render = () => { effectIndex = 0; component({ actionState, isPreview: true, onSize: size => sizes.push(size.toArray()) }); };
+  render();
   assert.deepEqual(scene.userData.hoverAction.actions, [key]);
   frame({}, 1);
   assert.equal(moving.position.x, 0);
   actionState.previewPaused = false;
   frame({}, 1);
   assert.equal(moving.position.x, 5);
+  const playing = runtimeRef.current;
+  render();
+  assert.equal(runtimeRef.current, playing, 'un nouveau callback ne recrée pas le lecteur');
+  assert.equal(moving.position.x, 5, 'la pose animée est conservée');
+  assert.deepEqual(sizes[1], sizes[0]);
   if (name === 'TrashBin') assert.equal(pedal.position.y, 2, 'la pédale avance avec le couvercle');
   frame({}, 1);
   assert.equal(moving.position.x, 10, 'uses clip duration, not a hardcoded endpoint');
@@ -43,15 +55,15 @@ for (const [name, key, clipName, scale] of [
   const count = invalidations;
   frame({}, 1);
   assert.equal(invalidations, count, 'settled animation does not request continuous rendering');
-  mounted = true;
   actionState[key] = false;
-  component({ actionState, isPreview: true, onSize() {} });
+  render();
   frame({}, 1);
   assert.equal(moving.position.x, 5, 'closing resumes from the open pose');
   if (name === 'TrashBin') assert.equal(pedal.position.y, 2, 'la pédale revient avec le couvercle');
   frame({}, 1);
   assert.equal(moving.position.x, 0);
-  cleanup();
+  effects.forEach(effect => effect.cleanup?.());
+  assert.equal(runtimeRef.current, null);
   assert.equal(scene.scale.x, scale);
 });
 test('Air Performer respects the selected arc, preview isolation and pause; docked remote follows the model', () => {

@@ -20,7 +20,7 @@ export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial
   const sceneOpen = useSceneStore(s => s.furniture.freezerOpen);
   const paused = isPreview && !!actionState.previewPaused;
   const wantOpen = isPreview ? !!actionState['freezer'] : sceneOpen;
-  const runtime = useRef<{ mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);
+  const runtime = useRef<{ size: THREE.Vector3; mixer: THREE.AnimationMixer; door: THREE.AnimationAction } | null>(null);
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
@@ -54,8 +54,7 @@ export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial
         obj.receiveShadow = true;
       }
     });
-    runtime.current = { mixer, door };
-    onSize?.(box.getSize(new THREE.Vector3()));
+    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, door };
     invalidate();
     return () => {
       runtime.current = null;
@@ -63,6 +62,10 @@ export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial
       mixer.uncacheRoot(scene);
     };
   }, [scene, animations, invalidate, isPreview]);
+
+  useLayoutEffect(() => {
+    onSize?.(runtime.current!.size.clone());
+  }, [scene, animations, onSize]);
 
   useEffect(() => { invalidate(); }, [wantOpen, paused, invalidate]);
 
