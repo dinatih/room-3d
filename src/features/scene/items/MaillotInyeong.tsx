@@ -1,23 +1,18 @@
 /**
- * MaillotInyeong.tsx — Maillot de foot Coréen (Inyeong #25).
+ * MaillotInyeong.tsx — Maillot de foot Coréen (Inyeong #24).
  * Modèle procédural rouge vif (#c8102e) avec col et détails noirs,
- * flocage au dos "INYEONG" et numéro 25, écusson Taegeuk sur la poitrine.
+ * flocage au dos "INYEONG" et numéro 24, écusson Taegeuk sur la poitrine.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createShirtGeometry, SHIRT_HALF_DEPTH as HALF_D } from './shirtGeometry';
 import { glbLocalBBox } from '../glbUtils';
 import type { ThreeElements } from '@react-three/fiber';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
-export type MaillotInyeongProps = Partial<SceneItemProps> & ThreeElements['group'] & {
-  playerName?: string;
-  playerNumber?: string | number;
-}
+export type MaillotInyeongProps = SceneModelProps & ThreeElements['group'];
 
 export function MaillotInyeong({
-  playerName = 'INYEONG',
-  playerNumber = '24',
   onSize,
   ...props
 }: MaillotInyeongProps) {
@@ -60,7 +55,7 @@ export function MaillotInyeong({
     });
   }, []);
 
-  // Flocage au dos : nom du joueur et grand numéro 25
+  // Flocage au dos : nom du joueur et grand numéro 24
   const backFlockingTexture = useMemo(() => {
     if (typeof document === 'undefined') return null;
     const canvas = document.createElement('canvas');
@@ -77,17 +72,17 @@ export function MaillotInyeong({
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.letterSpacing = '6px';
-    ctx.fillText(String(playerName).toUpperCase(), 512, 190);
+    ctx.fillText('INYEONG', 512, 190);
 
     // Numéro imposant style maillot de foot en Bebas Neue
     ctx.font = '700 500px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.letterSpacing = '0px';
-    ctx.fillText(String(playerNumber), 512, 630);
+    ctx.fillText('24', 512, 630);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 8;
     return tex;
-  }, [playerName, playerNumber, fontReady]);
+  }, [fontReady]);
 
   // Écusson Corée (Taegeuk rouge/bleu) et numéro poitrine
   const frontCrestTexture = useMemo(() => {
@@ -140,12 +135,15 @@ export function MaillotInyeong({
     ctx.font = '700 160px "Bebas Neue", "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(String(playerNumber), 370, 256);
+    ctx.fillText('24', 370, 256);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 8;
     return tex;
-  }, [playerNumber, fontReady]);
+  }, [fontReady]);
+
+  useEffect(() => () => backFlockingTexture?.dispose(), [backFlockingTexture]);
+  useEffect(() => () => frontCrestTexture?.dispose(), [frontCrestTexture]);
 
   useLayoutEffect(() => {
     onSize?.(glbLocalBBox(groupRef.current).getSize(new THREE.Vector3()));
@@ -192,7 +190,7 @@ export function MaillotInyeong({
         receiveShadow
       />
 
-      {/* Écusson Taegeuk et petit numéro 25 sur le torse */}
+      {/* Écusson Taegeuk et petit numéro 24 sur le torse */}
       {frontCrestTexture && (
         <mesh position={[0, -5, HALF_D + 0.03]}>
           <planeGeometry args={[22, 13]} />
@@ -208,7 +206,7 @@ export function MaillotInyeong({
         </mesh>
       )}
 
-      {/* Flocage arrière "INYEONG" et grand numéro 25 */}
+      {/* Flocage arrière "INYEONG" et grand numéro 24 */}
       {backFlockingTexture && (
         <mesh position={[0, -14, -HALF_D - 0.03]} rotation={[0, Math.PI, 0]}>
           <planeGeometry args={[27, 29]} />
