@@ -46,27 +46,18 @@ const X_CLOSED_R = +PANEL_W / 2;
 const ZL = -(SEP_T / 2 + PANEL_T / 2);
 const ZR = +(SEP_T / 2 + PANEL_T / 2);
 
-export function SdbCloset({ actionState, onSize }: SceneItemProps) {
+export function SdbCloset({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const groupLRef = useRef<THREE.Group>(null!);
   const groupRRef = useRef<THREE.Group>(null!);
   const isOpenL   = !!actionState.sdbClosetL;
   const isOpenR   = !!actionState.sdbClosetR;
   
-  // Use refs for useFrame to prevent stale closures (as per GEMINI.md)
-  const isOpenLRef = useRef(isOpenL);
-  const isOpenRRef = useRef(isOpenR);
-  
-  useLayoutEffect(() => {
-    isOpenLRef.current = isOpenL;
-    isOpenRRef.current = isOpenR;
-  }, [isOpenL, isOpenR]);
-
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    groupLRef.current.position.x = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
-    groupRRef.current.position.x = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
-    onSize(new THREE.Vector3(W, H, RAIL_D));
+    groupLRef.current.position.x = isOpenR ? X_CLOSED_R : X_CLOSED_L;
+    groupRRef.current.position.x = isOpenL ? X_CLOSED_L : X_CLOSED_R;
+    onSize?.(new THREE.Vector3(W, H, RAIL_D));
   }, []);
 
   const shelfGeo = useMemo(() => {
@@ -98,9 +89,9 @@ export function SdbCloset({ actionState, onSize }: SceneItemProps) {
 
   useFrame(() => {
     // groupLRef (en -X) est la Porte Droite depuis la SDB -> obéit à isOpenR
-    const targetL = isOpenRRef.current ? X_CLOSED_R : X_CLOSED_L;
+    const targetL = isOpenR ? X_CLOSED_R : X_CLOSED_L;
     // groupRRef (en +X) est la Porte Gauche depuis la SDB -> obéit à isOpenL
-    const targetR = isOpenLRef.current ? X_CLOSED_L : X_CLOSED_R;
+    const targetR = isOpenL ? X_CLOSED_L : X_CLOSED_R;
     const curL = groupLRef.current.position.x;
     const curR = groupRRef.current.position.x;
     if (curL === targetL && curR === targetR) return;

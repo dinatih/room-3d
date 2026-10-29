@@ -34,14 +34,14 @@ const shelfMat  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0
 const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.3 });
 const handleMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.85, roughness: 0.15 });
 
-export function CorridorCloset({ actionState, onSize }: SceneItemProps) {
+export function CorridorCloset({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const doorRef = useRef<THREE.Group>(null!);
   const isOpen  = actionState['corrDoors'] ?? false;
   const { invalidate } = useThree();
 
   useLayoutEffect(() => {
-    onSize(new THREE.Vector3(CLOSET_W, WALL_H, CLOSET_D));
-  }, []);
+    onSize?.(new THREE.Vector3(CLOSET_W, WALL_H, CLOSET_D));
+  }, [onSize]);
 
   useFrame(() => {
     // +π/2 CCW (vu d'en haut) : l'extrémité sud pivote vers l'Est (couloir) ✓

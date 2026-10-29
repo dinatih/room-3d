@@ -32,7 +32,7 @@ const waterMat = new THREE.MeshStandardMaterial({
   depthWrite: false,
 });
 
-export function Toilet({ onSize, actionState, isPreview = false }: SceneItemProps) {
+export function Toilet({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone(GLB);
   const { invalidate } = useThree();
 

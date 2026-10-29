@@ -8,9 +8,9 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
-import type { SceneItemProps } from '@shared/types';
+import type { SceneModelProps } from '@shared/types';
 
-type ScooterProps = SceneItemProps & { steeringAngle?: number; onWheels?: (front: THREE.Vector3[], rear: THREE.Vector3[]) => void };
+type ScooterProps = SceneModelProps & { steeringAngle?: number; onWheels?: (front: THREE.Vector3[], rear: THREE.Vector3[]) => void };
 export const SCOOTER_STEERING_ANGLE = -Math.PI / 3;
 
 export function Scooter({ onSize, steeringAngle = 0, onWheels }: ScooterProps) {
@@ -39,7 +39,7 @@ export function Scooter({ onSize, steeringAngle = 0, onWheels }: ScooterProps) {
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, steering, onSize]);
 
   useLayoutEffect(() => {
@@ -50,7 +50,7 @@ export function Scooter({ onSize, steeringAngle = 0, onWheels }: ScooterProps) {
     );
     const box = glbLocalBBox(scene);
     scene.position.y = -box.min.y;
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
     if (onWheels) {
       scene.updateWorldMatrix(true, true);
       const inverse = scene.parent!.matrixWorld.clone().invert();

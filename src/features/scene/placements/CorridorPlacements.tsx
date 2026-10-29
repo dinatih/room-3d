@@ -5,8 +5,6 @@ import * as THREE from 'three';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_ITEM, NOOP_STATE, NOOP_SIZE } from '@features/scene/sceneItem';
-import type { Item } from '@shared/types';
 
 import { CorridorCloset } from '../items/CorridorCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
@@ -26,9 +24,6 @@ import {
   PARTITION_THICKNESS
 } from '../wallData';
 import { CORRIDOR_NORTH_WALL, ROOM_EAST_WALL, pZ } from '../wallData';
-
-const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 // Coffrage plastique vertical 25.5×6.5×WALL_H, contre mur est du couloir,
 // début Z=ROOM_D+5 (5 cm du mur nord du couloir = mur sud séjour).
@@ -182,7 +177,7 @@ export function CorridorEquipment() {
           ],
         },
       }}>
-        <NavigationObstacle id="corridor-closet"><CorridorCloset item={stub('corridor-closet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="corridor-closet"><CorridorCloset actionState={as} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -208,7 +203,7 @@ export function CorridorFurnishings() {
     <MergedStaticGroup name="merged-corridor-furnishings">
       {/* Trottinette Xiaomi */}
       <group position={[parking.x, 0, parking.z]} rotation-y={parking.angle} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Trottinette Xiaomi' }}>
-        <NavigationObstacle id="scooter" hull><Scooter item={NOOP_ITEM} actionState={NOOP_STATE} onSize={NOOP_SIZE} steeringAngle={SCOOTER_STEERING_ANGLE} onWheels={parkScooter} /></NavigationObstacle>
+        <NavigationObstacle id="scooter" hull><Scooter steeringAngle={SCOOTER_STEERING_ANGLE} onWheels={parkScooter} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );

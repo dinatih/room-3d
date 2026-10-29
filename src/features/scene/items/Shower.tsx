@@ -43,25 +43,13 @@ const DOOR_H  = SHOWER_H;          // Hauteur cm
 const DOOR_T  = 0.8;               // Épaisseur vitre cm
 const FRAME   = 2.0;               // Section profil aluminium cm
 
-/** Applique une rotation X aux sommets de toutes les géométries (baking). */
-function applyGeomRotX(scene: THREE.Group, angle: number) {
-  const m4 = new THREE.Matrix4().makeRotationX(angle);
+/** Applique une rotation aux sommets sans modifier les géométries partagées. */
+function applyGeomRotation(scene: THREE.Group, matrix: THREE.Matrix4) {
   scene.traverse(c => {
     const mesh = c as THREE.Mesh;
     if (!mesh.isMesh || !mesh.geometry) return;
     mesh.geometry = mesh.geometry.clone();
-    mesh.geometry.applyMatrix4(m4);
-  });
-}
-
-/** Applique une rotation Y aux sommets de toutes les géométries (baking). */
-function applyGeomRotY(scene: THREE.Group, angle: number) {
-  const m4 = new THREE.Matrix4().makeRotationY(angle);
-  scene.traverse(c => {
-    const mesh = c as THREE.Mesh;
-    if (!mesh.isMesh || !mesh.geometry) return;
-    mesh.geometry = mesh.geometry.clone();
-    mesh.geometry.applyMatrix4(m4);
+    mesh.geometry.applyMatrix4(matrix);
   });
 }
 
@@ -280,7 +268,7 @@ function ShowerDoor({ isPreview, condensation, actionState }: { isPreview: boole
   );
 }
 
-export function Shower({ onSize, isPreview = false, actionState }: SceneItemProps) {
+export function Shower({ onSize, isPreview = false, actionState = {} }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene: tray   } = useGLTFClone(GLB_TRAY);
   const { scene: bar    } = useGLTFClone(GLB_BAR);
   const { scene: faucet } = useGLTFClone(GLB_FAUCET);
@@ -297,8 +285,8 @@ export function Shower({ onSize, isPreview = false, actionState }: SceneItemProp
     // Bar : Z→Y, puis flip sens avant/arrière, une seule fois par clone.
     const prepareHose = !bar.userData.merged;
     if (prepareHose) {
-      applyGeomRotX(bar, Math.PI / 2);
-      applyGeomRotY(bar, Math.PI);
+      applyGeomRotation(bar, new THREE.Matrix4().makeRotationX(Math.PI / 2));
+      applyGeomRotation(bar, new THREE.Matrix4().makeRotationY(Math.PI));
       setupScene(bar);
     }
 
@@ -323,7 +311,7 @@ export function Shower({ onSize, isPreview = false, actionState }: SceneItemProp
     waterOrigin.y = headBox.max.y - headBox.getSize(new THREE.Vector3()).x / 2;
     waterOrigin.z = headBox.min.z;
     groupRef.current.worldToLocal(fitting.localToWorld(waterOrigin));
-    onSize(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
+    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
     invalidate();
   }, [tray, bar, faucet, invalidate]);
 

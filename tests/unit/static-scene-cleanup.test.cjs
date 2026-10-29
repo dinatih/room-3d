@@ -390,3 +390,34 @@ it('TRÅDFRI et OLA conservent leur géométrie et leurs matériaux lors des nou
     assert.equal(sourceMaterial.emissive.getHex(), 0);
   }
 });
+
+it('le placard SDB suit les nouveaux états des deux portes sans références intermédiaires', () => {
+  const refs = [], dependencies = [], effects = [];
+  let refIndex, effectIndex, frame;
+  const { SdbCloset } = load('src/features/scene/items/SdbCloset.tsx', {
+    three: THREE, 'react/jsx-runtime': jsx,
+    react: {
+      useRef: value => refs[refIndex++] ??= { current: value === null ? new THREE.Group() : value },
+      useMemo: () => null,
+      useLayoutEffect: (fn, next) => {
+        const index = effectIndex++, previous = dependencies[index];
+        if (!previous || next.some((value, i) => value !== previous[i])) effects.push(fn);
+        dependencies[index] = next;
+      },
+    },
+    '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate() {} }) },
+    '../wallData': { pWest: () => 100, pEast: () => 0, pNorth: () => 500, WALL_H: 250 },
+    '../building/buildingCommon': { boxFaceMats: () => [], noCapMat: null }, './Grejig40329868': {},
+    '../ai/smartObjectRegistry': { SMART_OBJECTS: { 'sdb-closet': { slots: [] } } },
+    '../objectActions': { getObjectActionIds: () => [] },
+  });
+  const render = actionState => {
+    refIndex = effectIndex = 0; SdbCloset({ actionState }); effects.splice(0).forEach(fn => fn());
+    for (let i = 0; i < 100; i++) frame();
+    return refs.slice(0, 2).map(ref => ref.current.position.x);
+  };
+  assert.deepEqual(render({}), [-25, 25]);
+  assert.deepEqual(render({ sdbClosetL: true }), [-25, -25]);
+  assert.deepEqual(render({ sdbClosetR: true }), [25, 25]);
+  assert.deepEqual(render({}), [-25, 25]);
+});

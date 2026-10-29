@@ -25,13 +25,12 @@ const DOOR_GLB   = 'items/ringhult60327137/Ringhult60327137-40x60.glb';
 const HANDLE_GLB = 'items/kallror50357002/Kallror50357002.glb';
 
 function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey, hoverLabel, hoverObjectId, isPreview = false }:
-  SceneItemProps & { mirrorHandle?: boolean; openKey: 'cbnWest' | 'cbnEast'; hoverLabel: string; hoverObjectId: string }) {
+  Partial<Omit<SceneItemProps, 'item'>> & { mirrorHandle?: boolean; openKey: 'cbnWest' | 'cbnEast'; hoverLabel: string; hoverObjectId: string }) {
 
   const { scene }         = useGLTFClone(GLB);
   const { scene: door }   = useGLTFClone(DOOR_GLB);
   const { scene: handle } = useGLTFClone(HANDLE_GLB);
   const pivotRef = useRef<THREE.Group>(null!);
-  const openRef  = useRef(false);
   const { invalidate } = useThree();
   const sceneOpen = useSceneStore(s => s.furniture[openKey]);
   const wantOpen = isPreview ? !!actionState[openKey] : sceneOpen;
@@ -49,7 +48,7 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
       -box.min.y,
       -(box.min.z + box.max.z) / 2,
     );
-    onSize(box.getSize(new THREE.Vector3()));
+    onSize?.(box.getSize(new THREE.Vector3()));
 
     const cabHalfW  = (box.max.x - box.min.x) / 2;
     const cabFrontZ = (box.max.z - box.min.z) / 2;
@@ -100,14 +99,13 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
 
   // Réagit à actionState (inventory + scene via useFurnitureToggles dans Placements)
   useEffect(() => {
-    openRef.current = wantOpen;
     invalidate();
   }, [wantOpen, invalidate]);
 
   useFrame((_, delta) => {
     const pivot = pivotRef.current;
     if (!pivot) return;
-    const targetAngle = openRef.current ? (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) : 0;
+    const targetAngle = wantOpen ? (mirrorHandle ? Math.PI / 2 : -Math.PI / 2) : 0;
     if (pivot.rotation.y === targetAngle) return;
     const diff = targetAngle - pivot.rotation.y;
     if (Math.abs(diff) < 0.001) {
@@ -134,10 +132,10 @@ useGLTF.preload(GLB);
 useGLTF.preload(DOOR_GLB);
 useGLTF.preload(HANDLE_GLB);
 
-export function BathroomCabinetWest(props: SceneItemProps) {
+export function BathroomCabinetWest(props: Partial<Omit<SceneItemProps, 'item'>>) {
   return <MetodCabinet {...props} openKey="cbnWest" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;
 }
 
-export function BathroomCabinetEast(props: SceneItemProps) {
+export function BathroomCabinetEast(props: Partial<Omit<SceneItemProps, 'item'>>) {
   return <MetodCabinet {...props} mirrorHandle openKey="cbnEast" hoverLabel="Armoire SDB Est" hoverObjectId="bathroom-cabinet-east" />;
 }

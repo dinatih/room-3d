@@ -4,8 +4,6 @@ import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
 import { MergedStaticGroup } from '../Building';
-import { NOOP_SIZE } from '@features/scene/sceneItem';
-import type { Item } from '@shared/types';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 
 import { WaterHeater, WH_W, WH_D, WH_H } from '../items/WaterHeater';
@@ -26,9 +24,6 @@ import { DroneCell } from '../items/Drona';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
-
-const stub = (id: string): Item =>
-  ({ id, name: '', brand: '', category: '', qty: 1, dims: { w: 0, d: 0, h: 0 } });
 
 // Retrait de 5 cm sur chaque bord pour dégager l'accès aux meubles et boîtes DRÖNA.
 const TOILET_OBSTACLE_INSET = 5;
@@ -66,7 +61,7 @@ export function BathroomEquipment() {
 
       {/* WC President */}
       <group position={[BATH_WEST_WALL + 60, 1, BATH_NORTH_WALL + TOILET_D / 2 + 1.5]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'WC President', hoverAction: { label: 'WC President', actions: [...getObjectActionIds('toilet'), 'smart-object:::toilet:::use'] } }}>
-        <NavigationObstacle id="toilet" footprint={TOILET_FOOTPRINT}><Toilet item={stub('toilet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="toilet" footprint={TOILET_FOOTPRINT}><Toilet actionState={as} /></NavigationObstacle>
       </group>
 
       {/* Ampoule SDB (TRÅDFRI) */}
@@ -104,7 +99,7 @@ export function BathroomEquipment() {
           itemName: 'Cabine de Douche',
         }}
       >
-        <Shower item={stub('shower')} actionState={as} onSize={NOOP_SIZE} />
+        <Shower actionState={as} />
       </group>
 
       {/* Placard SDB */}
@@ -119,7 +114,7 @@ export function BathroomEquipment() {
           ],
         },
       }}>
-        <NavigationObstacle id="sdb-closet"><SdbCloset item={stub('sdb-closet')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="sdb-closet"><SdbCloset actionState={as} /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
@@ -133,10 +128,10 @@ export function BathroomFurniture() {
     <MergedStaticGroup name="merged-bathroom-furniture">
       {/* Meubles SDB Ouest et Est */}
       <group position={BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position} userData={{ sceneItemRoot: true, itemName: 'Meuble SDB Ouest' }}>
-        <NavigationObstacle id="bathroom-cabinet-west"><BathroomCabinetWest item={stub('bathroom-cabinet-west')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="bathroom-cabinet-west"><BathroomCabinetWest actionState={as} /></NavigationObstacle>
       </group>
       <group position={BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position} userData={{ sceneItemRoot: true, itemName: 'Meuble SDB Est' }}>
-        <NavigationObstacle id="bathroom-cabinet-east"><BathroomCabinetEast item={stub('bathroom-cabinet-east')} actionState={as} onSize={NOOP_SIZE} /></NavigationObstacle>
+        <NavigationObstacle id="bathroom-cabinet-east"><BathroomCabinetEast actionState={as} /></NavigationObstacle>
       </group>
 
       {/* Poubelle Fniss SDB */}
