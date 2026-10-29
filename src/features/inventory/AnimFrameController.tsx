@@ -21,6 +21,19 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 
 const SPEED_OPTIONS = [0.25, 0.5, 1, 1.5, 2];
 
+function transformSnippet(offset: readonly [number, number, number], rotation: number, duo: boolean): string {
+  const lines: string[] = [];
+  if (offset.some(value => value !== 0)) lines.push(`${duo ? 'offsetB' : 'defaultOffset'}: [${offset.join(', ')}],`);
+  if (rotation !== 0) {
+    const angle = Math.abs(rotation - Math.PI) < 0.001 ? 'Math.PI'
+      : Math.abs(rotation - Math.PI / 2) < 0.001 ? 'Math.PI / 2'
+      : Math.abs(rotation + Math.PI / 2) < 0.001 ? '-Math.PI / 2'
+      : rotation.toFixed(3);
+    lines.push(`${duo ? 'rotB' : 'defaultRotYOffset'}: ${angle},`);
+  }
+  return lines.join('\n') || (duo ? '// Aucun offset B (0, 0, 0 / 0°)' : '// Aucun offset (0, 0, 0 / 0°)');
+}
+
 export interface AnimFrameControllerProps {
   animName?: string;
   animKey?: string;
@@ -257,22 +270,7 @@ export function AnimFrameController({
 
   const handleCopySoloTs = useCallback(() => {
     if (!def) return;
-    const lines: string[] = [];
-    if (effectiveSoloOffset[0] !== 0 || effectiveSoloOffset[1] !== 0 || effectiveSoloOffset[2] !== 0) {
-      lines.push(`defaultOffset: [${effectiveSoloOffset.join(', ')}],`);
-    }
-    if (effectiveSoloRotYRad !== 0) {
-      const rotExp = Math.abs(effectiveSoloRotYRad - Math.PI) < 0.001
-        ? 'Math.PI'
-        : Math.abs(effectiveSoloRotYRad - Math.PI / 2) < 0.001
-        ? 'Math.PI / 2'
-        : Math.abs(effectiveSoloRotYRad + Math.PI / 2) < 0.001
-        ? '-Math.PI / 2'
-        : `${(effectiveSoloRotYRad).toFixed(3)}`;
-      lines.push(`defaultRotYOffset: ${rotExp},`);
-    }
-    const snippet = lines.join('\n');
-    navigator.clipboard.writeText(snippet || '// Aucun offset (0, 0, 0 / 0°)');
+    navigator.clipboard.writeText(transformSnippet(effectiveSoloOffset, effectiveSoloRotYRad, false));
     setCopiedSoloTs(true);
     setTimeout(() => setCopiedSoloTs(false), 2000);
   }, [def, effectiveSoloOffset, effectiveSoloRotYRad]);
@@ -309,22 +307,7 @@ export function AnimFrameController({
 
   const handleCopyDuoTs = useCallback(() => {
     if (!duoAnimDef) return;
-    const lines: string[] = [];
-    if (effectiveOffsetB[0] !== 0 || effectiveOffsetB[1] !== 0 || effectiveOffsetB[2] !== 0) {
-      lines.push(`offsetB: [${effectiveOffsetB.join(', ')}],`);
-    }
-    if (effectiveRotBRad !== 0) {
-      const rotExp = Math.abs(effectiveRotBRad - Math.PI) < 0.001
-        ? 'Math.PI'
-        : Math.abs(effectiveRotBRad - Math.PI / 2) < 0.001
-        ? 'Math.PI / 2'
-        : Math.abs(effectiveRotBRad + Math.PI / 2) < 0.001
-        ? '-Math.PI / 2'
-        : `${(effectiveRotBRad).toFixed(3)}`;
-      lines.push(`rotB: ${rotExp},`);
-    }
-    const snippet = lines.join('\n');
-    navigator.clipboard.writeText(snippet || '// Aucun offset B (0, 0, 0 / 0°)');
+    navigator.clipboard.writeText(transformSnippet(effectiveOffsetB, effectiveRotBRad, true));
     setCopiedDuoTs(true);
     setTimeout(() => setCopiedDuoTs(false), 2000);
   }, [duoAnimDef, effectiveOffsetB, effectiveRotBRad]);
@@ -640,6 +623,76 @@ export function AnimFrameController({
     observer.observe(badge);
     return () => observer.disconnect();
   }, [showPartnerSelector]);
+
+  const transformEditor = (duo: boolean) => {
+    const offset = duo ? effectiveOffsetB : effectiveSoloOffset;
+    const updateOffset = duo ? handleUpdateDuoOffset : handleUpdateSoloOffset;
+    const updateRotation = duo ? handleUpdateDuoRotDeg : handleUpdateSoloRotDeg;
+    const modified = duo ? hasDuoOverride : hasSoloOverride;
+    const copied = duo ? copiedDuoTs : copiedSoloTs;
+    const copy = duo ? handleCopyDuoTs : handleCopySoloTs;
+    const reset = duo ? handleResetDuoTransform : handleResetSoloTransform;
+    return (
+      <div className="card bg-white border p-2 mt-1">
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <div className="d-flex align-items-center gap-1.5 fw-bold text-dark small">
+            <i className="bi bi-sliders text-primary" aria-hidden="true" />
+            <span>{duo ? 'Ajustement live Offset & Rotation B' : 'Ajustement live Offset Pos & Rot Y'}</span>
+            {modified && (
+              <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié</span>
+            )}
+          </div>
+          <div className="d-flex align-items-center gap-1">
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm py-0 px-2"
+              style={{ fontSize: '11px' }}
+              onClick={copy}
+              title={duo ? 'Copier au format TypeScript pour duoAnimations.ts' : 'Copier au format TypeScript pour animationRegistry.ts'}
+            >
+              <i className={`bi ${copied ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
+              <span className="ms-1">{copied ? 'Copié !' : 'Copier TS'}</span>
+            </button>
+            {modified && (
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm py-0 px-2"
+                style={{ fontSize: '11px' }}
+                onClick={reset}
+                title="Réinitialiser aux valeurs d'origine"
+              >
+                <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
+                <span className="ms-1">Reset</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="row g-2 align-items-center">
+          {([[0, 'X', 'danger'], [1, 'Y', 'success'], [2, 'Z', 'primary']] as const).map(([axis, label, color]) => (
+            <div key={axis} className="col-6 col-md-3">
+              <div className="input-group input-group-sm">
+                <span className={`input-group-text font-monospace fw-bold text-${color} bg-light py-0 px-1.5`}>{label}</span>
+                <input type="number" step="1" className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                  value={offset[axis]} onChange={event => updateOffset(axis, parseFloat(event.target.value) || 0)} title={`Décalage ${label} en cm`} />
+                <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
+              </div>
+            </div>
+          ))}
+          <div className="col-6 col-md-3">
+            <div className="input-group input-group-sm">
+              <span className="input-group-text font-monospace fw-bold text-warning bg-light py-0 px-1.5">{duo ? 'Rot' : 'Rot Y'}</span>
+              <input type="number" step="5" className="form-control form-control-sm text-end font-monospace py-0 px-1"
+                value={duo ? Math.round(effectiveRotBDeg) : Math.round(effectiveSoloRotYDeg * 10) / 10}
+                onChange={event => updateRotation(parseFloat(event.target.value) || 0)} title="Rotation Y en degrés" />
+              <span className="input-group-text small bg-light py-0 px-1 text-muted">°</span>
+            </div>
+          </div>
+        </div>
+        {alignmentActions}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -1207,101 +1260,7 @@ export function AnimFrameController({
               </div>
 
               {/* Editeur en direct Offset Pos & Rot (Duo B) */}
-              <div className="card bg-white border p-2 mt-1">
-                <div className="d-flex align-items-center justify-content-between mb-2">
-                  <div className="d-flex align-items-center gap-1.5 fw-bold text-dark small">
-                    <i className="bi bi-sliders text-primary" aria-hidden="true" />
-                    <span>Ajustement live Offset &amp; Rotation B</span>
-                    {hasDuoOverride && (
-                      <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié</span>
-                    )}
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary btn-sm py-0 px-2"
-                      style={{ fontSize: '11px' }}
-                      onClick={handleCopyDuoTs}
-                      title="Copier au format TypeScript pour duoAnimations.ts"
-                    >
-                      <i className={`bi ${copiedDuoTs ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
-                      <span className="ms-1">{copiedDuoTs ? 'Copié !' : 'Copier TS'}</span>
-                    </button>
-                    {hasDuoOverride && (
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger btn-sm py-0 px-2"
-                        style={{ fontSize: '11px' }}
-                        onClick={handleResetDuoTransform}
-                        title="Réinitialiser aux valeurs d'origine"
-                      >
-                        <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
-                        <span className="ms-1">Reset</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="row g-2 align-items-center">
-                  <div className="col-6 col-md-3">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text font-monospace fw-bold text-danger bg-light py-0 px-1.5">X</span>
-                      <input
-                        type="number"
-                        step="1"
-                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                        value={effectiveOffsetB[0]}
-                        onChange={e => handleUpdateDuoOffset(0, parseFloat(e.target.value) || 0)}
-                        title="Décalage X en cm"
-                      />
-                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                    </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text font-monospace fw-bold text-success bg-light py-0 px-1.5">Y</span>
-                      <input
-                        type="number"
-                        step="1"
-                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                        value={effectiveOffsetB[1]}
-                        onChange={e => handleUpdateDuoOffset(1, parseFloat(e.target.value) || 0)}
-                        title="Décalage Y en cm"
-                      />
-                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                    </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text font-monospace fw-bold text-primary bg-light py-0 px-1.5">Z</span>
-                      <input
-                        type="number"
-                        step="1"
-                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                        value={effectiveOffsetB[2]}
-                        onChange={e => handleUpdateDuoOffset(2, parseFloat(e.target.value) || 0)}
-                        title="Décalage Z en cm"
-                      />
-                      <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                    </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="input-group input-group-sm">
-                      <span className="input-group-text font-monospace fw-bold text-warning bg-light py-0 px-1.5">Rot</span>
-                      <input
-                        type="number"
-                        step="5"
-                        className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                        value={Math.round(effectiveRotBDeg)}
-                        onChange={e => handleUpdateDuoRotDeg(parseFloat(e.target.value) || 0)}
-                        title="Rotation Y en degrés"
-                      />
-                      <span className="input-group-text small bg-light py-0 px-1 text-muted">°</span>
-                    </div>
-                  </div>
-                </div>
-                {alignmentActions}
-              </div>
+              {transformEditor(true)}
             </div>
           ) : (
             <div className="d-flex flex-column gap-2">
@@ -1358,101 +1317,7 @@ export function AnimFrameController({
 
               {/* Editeur en direct Offset Pos & Rot (Solo) */}
               {def && (
-                <div className="card bg-white border p-2 mt-1">
-                  <div className="d-flex align-items-center justify-content-between mb-2">
-                    <div className="d-flex align-items-center gap-1.5 fw-bold text-dark small">
-                      <i className="bi bi-sliders text-primary" aria-hidden="true" />
-                      <span>Ajustement live Offset Pos &amp; Rot Y</span>
-                      {hasSoloOverride && (
-                        <span className="badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié</span>
-                      )}
-                    </div>
-                    <div className="d-flex align-items-center gap-1">
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm py-0 px-2"
-                        style={{ fontSize: '11px' }}
-                        onClick={handleCopySoloTs}
-                        title="Copier au format TypeScript pour animationRegistry.ts"
-                      >
-                        <i className={`bi ${copiedSoloTs ? 'bi-check-lg text-success' : 'bi-clipboard'}`} aria-hidden="true" />
-                        <span className="ms-1">{copiedSoloTs ? 'Copié !' : 'Copier TS'}</span>
-                      </button>
-                      {hasSoloOverride && (
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm py-0 px-2"
-                          style={{ fontSize: '11px' }}
-                          onClick={handleResetSoloTransform}
-                          title="Réinitialiser aux valeurs d'origine"
-                        >
-                          <i className="bi bi-arrow-counterclockwise" aria-hidden="true" />
-                          <span className="ms-1">Reset</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="row g-2 align-items-center">
-                    <div className="col-6 col-md-3">
-                      <div className="input-group input-group-sm">
-                        <span className="input-group-text font-monospace fw-bold text-danger bg-light py-0 px-1.5">X</span>
-                        <input
-                          type="number"
-                          step="1"
-                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                          value={effectiveSoloOffset[0]}
-                          onChange={e => handleUpdateSoloOffset(0, parseFloat(e.target.value) || 0)}
-                          title="Décalage X en cm"
-                        />
-                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="input-group input-group-sm">
-                        <span className="input-group-text font-monospace fw-bold text-success bg-light py-0 px-1.5">Y</span>
-                        <input
-                          type="number"
-                          step="1"
-                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                          value={effectiveSoloOffset[1]}
-                          onChange={e => handleUpdateSoloOffset(1, parseFloat(e.target.value) || 0)}
-                          title="Décalage Y en cm"
-                        />
-                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="input-group input-group-sm">
-                        <span className="input-group-text font-monospace fw-bold text-primary bg-light py-0 px-1.5">Z</span>
-                        <input
-                          type="number"
-                          step="1"
-                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                          value={effectiveSoloOffset[2]}
-                          onChange={e => handleUpdateSoloOffset(2, parseFloat(e.target.value) || 0)}
-                          title="Décalage Z en cm"
-                        />
-                        <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                      <div className="input-group input-group-sm">
-                        <span className="input-group-text font-monospace fw-bold text-warning bg-light py-0 px-1.5">Rot Y</span>
-                        <input
-                          type="number"
-                          step="5"
-                          className="form-control form-control-sm text-end font-monospace py-0 px-1"
-                          value={Math.round(effectiveSoloRotYDeg * 10) / 10}
-                          onChange={e => handleUpdateSoloRotDeg(parseFloat(e.target.value) || 0)}
-                          title="Rotation Y en degrés"
-                        />
-                        <span className="input-group-text small bg-light py-0 px-1 text-muted">°</span>
-                      </div>
-                    </div>
-                  </div>
-                  {alignmentActions}
-                </div>
+                transformEditor(false)
               )}
             </div>
           )}
