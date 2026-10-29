@@ -38,7 +38,7 @@ export async function life(fixture) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     check(nativeLife.needs.rest < beforeRest, 'Fatigue must decrease while seated');
     const panel = document.querySelector('[aria-label="Vie de Lara Native"]');
-    check(panel.querySelectorAll('progress').length === 6, 'Six needs must be visible');
+    check(panel.querySelectorAll('progress').length === 7, 'Seven needs must be visible');
     const values = [...panel.querySelectorAll('progress')].map(element => element.value);
     Object.values(nativeLife.needs).forEach((value, index) => check(Math.abs(value - values[index]) < 2, 'Needs panel must track the simulation'));
     await waitFor(() => animation('looking') && decisions().some(entry => entry.appLog.object?.id === 'garden-fresh-air'), 'Lara se relève, marche puis observe le jardin');
@@ -75,7 +75,7 @@ export async function meal(fixture) {
     check(normalGrowth > 0 && fastGrowth > normalGrowth * 4, `Accelerated needs must advance faster: normal=${normalGrowth}, fast=${fastGrowth}`);
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle initiale');
-    nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90, hygiene: 0, toilet: 0 };
+    nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90, hygiene: 0, toilet: 0, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('cooking-stir-pan'), 'Lara rejoint les plaques et prépare le repas');
     const beforePreparation = nativeLife.needs.meal;
@@ -104,7 +104,7 @@ export async function sleep(fixture) {
     const startNight = async () => {
         cameraState.recordUserControl();
         await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
-        nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+        nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
         cameraState.lastUserControlTime = 0;
         await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping'), 'Lara rejoint le lit et se couche');
         check(cameraState.positions.native.y === 45, 'Sleeping must take place on the mattress');
@@ -142,7 +142,7 @@ export async function hygiene(fixture) {
     useLaraLifeStore.setState({ speed: 10 });
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant les toilettes');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 10, toilet: 90 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 10, toilet: 90, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => nativeLife.handsDirty && nativeLife.needs.toilet < 85, 'Les toilettes soulagent le besoin');
     cameraState.recordUserControl();
@@ -154,7 +154,7 @@ export async function hygiene(fixture) {
     await waitFor(() => !nativeLife.handsDirty, 'Mains propres après le lavage complet');
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant un cycle complet');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
     const traceStart = window.__testTrace.length;
     cameraState.lastUserControlTime = 0;
     await waitFor(() => nativeLife.lastActivity === 'toilet', 'Cycle toilettes, chasse puis lavage terminé');
@@ -164,7 +164,7 @@ export async function hygiene(fixture) {
     check(phases.indexOf('use-toilet') < phases.indexOf('flush') && phases.indexOf('flush') < phases.indexOf('wash-hands'), 'Toilet, flush and handwashing must execute in order');
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant la douche');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('taking-shower'), 'Lara rejoint la douche');
     const beforeShower = nativeLife.needs.hygiene;
@@ -190,7 +190,7 @@ export async function routine(fixture) {
         nativeLife.elapsedSeconds = 13 * 60; // 21:00, with all physiological needs fulfilled.
         nativeLife.memory = {};
         nativeLife.relationships = {};
-        nativeLife.needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+        nativeLife.needs = { rest: 0, work: lastActivity === 'watch-tv' ? 0 : 60, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: lastActivity === 'watch-tv' ? 90 : 0 };
         nativeLife.lastActivity = lastActivity;
         for (const [id, slot] of blocked) reserve(id, slot);
         cameraState.lastUserControlTime = 0;
@@ -226,12 +226,14 @@ export async function routine(fixture) {
         check(session.playlist[0].id === 'conversation', 'The session must be a conversation');
         check(session.participantA.isReady && session.participantB.isReady, 'Both people must have arrived');
         const partnerId = session.participantA.characterId === 'native' ? session.participantB.characterId : session.participantA.characterId;
-        const beforeSocial = nativeLife.needs.work;
-        await waitFor(() => nativeLife.needs.work < beforeSocial - 2, 'La discussion réduit son ennui');
+        const beforeSocial = nativeLife.needs.company;
+        await waitFor(() => nativeLife.needs.company < beforeSocial - 2, 'La discussion satisfait le besoin de compagnie, même sans ennui');
         check(nativeLife.memory.social?.satisfaction > 0, 'A real conversation must be remembered');
         check(nativeLife.relationships[partnerId]?.seconds > 0, 'Only the actual conversation partner must gain affinity');
         await waitFor(() => document.querySelector('[aria-label^="Compagnie préférée :"]'), 'La compagnie préférée est visible dans le panneau');
         await waitFor(() => nativeLife.lastActivity === 'social', 'La discussion se termine et Lara reprend sa routine');
+        check(nativeLife.needs.company < 35, 'A complete conversation must relieve loneliness');
+        check(document.querySelector('progress[aria-label="Besoin de compagnie"]'), 'The company gauge must be visible');
         check(!duoSessionManager.getSessionFor('native'), 'The conversation must release both participants');
         return { observations };
     } finally {

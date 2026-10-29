@@ -2,7 +2,7 @@ import { closestLifeFriend, favoriteLifeActivity, getLifeMood, lifeClock, LIFE_L
 import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 
-const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes' };
+const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie' };
 
 export function LaraLifePanel() {
   const { needs, memory, relationships, elapsedSeconds, activity, reason, speed } = useLaraLifeStore();

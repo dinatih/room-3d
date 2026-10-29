@@ -1,5 +1,5 @@
 export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
-export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number };
+export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number };
 export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number }>;
 const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social'];
@@ -24,7 +24,7 @@ export interface LifeCandidate {
 
 // Gameplay seconds: needs become important in roughly two minutes.
 export const LIFE_SETTINGS = { activitySeconds: 60, mealPreparationSeconds: 20, toiletSeconds: 30, handWashingSeconds: 15,
-  sleepSeconds: 120, sleepPriority: 75, pauseSeconds: 20, priority: 35 };
+  sleepSeconds: 120, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
   rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
@@ -33,10 +33,10 @@ export const LIFE_LABELS: Record<LifeActivity, string> = {
 };
 export const LIFE_NEED_LABELS: Record<keyof LifeNeeds, string> = {
   rest: 'Besoin de repos', work: 'Besoin de stimulation', walk: 'Envie de bouger', meal: 'Faim',
-  hygiene: 'Besoin de se laver', toilet: 'Toilettes',
+  hygiene: 'Besoin de se laver', toilet: 'Toilettes', company: 'Besoin de compagnie',
 };
 const MOOD_LABELS: Record<keyof LifeNeeds, string> = {
-  rest: 'Fatiguée', work: 'Ennuyée', walk: 'Impatiente', meal: 'Affamée', hygiene: 'Inconfortable', toilet: 'Pressée',
+  rest: 'Fatiguée', work: 'Ennuyée', walk: 'Impatiente', meal: 'Affamée', hygiene: 'Inconfortable', toilet: 'Pressée', company: 'Seule',
 };
 
 /** Mood follows the most pressing unmet need, using the activity decision threshold. */
@@ -49,22 +49,22 @@ export function getLifeMood(needs: LifeNeeds) {
 }
 
 const rates: Record<LifeActivity, LifeNeeds> = {
-  pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
-  rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
-  work: { rest: 0.5, work: -1.5, walk: 0.6, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
-  walk: { rest: 0.4, work: -0.8, walk: 0, meal: 0.2, hygiene: 0.18, toilet: 0.18 },
-  meal: { rest: 0.2, work: -0.4, walk: 0.3, meal: -1.5, hygiene: 0.12, toilet: 0.18 },
-  sleep: { rest: -0.8, work: 0.2, walk: 0.2, meal: 0.1, hygiene: 0.06, toilet: 0.09 },
-  toilet: { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: 0.12, toilet: -3 },
-  shower: { rest: -0.1, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -1.5, toilet: 0.18 },
-  'wash-hands': { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18 },
-  read: { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
-  'watch-tv': { rest: 0.1, work: -1, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
-  social: { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hygiene: 0.12, toilet: 0.18 },
+  pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  work: { rest: 0.5, work: -1.5, walk: 0.6, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  walk: { rest: 0.4, work: -0.8, walk: 0, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2 },
+  meal: { rest: 0.2, work: -0.4, walk: 0.3, meal: -1.5, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  sleep: { rest: -0.8, work: 0.2, walk: 0.2, meal: 0.1, hygiene: 0.06, toilet: 0.09, company: 0.05 },
+  toilet: { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: 0.12, toilet: -3, company: 0.2 },
+  shower: { rest: -0.1, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -1.5, toilet: 0.18, company: 0.2 },
+  'wash-hands': { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18, company: 0.2 },
+  read: { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  'watch-tv': { rest: 0.1, work: -1, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  social: { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: -1.5 },
 };
 
 export function createLife() {
-  return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5 } as LifeNeeds,
+  return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10 } as LifeNeeds,
     elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, lastActivity: null as LifeActivity | null };
 }
 
@@ -155,7 +155,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
 /** A short rest and a night in bed answer the same fatigue, with different recovery rates. */
 export const lifeNeed = (activity: LifeCandidate['activity']): keyof LifeNeeds => activity === 'sleep' ? 'rest'
   : activity === 'shower' || activity === 'wash-hands' ? 'hygiene'
-  : activity === 'read' || activity === 'watch-tv' || activity === 'social' ? 'work' : activity;
+  : activity === 'social' ? 'company' : activity === 'read' || activity === 'watch-tv' ? 'work' : activity;
 
 export const lifeEffect = (activity: LifeActivity | null, phase?: LifePhase): LifeActivity | null => phase
   ? LIFE_PHASE_EFFECTS[phase] : ['rest', 'work', 'walk', 'pause'].includes(activity ?? '') ? activity : null;

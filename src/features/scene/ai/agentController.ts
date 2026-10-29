@@ -129,7 +129,7 @@ export function createAgentController(
   const hasLife = _characterId === 'native' && enabled;
   let lifeActivity: LifeActivity | null = hasLife && loop ? 'work' : null;
   let lifeSnapshotSeconds = 0;
-  const failedLifeTargets = new Map<string, { environment: string; actors?: ActorBlockers }>();
+  const failedLifeTargets = new Map<string, { environment: string; actors?: ActorBlockers; retryAt?: number }>();
   const lifeEnvironment = () => JSON.stringify([getObstacleRevision(), OccupancyManager.getReservations()
     .filter(reservation => reservation.characterId !== _characterId).map(({ slot, characterId }) => [slot, characterId]).sort()]);
   const interruptLife = (reason: string) => {
@@ -565,11 +565,9 @@ export function createAgentController(
 
   const retrySmartAction = (objectId: string) => {
     const failedInstruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
-    if (hasLife && loop && lifeActivity) {
-      failedLifeTargets.set(`${objectId}:${failedInstruction?.slotId ?? (lifeActivity === 'walk' ? 'breathe' : '')}`,
-        { environment: lifeEnvironment(), actors: blockedCoords?.actorBlockers });
-      lifeActivity = null;
-    }
+    const failedActivity = hasLife && loop ? lifeActivity : null;
+    const failedActors = blockedCoords?.actorBlockers;
+    if (failedActivity) lifeActivity = null;
     const departureOwner = route.owner;
     const session = duoSessionManager.getSessionFor(_characterId);
     const partners = [session?.participantA?.characterId, session?.participantB?.characterId]
@@ -590,6 +588,9 @@ export function createAgentController(
     // Skip the remaining steps of the failed action, including its exit steps.
     while (scenario?.[stepIndex]?.smartObjectId === objectId) stepIndex++;
     if (hasLife && loop) {
+      if (failedActivity) failedLifeTargets.set(`${objectId}:${(failedInstruction?.slotId ?? (failedActivity === 'walk' ? 'breathe' : '')).replace(/:role[AB]$/, '')}`,
+        { environment: lifeEnvironment(), actors: failedActors,
+          ...(failedActivity === 'social' ? { retryAt: nativeLife.elapsedSeconds + LIFE_SETTINGS.socialRetrySeconds } : {}) });
       pickNewAutonomousActivity();
     } else {
       const candidates = getAvailableAutonomousActivities(_characterId).filter(activity => activity.id !== objectId);
@@ -611,7 +612,8 @@ export function createAgentController(
     if (hasLife && loop) {
       const environment = lifeEnvironment();
       for (const [key, failure] of failedLifeTargets) {
-        if (failure.environment !== environment || (failure.actors && !actorBlocksUnchanged(failure.actors))) failedLifeTargets.delete(key);
+        if (failure.environment !== environment || (failure.actors && !actorBlocksUnchanged(failure.actors))
+          || (failure.retryAt !== undefined && nativeLife.elapsedSeconds >= failure.retryAt)) failedLifeTargets.delete(key);
       }
       const candidate = chooseLifeActivity(nativeLife.needs, getLaraLifeCandidates(nativeLife.handsDirty)
         .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
@@ -1393,17 +1395,22 @@ export function createAgentController(
       const isDuoAction = isDuoSlot(currentInstruction.smartObjectId, currentInstruction.slotId)
         || !!duoRole;
       if (isDuoAction) {
+        const conversation = lifeActivity === 'social' ? duoSessionManager.getCurrentAnimState(_characterId) : null;
+        const conversationClip = duoRole === 'roleB' ? conversation?.clipB : conversation?.clipA;
         const isEnded = handleDuoInteraction({
           characterId: _characterId,
-          dt,
+          dt: conversationClip && (state.animationPaused || animationPlayback?.animation !== conversationClip) ? 0 : dt,
+          waitDt: lifeActivity === 'social' ? dt / useLaraLifeStore.getState().speed : dt,
           state: state,
           duoRole: duoRole,
           duoWaitTimer: duoWaitTimer,
           duoInvited: duoInvited,
           onSessionEnded: (completed) => {
-            if (hasLife && loop && lifeActivity === 'social' && !completed) lifeActivity = null;
-            resetDuoState();
-            advanceToNextStep(hasNavStep);
+            if (hasLife && loop && lifeActivity === 'social' && !completed) retrySmartAction(currentInstruction.smartObjectId!);
+            else {
+              resetDuoState();
+              advanceToNextStep(hasNavStep);
+            }
             lastDuoEndTime = Date.now();
           },
           setDuoWaitTimer: (t) => { duoWaitTimer = t; },
@@ -1656,8 +1663,10 @@ export function createAgentController(
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
+    const socialAnimation = interacting && lifeActivity === 'social' && duoSessionManager.isPlaying(_characterId) ? duoSessionManager.getCurrentAnimState(_characterId) : null;
+    const socialClip = duoRole === 'roleB' ? socialAnimation?.clipB : socialAnimation?.clipA;
     const interactionSeconds = interacting ? lifeActivity === 'social'
-      ? (duoSessionManager.isPlaying(_characterId) ? dt : 0) : Math.min(dt, Math.max(0, timer)) : 0;
+      ? (socialClip === state.animation ? dt : 0) : Math.min(dt, Math.max(0, timer)) : 0;
     const conversation = lifeRunning && previousLifeActivity === 'social' && interactionSeconds > 0 ? duoSessionManager.getSessionFor(_characterId) : null;
     const partnerId = [conversation?.participantA?.characterId, conversation?.participantB?.characterId].find(id => id && id !== _characterId);
     let waitingForNavigation = false;

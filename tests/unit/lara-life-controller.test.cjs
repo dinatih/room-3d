@@ -33,6 +33,9 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     releaseAllForCharacter: () => reservations.clear(),
     getReservations: () => [...reservations].map(([slot, characterId]) => ({ slot, characterId })) };
   const noop = () => {};
+  const duo = { leaveDuoZone: noop, getSessionFor: noop, startDuoSession: () => null,
+    markReady: noop, isPlaying: () => false, isWaitingPartner: () => true, getCurrentAnimState: () => null };
+  const duoTicks = [];
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
@@ -48,10 +51,10 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { type: 'MOVE_TO', targetPos: [50, 45, 10] },
         { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
         { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
-      ] : sequence(candidate.id, candidate.slotId) },
-    './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state) } },
+      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: candidate.activity === 'social' ? 'social' : undefined })) },
+    './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state), getState: () => ({ speed: 1 }) } },
     './occupancyManager': { OccupancyManager: occupancy },
-    './duoSessionManager': { duoSessionManager: { leaveDuoZone: noop, getSessionFor: noop, startDuoSession: () => null } },
+    './duoSessionManager': { duoSessionManager: duo },
     '../animations/duoAnimations': { getDuoAnimationForClip: noop },
     './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; }, recoverDoorContact: () => undefined,
       followRoute: (route, actor, start, goal) => {
@@ -81,7 +84,12 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     } },
     './agent/agentAvoidance': { setAgentVelocity: noop, computeRotYStep: (from, to) => to, isAgentDestinationFree: () => true,
       beginActorBlockCheck: noop, endActorBlockCheck: () => new Map([['other', 'position']]), actorBlocksUnchanged: () => Boolean(actorBlockedId) },
-    './agent/agentDuoHandler': {}, './navigation/doorRequests': { releaseAgentDoors: noop },
+    './agent/agentDuoHandler': { handleDuoInteraction: ctx => {
+      duoTicks.push(ctx.dt);
+      const animation = duo.getCurrentAnimState();
+      if (animation) ctx.state.animation = animation.clipA;
+      return false;
+    } }, './navigation/doorRequests': { releaseAgentDoors: noop },
     '@features/scene/utils/deskScreenVideo': { setDesk2SmartActionState: noop },
     './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
     '@/devLog': { devLog: noop, DEV_LOG_ENABLED: false }, '../idleState': { isAppIdle: () => false },
@@ -93,7 +101,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations, candidates, objects,
+  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -185,7 +193,7 @@ it('interrompt une activité autonome pour le contrôle manuel et reprend sans r
 it('ne retente une cible inaccessible qu’après un changement du monde', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.fail('rest');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 20).length, 1);
@@ -205,7 +213,7 @@ it('laisse les autres personnages suivre leur scénario sans simulation de besoi
 it('réexamine une approche lorsque le personnage qui la bloquait s’écarte', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.blockActor('rest');
   for (let i = 0; i < 12; i++) w.tick();
   const restDecisions = () => w.logs.filter(entry => entry.action === 'life_decision' && entry.object?.id === 'rest');
@@ -222,7 +230,7 @@ it('exécute un ordre direct avant de reprendre le choix selon les besoins', () 
   const w = world(), disconnect = w.controller.connect();
   try {
     w.tick();
-    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
     document.dispatchEvent(new CustomEvent('agent-force-smartobject', { detail: { targetId: 'native', objectId: 'desk-bollsidan-2', slotId: 'use' } }));
     assert.equal(w.controller.hasPendingDynamicTask(), true);
     w.tick();
@@ -248,7 +256,7 @@ it('garde les besoins et la décision en pause quand le personnage est masqué',
 it('prépare puis mange sans satisfaire la faim pendant la préparation ou le chargement', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'cook');
   const hungry = w.nativeLife.needs.meal;
@@ -270,7 +278,7 @@ it('prépare puis mange sans satisfaire la faim pendant la préparation ou le ch
 it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim artificiellement satisfaite', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
   w.fail('cuisine-group');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 40).length, 1);
@@ -281,7 +289,7 @@ it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim arti
 it('récupère seulement au lit pendant le sommeil, puis se réveille et libère son lit au sol', () => {
   const w = world('native', false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.tick(); w.tick();
   const beforeBed = w.nativeLife.needs.rest;
   w.tick();
@@ -305,7 +313,7 @@ it('récupère seulement au lit pendant le sommeil, puis se réveille et libère
 it('conserve les mains sales après interruption et ne les nettoie qu’après le lavage réellement joué', () => {
   const w = world('native', false, false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'toilet');
   w.tick(1, false);
@@ -345,14 +353,18 @@ it('abandonne une conversation sans partenaire sans réessayer en boucle ni sati
   const w = world();
   w.tick(); w.tick();
   w.nativeLife.elapsedSeconds = 13 * 60;
-  w.nativeLife.needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0 };
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
   w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
   w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
     position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
   w.tick(); w.tick();
-  assert(w.nativeLife.needs.work >= 60, 'An unavailable conversation cannot relieve boredom');
-  for (let i = 0; i < 20; i++) w.tick();
+  assert(w.nativeLife.needs.company >= 90, 'An unavailable conversation cannot relieve loneliness');
+  for (let i = 0; i < life.LIFE_SETTINGS.socialRetrySeconds / 2; i++) w.tick();
   assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 1);
+  w.nativeLife.elapsedSeconds += life.LIFE_SETTINGS.socialRetrySeconds;
+  w.tick(life.LIFE_SETTINGS.pauseSeconds);
+  for (let i = 0; i < 4; i++) w.tick();
+  assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 2, 'Retry after a break, even if furniture is unchanged');
   assert(w.nativeLife.elapsedSeconds > 13 * 60);
 });
 
@@ -380,7 +392,7 @@ it('distingue une discussion achevée d’une attente expirée ou d’un partena
       '@features/ui/AppConsole': { appLog: () => {} },
     });
     let completed;
-    assert(handleDuoInteraction({ characterId: 'native', dt: 21, state: {}, duoRole: 'roleA', duoWaitTimer: 0,
+    assert(handleDuoInteraction({ characterId: 'native', dt: 21, waitDt: 21, state: {}, duoRole: 'roleA', duoWaitTimer: 0,
       duoInvited: false, setDuoWaitTimer: () => {}, setDuoInvited: () => {}, onSessionEnded: value => { completed = value; } }));
     assert.equal(completed, outcome === 'completed');
   }
@@ -416,4 +428,54 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
       assert.deepEqual(nativeLife.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
     }
   } finally { global.document = originalDocument; }
+});
+
+it('soulage la solitude seulement pendant la discussion jouée, jamais pendant l’attente ou le chargement', () => {
+  const w = world();
+  w.tick(); w.tick();
+  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
+  w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
+  w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
+    position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
+  let playing = false;
+  Object.assign(w.duo, {
+    startDuoSession: () => ({ targetA: 'native', targetB: 'rosanna', posA: [60, 0, 10], posB: [60, 0, 110], rotA: 0, rotB: Math.PI, actualSlotId: 'chat' }),
+    getSessionFor: () => ({ participantA: { characterId: 'native' }, participantB: { characterId: 'rosanna' } }),
+    isPlaying: () => playing,
+    getCurrentAnimState: () => playing ? { clipA: 'conversation-gestures', clipB: 'talking-1' } : null,
+  });
+  for (let i = 0; i < 5; i++) w.tick();
+  assert(w.nativeLife.needs.company >= 90);
+  assert.deepEqual(w.nativeLife.relationships, {});
+  playing = true;
+  w.tick(1, false); w.tick(1, false);
+  const lonely = w.nativeLife.needs.company;
+  assert(lonely >= 90, 'Loading the talking clip must not satisfy company');
+  assert.equal(w.duoTicks.at(-1), 0, 'The conversation timer must wait for actual playback');
+  w.tick();
+  assert(w.nativeLife.needs.company < lonely);
+  assert(w.nativeLife.relationships.rosanna.seconds > 0);
+  const needs = { ...w.nativeLife.needs }, relationships = structuredClone(w.nativeLife.relationships);
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try { w.controller.setPosition(10, 0, 10); w.tick(0); }
+  finally { global.document = originalDocument; }
+  assert.deepEqual(w.nativeLife.needs, needs);
+  assert.deepEqual(w.nativeLife.relationships, relationships);
+});
+
+it('laisse au partenaire son temps de déplacement normal même quand la vie de Lara est accélérée', () => {
+  let waited = 0, ended = false;
+  const { handleDuoInteraction } = load('src/features/scene/ai/agent/agentDuoHandler.ts', {
+    '../duoSessionManager': { duoSessionManager: { isCompletedFor: () => false, isPlaying: () => false,
+      markReady: () => {}, isWaitingPartner: () => true,
+      getCurrentLocation: () => ({ slotId: 'chat', objectId: 'garden-conversation', anchorPos: [0, 0, 0], anchorRotY: 0 }),
+    } }, '@features/ui/AppConsole': { appLog: () => {} },
+  });
+  const update = () => handleDuoInteraction({ characterId: 'native', dt: 10, waitDt: 1, state: {}, duoRole: 'roleA',
+    duoWaitTimer: waited, duoInvited: true, setDuoWaitTimer: value => { waited = value; },
+    setDuoInvited: () => {}, onSessionEnded: () => { ended = true; } });
+  update(); update(); update();
+  assert.equal(waited, 3);
+  assert(!ended, 'Three normal seconds must not expire an invitation as thirty accelerated seconds');
 });

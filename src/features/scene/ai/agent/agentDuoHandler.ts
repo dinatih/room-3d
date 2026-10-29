@@ -5,6 +5,7 @@ import { AgentState } from './agentTypes';
 export interface DuoUpdateContext {
   characterId: string;
   dt: number;
+  waitDt: number;
   state: AgentState;
   duoRole: DuoRole | null;
   duoWaitTimer: number;
@@ -18,6 +19,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
   const {
     characterId,
     dt,
+    waitDt,
     state,
     duoRole,
     duoWaitTimer,
@@ -39,7 +41,7 @@ export function handleDuoInteraction(ctx: DuoUpdateContext): boolean {
 
   const isWaiting = duoSessionManager.isWaitingPartner(characterId);
   if (isWaiting) {
-    const nextTimer = duoWaitTimer + dt;
+    const nextTimer = duoWaitTimer + waitDt;
     setDuoWaitTimer(nextTimer);
 
     if (nextTimer > 20.0) {
