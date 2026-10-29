@@ -1,3 +1,4 @@
+import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
@@ -49,7 +50,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
   const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
-  const playingRef = useRef(false);
   const danceRef = useRef({ owner: null as string | null, jumping: false });
   
   const showSkeletonGlobal = useSceneStore(s => s.layers.skeleton);
@@ -122,7 +122,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.reset().play();
       activeAction.current = action;
-      playingRef.current = true;
     }
 
     if (modelRef.current && !isPreview) {
@@ -170,7 +169,6 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           action.clampWhenFinished = false;
           action.reset().play();
           activeAction.current = action;
-          playingRef.current = true;
           invalidate();
         }
       }
@@ -202,39 +200,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     if (isPreview) {
       const clip = findDogClip(animations, previewAnim || 'idle');
       if (clip && clip.duration > 0) {
-        const store = useAnimPreviewStore.getState();
-        store.setClipInfo(`Shiba ${clip.name}`, clip.duration, false);
-        const action = mixerRef.current.clipAction(clip);
-        const animDelta = delta * (store.speed || 1);
-        if (store.isPlaying && !store.isScrubbing) {
-          if (action.paused) action.paused = false;
-          if (!store.isLooping) {
-            action.setLoop(THREE.LoopOnce, 0);
-            action.clampWhenFinished = true;
-            if (action.time >= clip.duration - 0.005) {
-              action.time = 0;
-            }
-          } else {
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.clampWhenFinished = false;
-          }
-          mixerRef.current.update(animDelta);
-          if (!store.isLooping && action.time >= clip.duration) {
-            action.time = clip.duration;
-            action.paused = true;
-            store.setCurrentTime(clip.duration);
-            store.pause();
-          } else {
-            store.setCurrentTime(action.time % clip.duration);
-          }
-        } else {
-          action.setEffectiveWeight(1);
-          (action as any)._fadeDuration = 0;
-          (action as any)._weight = 1;
-          action.time = store.currentTime;
-          action.paused = true;
-          mixerRef.current.update(0);
-        }
+        updateClipPreview(mixerRef.current, clip, delta, 'Shiba');
       }
       invalidate();
       return;

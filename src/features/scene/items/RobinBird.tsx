@@ -1,3 +1,4 @@
+import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
@@ -8,7 +9,6 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
-import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '@features/scene/cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { SubjectDriver } from '../camera/subjectControls';
@@ -259,39 +259,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       }
       const clip = animations.find(a => a.name === targetAnimName) || animations[0];
       if (clip && clip.duration > 0) {
-        const store = useAnimPreviewStore.getState();
-        store.setClipInfo(`Robin ${clip.name}`, clip.duration, false);
-        const action = mixerRef.current.clipAction(clip);
-        const animDelta = delta * (store.speed || 1);
-        if (store.isPlaying && !store.isScrubbing) {
-          if (action.paused) action.paused = false;
-          if (!store.isLooping) {
-            action.setLoop(THREE.LoopOnce, 0);
-            action.clampWhenFinished = true;
-            if (action.time >= clip.duration - 0.005) {
-              action.time = 0;
-            }
-          } else {
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.clampWhenFinished = false;
-          }
-          mixerRef.current.update(animDelta);
-          if (!store.isLooping && action.time >= clip.duration) {
-            action.time = clip.duration;
-            action.paused = true;
-            store.setCurrentTime(clip.duration);
-            store.pause();
-          } else {
-            store.setCurrentTime(action.time % clip.duration);
-          }
-        } else {
-          action.setEffectiveWeight(1);
-          (action as any)._fadeDuration = 0;
-          (action as any)._weight = 1;
-          action.time = store.currentTime;
-          action.paused = true;
-          mixerRef.current.update(0);
-        }
+        updateClipPreview(mixerRef.current, clip, delta, 'Robin');
       }
       invalidate();
       return;
