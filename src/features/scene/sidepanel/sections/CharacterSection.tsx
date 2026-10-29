@@ -83,6 +83,20 @@ export function CharacterSection({
     );
   };
 
+  const rangeControl = (key: keyof LayerState, value: number, min: string, max: string, step: string,
+    label: React.ReactNode, badge: React.ReactNode, className?: string) => (
+    <div className={className}>
+      <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
+        {label}{badge}
+      </div>
+      <input type="range" className="form-range form-range-sm" min={min} max={max} step={step} value={value}
+        onChange={event => {
+          const val = step === '1' ? parseInt(event.target.value, 10) : parseFloat(event.target.value);
+          useSceneStore.setState(state => ({ layers: { ...state.layers, [key]: val } }));
+        }} />
+    </div>
+  );
+
   return (
     <div className="d-flex flex-column bg-transparent">
       {layers.character && (
@@ -172,205 +186,77 @@ export function CharacterSection({
                   <i className="bi bi-scissors me-1" aria-hidden="true" />Paramètres Physique Perruques
                 </div>
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-shield-check me-1" aria-hidden="true" />Rigidité & Maintien (Stiffness)
-                    </span>
-                    <span className="badge bg-primary text-white">
-                      {(layers.wigStiffness ?? 1.0).toFixed(2)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.1"
-                    max="3.0"
-                    step="0.1"
-                    value={layers.wigStiffness ?? 1.0}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigStiffness: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigStiffness', layers.wigStiffness ?? 1.0, '0.1', '3.0', '0.1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-shield-check me-1" aria-hidden="true" />Rigidité & Maintien (Stiffness)
+                  </span>,
+                  <span className="badge bg-primary text-white">
+                    {(layers.wigStiffness ?? 1.0).toFixed(2)}x
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-shield-check me-1" aria-hidden="true" />Amortissement & Anti-vibration (Damping)
-                    </span>
-                    <span className="badge bg-success text-white">
-                      {(layers.wigDamping ?? 0.80).toFixed(2)}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.50"
-                    max="0.98"
-                    step="0.02"
-                    value={layers.wigDamping ?? 0.80}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigDamping: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigDamping', layers.wigDamping ?? 0.80, '0.50', '0.98', '0.02',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-shield-check me-1" aria-hidden="true" />Amortissement & Anti-vibration (Damping)
+                  </span>,
+                  <span className="badge bg-success text-white">
+                    {(layers.wigDamping ?? 0.80).toFixed(2)}
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-speedometer2 me-1" aria-hidden="true" />Poids aux pointes / Anti-fouet (Tip Weight)
-                    </span>
-                    <span className="badge bg-warning text-dark">
-                      {(layers.wigTipWeight ?? 1.2).toFixed(1)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.0"
-                    max="3.0"
-                    step="0.1"
-                    value={layers.wigTipWeight ?? 1.2}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigTipWeight: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigTipWeight', layers.wigTipWeight ?? 1.2, '0.0', '3.0', '0.1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-speedometer2 me-1" aria-hidden="true" />Poids aux pointes / Anti-fouet (Tip Weight)
+                  </span>,
+                  <span className="badge bg-warning text-dark">
+                    {(layers.wigTipWeight ?? 1.2).toFixed(1)}x
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-arrows-angle-expand me-1" aria-hidden="true" />Angle max déviation repos (Max Angle)
-                    </span>
-                    <span className="badge bg-danger text-white">
-                      {layers.wigMaxAngle ?? 15}°
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="5"
-                    max="45"
-                    step="1"
-                    value={layers.wigMaxAngle ?? 15}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigMaxAngle: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigMaxAngle', layers.wigMaxAngle ?? 15, '5', '45', '1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-arrows-angle-expand me-1" aria-hidden="true" />Angle max déviation repos (Max Angle)
+                  </span>,
+                  <span className="badge bg-danger text-white">
+                    {layers.wigMaxAngle ?? 15}°
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-globe2 me-1" aria-hidden="true" />Gravité globale (Gravity)
-                    </span>
-                    <span className="badge bg-danger text-white">
-                      {(layers.wigGravity ?? 1.0).toFixed(2)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.0"
-                    max="3.0"
-                    step="0.1"
-                    value={layers.wigGravity ?? 1.0}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigGravity: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigGravity', layers.wigGravity ?? 1.0, '0.0', '3.0', '0.1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-globe2 me-1" aria-hidden="true" />Gravité globale (Gravity)
+                  </span>,
+                  <span className="badge bg-danger text-white">
+                    {(layers.wigGravity ?? 1.0).toFixed(2)}x
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-speedometer me-1" aria-hidden="true" />Inertie dynamique (Inertia)
-                    </span>
-                    <span className="badge bg-secondary text-white">
-                      {(layers.wigInertia ?? 1.0).toFixed(1)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.0"
-                    max="3.0"
-                    step="0.1"
-                    value={layers.wigInertia ?? 1.0}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigInertia: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigInertia', layers.wigInertia ?? 1.0, '0.0', '3.0', '0.1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-speedometer me-1" aria-hidden="true" />Inertie dynamique (Inertia)
+                  </span>,
+                  <span className="badge bg-secondary text-white">
+                    {(layers.wigInertia ?? 1.0).toFixed(1)}x
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-wind me-1" aria-hidden="true" />Vent / Brise ambiante (Wind)
-                    </span>
-                    <span className="badge bg-info text-dark">
-                      {(layers.wigWind ?? 0.0).toFixed(1)}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.0"
-                    max="2.0"
-                    step="0.1"
-                    value={layers.wigWind ?? 0.0}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigWind: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigWind', layers.wigWind ?? 0.0, '0.0', '2.0', '0.1',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-wind me-1" aria-hidden="true" />Vent / Brise ambiante (Wind)
+                  </span>,
+                  <span className="badge bg-info text-dark">
+                    {(layers.wigWind ?? 0.0).toFixed(1)}x
+                  </span>
+                )}
 
-                <div>
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark small text-uppercase">
-                      <i className="bi bi-shield me-1" aria-hidden="true" />Rayon Collision Tête (Head Collider)
-                    </span>
-                    <span className="badge bg-dark text-white">
-                      {(layers.wigHeadCollisionRadius ?? 13.0).toFixed(1)} cm
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="8.0"
-                    max="20.0"
-                    step="0.5"
-                    value={layers.wigHeadCollisionRadius ?? 13.0}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, wigHeadCollisionRadius: val }
-                      }));
-                    }}
-                  />
-                </div>
+                {rangeControl('wigHeadCollisionRadius', layers.wigHeadCollisionRadius ?? 13.0, '8.0', '20.0', '0.5',
+                  <span className="text-muted fw-semibold text-dark small text-uppercase">
+                    <i className="bi bi-shield me-1" aria-hidden="true" />Rayon Collision Tête (Head Collider)
+                  </span>,
+                  <span className="badge bg-dark text-white">
+                    {(layers.wigHeadCollisionRadius ?? 13.0).toFixed(1)} cm
+                  </span>
+                )}
               </div>
             )}
         </div>
@@ -433,305 +319,113 @@ export function CharacterSection({
             <i className="bi bi-activity me-1" aria-hidden="true" />Paramètres Physique Buste
           </div>
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-lightning-charge me-1" aria-hidden="true" />Intensité Physique Buste
-              </span>
-              <span className="badge bg-danger">
-                {(layers.breastIntensity ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.0"
-              max="10.0"
-              step="0.2"
-              value={layers.breastIntensity ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastIntensity: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastIntensity', layers.breastIntensity ?? 1.0, '0.0', '10.0', '0.2',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-lightning-charge me-1" aria-hidden="true" />Intensité Physique Buste
+            </span>,
+            <span className="badge bg-danger">
+              {(layers.breastIntensity ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-speedometer2 me-1" aria-hidden="true" />Masse / Poids Buste (breastMass)
-              </span>
-              <span className="badge bg-danger text-white">
-                {(layers.breastMass ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.1"
-              max="4.0"
-              step="0.1"
-              value={layers.breastMass ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastMass: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastMass', layers.breastMass ?? 1.0, '0.1', '4.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-speedometer2 me-1" aria-hidden="true" />Masse / Poids Buste (breastMass)
+            </span>,
+            <span className="badge bg-danger text-white">
+              {(layers.breastMass ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-shield-check me-1" aria-hidden="true" />Fermeté / Maintien Buste (breastFirmness)
-              </span>
-              <span className="badge bg-purple text-white" style={{ backgroundColor: '#6f42c1' }}>
-                {(layers.breastFirmness ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.1"
-              max="3.0"
-              step="0.1"
-              value={layers.breastFirmness ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastFirmness: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastFirmness', layers.breastFirmness ?? 1.0, '0.1', '3.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-shield-check me-1" aria-hidden="true" />Fermeté / Maintien Buste (breastFirmness)
+            </span>,
+            <span className="badge bg-purple text-white" style={{ backgroundColor: '#6f42c1' }}>
+              {(layers.breastFirmness ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Élasticité Verticale (braElasticity)
-              </span>
-              <span className="badge bg-primary">
-                {(layers.braElasticity ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.2"
-              max="4.0"
-              step="0.1"
-              value={layers.braElasticity ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, braElasticity: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('braElasticity', layers.braElasticity ?? 1.0, '0.2', '4.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Élasticité Verticale (braElasticity)
+            </span>,
+            <span className="badge bg-primary">
+              {(layers.braElasticity ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows me-1" aria-hidden="true" />Élasticité Horizontale XZ (braElasticityXZ)
-              </span>
-              <span className="badge bg-success text-dark">
-                {(layers.braElasticityXZ ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.2"
-              max="5.0"
-              step="0.1"
-              value={layers.braElasticityXZ ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, braElasticityXZ: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('braElasticityXZ', layers.braElasticityXZ ?? 1.0, '0.2', '5.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows me-1" aria-hidden="true" />Élasticité Horizontale XZ (braElasticityXZ)
+            </span>,
+            <span className="badge bg-success text-dark">
+              {(layers.braElasticityXZ ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-stopwatch me-1" aria-hidden="true" />Retard / Déphasage Inertie (breastLagDelay)
-              </span>
-              <span className="badge bg-secondary text-white">
-                {(layers.breastLagDelay ?? 1.0).toFixed(1)}x
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.0"
-              max="3.0"
-              step="0.1"
-              value={layers.breastLagDelay ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastLagDelay: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastLagDelay', layers.breastLagDelay ?? 1.0, '0.0', '3.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-stopwatch me-1" aria-hidden="true" />Retard / Déphasage Inertie (breastLagDelay)
+            </span>,
+            <span className="badge bg-secondary text-white">
+              {(layers.breastLagDelay ?? 1.0).toFixed(1)}x
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Angle Max Vertical (maxBreastAngle)
-              </span>
-              <span className="badge bg-info text-dark">
-                {layers.maxBreastAngle ?? 25}°
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="5"
-              max="60"
-              step="1"
-              value={layers.maxBreastAngle ?? 25}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, maxBreastAngle: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('maxBreastAngle', layers.maxBreastAngle ?? 25, '5', '60', '1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Angle Max Vertical (maxBreastAngle)
+            </span>,
+            <span className="badge bg-info text-dark">
+              {layers.maxBreastAngle ?? 25}°
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows me-1" aria-hidden="true" />Angle Max Horizontal (maxBreastAngleXZ)
-              </span>
-              <span className="badge bg-warning text-dark">
-                {layers.maxBreastAngleXZ ?? 35}°
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="5"
-              max="120"
-              step="1"
-              value={layers.maxBreastAngleXZ ?? 35}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, maxBreastAngleXZ: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('maxBreastAngleXZ', layers.maxBreastAngleXZ ?? 35, '5', '120', '1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows me-1" aria-hidden="true" />Angle Max Horizontal (maxBreastAngleXZ)
+            </span>,
+            <span className="badge bg-warning text-dark">
+              {layers.maxBreastAngleXZ ?? 35}°
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Rebond / Translation (breastTranslation)
-              </span>
-              <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`}>
-                {(layers.breastTranslation ?? 0.15) === 0 ? 'Désactivé' : `${(layers.breastTranslation ?? 0.15).toFixed(2)}x`}
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.0"
-              max="4.0"
-              step="0.05"
-              value={layers.breastTranslation ?? 0.15}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastTranslation: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastTranslation', layers.breastTranslation ?? 0.15, '0.0', '4.0', '0.05',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows-vertical me-1" aria-hidden="true" />Rebond / Translation (breastTranslation)
+            </span>,
+            <span className={`badge ${(layers.breastTranslation ?? 0.15) > 0 ? 'bg-primary' : 'bg-secondary'}`}>
+              {(layers.breastTranslation ?? 0.15) === 0 ? 'Désactivé' : `${(layers.breastTranslation ?? 0.15).toFixed(2)}x`}
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-rulers me-1" aria-hidden="true" />Course Max Rebond (breastMaxTravel)
-              </span>
-              <span className="badge bg-dark text-white">
-                {(layers.breastMaxTravel ?? 0.5).toFixed(2)} cm
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.1"
-              max="10.0"
-              step="0.1"
-              value={layers.breastMaxTravel ?? 0.5}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastMaxTravel: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastMaxTravel', layers.breastMaxTravel ?? 0.5, '0.1', '10.0', '0.1',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-rulers me-1" aria-hidden="true" />Course Max Rebond (breastMaxTravel)
+            </span>,
+            <span className="badge bg-dark text-white">
+              {(layers.breastMaxTravel ?? 0.5).toFixed(2)} cm
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-arrows-collapse-vertical me-1" aria-hidden="true" />Aplatissement / Squash & Stretch (breastSquash)
-              </span>
-              <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`}>
-                {(layers.breastSquash ?? 0.25) === 0 ? 'Désactivé' : `${(layers.breastSquash ?? 0.25).toFixed(2)}x`}
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.0"
-              max="4.0"
-              step="0.05"
-              value={layers.breastSquash ?? 0.25}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastSquash: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastSquash', layers.breastSquash ?? 0.25, '0.0', '4.0', '0.05',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-arrows-collapse-vertical me-1" aria-hidden="true" />Aplatissement / Squash & Stretch (breastSquash)
+            </span>,
+            <span className={`badge ${(layers.breastSquash ?? 0.25) > 0 ? 'bg-info text-dark' : 'bg-secondary'}`}>
+              {(layers.breastSquash ?? 0.25) === 0 ? 'Désactivé' : `${(layers.breastSquash ?? 0.25).toFixed(2)}x`}
+            </span>
+          )}
 
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-              <span className="text-muted fw-semibold text-dark small text-uppercase">
-                <i className="bi bi-globe2 me-1" aria-hidden="true" />Gravité Buste (breastGravity)
-              </span>
-              <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`}>
-                {(layers.breastGravity ?? 1.0) === 0 ? 'Désactivé' : `${(layers.breastGravity ?? 1.0).toFixed(2)}x`}
-              </span>
-            </div>
-            <input
-              type="range"
-              className="form-range form-range-sm"
-              min="0.0"
-              max="3.0"
-              step="0.05"
-              value={layers.breastGravity ?? 1.0}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                useSceneStore.setState(st => ({
-                  layers: { ...st.layers, breastGravity: val }
-                }));
-              }}
-            />
-          </div>
+          {rangeControl('breastGravity', layers.breastGravity ?? 1.0, '0.0', '3.0', '0.05',
+            <span className="text-muted fw-semibold text-dark small text-uppercase">
+              <i className="bi bi-globe2 me-1" aria-hidden="true" />Gravité Buste (breastGravity)
+            </span>,
+            <span className={`badge ${(layers.breastGravity ?? 1.0) > 0 ? 'bg-danger text-white' : 'bg-secondary'}`}>
+              {(layers.breastGravity ?? 1.0) === 0 ? 'Désactivé' : `${(layers.breastGravity ?? 1.0).toFixed(2)}x`}
+            </span>
+          )}
         </div>
       )}
 
@@ -749,26 +443,11 @@ export function CharacterSection({
               {layerBtn('light', iconLabel('bi-camera-reels', 'Stabilisation Caméra'), 'fpvStabilization')}
 
               {(layers.fpvStabilization ?? true) && (
-                <div className="py-1 px-2 border-bottom">
-                  <div className="d-flex justify-content-between align-items-center mb-1 form-range-header">
-                    <span className="text-muted fw-semibold text-dark text-uppercase">Amorti des secousses</span>
-                    <span className="badge bg-danger text-white">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="0.0"
-                    max="0.95"
-                    step="0.05"
-                    value={layers.fpvStabilizationFactor ?? 0.7}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      useSceneStore.setState(st => ({
-                        layers: { ...st.layers, fpvStabilizationFactor: val }
-                      }));
-                    }}
-                  />
-                </div>
+                rangeControl('fpvStabilizationFactor', layers.fpvStabilizationFactor ?? 0.7, '0.0', '0.95', '0.05',
+                  <span className="text-muted fw-semibold text-dark text-uppercase">Amorti des secousses</span>,
+                  <span className="badge bg-danger text-white">{Math.round((layers.fpvStabilizationFactor ?? 0.7) * 100)}%</span>,
+                  'py-1 px-2 border-bottom'
+                )
               )}
             </>
           )}
