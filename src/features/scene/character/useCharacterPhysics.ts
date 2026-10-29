@@ -60,7 +60,6 @@ export function useCharacterPhysics() {
   // Collision bones
   const headBoneRef = useRef<THREE.Bone | null>(null);
   const spine2BoneRef = useRef<THREE.Bone | null>(null);
-  const spineBoneRef = useRef<THREE.Bone | null>(null);
   const hipsBoneRef = useRef<THREE.Bone | null>(null);
   const lShoulderRef = useRef<THREE.Bone | null>(null);
   const rShoulderRef = useRef<THREE.Bone | null>(null);
@@ -70,7 +69,6 @@ export function useCharacterPhysics() {
   const initPhysicsBones = (parts: CharacterParts) => {
     hipsBoneRef.current = parts.bones.hips;
     spine2BoneRef.current = parts.bones.spine2;
-    spineBoneRef.current = parts.bones.spine;
     headBoneRef.current = parts.bones.head;
     lShoulderRef.current = parts.bones.lShoulder;
     rShoulderRef.current = parts.bones.rShoulder;
@@ -78,18 +76,11 @@ export function useCharacterPhysics() {
     const breastChain: any[] = [];
     for (const bone of parts.bones.breastBones) {
       let axis = new THREE.Vector3(0, 1, 0);
-      let length = 15.0;
       const child = bone.children.find(x => (x as any).isBone);
       if (child && child.position.lengthSq() > 1e-8) {
-        length = child.position.length();
         axis = child.position.clone().normalize();
       }
       bone.updateMatrixWorld(true);
-      const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-      const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-      const worldLength = length * worldScale.z;
-      const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
-      const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
       const initialRestQ = (bone as any).restLocalQuaternion ? (bone as any).restLocalQuaternion.clone() : bone.quaternion.clone();
       const initialRestPos = (bone as any).userData?.restPos ? (bone as any).userData.restPos.clone() : bone.position.clone();
       const initialRestScale = (bone as any).userData?.restScale ? (bone as any).userData.restScale.clone() : bone.scale.clone();
@@ -99,10 +90,6 @@ export function useCharacterPhysics() {
         restPos: initialRestPos,
         restScale: initialRestScale,
         axis,
-        length,
-        worldLength,
-        tipWorld: tipWorld.clone(),
-        tipPrev: tipWorld.clone(),
       });
     }
     breastChainRef.current = breastChain;
@@ -250,9 +237,6 @@ export function useCharacterPhysics() {
           // Anti-vibration sleep filter when velocity is low
           const sleepThreshold = isWig ? (0.25 + pChain * 0.35) : 0.1;
           const isNodeSleeping = !isHeadMoving && vel.lengthSq() < sleepThreshold;
-          if (isNodeSleeping) {
-            vel.set(0, 0, 0);
-          }
 
           // Constraints pass (2 passes)
           for (let i = 0; i < 2; i++) {
@@ -305,7 +289,7 @@ export function useCharacterPhysics() {
 
           // Cône de déviation angulaire stricte (Perruques UNIQUEMENT - max 15° par rapport au repos)
           if (isWig) {
-            const maxAngleDeg = useSceneStore.getState().layers.wigMaxAngle ?? 15;
+            const maxAngleDeg = layers.wigMaxAngle ?? 15;
             const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
             const cosAngle = Math.max(-1.0, Math.min(1.0, restDirWorld.dot(currentDirWorld)));
             const currentAngle = Math.acos(cosAngle);
@@ -361,18 +345,18 @@ export function useCharacterPhysics() {
     }
 
     // Physique poitrine
-    const breastIntensity = useSceneStore.getState().layers.breastIntensity ?? 1.0;
-    const breastMass = useSceneStore.getState().layers.breastMass ?? 1.0;
-    const breastFirmness = useSceneStore.getState().layers.breastFirmness ?? 1.0;
-    const braElasticity = useSceneStore.getState().layers.braElasticity ?? 1.0;
-    const braElasticityXZ = useSceneStore.getState().layers.braElasticityXZ ?? 1.0;
-    const breastLagDelay = useSceneStore.getState().layers.breastLagDelay ?? 1.0;
-    const maxBreastAngleDeg = useSceneStore.getState().layers.maxBreastAngle ?? 25;
-    const maxBreastAngleXZDeg = useSceneStore.getState().layers.maxBreastAngleXZ ?? 35;
-    const breastTranslation = useSceneStore.getState().layers.breastTranslation ?? 0.15;
-    const breastMaxTravel = useSceneStore.getState().layers.breastMaxTravel ?? 0.5;
-    const breastSquash = useSceneStore.getState().layers.breastSquash ?? 0.25;
-    const breastGravity = useSceneStore.getState().layers.breastGravity ?? 1.0;
+    const breastIntensity = layers.breastIntensity ?? 1.0;
+    const breastMass = layers.breastMass ?? 1.0;
+    const breastFirmness = layers.breastFirmness ?? 1.0;
+    const braElasticity = layers.braElasticity ?? 1.0;
+    const braElasticityXZ = layers.braElasticityXZ ?? 1.0;
+    const breastLagDelay = layers.breastLagDelay ?? 1.0;
+    const maxBreastAngleDeg = layers.maxBreastAngle ?? 25;
+    const maxBreastAngleXZDeg = layers.maxBreastAngleXZ ?? 35;
+    const breastTranslation = layers.breastTranslation ?? 0.15;
+    const breastMaxTravel = layers.breastMaxTravel ?? 0.5;
+    const breastSquash = layers.breastSquash ?? 0.25;
+    const breastGravity = layers.breastGravity ?? 1.0;
 
     const maxBreastAngleRad = (maxBreastAngleDeg * Math.PI) / 180;
     const maxBreastAngleXZRad = (maxBreastAngleXZDeg * Math.PI) / 180;
@@ -484,32 +468,14 @@ export function useCharacterPhysics() {
             // Taux de compression sur la hauteur (inertie verticale haut/bas)
             const vertComp = Math.max(-0.50, Math.min(0.50, breastImpulseRef.current.y * 0.06 * softnessFactor * breastSquash));
 
-            if (Math.abs(axis.y) > 0.7) {
-              // Axe principal Y = longueur/profondeur du sein
-              const sy = Math.max(0.35, Math.min(2.0, 1.0 - depthComp));
-              const sz = Math.max(0.40, Math.min(1.8, 1.0 + vertComp));
-              // Préservation volumétrique sur X (élargissement latéral compensatoire)
-              const volumeComp = 1.0 / Math.sqrt(Math.max(0.2, sy * sz));
-              const sx = Math.max(0.40, Math.min(2.0, volumeComp));
-
-              bone.scale.set(
-                baseRestScale.x * sx,
-                baseRestScale.y * sy,
-                baseRestScale.z * sz
-              );
-            } else {
-              // Axe principal Z
-              const sz = Math.max(0.35, Math.min(2.0, 1.0 - depthComp));
-              const sy = Math.max(0.40, Math.min(1.8, 1.0 + vertComp));
-              const volumeComp = 1.0 / Math.sqrt(Math.max(0.2, sy * sz));
-              const sx = Math.max(0.40, Math.min(2.0, volumeComp));
-
-              bone.scale.set(
-                baseRestScale.x * sx,
-                baseRestScale.y * sy,
-                baseRestScale.z * sz
-              );
-            }
+            const depthScale = Math.max(0.35, Math.min(2.0, 1.0 - depthComp));
+            const verticalScale = Math.max(0.40, Math.min(1.8, 1.0 + vertComp));
+            const alongY = Math.abs(axis.y) > 0.7;
+            const sy = alongY ? depthScale : verticalScale;
+            const sz = alongY ? verticalScale : depthScale;
+            const volumeComp = 1.0 / Math.sqrt(Math.max(0.2, sy * sz));
+            const sx = Math.max(0.40, Math.min(2.0, volumeComp));
+            bone.scale.set(baseRestScale.x * sx, baseRestScale.y * sy, baseRestScale.z * sz);
           } else {
             bone.scale.copy(baseRestScale);
           }
@@ -541,7 +507,6 @@ export function useCharacterPhysics() {
   return {
     hairChainRef,
     customHairChainRef,
-    breastChainRef,
     initPhysicsBones,
     updatePhysics
   };

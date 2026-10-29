@@ -34,8 +34,6 @@ export function PlaneControls({
   const neutral = useRef<THREE.Quaternion | null>(null);
   const latest = useRef<THREE.Quaternion | null>(null);
   const held = useRef(new Map<number, string>());
-  const mounted = useRef(true);
-  const sensorReady = useRef(false);
   const flying = launched && viewMode !== 'landing' && viewMode !== 'landed';
 
   const showTouch = isMobile || (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
@@ -47,7 +45,6 @@ export function PlaneControls({
   }
 
   useEffect(() => {
-    mounted.current = true;
     const timer = window.setInterval(() => {
       setSpeed(cameraState.planeSpeed * 0.036);
       setLaunching(cameraState.planeLaunching);
@@ -65,7 +62,6 @@ export function PlaneControls({
     window.addEventListener('blur', blur);
     document.addEventListener('visibilitychange', visibility);
     return () => {
-      mounted.current = false;
       clearInterval(timer);
       window.removeEventListener('blur', blur);
       document.removeEventListener('visibilitychange', visibility);
@@ -79,7 +75,6 @@ export function PlaneControls({
 
   useEffect(() => {
     if (!gyro) return;
-    sensorReady.current = false;
     neutral.current = null;
     latest.current = null;
     const orientation = new THREE.Quaternion();
@@ -99,7 +94,6 @@ export function PlaneControls({
 
     const onOrientation = (event: DeviceOrientationEvent) => {
       if (event.beta === null || event.gamma === null || document.hidden) return;
-      sensorReady.current = true;
       euler.set(
         THREE.MathUtils.degToRad(event.beta),
         THREE.MathUtils.degToRad(event.alpha ?? 0),
@@ -176,7 +170,6 @@ export function PlaneControls({
     }
     neutral.current = null;
     latest.current = null;
-    sensorReady.current = false;
     setGyro(true);
     setMessage('Inclinez le téléphone pour piloter (croix également active).');
   }
