@@ -127,11 +127,6 @@ export function DjiDrone({
       if (!m.isMesh) return;
       m.castShadow = true;
       m.receiveShadow = true;
-      if (m.material) {
-        const mat = m.material as THREE.MeshStandardMaterial;
-        mat.metalness = mat.metalness ?? 0.35;
-        mat.roughness = mat.roughness ?? 0.55;
-      }
     });
 
     if (rootRef.current) {
@@ -148,7 +143,6 @@ export function DjiDrone({
     }
 
     invalidate();
-    onSize?.(dimensions.current.clone());
 
     return () => {
       mixerRef.current?.stopAllAction();
@@ -167,7 +161,11 @@ export function DjiDrone({
         }
       }
     };
-  }, [scene, targetMaxDimCm, rotationY, onSize, invalidate, isPreview, subjectId, startObservation, driver, itemName]);
+  }, [scene, targetMaxDimCm, rotationY, invalidate, isPreview, subjectId, startObservation, driver, itemName]);
+
+  useLayoutEffect(() => {
+    onSize?.(dimensions.current.clone());
+  }, [scene, targetMaxDimCm, rotationY, onSize]);
 
   useFrame((_, delta) => {
     if (isAppIdle() || !mixerRef.current) return;
@@ -182,37 +180,35 @@ export function DjiDrone({
     const targetAnimName = isPreview ? previewAnim || 'Drone_Hover' : driver.active ? 'Drone_Hover' : tour?.state === 'travelling' ? 'Drone_Fly' : tour?.observation?.sweep ? 'Drone_Scan' : 'Drone_Hover';
     const clip = clips.find(a => a.name === targetAnimName);
     if (!clip) throw new Error(`${itemName} : animation inconnue ${targetAnimName}`);
-    if (clip && clip.duration > 0) {
-      let action = currentAction.current;
-      if (!action || action.getClip().name !== clip.name) {
-        const nextAction = mixerRef.current.clipAction(clip);
-        nextAction.reset();
-        nextAction.setLoop(THREE.LoopRepeat, Infinity);
-        nextAction.play();
-        if (action) {
-          nextAction.crossFadeFrom(action, 0.2, false);
-        }
-        action = nextAction;
-        currentAction.current = action;
+    let action = currentAction.current;
+    if (!action || action.getClip().name !== clip.name) {
+      const nextAction = mixerRef.current.clipAction(clip);
+      nextAction.reset();
+      nextAction.setLoop(THREE.LoopRepeat, Infinity);
+      nextAction.play();
+      if (action) {
+        nextAction.crossFadeFrom(action, 0.2, false);
       }
+      action = nextAction;
+      currentAction.current = action;
+    }
 
-      if (isPreview) {
-        const store = useAnimPreviewStore.getState();
-        store.setClipInfo(`${itemName} ${clip.name}`, clip.duration, false);
-        const animDelta = delta * (store.speed || 1);
-        if (store.isPlaying && !store.isScrubbing) {
-          if (action.paused) action.paused = false;
-          action.setLoop(store.isLooping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-          mixerRef.current.update(animDelta);
-          store.setCurrentTime(action.time % clip.duration);
-        } else {
-          action.time = store.currentTime;
-          action.paused = true;
-          mixerRef.current.update(0);
-        }
+    if (isPreview) {
+      const store = useAnimPreviewStore.getState();
+      store.setClipInfo(`${itemName} ${clip.name}`, clip.duration, false);
+      const animDelta = delta * (store.speed || 1);
+      if (store.isPlaying && !store.isScrubbing) {
+        if (action.paused) action.paused = false;
+        action.setLoop(store.isLooping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+        mixerRef.current.update(animDelta);
+        store.setCurrentTime(action.time % clip.duration);
       } else {
-        mixerRef.current.update(delta);
+        action.time = store.currentTime;
+        action.paused = true;
+        mixerRef.current.update(0);
       }
+    } else {
+      mixerRef.current.update(delta);
     }
     invalidate();
   }, -2);
