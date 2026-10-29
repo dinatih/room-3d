@@ -12,8 +12,6 @@ import {
 interface ExtraCharactersSelectorProps {
   isMobile: boolean;
   compact?: boolean;
-  onToggleLayer?: (key: any) => void;
-  extraCharactersEnabled?: boolean;
 }
 
 export function ExtraCharactersSelector({
