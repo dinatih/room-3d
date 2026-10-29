@@ -214,7 +214,7 @@ export const SPATIAL_ZONES_CONFIG: SpatialZoneDef[] = [
 ];
 
 /**
- * Gestionnaire global des zones spatiales (ZoneManager / SpatialZoneManager)
+ * Gestionnaire global des zones spatiales
  */
 class SpatialZoneManagerClass {
   private zones: Map<string, SpatialZone> = new Map();
@@ -266,7 +266,6 @@ class SpatialZoneManagerClass {
 }
 
 export const SpatialZoneManager = new SpatialZoneManagerClass();
-export const ZoneManager = SpatialZoneManager;
 
 /**
  * Détecte si un agent se trouve dans le volume intérieur de la salle de bain.
