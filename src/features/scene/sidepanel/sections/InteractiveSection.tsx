@@ -1,3 +1,4 @@
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { AIR_PERFORMER_ACTION_IDS, AIR_PERFORMER_CONTROLS } from '../../../home-assistant/airPerformer';
 import { AIRCRAFT_MODELS } from '../../aircraftModels';
 import { useSceneStore, getSceneActionValue } from '../../store/useSceneStore';
@@ -35,29 +36,25 @@ export function InteractiveSection({
   useSceneStore(state => state.extraStates);
   useSceneStore(state => state.desk2ScreenActive);
 
-  const doorBtn = (label: string, key: string) => (
+  const actionButton = (label: ReactNode, badge: ReactNode, props: ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button
       className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-      onClick={() => triggerAction(key)}
+      {...props}
     >
-      <span>{label}</span><span className="badge bg-secondary">{getActionLabel(key, getSceneActionValue(key))}</span>
+      <span>{label}</span>{badge}
     </button>
   );
 
-  const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => {
-    return (
-      <button 
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        disabled={isHomeAssistantControlDisabled(actionKey, ha)}
-        onClick={() => triggerAction(actionKey, undefined, 'user')}
-      >
-        <span>{label}</span>
-        <span className="badge bg-secondary">
-          {badgeLabel}
-        </span>
-      </button>
-    );
-  };
+  const doorBtn = (label: string, key: string) => (
+    actionButton(label, <span className="badge bg-secondary">{getActionLabel(key, getSceneActionValue(key))}</span>, { onClick: () => triggerAction(key) })
+  );
+
+  const triggerBtn = (label: string, actionKey: string, badgeLabel = 'Action') => (
+    actionButton(label, <span className="badge bg-secondary">{badgeLabel}</span>, {
+      disabled: isHomeAssistantControlDisabled(actionKey, ha),
+      onClick: () => triggerAction(actionKey, undefined, 'user'),
+    })
+  );
 
   const furnitureBtn = (
     label: string,
@@ -69,20 +66,12 @@ export function InteractiveSection({
     const val = furniture[key];
     const isOn = typeof val === 'boolean' ? val : !!val;
     const unavailable = isHomeAssistantLight(key) && isHomeAssistantLinked(ha) && (ha.status !== 'connected' || !ha.lights[key].available);
-    return (
-      <button 
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        disabled={isHomeAssistantControlDisabled(key, ha)}
-        onClick={() => toggleFurniture(key)}
-        style={{ 
-          opacity: isOn ? 1 : 0.55,
-        }}
-      >
-        <span>{isHomeAssistantLight(key) && isHomeAssistantLinked(ha) ? ha.lights[key].name ?? label : label}</span>
-        <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
+    return actionButton(
+      isHomeAssistantLight(key) && isHomeAssistantLinked(ha) ? ha.lights[key].name ?? label : label,
+      <span className={`badge ${isOn ? 'bg-danger' : 'bg-secondary'}`}>
           {unavailable ? 'INDISPONIBLE' : displayValue ? displayValue(val) : (isOn ? txtOn : txtOff)}
-        </span>
-      </button>
+      </span>,
+      { disabled: isHomeAssistantControlDisabled(key, ha), onClick: () => toggleFurniture(key), style: { opacity: isOn ? 1 : 0.55 } }
     );
   };
 
@@ -97,7 +86,7 @@ export function InteractiveSection({
       {doorBtn('Baie Vitrée Est', 'eastGlassDoor')}
       {doorBtn('Baie Vitrée Ouest', 'glassDoorV2LeftOpen')}
       {furnitureBtn('Volets', 'glassDoorV2ShutterPos', 'ON', 'OFF', v => typeof v === 'number' ? (v === 0 ? 'OUVERT' : v === 100 ? 'FERMÉ' : `${v}%`) : `${v}%`)}
-      
+
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PLACARDS</div>
       {furnitureBtn('Placard Couloir', 'corrDoors', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Placard SDB Gauche', 'sdbClosetL', 'OUVERT', 'FERMÉ')}
@@ -105,24 +94,18 @@ export function InteractiveSection({
       {furnitureBtn('Armoire SDB Ouest', 'cbnWest', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Armoire SDB Est', 'cbnEast', 'OUVERT', 'FERMÉ')}
       {furnitureBtn('Meuble sous évier', 'cabinet', 'OUVERT', 'FERMÉ')}
-      
+
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">MOBILIER & ÉLECTRO</div>
       {furnitureBtn('Lit Double', 'bedDouble', 'DOUBLE', 'SÉPARÉ')}
       {furniture.bedDouble && (
-        <button
-          className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-          onClick={() => {
-            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
-          }}
-        >
-          <span>Lit Double (Position)</span>
-          <span className="badge bg-primary">
+        actionButton('Lit Double (Position)', <span className="badge bg-primary">
             {(() => {
               const p = positionState['bed-position'];
               return DOUBLE_BED_POSITIONS[p?.idx ?? 0]?.label ?? `Pos ${(p?.idx ?? 0) + 1}`;
             })()}
-          </span>
-        </button>
+          </span>, { onClick: () => {
+            document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'bed-position' } }));
+          } })
       )}
       {furnitureBtn('Accoudoir Canapé Gauche', 'sofaArmLeft')}
       {furnitureBtn('Accoudoir Canapé Droit', 'sofaArmRight')}
@@ -150,7 +133,7 @@ export function InteractiveSection({
       {triggerBtn('WC Couvercle', 'wc-lid-toggle')}
       {triggerBtn('WC Siège', 'wc-seat-toggle')}
       {triggerBtn('WC Chasse d\'eau', 'wc-flush')}
-      
+
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase"><i className="bi bi-airplane me-1" aria-hidden="true" />Expériences & avion</div>
       <button
         className="btn btn-sm btn-outline-danger w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 fw-bold small"
@@ -166,30 +149,12 @@ export function InteractiveSection({
                   {AIRCRAFT_MODELS.map(entry => <option key={entry.key} value={entry.key}>{entry.label}</option>)}
                 </select>
       </div>
-      <button
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        onClick={onToggleAutopilot}
-        style={{ 
-          opacity: autopilotVisible ? 1 : 0.55,
-        }}
-      >
-        <span>Pilote auto ∞</span>
-        <span className={`badge ${autopilotVisible ? 'bg-danger' : 'bg-secondary'}`}>
+      {actionButton('Pilote auto ∞', <span className={`badge ${autopilotVisible ? 'bg-danger' : 'bg-secondary'}`}>
           {autopilotVisible ? 'ON' : 'OFF'}
-        </span>
-      </button>
-      <button
-        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small bg-transparent"
-        onClick={onToggleLandingStrips}
-        style={{ 
-          opacity: showLandingStrips ? 1 : 0.55,
-        }}
-      >
-        <span><i className="bi bi-sign-turn-right me-1" aria-hidden="true" />Pistes</span>
-        <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`}>
+        </span>, { onClick: onToggleAutopilot, style: { opacity: autopilotVisible ? 1 : 0.55 } })}
+      {actionButton(<><i className="bi bi-sign-turn-right me-1" aria-hidden="true" />Pistes</>, <span className={`badge ${showLandingStrips ? 'bg-danger' : 'bg-secondary'}`}>
           {showLandingStrips ? 'ON' : 'OFF'}
-        </span>
-      </button>
+        </span>, { onClick: onToggleLandingStrips, style: { opacity: showLandingStrips ? 1 : 0.55 } })}
 
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
