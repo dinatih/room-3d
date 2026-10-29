@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
-import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
+import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { cameraState } from '../cameraState';
 import { HornetTour } from '../hornetTour';
 import { SubjectDriver } from '../camera/subjectControls';
@@ -194,19 +194,7 @@ export function DjiDrone({
     }
 
     if (isPreview) {
-      const store = useAnimPreviewStore.getState();
-      store.setClipInfo(`${itemName} ${clip.name}`, clip.duration, false);
-      const animDelta = delta * (store.speed || 1);
-      if (store.isPlaying && !store.isScrubbing) {
-        if (action.paused) action.paused = false;
-        action.setLoop(store.isLooping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-        mixerRef.current.update(animDelta);
-        store.setCurrentTime(action.time % clip.duration);
-      } else {
-        action.time = store.currentTime;
-        action.paused = true;
-        mixerRef.current.update(0);
-      }
+      updateClipPreview(mixerRef.current, clip, delta, itemName);
     } else {
       mixerRef.current.update(delta);
     }

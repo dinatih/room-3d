@@ -6,7 +6,7 @@ import { useGLTF } from '@react-three/drei';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
-import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
+import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { cameraState } from '@features/scene/cameraState';
 import { droneInput, droneMovement, useDroneControlStore } from '../droneControls';
 import { useDroneControls } from '../camera/useDroneControls';
@@ -209,20 +209,7 @@ export function BlackHornetDrone({
       const targetAnimName = previewAnim || 'Drone_Hover';
       const clip = animations.find(a => a.name === targetAnimName) || animations[0];
       if (clip && clip.duration > 0) {
-        const store = useAnimPreviewStore.getState();
-        store.setClipInfo(`Black Hornet ${clip.name}`, clip.duration, false);
-        const action = mixerRef.current.clipAction(clip);
-        const animDelta = delta * (store.speed || 1);
-        if (store.isPlaying && !store.isScrubbing) {
-          if (action.paused) action.paused = false;
-          action.setLoop(store.isLooping ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
-          mixerRef.current.update(animDelta);
-          store.setCurrentTime(action.time % clip.duration);
-        } else {
-          action.time = store.currentTime;
-          action.paused = true;
-          mixerRef.current.update(0);
-        }
+        updateClipPreview(mixerRef.current, clip, delta, 'Black Hornet');
       }
       invalidate();
       return;

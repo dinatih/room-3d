@@ -21,7 +21,7 @@ for (const name of ['DjiNeoDrone', 'DjiAvata2Drone', 'DjiFpvDrone']) it(`${name}
     '@features/scene/useGLTFClone': { useGLTFClone: () => ({ scene }) },
     '@react-three/drei': { useGLTF: { preload() {} } }, '@features/scene/idleState': { isAppIdle: () => false },
     '@features/scene/glbUtils': { glbLocalBBox: object => new THREE.Box3().setFromObject(object) },
-    '@features/inventory/useAnimPreviewStore': {},
+    '@features/inventory/updateClipPreview': {},
     '../cameraState': { cameraState: { animalViews: {}, positions: {}, animalTarget: null } },
     '../hornetTour': { HornetTour: class {
       constructor() { tours++; this.observations = ['terrace', 'feeder', 'top'].map(id => ({ id, position: new THREE.Vector3(1, 2, 3) })); this.space = { safeStop: () => true }; }
