@@ -1,8 +1,8 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
-const { CHARACTERS, isCharacterVisibleInMode } = require('../../src/features/scene/characterConfig.ts');
-const state = { layers: { laraCount: 7 }, activeCharacterId: 'native' };
+const { CHARACTERS, DEFAULT_LARA_COUNT, LARA_COUNT_MODES, getDefaultSceneCharacterIds, isCharacterVisibleInMode } = require('../../src/features/scene/characterConfig.ts');
+const state = { layers: { laraCount: DEFAULT_LARA_COUNT }, activeCharacterId: 'native' };
 const grid = load('src/features/scene/character/characterGridUtils.ts', {
   '../characterConfig': { CHARACTERS, isCharacterVisibleInMode },
   './useCharacterGridStore': { useCharacterGridStore: { getState: () => ({}) } },
@@ -20,7 +20,7 @@ it('chooses an occupied middle column for incomplete grids', () => {
 });
 
 it('frames every row around the active character in perspective and ortho', () => {
-  for (const count of [1, 2, 4, 7, 10, 15, CHARACTERS.length]) {
+  for (const count of [...LARA_COUNT_MODES, CHARACTERS.length]) {
     const view = grid.getCharacterGridCameraView(count);
     const ortho = grid.getCharacterGridOrthoViews(count).front;
     const halfHeight = (view.pos[2] - view.target[2]) * Math.tan(grid.CHARACTER_GRID_CONFIG.fov * Math.PI / 360);
@@ -33,4 +33,13 @@ it('frames every row around the active character in perspective and ortho', () =
       }
     }
   }
+});
+
+it('ajoute Cha aux sept personnages présents par défaut sans remplacer personne', () => {
+  assert.equal(DEFAULT_LARA_COUNT, 8);
+  assert(LARA_COUNT_MODES.includes(DEFAULT_LARA_COUNT));
+  assert.deepEqual(getDefaultSceneCharacterIds(DEFAULT_LARA_COUNT, 'native'), [
+    'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha',
+  ]);
+  assert(isCharacterVisibleInMode('cha', DEFAULT_LARA_COUNT, 'native'));
 });
