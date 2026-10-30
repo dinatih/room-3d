@@ -715,6 +715,9 @@ export function Studio() {
       } else if (e.key === 'm' || e.key === 'M') {
         e.preventDefault();
         document.dispatchEvent(new CustomEvent('toggle-minimap'));
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent('toggle-life'));
       } else if (e.key === 'F10' || e.code === 'F10') {
         e.preventDefault();
         useSceneStore.getState().setPhotoModeOpen(true);

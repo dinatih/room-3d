@@ -226,11 +226,14 @@ export function AppConsole({
   useEffect(() => {
     const onToggleMinimap = () => setShowMinimap(v => !v);
     const onTogglePerf = () => setShowPerf(v => !v);
+    const onToggleLife = () => setShowLife(v => !v);
     document.addEventListener('toggle-minimap', onToggleMinimap);
     document.addEventListener('toggle-perf', onTogglePerf);
+    document.addEventListener('toggle-life', onToggleLife);
     return () => {
       document.removeEventListener('toggle-minimap', onToggleMinimap);
       document.removeEventListener('toggle-perf', onTogglePerf);
+      document.removeEventListener('toggle-life', onToggleLife);
     };
   }, []);
 
