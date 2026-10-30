@@ -60,8 +60,8 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
 
   return (
     <group ref={ref} rotation-y={isPreview ? Math.PI : 0}>
-      {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0) */}
-      <group position={[0, 0, 0]} userData={{ sceneItemRoot: true }}>
+      {/* Congélateur CHIQ au sol sous la tour Kallax (Y = 0, tourné de 180° pour faire face à l'appartement) */}
+      <group position={[0, 0, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true }}>
         <Freezer />
       </group>
 
