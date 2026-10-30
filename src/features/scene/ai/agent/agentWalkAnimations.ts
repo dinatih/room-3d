@@ -10,7 +10,7 @@ export const NPC_WALK_ANIMATIONS = [
   // 'unarmed-walk-forward',
   'walking',
   // 'wheelbarrow-walk-2',
-  'miley-armature-walk-relaxed-loop',
+  // 'miley-armature-walk-relaxed-loop',
   // 'miley-armature-08-angry-walk',
   // 'miley-armature-26-drunk-walk',
   // 'miley-armature-32-groove-walk',

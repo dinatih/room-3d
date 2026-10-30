@@ -50,7 +50,7 @@ export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
 ];
 
 export const AIRPERFORMER_POSITIONS: readonly FurnitureTransform[] = [
-  { x: 261, z: 65.5, ry: 0 },
+  { x: 257, z: 76, ry: 0 },
   { x: 200, z: 100,  ry: 0 },
 ];
 
