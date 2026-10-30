@@ -38,10 +38,11 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
             bpy.data.actions.remove(action)
         else:
             action.name = name.lower().replace('_', '-')
-    # The source walk continues into a different pose after its cycle (frame 22).
+    # The source walk cycle runs seamlessly from frame 7 to 31 (24 frames = 1.0s at 24 fps).
     walk = bpy.data.actions['walk']
     walk.use_frame_range = True
-    walk.frame_end = 22
+    walk.frame_start = 7
+    walk.frame_end = 31
     # The FBX has no jaw bone: the Head bone tip supplies the muzzle direction.
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode='EDIT')
