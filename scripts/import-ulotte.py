@@ -108,13 +108,13 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     bpy.context.scene.frame_set(1)
     p_sit = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
 
-    # Snapshot of lay pose: lowered chest flat to ground, front legs extended forward
+    # Snapshot of lay pose: curled resting on side (flank)
     p_lay = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
-    p_lay['UpperBack'] = (p_sit['UpperBack'][0].copy(), p_sit['UpperBack'][1] @ Quaternion((1, 0, 0), 0.35), p_sit['UpperBack'][2].copy())
-    p_lay['FrontLeg0.L'] = (p_sit['FrontLeg0.L'][0].copy(), p_sit['FrontLeg0.L'][1] @ Quaternion((1, 0, 0), 0.85), p_sit['FrontLeg0.L'][2].copy())
-    p_lay['FrontLeg0.R'] = (p_sit['FrontLeg0.R'][0].copy(), p_sit['FrontLeg0.R'][1] @ Quaternion((1, 0, 0), 0.85), p_sit['FrontLeg0.R'][2].copy())
-    p_lay['Neck'] = (p_sit['Neck'][0].copy(), p_sit['Neck'][1] @ Quaternion((1, 0, 0), -0.15), p_sit['Neck'][2].copy())
-    p_lay['Head'] = (p_sit['Head'][0].copy(), p_sit['Head'][1] @ Quaternion((1, 0, 0), -0.20), p_sit['Head'][2].copy())
+    p_lay['BodyHandle'] = (p_sit['BodyHandle'][0] + Vector((0, 0, 0.81)), p_sit['BodyHandle'][1] @ Quaternion((0, 1, 0), 1.35), p_sit['BodyHandle'][2].copy())
+    p_lay['Neck'] = (p_sit['Neck'][0].copy(), p_sit['Neck'][1] @ Quaternion((0, 0, 1), 0.25) @ Quaternion((1, 0, 0), -0.15), p_sit['Neck'][2].copy())
+    p_lay['Head'] = (p_sit['Head'][0].copy(), p_sit['Head'][1] @ Quaternion((0, 0, 1), 0.20) @ Quaternion((1, 0, 0), -0.20), p_sit['Head'][2].copy())
+    p_lay['Ear1.L'] = (p_sit['Ear1.L'][0].copy(), p_sit['Ear1.L'][1] @ Quaternion((0, 1, 0), -0.3), p_sit['Ear1.L'][2].copy())
+    p_lay['Ear1.R'] = (p_sit['Ear1.R'][0].copy(), p_sit['Ear1.R'][1] @ Quaternion((0, 1, 0), -0.3), p_sit['Ear1.R'][2].copy())
 
     tail_bones = ['Tail1', 'Tail2', 'Tail3', 'Tail4', 'Tail5', 'Tail6', 'Tail7']
 
@@ -139,20 +139,20 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     act_sit.frame_start = 1
     act_sit.frame_end = 16
 
-    # 2. Lay down action: transition from sit to true lying down on the ground (16 frames)
+    # 2. Lay down action: roll from sit onto flank/side resting on ground (16 frames)
     act_lay = bpy.data.actions.new(name="lay-down")
     rig.animation_data.action = act_lay
     for f in range(1, 17):
         t = (f - 1) / 15.0
         alpha = t * t * (3 - 2 * t)
-        arc = math.sin(t * math.pi) * 0.7
+        arc_dz = math.sin(t * math.pi) * -0.36
         bpy.context.scene.frame_set(f)
         for pb in rig.pose.bones:
             pb.location = p_sit[pb.name][0].lerp(p_lay[pb.name][0], alpha)
             pb.rotation_quaternion = p_sit[pb.name][1].slerp(p_lay[pb.name][1], alpha)
             pb.scale = p_sit[pb.name][2].lerp(p_lay[pb.name][2], alpha)
-            if pb.name in ['FrontLeg0.L', 'FrontLeg0.R']:
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), arc)
+            if pb.name == 'BodyHandle':
+                pb.location.z += arc_dz
             pb.keyframe_insert(data_path="location", frame=f)
             pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
             pb.keyframe_insert(data_path="scale", frame=f)
