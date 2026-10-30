@@ -94,6 +94,15 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     muzzle.parent = head
     bpy.ops.object.mode_set(mode='OBJECT')
 
+    # Unparent Dog mesh and apply transforms so its local vertices match world coordinates,
+    # preventing double Armature transformations in glTF viewers (F3D / VTK)
+    dog = bpy.data.objects['Dog']
+    bpy.ops.object.select_all(action='DESELECT')
+    dog.select_set(True)
+    bpy.context.view_layer.objects.active = dog
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
     raw_glb = root / 'raw.glb'
     bpy.ops.export_scene.gltf(filepath=str(raw_glb), export_format='GLB',
                               export_animation_mode='ACTIONS', export_force_sampling=True)
