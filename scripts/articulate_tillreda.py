@@ -83,23 +83,36 @@ def extract(name, indices, mat, mirror_x=False):
     bpy.context.collection.objects.link(obj)
     return obj
 
-# Door parts: door surfaces + front cap (part 8) which covers the hole on the door
+# Door parts: door surfaces + caps/bracket on the door (parts 7, 20, 28, plus top cap 8 and bottom hinge bracket parts 3, 15, 16, 17, 18)
 door_ids = {7, 20, 28}
-door_cap_ids = {8}
-# Hinge hardware parts to mirror to the right (+X): bracket (9) and pin (11)
-hinge_bracket_ids = {9, 11}
-# Cabinet top caps to mirror to the left (-X): caps 23 and 24
-cabinet_cap_ids = {23, 24}
+door_top_cap_ids = {8}
+door_bottom_bracket_ids = {3, 15, 16, 17, 18}
+
+# Top hinge bracket & pin to mirror to the right (+X): bracket (9) and pin (11)
+top_hinge_bracket_ids = {9, 11}
+# Top cabinet caps to mirror to the left (-X): caps 23 and 24
+top_cabinet_cap_ids = {23, 24}
+
+# Bottom hinge parts on the cabinet:
+# Parts 1, 5, 6, 25 are on the bottom-right of the cabinet. They form the bottom hinge on the cabinet.
+bottom_cabinet_hinge_ids = {1, 5, 6, 25}
 
 # Remaining body parts: cabinet shell, feet, etc.
-body_base_ids = set(range(29)) - door_ids - door_cap_ids - {10, 21, 22} - hinge_bracket_ids - cabinet_cap_ids
+body_base_ids = (set(range(29))
+                 - door_ids
+                 - door_top_cap_ids
+                 - door_bottom_bracket_ids
+                 - {10, 21, 22}
+                 - top_hinge_bracket_ids
+                 - top_cabinet_cap_ids)
 
 body = extract('body', body_base_ids, exterior)
-bracket_right = extract('hinge_bracket_right', hinge_bracket_ids, exterior, mirror_x=True)
-caps_left = extract('caps_left', cabinet_cap_ids, exterior, mirror_x=True)
+bracket_right = extract('hinge_bracket_right', top_hinge_bracket_ids, exterior, mirror_x=True)
+caps_left = extract('caps_left', top_cabinet_cap_ids, exterior, mirror_x=True)
 
 door = extract('door_surface', door_ids, exterior)
-door_cap_left = extract('door_cap_left', door_cap_ids, exterior, mirror_x=True)
+door_cap_left = extract('door_cap_left', door_top_cap_ids, exterior, mirror_x=True)
+door_bottom_bracket = extract('door_bottom_bracket', door_bottom_bracket_ids, exterior, mirror_x=True)
 gasket = extract('door_gasket', {10}, seal)
 floor = extract('interior_floor', {22}, liner)
 
@@ -116,9 +129,9 @@ pivot = bpy.data.objects.new('door', None)
 bpy.context.collection.objects.link(pivot)
 pivot.location = (hinge_x, hinge_y, 0)
 pivot['removedSourceTriangles'] = removed_faces
-pivot['sourceDoorIslands'] = sorted(door_ids | door_cap_ids)
+pivot['sourceDoorIslands'] = sorted(door_ids | door_top_cap_ids | door_bottom_bracket_ids)
 
-for obj in [door, door_cap_left, gasket]:
+for obj in [door, door_cap_left, door_bottom_bracket, gasket]:
     obj.parent = pivot
     obj.matrix_parent_inverse = Matrix.Translation(-pivot.location)
 
@@ -208,4 +221,4 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT.with_suffix('.blend')))
 bpy.ops.export_scene.gltf(filepath=str(OUTPUT), export_format='GLB', export_yup=True,
                           export_extras=True, export_animations=True,
                           export_animation_mode='ACTIONS', export_frame_range=True)
-print('TILLREDA updated: right-hinged door at', tuple(pivot.location), 'pastille 8 on door, bracket & caps swapped with correct normals.')
+print('TILLREDA updated: door bottom bracket parts {3,15,16,17,18} now attached to door!')
