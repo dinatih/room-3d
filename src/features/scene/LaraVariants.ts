@@ -6,7 +6,7 @@ import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
 import { applyChaBackTattoo } from './ChaBackTattoo';
 
-export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta';
+export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta' | 'helena';
 
 const textureCache: Record<string, THREE.Texture> = {};
 const grayscaleTextureCache = new Map<string, THREE.Texture>();
@@ -82,6 +82,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
   const isAngelina = style === 'angelina';
   const isRomana = style === 'romana';
   const isLgbta = style === 'lgbta';
+  const isHelena = style === 'helena';
 
   model.traverse(node => {
     if ((node as THREE.Mesh).isMesh) {
@@ -95,7 +96,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       const isDelphinaNudeTorso = isDelphina && meshName.startsWith('body_nude_torso');
       const isPlainNudeTorso = !isSara && !isDelphina && !isMarissa && meshName.startsWith('body_nude_torso');
       if (meshName.includes('body_nude') || meshName.includes('panties') || meshName.includes('feet') || meshName.includes('hands')) {
-        if (!isPlainNudeTorso && !isMarissaBareFeet && !isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
+        if (!isHelena && !isPlainNudeTorso && !isMarissaBareFeet && !isMarissaNudeTorso && !isSaraNudeTorso && !isDelphinaNudeTorso && (!isNudeLimb || (!isMarissa && !isDelphina))) return;
       }
 
       // Variants need independent materials, but this function can run again
@@ -117,7 +118,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
       mesh.material = clonedMats.length === 1 ? clonedMats[0] : clonedMats;
 
       clonedMats.forEach(mat => {
-        if (isPlainNudeTorso) return; // Preserve clean skin maps, with independent tattoo materials.
+        if (!isHelena && isPlainNudeTorso) return; // Preserve clean skin maps, with independent tattoo materials.
         if(meshName.startsWith('bikini_')) {
           // Keep saturated red fabric under the app's AgX lighting.
           mat.toneMapped=false;
@@ -145,6 +146,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
         const isHand = matName.includes('hand') || matName.includes('finger') || meshName.includes('hand') || meshName.includes('finger');
         const isSkin = matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || meshName.includes('body') || meshName.includes('arm') || isHand;
+        if (isHelena && isSkin) {
+          mat.color.setHex(0x42281a);
+          mat.needsUpdate = true;
+        }
         const isHair = matName.includes('hair') || matName.includes('pony') || matName.includes('braid') || meshName.includes('hair') || meshName.includes('pony') || meshName.includes('braid');
         const isLash = matName.includes('lash');
         const isEye  = matName.includes('eye') && !isLash;
@@ -223,6 +228,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               mat.color.setHex(0x795b42); // Châtain clair doré, reflets miel
               mat.emissive.setHex(0x000000);
               mat.emissiveIntensity = 0.05;
+           } else if (isHelena) {
+              mat.map = null;
+              mat.color.setHex(0x0f0b08); // Noir profond naturel
+              mat.emissive.setHex(0x000000);
+              mat.emissiveIntensity = 0;
            }
         }
 
@@ -244,6 +254,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               mat.color.setHex(0xffffff);
               mat.map = getTexture('characters/lara/textures/8003_green.png');
            } else if (isMarissa) {
+              mat.color.setHex(0xffffff);
+              mat.map = getTexture('characters/lara/textures/8003_black.png');
+           } else if (isHelena) {
               mat.color.setHex(0xffffff);
               mat.map = getTexture('characters/lara/textures/8003_black.png');
            } else {
@@ -411,6 +424,17 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   forceProcedural = false;
                 } else {
                   color = 0x9900ff; // Violet vif
+                  forceProcedural = false;
+                }
+             } else if (isHelena) {
+                if (isTop) {
+                  color = 0x1a5276; // Bleu canard / pétrole élégant
+                  forceProcedural = false;
+                } else if (isShorts) {
+                  color = 0xd4ac0d; // Ocre doré chaleureux
+                  forceProcedural = false;
+                } else {
+                  color = 0x1c1c1c; // Bottes et équipements cuir sombre
                   forceProcedural = false;
                 }
              } else {

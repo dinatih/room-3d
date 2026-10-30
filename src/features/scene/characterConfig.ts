@@ -33,6 +33,7 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'romana',   name: 'Romana',   emoji: '👶', color: '#ffaacc',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'romana',   height: 173.4 },
   { id: 'angelina', name: 'Angelina', emoji: '🧑‍🏫', color: '#00aaff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'angelina', height: 173.4 },
   { id: 'lgbta',    name: 'Lgbta',    emoji: '🌈', color: '#cc88ff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'lgbta',    height: 173.4 },
+  { id: 'helena',   name: 'Helena',   emoji: '🐆', color: '#f39c12',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'helena',   height: 173.4 },
 
   // Exception : Xbot
   { id: 'sandra',   name: 'Sandra',   emoji: '🥊', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sandra', height: 173.4 },
@@ -250,6 +251,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'sandra', 'rajaa', 'valby',
+  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'helena', 'sandra', 'rajaa', 'valby',
   'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis'
 ]);
