@@ -207,7 +207,6 @@ const ACTIONS: Record<string, ActionConfig> = {
       { value: 'idle-1', label: 'Repos' },
       { value: 'idle-2', label: 'Repos assis' },
       { value: 'sit', label: 'S’assoir' },
-      { value: 'lay-down', label: 'Se coucher' },
       { value: 'wag', label: 'Frétiller de la queue' },
       { value: 'bark', label: 'Aboyer' },
       { value: 'scratch', label: 'Se gratter' },
