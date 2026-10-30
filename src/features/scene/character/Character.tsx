@@ -122,7 +122,7 @@ export function Character({
   isGridPartner = false,
   isAnimationMaster,
 }: CharacterProps) {
-  const [localHaircut, setLocalHaircut] = useState<string>('original');
+  const [localHaircut, setLocalHaircut] = useState<string>(variant === 'helena' || id === 'helena' ? 'hair_111' : 'original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
 
   const [localHairColor, setLocalHairColor] = useState<string | undefined>(undefined);

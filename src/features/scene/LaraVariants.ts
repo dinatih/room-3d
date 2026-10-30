@@ -428,13 +428,10 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                 }
              } else if (isHelena) {
                 if (isTop) {
-                  color = 0x1a5276; // Bleu canard / pétrole élégant
+                  color = 0xffffff; // Haut blanc éclatant
                   forceProcedural = false;
                 } else if (isShorts) {
-                  color = 0xd4ac0d; // Ocre doré chaleureux
-                  forceProcedural = false;
-                } else {
-                  color = 0x1c1c1c; // Bottes et équipements cuir sombre
+                  color = 0x151515; // Short noir profond
                   forceProcedural = false;
                 }
              } else {
