@@ -25,7 +25,7 @@ import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
-import { Equipment, Furniture, Furnishings, Decor, Animals } from './Placements';
+import { Equipment, Furniture, Furnishings, Decor, Animals, Robots } from './Placements';
 import { CharacterGroup } from './character';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { ZoneAiDebugOverlay } from './ai/ZoneAiDebugOverlay';
@@ -84,7 +84,7 @@ const RaytracingPhotoModal = lazy(() => import('./photo/RaytracingPhotoModal').t
 import {
   LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR, LAYER_NEIGHBORS, LAYER_LIDAR,
   LAYER_WALKER_DETAIL, LAYER_MIRRORS, LAYER_WALKER, LAYER_ENVIRONMENT,
-  LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_FLOOR_COVERINGS, LAYER_ANIMALS,
+  LAYER_WALL_STRUCTURE, LAYER_DOORS, LAYER_FLOOR_COVERINGS, LAYER_ANIMALS, LAYER_ROBOTS,
 } from '@config';
 
 
@@ -980,9 +980,14 @@ export function Studio() {
             <Decor />
           </CategoryLayerGroup>
 
-          {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin, Shiba, poissons, étoiles de mer) et robots (G1, Go2, Jumper, Drone) */}
+          {/* LAYER_ANIMALS (20) — Animaux autonomes (Robin, Shiba, poissons, étoiles de mer) */}
           <CategoryLayerGroup layer={LAYER_ANIMALS} visible={layers.animals}>
             <Animals />
+          </CategoryLayerGroup>
+
+          {/* LAYER_ROBOTS (30) — Robots autonomes (G1, Go2, H2, As2-W, Jumper, Microduck, Rover) */}
+          <CategoryLayerGroup layer={LAYER_ROBOTS} visible={layers.robots}>
+            <Robots />
           </CategoryLayerGroup>
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector (MD/HD) ou glaces ambiantes PBR (SD) */}

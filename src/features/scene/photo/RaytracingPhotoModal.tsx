@@ -21,6 +21,7 @@ import {
   LAYER_WALKER_DETAIL,
   LAYER_MIRRORS,
   LAYER_ANIMALS,
+  LAYER_ROBOTS,
   LAYER_ENVIRONMENT,
 } from '@config';
 
@@ -242,7 +243,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
 
       // Animaux : ne pas masquer
-      const isAnimal = (obj.layers.mask & (1 << LAYER_ANIMALS)) !== 0;
+      const isAnimal = (obj.layers.mask & ((1 << LAYER_ANIMALS) | (1 << LAYER_ROBOTS))) !== 0;
       if (isAnimal) {
         return;
       }
@@ -662,6 +663,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     }
     renderCamera.layers.enable(LAYER_MIRRORS);
     renderCamera.layers.enable(LAYER_ANIMALS);
+    renderCamera.layers.enable(LAYER_ROBOTS);
     renderCamera.layers.enable(LAYER_ENVIRONMENT);
     renderCameraRef.current = renderCamera;
 

@@ -26,6 +26,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   mirrorsHD: false,
   neighbors: false,
   animals: true,
+  robots: true,
   // Visualisation / debug
   cameraViewMarkers: true,
   wireframe: false,
@@ -178,6 +179,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'animals',
     canonicalParam: 'animals',
     urlParams: ['animals', 'animal', 'animaux', 'animeaux', 'pets'],
+  },
+  {
+    layerKey: 'robots',
+    canonicalParam: 'robots',
+    urlParams: ['robots', 'robot'],
   },
   {
     layerKey: 'pillarsOnly',

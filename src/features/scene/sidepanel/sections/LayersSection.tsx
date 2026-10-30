@@ -251,7 +251,8 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
       {layerBtn(iconLabel('bi-arrows-move', 'Lissage origine (anti-téléportation)'), 'animOriginLerp')}
       {layerBtn(iconLabel('bi-bezier2', 'Fondu squelettique (Crossfade)'), 'animCrossfade')}
-      {layerBtn(iconLabel('bi-heart-pulse', 'Animaux et robots'), 'animals')}
+      {layerBtn(iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
+      {layerBtn(iconLabel('bi-robot', 'Robots'), 'robots')}
       {layerBtn('Surfaces des miroirs',           'mirrorSurfaces')}
       {layerBtn('Miroirs MD (Moyenne déf)',       'mirrors')}
       {layerBtn('Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}

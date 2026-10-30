@@ -66,17 +66,17 @@ export function Decor() {
   );
 }
 
-// Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu, poissons, étoiles de mer) et robots (G1, Go2, Jumper, Drone)
+// Pass 4 — Animals : Animaux autonomes (Robin Bird, Shiba Inu, poissons, étoiles de mer)
 export function Animals() {
   const enabled = useSceneStore(state => state.layers.animals ?? true);
-  // Unmount autonomous actors so hidden layers have no frame updates or listeners.
   if (!enabled) return null;
+  return <GardenAnimals />;
+}
 
-  return (
-    <>
-      <GardenAnimals />
-      <RobotPlacements />
-    </>
-  );
+// Pass 5 — Robots : Robots autonomes (Unitree G1, Go2, H2, As2-W, Jumper, Microduck, Rover)
+export function Robots() {
+  const enabled = useSceneStore(state => state.layers.robots ?? true);
+  if (!enabled) return null;
+  return <RobotPlacements />;
 }
 

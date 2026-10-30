@@ -121,6 +121,7 @@ export interface LayerState {
   groundType?:  GroundType;
   character:    boolean;
   animals:      boolean;
+  robots:       boolean;
   accessories:  boolean;
   laraPistols:  boolean;
   laraTop: LaraClothing;

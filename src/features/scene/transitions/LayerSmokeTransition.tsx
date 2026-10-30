@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { SmokeParticles, type SmokeParticlesRef } from './SmokeParticles';
 import {
   LAYER_STRUCTURE, LAYER_EQUIPMENT, LAYER_FURNITURE, LAYER_FURNISHINGS, LAYER_DECOR,
-  LAYER_ANIMALS, LAYER_DOORS, LAYER_WALL_STRUCTURE,
+  LAYER_ANIMALS, LAYER_ROBOTS, LAYER_DOORS, LAYER_WALL_STRUCTURE,
 } from '@config';
 import type { LayerState } from '../sidepanel/types';
 
@@ -20,6 +20,7 @@ const ANIMATABLE_LAYERS: Record<string, number> = {
   furnishings:   LAYER_FURNISHINGS,
   decor:         LAYER_DECOR,
   animals:       LAYER_ANIMALS,
+  robots:        LAYER_ROBOTS,
   doors:         LAYER_DOORS,
   wallStructure: LAYER_WALL_STRUCTURE,
 };
