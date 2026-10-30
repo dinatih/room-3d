@@ -125,7 +125,7 @@ export function Character({
   const [localHaircut, setLocalHaircut] = useState<string>(variant === 'helena' || id === 'helena' ? 'hair_111' : 'original');
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
 
-  const [localHairColor, setLocalHairColor] = useState<string | undefined>(undefined);
+  const [localHairColor, setLocalHairColor] = useState<string | undefined>(variant === 'helena' || id === 'helena' ? 'noir' : undefined);
   const hairColor = isPreview ? previewHairColor : localHairColor;
 
   const characterGrid = useSceneStore(state => state.layers.characterGrid);

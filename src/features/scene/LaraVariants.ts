@@ -304,7 +304,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           const shouldColor = !isSkin && !isEye && !isLash && !isMouth && !isHair && !isBuckle &&
                               !(!isDelphina && isGear) &&
                               !(isCha && (isShirt || isBoot)) &&
-                              !isRajaa;
+                              !isRajaa &&
+                              !(isHelena && !isTop && !isShorts);
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
