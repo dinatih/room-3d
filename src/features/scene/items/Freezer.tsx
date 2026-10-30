@@ -37,7 +37,6 @@ export function Freezer({ actionState = {}, onSize, isPreview = false }: Partial
     door.paused = true;
     mixer.update(0);
     scene.scale.setScalar(100);
-    scene.rotation.y = Math.PI / 2;
     const box = glbLocalBBox(scene);
     scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
     scene.userData.skipMerge = true;
