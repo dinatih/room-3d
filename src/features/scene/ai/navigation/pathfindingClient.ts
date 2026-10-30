@@ -178,6 +178,7 @@ const sharedGraphs = new Map<string, GraphPreparation>();
 export function prepareNavigationGraph(definition: WorkerDefinition): GraphPreparation {
   const key = JSON.stringify(definition), shared = sharedGraphs.get(key);
   if (shared) {
+    devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: navigationEpoch, graphId: shared.id, cause: 'shared-geometry' } });
     const release = shared.retain();
     let cancelled = false;
     return { ...shared, get pending() { return shared.pending; }, cancel: () => { if (!cancelled) { cancelled = true; release(); } } };

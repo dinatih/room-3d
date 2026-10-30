@@ -65,6 +65,63 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
+    it('attend hors du débattement après dégagement au lieu de reboucler dans la porte de Sabira', () => {
+        setup({ bath: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+        doors.doorCollisionState.bath.angle = 0.21765831600078125;
+        const route = nav.createRouteState(), target = { x: 0, z: -100 };
+        let position = { x: 41.5, z: 27.83034 };
+        cameraState.positions.walker = { ...position, y: 0 };
+        assert(doors.computeDoorDynamics(doors.DOOR_CONFIGS.bath, doors.doorCollisionState.bath.angle).allowed < Math.PI / 2);
+        route.waitReason = "Battant bath sur le trajet, attente d'ouverture";
+        try {
+            do {
+                const next = nav.recoverDoorContact(route, 'walker', position, 3);
+                assert(next); position = next;
+                cameraState.positions.walker = { ...position, y: 0 };
+            } while (route.doorEscape);
+            const outside = { ...position };
+            assert.equal(doors.computeDoorDynamics(doors.DOOR_CONFIGS.bath, doors.doorCollisionState.bath.angle).allowed, Math.PI / 2, 'Le personnage dégagé ne doit plus retenir la porte');
+            for (let frame = 0; frame < 10; frame++) {
+                position = nav.followRoute(route, 'walker', position, target, 3);
+                assert.deepEqual(position, outside, 'Ne pas rentrer dans l’arc avant que le passage réel soit libre');
+                assert(requests.doorRequested('bath'));
+            }
+            doors.doorCollisionState.bath.angle = Math.PI / 2;
+            for (let frame = 0; frame < 200 && g.distance(position, target); frame++) position = nav.followRoute(route, 'walker', position, target, 3);
+            assert.deepEqual(position, target, 'Le trajet doit reprendre lorsque la porte est ouverte');
+        } finally { delete cameraState.positions.walker; nav.resetRoute(route, 'walker'); }
+    });
+    it('réutilise le réseau après une révision sans changement de géométrie retenue', () => {
+        setup({}, 83);
+        const profile = obstacles.getAgentProfile('walker'), graph = nav.getNavigationGraph(profile);
+        try {
+            obstacles.registerObstacle({ id: 'above-agent', polygon: g.rectangle(0, 0, 40, 40), yMin: 300, yMax: 400 });
+            assert.equal(nav.getNavigationGraph(profile), graph, 'An obstacle above the actor must not replace its network');
+            obstacles.unregisterObstacle('above-agent');
+            assert.equal(nav.getNavigationGraph(profile), graph, 'Removing excluded geometry must preserve the preparation');
+            obstacles.registerObstacle({ id: 'above-agent', polygon: g.rectangle(0, 0, 40, 40), yMin: 0, yMax: 200 });
+            assert.notEqual(nav.getNavigationGraph(profile), graph, 'A physical change must replace the network');
+        } finally { obstacles.unregisterObstacle('above-agent'); }
+    });
+    it('acquiert le remplacement avant de libérer une préparation encore en cours', () => {
+        setup({}, 83);
+        const events = [];
+        const pending = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies,
+            './pathfindingClient': { ...navigationDependencies['./pathfindingClient'], prepareNavigationGraph: definition => {
+                events.push('prepare');
+                const preparation = navigationDependencies['./pathfindingClient'].prepareNavigationGraph(definition);
+                return { ...preparation, cancel() { events.push('cancel'); preparation.cancel(); } };
+            } },
+        });
+        holdBuilds = true;
+        try {
+            const profile = obstacles.getAgentProfile('walker');
+            assert.throws(() => pending.getNavigationGraph(profile), navigationDependencies['./navigationScope'].NavigationPending);
+            obstacles.registerObstacle({ id: 'replacement-order', polygon: g.rectangle(0, 0, 40, 40), yMin: 0, yMax: 200 });
+            assert.throws(() => pending.getNavigationGraph(profile), navigationDependencies['./navigationScope'].NavigationPending);
+            assert.deepEqual(events, ['prepare', 'prepare', 'cancel']);
+        } finally { holdBuilds = false; obstacles.unregisterObstacle('replacement-order'); obstacles.removeAgentProfile('walker'); }
+    });
     for (const crossing of [false, true]) for (const travel of [3, 11]) it(`${crossing ? 'croise à angle droit' : 'anticipe un face-à-face'} sans arrêt (${travel} cm par pas)`, () => {
         setup({}, 83);
         const avoidance = loadAvoidance(), ids = ['walker', 'oncoming'];
@@ -369,7 +426,10 @@ describe('Navigation et portes — géométrie isolée', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const avoidance = loadAvoidance();
-        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        let limitStep = false;
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': { ...avoidance,
+            limitAgentMovement: (id, start, proposed) => limitStep && g.distance(start, proposed) <= 3 + g.BOOLEAN_PRECISION ? start : avoidance.limitAgentMovement(id, start, proposed),
+        } });
         const route = crowded.createRouteState(), target = { x: 100, z: -100 };
         let position = { x: -100, z: -100 };
         obstacles.setAgentProfile('blocker', obstacles.getAgentProfile('walker'));
@@ -380,11 +440,25 @@ describe('Navigation et portes — géométrie isolée', () => {
             position = crowded.followRoute(route, 'walker', position, target, 3);
             cameraState.positions.walker = { ...position, y: 0 };
             const readyPreparation = route.crowd.preparation, waypoint = route.path[route.index];
+            obstacles.setAgentProfile('distant', obstacles.getAgentProfile('walker'));
+            cameraState.positions.distant = { x: 200, y: 0, z: 200 };
+            for (const z of [190, 180]) {
+                cameraState.positions.distant.z = z;
+                limitStep = true;
+                position = crowded.followRoute(route, 'walker', position, target, 3);
+                limitStep = false;
+                cameraState.positions.walker = { ...position, y: 0 };
+                assert.equal(route.crowd.preparation, readyPreparation, 'A distant moving actor must not rebuild a safe detour');
+            }
+            cameraState.positions.blocker.x += 1;
+            position = crowded.followRoute(route, 'walker', position, target, 3);
+            cameraState.positions.walker = { ...position, y: 0 };
+            assert.equal(route.crowd.preparation, readyPreparation, 'A moved obstacle that leaves the detour free must preserve it');
             cameraState.positions.blocker = { x: (position.x + waypoint.x) / 2, y: 0, z: (position.z + waypoint.z) / 2 };
             holdBuilds = true;
             const beforeRenewal = position;
             position = crowded.followRoute(route, 'walker', position, target, 3);
-            assert.notEqual(route.crowd.preparation, readyPreparation, 'A completed detour must refresh when its body obstacles move');
+            assert.notEqual(route.crowd.preparation, readyPreparation, 'An obstruction of a remaining segment must replace the detour');
             assert(g.distance(position, beforeRenewal) > 0);
             cameraState.positions.walker = { ...position, y: 0 };
             for (let frame = 0; frame < 10; frame++) {
@@ -416,6 +490,7 @@ describe('Navigation et portes — géométrie isolée', () => {
             holdBuilds = false; crowded.resetRoute(route, 'walker');
             delete cameraState.positions.blocker; delete cameraState.positions.walker;
             obstacles.removeAgentProfile('blocker');
+            delete cameraState.positions.distant; obstacles.removeAgentProfile('distant');
         }
     });
     it('quitte le contact de Sandra aux coordonnées du blocage de David', () => {

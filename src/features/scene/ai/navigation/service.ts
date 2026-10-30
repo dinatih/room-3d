@@ -56,7 +56,7 @@ export function getContainingObjectOwner(agentId: string, position: Point): stri
   }
   return undefined;
 }
-const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; preparation: ReturnType<typeof prepareNavigationGraph>; previous?: ReturnType<typeof prepareNavigationGraph>; graph?: NavigationGraph }>>();
+const caches = new WeakMap<AgentProfile, Map<string, { revision: number; doorAngles: string; signature: string; preparation: ReturnType<typeof prepareNavigationGraph>; previous?: ReturnType<typeof prepareNavigationGraph>; graph?: NavigationGraph }>>();
 const releaseProfile = (profile: AgentProfile) => {
   for (const entry of caches.get(profile)?.values() ?? []) { entry.preparation.cancel(); entry.previous?.cancel(); }
   caches.delete(profile);
@@ -96,8 +96,6 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
   const old = profileCache.get(key);
   if (old && old.doorAngles === doorAngles && (movingFurniture.size || old.revision === revision)) return old;
-  const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
-  if (old && old.preparation !== previous) old.preparation.cancel();
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));
   const definition: GraphDefinition = { solids: [], surfaces: walkableSurfaces, comfortDistance: excludeSet?.size ? undefined : NAVIGATION_COMFORT_CM };
   const addObstacle = (polygon: Polygon) => {
@@ -111,12 +109,20 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
     const a = ring[i], b = ring[(i + 1) % ring.length];
     addObstacle(rectangle((a.x + b.x) / 2, (a.z + b.z) / 2, distance(a, b), 0, Math.atan2(a.z - b.z, b.x - a.x)));
   }
+  const signature = JSON.stringify(definition);
+  if (old?.signature === signature) {
+    old.revision = revision; old.doorAngles = doorAngles;
+    devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: old.preparation.epoch, graphId: old.preparation.id, cause: 'unchanged-geometry', revision } });
+    return old;
+  }
   const preparation = prepareNavigationGraph(definition);
+  const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
+  if (old && old.preparation !== previous) old.preparation.cancel();
   if (DEV_LOG_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_geometry', data: {
-    epoch: preparation.epoch, graphId: preparation.id, revision, excludeOwners: excludeSet, doorAngles: angles, shutterBlocked,
+    epoch: preparation.epoch, graphId: preparation.id, revision, cause: !old ? 'initial' : old.doorAngles !== doorAngles ? 'doors' : 'obstacles', excludeOwners: excludeSet, doorAngles: angles, shutterBlocked,
     movingFurniture: [...movingFurniture], definition, sources: solid,
   } });
-  const entry = { revision, doorAngles, preparation, previous, graph: old?.graph };
+  const entry = { revision, doorAngles, signature, preparation, previous, graph: old?.graph };
   profileCache.set(key, entry);
   return entry;
 }
@@ -229,18 +235,19 @@ function clearCrowd(route: RouteState): void {
 }
 export const createRouteState = (): RouteState => ({ path: [], index: 0, target: null, graph: null, error: null, doors: new Set() });
 
+function doorSwingRadius(key: DoorKey): number {
+  const d = DOOR_CONFIGS[key];
+  return NAVIGATION_RADIUS_CM + Math.max(Math.hypot(d.length, d.thickness / 2) + CLEARANCE_ERROR, d.length + d.thickness / 2) + BOOLEAN_PRECISION;
+}
+
 /** Leave a leaf's swing before asking it to open; never cross static geometry. */
 export function recoverDoorContact(route: RouteState, agentId: string, start: Point, travel: number): Point | undefined {
   const profile = getAgentProfile(agentId);
   const leaves = doorKeys.filter(key => DOOR_CONFIGS[key].yMin < profile.height && DOOR_CONFIGS[key].yMax > 0);
   const actual = leaves.map(key => doorFootprint(profile, key, doorCollisionState[key].angle));
-  const swingRadius = (key: DoorKey) => {
-    const d = DOOR_CONFIGS[key];
-    return NAVIGATION_RADIUS_CM + Math.max(Math.hypot(d.length, d.thickness / 2) + CLEARANCE_ERROR, d.length + d.thickness / 2) + BOOLEAN_PRECISION;
-  };
   const blocking = route.doorEscape?.key ?? leaves.find((key, i) => insideObstacle(start, actual[i])
     || insideObstacle(start, doorFootprint(profile, key, computeDoorAllowedAngle(DOOR_CONFIGS[key])))
-    || route.waitReason === `Battant ${key} sur le trajet, attente d'ouverture` && distance(start, DOOR_CONFIGS[key].pivot) < swingRadius(key) - BOOLEAN_PRECISION);
+    || route.waitReason === `Battant ${key} sur le trajet, attente d'ouverture` && distance(start, DOOR_CONFIGS[key].pivot) < doorSwingRadius(key) - BOOLEAN_PRECISION);
   if (!route.doorEscape && !blocking) return undefined;
   const solids = [...architectureObstacles, ...furnitureObstacles.values()]
     .filter(o => o.yMin < profile.height && o.yMax > 0).map(o => [inflate(o.polygon, NAVIGATION_RADIUS_CM)]);
@@ -252,7 +259,7 @@ export function recoverDoorContact(route: RouteState, agentId: string, start: Po
     ...LIMITED_ROOMS.filter(room => !isInRoom(room, start) && !OccupancyManager.hasRoomCapacity(room, agentId)).map(room => [ROOM_FOOTPRINTS[room]])];
   if (!route.doorEscape) {
     const key = blocking!, d = DOOR_CONFIGS[key];
-    const radius = swingRadius(key);
+    const radius = doorSwingRadius(key);
     const length = distance(start, d.pivot);
     const directions = [length ? { x: (start.x - d.pivot.x) / length, z: (start.z - d.pivot.z) / length } : d.closedDir,
       d.closedDir, d.openNormal, { x: -d.closedDir.x, z: -d.closedDir.z }, { x: -d.openNormal.x, z: -d.openNormal.z }];
@@ -379,7 +386,10 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
     const opening = doorOpeningKey(key);
     if (d.yMin >= profile.height || d.yMax <= 0) continue;
     const actual = doorFootprint(profile, key, doorCollisionState[key].angle);
-    const blocked = !segmentFree(start, proposed, actual);
+    // Entering too soon would stop the leaf again and restart the same escape.
+    const swingRadius = doorSwingRadius(key) - BOOLEAN_PRECISION;
+    const enteringSwing = distance(start, d.pivot) > swingRadius && distance(proposed, d.pivot) <= swingRadius;
+    const blocked = !segmentFree(start, proposed, actual) || enteringSwing && points.some((point, i) => i > 0 && !segmentFree(points[i - 1], point, actual));
     if (route.doors.has(opening) || blocked) {
       requestDoor(opening, agentId);
       route.doors.add(opening);
@@ -473,12 +483,21 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       : route.graph ?? getNavigationGraph(getAgentProfile(agentId), undefined);
     const obstacles = fullTransitRooms.length ? roomPolygons : getAgentObstacles(agentId, start);
     const signature = JSON.stringify(obstacles);
+    if (route.crowd?.graph && route.crowd.base === base && route.crowd.signature !== signature) {
+      const remaining = [start, ...route.path.slice(route.index)];
+      const barriers = [...base.obstacles, ...obstacles.map(polygon => [polygon])];
+      if (remaining.every((point, i) => !i || segmentFree(remaining[i - 1], point, barriers))) {
+        route.crowd.signature = signature;
+        devLog({ tag: agentId, category: 'nav', action: 'nav_detour_reused', data: { graphId: route.crowd.preparation?.id, cause: 'remaining-segments-free' } });
+      }
+    }
     if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature || !progressing && !route.crowd.graph)) {
       // Finish the current crowd snapshot instead of restarting for every actor.
       let crowd = route.crowd;
       if (!crowd || crowd.base !== base || !crowd.planning && !crowd.preparing && crowd.signature !== signature) {
         crowd?.preparation?.cancel();
         const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])], surfaces: walkableSurfaces });
+        devLog({ tag: agentId, category: 'nav', action: 'nav_detour_geometry', data: { epoch: preparation.epoch, graphId: preparation.id, cause: !crowd ? 'blocked-segment' : 'remaining-segment-obstructed', baseId: base.id } });
         crowd = { base, graph: null, preparation, preparing: true, signature,
           resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
         route.crowd = crowd;

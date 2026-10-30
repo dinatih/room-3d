@@ -154,7 +154,7 @@ export function createAgentController(
   let diagnosticInstruction: AgentInstruction | undefined;
   const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers, pending = false) => {
     const key = `${label}:${reason}`;
-    if (navigationError === key) return;
+    if (navigationError === key && (!DEV_LOG_ENABLED || diagnosticStop)) return;
     navigationError = key;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex] ?? routeInstruction;
     const objId = instruction?.smartObjectId ?? claimedSlot?.objectId;
@@ -1735,7 +1735,8 @@ export function createAgentController(
           devLog({ tag: _characterId, category: 'nav', action: 'nav_instruction', data: { previous: diagnosticInstruction, instruction: next, stepIndex, dynamicNavIndex, state } });
           diagnosticInstruction = next;
         }
-        if (diagnosticStop && !navigationError) {
+        if (diagnosticStop && (!navigationError || state.x !== x || state.z !== z
+          || (!waitingForNavigation && agentStatus !== 'MOVING' && agentStatus !== 'BLOCKED'))) {
           devLog({ tag: _characterId, category: 'nav', action: 'nav_stop_end', data: { ...diagnosticStop, durationMs: now - diagnosticStop.startedAt,
             movedThisFrame: state.x !== x || state.z !== z, state, status: agentStatus, instruction: next } });
           diagnosticStop = undefined;

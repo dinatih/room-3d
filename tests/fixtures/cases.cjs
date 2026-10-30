@@ -11,6 +11,7 @@ const apartment = {
     profile: { radius: 13.3, height: 170 },
 };
 exports.navigation = [
+    { id: 'sabira-door-loop', behavior: 'dégage Sabira du battant réel sans y revenir avant son ouverture', activity: 'doorEscapeLoop', layers: { animals: false }, timeoutMs: 60000 },
     { id: 'lara-roommates', behavior: 'sépare les jauges de Lara et Cha, garde le contrôle indépendant des onglets et satisfait leur compagnie lors d’une discussion commune', activity: 'roommates', count: 3,
         layers: { animals: false }, query: { debug: 'characters-only', character: 'cha' }, softwareRendering: true, captureFreezeStack: true, timeoutMs: 240000 },
     { id: 'lara-routine', behavior: 'fait lire Lara, regarder la télé puis discuter réellement à deux, avec une horloge en pause pendant le contrôle manuel', activity: 'routine', count: 3,

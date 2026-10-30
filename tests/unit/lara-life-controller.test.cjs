@@ -5,7 +5,8 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
-function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false) {
+function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false, diagnostics = false) {
+  const journal = [];
   const characterLives = { native: life.createLife('native'), cha: life.createLife('cha') };
   const lifeState = characterLives[life.isLifeCharacter(id) ? id : 'native'], logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
@@ -93,7 +94,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     } }, './navigation/doorRequests': { releaseAgentDoors: noop },
     '@features/scene/utils/deskScreenVideo': { setDesk2SmartActionState: noop },
     './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
-    '@/devLog': { devLog: noop, DEV_LOG_ENABLED: false }, '../idleState': { isAppIdle: () => false },
+    '@/devLog': { devLog: entry => journal.push(entry), DEV_LOG_ENABLED: diagnostics }, '../idleState': { isAppIdle: () => false },
   });
   const scenario = sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
   const controller = createAgentController(id, scenario, true, () => ({ x: 10, y: 0, z: 10, rotY: 0 }));
@@ -102,11 +103,23 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, lifeState, logs, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives,
+  return { controller, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
+
+it('termine le diagnostic d’attente lorsque l’interaction commence sans déplacement', () => {
+  const w = world('rosanna', false, false, false, true);
+  w.pauseNavigation(true); w.tick(.1, false);
+  assert(w.journal.some(e => e.action === 'nav_stop'));
+  w.pauseNavigation(false); w.tick(.1, false);
+  assert.equal(w.controller.getStatus(), 'INTERACTING');
+  assert.equal(w.controller.state.animation, 'work');
+  const end = w.journal.find(e => e.action === 'nav_stop_end');
+  assert(end, 'Une attente résolue ne doit pas englober la durée de l’interaction');
+  assert.equal(end.data.movedThisFrame, false);
+});
 
 it('joue les actions de la manette sur place et attend la fin réelle du clip avant de reprendre', () => {
   for (const id of ['native', 'rosanna']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {

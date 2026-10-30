@@ -479,6 +479,40 @@ export async function unreachable(fixture) {
         release(id);
     }
 }
+export async function doorEscapeLoop(fixture) {
+    const id = 'suite-sabira', route = nav.createRouteState();
+    const descriptor = Object.getOwnPropertyDescriptor(doors.doorCollisionState.bath, 'angle');
+    let angle = 0.21765831600078125, position = { x: 167.76966, z: 525.70338 };
+    const target = { x: 500, z: 300 }, deadline = performance.now() + fixture.timeoutMs;
+    register(id, fixture);
+    Object.defineProperty(doors.doorCollisionState.bath, 'angle', { configurable: true, get: () => angle, set: () => {} });
+    route.waitReason = "Battant bath sur le trajet, attente d'ouverture";
+    try {
+        do {
+            check(performance.now() < deadline, 'Door recovery did not finish');
+            const next = await resolveNavigation(() => nav.recoverDoorContact(route, id, position, fixture.travelCmPerFrame));
+            check(next, 'Missing escape from the recorded Sabira position');
+            position = next;
+            cameraState.positions[id] = { ...position, y: 0, yaw: 0 };
+            await nextTask();
+        } while (route.doorEscape);
+        const outside = { ...position };
+        do {
+            check(performance.now() < deadline, 'Missing explained wait outside the leaf swing');
+            position = nav.followRoute(route, id, position, target, fixture.travelCmPerFrame);
+            check(position.x === outside.x && position.z === outside.z, 'Sabira entered the swing again before the crossing was free');
+            await nextTask();
+        } while (!route.waitReason?.startsWith('Battant bath'));
+        check(requests.doorRequested('bath'), 'The waiting actor must keep requesting the door');
+        check(doors.computeDoorDynamics(doors.DOOR_CONFIGS.bath, angle).allowed === doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.bath), 'The recovered actor still holds the leaf closed');
+        angle = doors.computeDoorAllowedAngle(doors.DOOR_CONFIGS.bath);
+        return { outside, actors: await walk([{ id, route, position, target }], fixture) };
+    } finally {
+        Object.defineProperty(doors.doorCollisionState.bath, 'angle', descriptor);
+        nav.resetRoute(route, id); release(id);
+    }
+}
+
 export async function closedDoor(fixture) {
     // Isolate leaf motion from the render loop while retaining apartment geometry.
     const id = 'suite-closed-door', route = nav.createRouteState();
