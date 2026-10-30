@@ -8,7 +8,7 @@ Conversion reproductible depuis la racine du projet :
 blender -b -noaudio -t 2 --python scripts/import-ulotte.py -- '/home/dinatih/3D Resources/animals/dashshund-dog.zip'
 ```
 
-La marche est coupée à l’image 22 (au lieu de 31), dernière pose la plus proche du début du cycle avant que la fin originale s’en éloigne. Cette plage est définie dans le script d’import pour conserver la correction lors des conversions.
+Les cycles de locomotion (`walk` images 7 à 31, `run` images 7 à 23) sont rééchantillonnés à partir de l’image 1 avec raccord cyclique exact dans le script d’import pour supprimer tout à-coup ou saut de trame au bouclage.
 
 Les six animations originales sont conservées à 24 images/s : `idle-1`, `idle-2`, `walk`, `run`, `jump`, `eating`. `PoseLib`, qui ne contient que les poses de travail, est exclue. L’opacité importée du FBX est corrigée pour afficher le pelage opaque. L’os `Muzzle`, enfant de `Head` et placé à son extrémité, donne la direction de la caméra sans modifier les animations.
 
