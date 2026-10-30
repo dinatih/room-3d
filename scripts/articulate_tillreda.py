@@ -83,19 +83,15 @@ def extract(name, indices, mat, mirror_x=False):
     bpy.context.collection.objects.link(obj)
     return obj
 
-# Door parts: door surfaces + caps/bracket on the door (parts 7, 20, 28, plus top cap 8 and bottom hinge bracket parts 3, 15, 16, 17, 18)
+# Door parts: door surfaces (7, 20, 28) + top cap (8) + bottom hinge bracket (3, 4, 15, 16, 17, 18)
 door_ids = {7, 20, 28}
 door_top_cap_ids = {8}
-door_bottom_bracket_ids = {3, 15, 16, 17, 18}
+door_bottom_bracket_ids = {3, 4, 15, 16, 17, 18}
 
 # Top hinge bracket & pin to mirror to the right (+X): bracket (9) and pin (11)
 top_hinge_bracket_ids = {9, 11}
 # Top cabinet caps to mirror to the left (-X): caps 23 and 24
 top_cabinet_cap_ids = {23, 24}
-
-# Bottom hinge parts on the cabinet:
-# Parts 1, 5, 6, 25 are on the bottom-right of the cabinet. They form the bottom hinge on the cabinet.
-bottom_cabinet_hinge_ids = {1, 5, 6, 25}
 
 # Remaining body parts: cabinet shell, feet, etc.
 body_base_ids = (set(range(29))
@@ -221,4 +217,4 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT.with_suffix('.blend')))
 bpy.ops.export_scene.gltf(filepath=str(OUTPUT), export_format='GLB', export_yup=True,
                           export_extras=True, export_animations=True,
                           export_animation_mode='ACTIONS', export_frame_range=True)
-print('TILLREDA updated: door bottom bracket parts {3,15,16,17,18} now attached to door!')
+print('TILLREDA updated: part 4 (round bottom piece) added to door!')
