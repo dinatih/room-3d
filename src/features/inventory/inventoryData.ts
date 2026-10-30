@@ -485,7 +485,7 @@ INVENTORY.push({
   dims: { w: 19.2, d: 50.2, h: 30 },
   glbPath: 'characters/ulotte/ulotte.glb',
   photos: ['characters/ulotte/ulotte_3d_preview.png'],
-  notes: `Chienne teckel Ulotte. Animations : repos, repos alternatif, marche, course, saut et repas.`
+  notes: `Chienne teckel Ulotte. Animations : repos debout, repos assis, s'assoir, se coucher, frétiller, aboyer, se gratter, creuser, marche, course, saut et repas.`
 });
 
 INVENTORY.push({

@@ -3,10 +3,12 @@
 blender -b -noaudio -t 2 --python scripts/import-ulotte.py -- /path/to/dashshund-dog.zip
 """
 import json
+import math
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
+from mathutils import Quaternion, Vector
 
 import bpy
 
@@ -57,7 +59,7 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     jump = bpy.data.actions['Armature|Armature|Jump']
     rig.animation_data.action = jump
     bpy.context.scene.frame_set(1)
-    p1 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    p_stand = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
     bpy.context.scene.frame_set(21)
     p21 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
     blend_steps = 6
@@ -67,15 +69,210 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
         alpha = t * t * (3 - 2 * t)
         bpy.context.scene.frame_set(f)
         for pb in rig.pose.bones:
-            pb.location = p21[pb.name][0].lerp(p1[pb.name][0], alpha)
-            pb.rotation_quaternion = p21[pb.name][1].slerp(p1[pb.name][1], alpha)
-            pb.scale = p21[pb.name][2].lerp(p1[pb.name][2], alpha)
+            pb.location = p21[pb.name][0].lerp(p_stand[pb.name][0], alpha)
+            pb.rotation_quaternion = p21[pb.name][1].slerp(p_stand[pb.name][1], alpha)
+            pb.scale = p21[pb.name][2].lerp(p_stand[pb.name][2], alpha)
             pb.keyframe_insert(data_path="location", frame=f)
             pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
             pb.keyframe_insert(data_path="scale", frame=f)
     jump.use_frame_range = True
     jump.frame_start = 1
     jump.frame_end = 21 + blend_steps
+
+    # Eating: smooth return transition (frames 50..57) back to start pose so it loops seamlessly
+    eating = bpy.data.actions['Armature|Armature|Eating']
+    rig.animation_data.action = eating
+    bpy.context.scene.frame_set(1)
+    p_eat1 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    bpy.context.scene.frame_set(49)
+    p_eat49 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    eat_blend_steps = 8
+    for step in range(1, eat_blend_steps + 1):
+        f = 49 + step
+        t = step / eat_blend_steps
+        alpha = t * t * (3 - 2 * t)
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_eat49[pb.name][0].lerp(p_eat1[pb.name][0], alpha)
+            pb.rotation_quaternion = p_eat49[pb.name][1].slerp(p_eat1[pb.name][1], alpha)
+            pb.scale = p_eat49[pb.name][2].lerp(p_eat1[pb.name][2], alpha)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    eating.use_frame_range = True
+    eating.frame_start = 1
+    eating.frame_end = 49 + eat_blend_steps
+
+    # Snapshot of sit pose (Idle_2 frame 1)
+    rig.animation_data.action = bpy.data.actions['Armature|Armature|Idle_2']
+    bpy.context.scene.frame_set(1)
+    p_sit = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+
+    # Snapshot of lay pose (relaxed sit lowered to ground)
+    p_lay = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    p_lay['BodyHandle'] = (p_sit['BodyHandle'][0] + Vector((0, 0, 0.05)), p_sit['BodyHandle'][1].copy(), p_sit['BodyHandle'][2].copy())
+    p_lay['Neck'] = (p_sit['Neck'][0].copy(), p_sit['Neck'][1] @ Quaternion((1, 0, 0), -0.2), p_sit['Neck'][2].copy())
+    p_lay['Head'] = (p_sit['Head'][0].copy(), p_sit['Head'][1] @ Quaternion((1, 0, 0), -0.15), p_sit['Head'][2].copy())
+
+    tail_bones = ['Tail1', 'Tail2', 'Tail3', 'Tail4', 'Tail5', 'Tail6', 'Tail7']
+
+    # 1. Sit action: transition from standing to sitting (16 frames)
+    act_sit = bpy.data.actions.new(name="sit")
+    rig.animation_data.action = act_sit
+    for f in range(1, 17):
+        t = (f - 1) / 15.0
+        alpha = t * t * (3 - 2 * t)
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_stand[pb.name][0].lerp(p_sit[pb.name][0], alpha)
+            pb.rotation_quaternion = p_stand[pb.name][1].slerp(p_sit[pb.name][1], alpha)
+            pb.scale = p_stand[pb.name][2].lerp(p_sit[pb.name][2], alpha)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_sit.use_frame_range = True
+    act_sit.frame_start = 1
+    act_sit.frame_end = 16
+
+    # 2. Lay down action: transition from sit to relaxed lay-down (16 frames)
+    act_lay = bpy.data.actions.new(name="lay-down")
+    rig.animation_data.action = act_lay
+    for f in range(1, 17):
+        t = (f - 1) / 15.0
+        alpha = t * t * (3 - 2 * t)
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_sit[pb.name][0].lerp(p_lay[pb.name][0], alpha)
+            pb.rotation_quaternion = p_sit[pb.name][1].slerp(p_lay[pb.name][1], alpha)
+            pb.scale = p_sit[pb.name][2].lerp(p_lay[pb.name][2], alpha)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_lay.use_frame_range = True
+    act_lay.frame_start = 1
+    act_lay.frame_end = 16
+
+    # 3. Wag action: standing energetic tail wag with ear twitch (16 frames cyclic loop)
+    act_wag = bpy.data.actions.new(name="wag")
+    rig.animation_data.action = act_wag
+    for f in range(1, 17):
+        phase = (f - 1) / 16.0 * 2 * math.pi * 2
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_stand[pb.name][0].copy()
+            pb.rotation_quaternion = p_stand[pb.name][1].copy()
+            pb.scale = p_stand[pb.name][2].copy()
+            if pb.name in tail_bones:
+                idx = tail_bones.index(pb.name) + 1
+                angle = math.sin(phase - idx * 0.15) * (0.07 * idx)
+                pb.rotation_quaternion @= Quaternion((0, 0, 1), angle)
+            elif pb.name in ['Ear1.L', 'Ear1.R', 'Ear2.L', 'Ear2.R']:
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), math.sin(phase) * 0.03)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_wag.use_frame_range = True
+    act_wag.frame_start = 1
+    act_wag.frame_end = 16
+
+    # 4. Bark action: 2 crisp barks with forward thrust, raised muzzle & ear flip (24 frames)
+    act_bark = bpy.data.actions.new(name="bark")
+    rig.animation_data.action = act_bark
+    for f in range(1, 25):
+        bark1 = math.exp(-((f - 5) ** 2) / 4.0)
+        bark2 = math.exp(-((f - 15) ** 2) / 4.0)
+        bark_intensity = max(bark1, bark2 * 0.85)
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_stand[pb.name][0].copy()
+            pb.rotation_quaternion = p_stand[pb.name][1].copy()
+            pb.scale = p_stand[pb.name][2].copy()
+            if pb.name == 'Head':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.35)
+            elif pb.name == 'Neck':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.15)
+            elif pb.name == 'UpperBack':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.05)
+            elif 'Ear' in pb.name:
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.2)
+            elif pb.name in tail_bones:
+                idx = tail_bones.index(pb.name) + 1
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.1 * idx)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_bark.use_frame_range = True
+    act_bark.frame_start = 1
+    act_bark.frame_end = 24
+
+    # 5. Scratch action: seated ear scratch with rapid rear paw beats (24 frames cyclic loop)
+    act_scratch = bpy.data.actions.new(name="scratch")
+    rig.animation_data.action = act_scratch
+    for f in range(1, 25):
+        phase = (f - 1) / 24.0 * 2 * math.pi * 3
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_sit[pb.name][0].copy()
+            pb.rotation_quaternion = p_sit[pb.name][1].copy()
+            pb.scale = p_sit[pb.name][2].copy()
+            if pb.name == 'Head':
+                pb.rotation_quaternion @= Quaternion((0, 0, 1), 0.3)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.1)
+            elif pb.name == 'Neck':
+                pb.rotation_quaternion @= Quaternion((0, 0, 1), 0.15)
+            elif pb.name == 'BackLeg1.R':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.6)
+                pb.rotation_quaternion @= Quaternion((0, 0, 1), 0.3)
+            elif pb.name == 'BackLeg2.R':
+                scratch_beat = math.sin(phase) * 0.35
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.4 + scratch_beat)
+            elif pb.name in ['Ear1.R', 'Ear2.R']:
+                pb.rotation_quaternion @= Quaternion((0, 1, 0), math.sin(phase) * 0.15)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_scratch.use_frame_range = True
+    act_scratch.frame_start = 1
+    act_scratch.frame_end = 24
+
+    # 6. Dig action: terrier ground scraping with alternating front paws (24 frames cyclic loop)
+    act_dig = bpy.data.actions.new(name="dig")
+    rig.animation_data.action = act_dig
+    for f in range(1, 25):
+        phase = (f - 1) / 24.0 * 2 * math.pi * 2
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p_stand[pb.name][0].copy()
+            pb.rotation_quaternion = p_stand[pb.name][1].copy()
+            pb.scale = p_stand[pb.name][2].copy()
+            if pb.name == 'Head':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.45)
+            elif pb.name == 'Neck':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.25)
+            elif pb.name == 'UpperBack':
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.1)
+            elif pb.name in tail_bones:
+                idx = tail_bones.index(pb.name) + 1
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.08 * idx)
+                pb.rotation_quaternion @= Quaternion((0, 0, 1), math.sin(phase) * 0.04 * idx)
+            elif pb.name == 'FrontLeg0.L':
+                stroke = math.sin(phase)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.4)
+            elif pb.name == 'FrontLeg1.L':
+                stroke = math.sin(phase)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), max(0.0, -stroke) * 0.5)
+            elif pb.name == 'FrontLeg0.R':
+                stroke = math.sin(phase + math.pi)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.4)
+            elif pb.name == 'FrontLeg1.R':
+                stroke = math.sin(phase + math.pi)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), max(0.0, -stroke) * 0.5)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    act_dig.use_frame_range = True
+    act_dig.frame_start = 1
+    act_dig.frame_end = 24
 
     for action in list(bpy.data.actions):
         name = action.name.split('|')[-1]
