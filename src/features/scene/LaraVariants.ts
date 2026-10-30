@@ -136,8 +136,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           return;
         }
         if (isNudeLimb) {
-          if (!isMarissa && mat.userData.lara_tattoo_projection) {
+          if (isDelphina && mat.userData.lara_tattoo_projection) {
             mat.map = getLaraLimbTattooTexture(mat, 'delphina', drawDelphinaFloralTattoosOnCanvas);
+            mat.needsUpdate = true;
+          }
+          if (isHelena) {
+            mat.color.setHex(0x42281a);
             mat.needsUpdate = true;
           }
           return;
