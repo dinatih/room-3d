@@ -92,6 +92,7 @@ import { Kejserlig90511501 }                          from '@features/scene/item
 import { Counter }                                    from '@features/scene/items/Counter';
 import { NissedalMirror }                             from '@features/scene/items/NissedalMirror';
 import { NinjaSP101 }                                 from '@features/scene/items/NinjaSP101';
+import { GrifemaGC1001 }                             from '@features/scene/items/GrifemaGC1001';
 import { MllseG2Pro }                                 from '@features/scene/items/MllseG2Pro';
 import { MatterHub }                                  from '@features/scene/items/MatterHub';
 import { JblCharge3 }                                 from '@features/scene/items/JblCharge3';
@@ -241,6 +242,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'mirror-nissedal-a':      NissedalMirror,
   'mirror-nissedal-d':      NissedalMirror,
   'ninja-sp101':            NinjaSP101,
+  'grifema-gc1001':         GrifemaGC1001,
   'mini-pc':                MllseG2Pro,
   'matter-hub':             MatterHub,
   'linky':                  Linky,

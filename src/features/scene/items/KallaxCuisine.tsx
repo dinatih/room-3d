@@ -13,6 +13,7 @@ import { Kallax2x1 }     from './Kallax2x1';
 import { Kallax2x2 }     from './Kallax2x2';
 import { Kallax2x2Spec } from './Kallax2x2Spec';
 import { NinjaSP101 } from './NinjaSP101';
+import { GrifemaGC1001 } from './GrifemaGC1001';
 import { DroneCell } from './Drona';
 import { SlidingDrona } from './SlidingDrona';
 import { LaserDistanceMaster } from './LaserDistanceMaster';
@@ -80,6 +81,11 @@ export function KallaxCuisine({ onSize, actionState = {}, noDrona, isPreview = f
       {/* Mini four Ninja SP101EU — dans la case basse du 2×2 spec */}
       <group position={[-8, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true }}>
         <NinjaSP101 actionState={actionState} isPreview={isPreview} />
+      </group>
+
+      {/* Bouilloire électrique GRIFEMA GC1001 — à gauche du four Ninja */}
+      <group position={[24, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Bouilloire GRIFEMA' }}>
+        <GrifemaGC1001 />
       </group>
     </group>
   );
