@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_SETTINGS, type LifeCandidate } from './laraLife';
+import { LIFE_SETTINGS, isLifeCharacter, type LifeCharacterId, type LifeCandidate } from './laraLife';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
 
@@ -16,7 +16,7 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn 
   marissa:  'bed-west',
   delphina: 'shower',
   sara:     'inyeong-cha-hugs-point',
-  cha:      'inyeong-cha-hugs-point',
+  cha:      'garden-fresh-air',
   vivida:   'hugs-point',
   sabira:   'bed-west',
   // safa:     'west-neighbor-flat',
@@ -45,7 +45,9 @@ export function getAvailableAutonomousActivities(characterId: string) {
 
 /** Free activities remain independent from the two scripted tours. */
 export function buildAutonomousActivities(characterId: string): AgentInstruction[] {
-  if (characterId === 'native') return buildLaraLifeInstructions({ activity: 'work', id: 'desk-bollsidan-2', slotId: 'work-standing' });
+  if (isLifeCharacter(characterId)) return buildLaraLifeInstructions(characterId, characterId === 'native'
+    ? { activity: 'work', id: 'desk-bollsidan-2', slotId: 'work-standing' }
+    : { activity: 'walk', id: 'garden-fresh-air', slotId: 'breathe' });
   const activities = getAvailableAutonomousActivities(characterId);
   for (let i = activities.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -56,12 +58,12 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(handsDirty: boolean): LifeCandidate[] {
-  const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, 'native'));
+export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean): LifeCandidate[] {
+  const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
-    && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native')));
+    && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
   return objects.flatMap(object =>
-    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation') && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, 'native'))
+    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation') && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
         const activity = object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'tv-view' ? 'watch-tv'
@@ -79,14 +81,14 @@ export function getLaraLifeCandidates(handsDirty: boolean): LifeCandidate[] {
       }));
 }
 
-export function buildLaraLifeInstructions(candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
+export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
   if (candidate.activity === 'meal') return [
     { type: 'USE_OBJECT', smartObjectId: MEAL_PREPARATION.id, slotId: MEAL_PREPARATION.slotId, animation: 'cooking-stir-pan',
       duration: LIFE_SETTINGS.mealPreparationSeconds, repeatCount: 1, lifePhase: 'prepare-meal' },
     { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
       duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
   ];
-  const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, 'native');
+  const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, characterId);
   if (candidate.activity === 'social') return sequence.map(instruction => ({ ...instruction, lifePhase: 'social' }));
   if (candidate.activity === 'toilet' || candidate.activity === 'wash-hands' || candidate.activity === 'shower') return sequence.map((instruction): AgentInstruction => {
     if (instruction.type !== 'USE_OBJECT') return instruction;

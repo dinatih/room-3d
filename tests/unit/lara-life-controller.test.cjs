@@ -6,7 +6,8 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
 function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false) {
-  const nativeLife = life.createLife(), logs = [], reservations = new Map();
+  const characterLives = { native: life.createLife('native'), cha: life.createLife('cha') };
+  const lifeState = characterLives[life.isLifeCharacter(id) ? id : 'native'], logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
   const objects = Object.fromEntries(candidates.map(candidate => [candidate.id, { id: candidate.id, name: candidate.id,
@@ -39,7 +40,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
-      getLaraLifeCandidates: dirty => candidates.filter(c => c.activity !== 'wash-hands' || dirty), buildLaraLifeInstructions: candidate => candidate.activity === 'toilet' ? [
+      getLaraLifeCandidates: (characterId, dirty) => candidates.filter(c => c.activity !== 'wash-hands' || dirty), buildLaraLifeInstructions: (characterId, candidate) => candidate.activity === 'toilet' ? [
         { ...sequence('toilet', 'use')[0], duration: 3, lifePhase: 'use-toilet' },
         { type: 'WAIT', animation: 'flush', duration: 1, lifePhase: 'flush' },
         { ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' },
@@ -52,7 +53,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
         { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
       ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: candidate.activity === 'social' ? 'social' : undefined })) },
-    './laraLife': life, './laraLifeStore': { nativeLife, useLaraLifeStore: { setState: state => Object.assign(snapshot, state), getState: () => ({ speed: 1 }) } },
+    './laraLife': life, './laraLifeStore': { characterLives, publishLife: (characterId, state) => Object.assign(snapshot, state), useLaraLifeStore: { getState: () => ({ speed: 1 }) } },
     './occupancyManager': { OccupancyManager: occupancy },
     './duoSessionManager': { duoSessionManager: duo },
     '../animations/duoAnimations': { getDuoAnimationForClip: noop },
@@ -94,14 +95,14 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
     '@/devLog': { devLog: noop, DEV_LOG_ENABLED: false }, '../idleState': { isAppIdle: () => false },
   });
-  const scenario = sequence('desk-bollsidan-2', 'use');
+  const scenario = sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
   const controller = createAgentController(id, scenario, true, () => ({ x: 10, y: 0, z: 10, rotY: 0 }));
   controller.configure({ scenario, loop: true, landingAnim: 'idle' });
   const tick = (seconds = 1, playback = true) => {
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, nativeLife, logs, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks,
+  return { controller, lifeState, logs, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -167,33 +168,33 @@ it('préserve une animation sad explicitement demandée par une interaction', ()
 it('attend la vraie animation avant de satisfaire un besoin et de terminer l’activité', () => {
   const w = world();
   w.tick(1, false);
-  const before = w.nativeLife.needs.work;
+  const before = w.lifeState.needs.work;
   w.tick(1, false);
-  assert(w.nativeLife.needs.work > before);
+  assert(w.lifeState.needs.work > before);
   assert.equal(w.controller.getStatus(), 'INTERACTING');
   w.tick();
-  assert(w.nativeLife.needs.work < before);
-  assert.equal(w.nativeLife.lastActivity, 'work');
+  assert(w.lifeState.needs.work < before);
+  assert.equal(w.lifeState.lastActivity, 'work');
 });
 
 it('interrompt une activité autonome pour le contrôle manuel et reprend sans réinitialisation', () => {
   const w = world();
   w.tick(); w.tick(); w.tick();
   assert.equal(w.controller.hasPendingDynamicTask(), false, 'An autonomous queue must not prevent manual movement');
-  const needs = { ...w.nativeLife.needs };
+  const needs = { ...w.lifeState.needs };
   w.controller.setPosition(50, 0, 50);
-  assert.deepEqual(w.nativeLife.needs, needs);
+  assert.deepEqual(w.lifeState.needs, needs);
   assert.equal(w.snapshot.activity, 'Commande utilisateur');
   w.tick();
   assert.equal(w.controller.state.x, 10);
   assert(w.logs.some(entry => entry.action === 'life_decision'));
-  assert(w.nativeLife.needs.work < needs.work + 1);
+  assert(w.lifeState.needs.work < needs.work + 1);
 });
 
 it('ne retente une cible inaccessible qu’après un changement du monde', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
+  w.lifeState.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.fail('rest');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 20).length, 1);
@@ -204,16 +205,16 @@ it('ne retente une cible inaccessible qu’après un changement du monde', () =>
 });
 
 it('laisse les autres personnages suivre leur scénario sans simulation de besoins', () => {
-  const w = world('rosanna'), initial = { ...w.nativeLife.needs };
+  const w = world('rosanna'), initial = { ...w.lifeState.needs };
   for (let i = 0; i < 10; i++) w.tick();
-  assert.deepEqual(w.nativeLife.needs, initial);
+  assert.deepEqual(w.lifeState.needs, initial);
   assert(!w.logs.some(entry => entry.action === 'life_decision'));
 });
 
 it('réexamine une approche lorsque le personnage qui la bloquait s’écarte', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
+  w.lifeState.needs = { rest: 100, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.blockActor('rest');
   for (let i = 0; i < 12; i++) w.tick();
   const restDecisions = () => w.logs.filter(entry => entry.action === 'life_decision' && entry.object?.id === 'rest');
@@ -230,7 +231,7 @@ it('exécute un ordre direct avant de reprendre le choix selon les besoins', () 
   const w = world(), disconnect = w.controller.connect();
   try {
     w.tick();
-    w.nativeLife.needs = { rest: 100, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
+    w.lifeState.needs = { rest: 100, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
     document.dispatchEvent(new CustomEvent('agent-force-smartobject', { detail: { targetId: 'native', objectId: 'desk-bollsidan-2', slotId: 'use' } }));
     assert.equal(w.controller.hasPendingDynamicTask(), true);
     w.tick();
@@ -247,138 +248,138 @@ it('exécute un ordre direct avant de reprendre le choix selon les besoins', () 
 it('garde les besoins et la décision en pause quand le personnage est masqué', () => {
   const w = world();
   w.tick();
-  const needs = { ...w.nativeLife.needs }, count = w.logs.length;
+  const needs = { ...w.lifeState.needs }, count = w.logs.length;
   for (let i = 0; i < 10; i++) w.tick(0);
-  assert.deepEqual(w.nativeLife.needs, needs);
+  assert.deepEqual(w.lifeState.needs, needs);
   assert.equal(w.logs.length, count);
 });
 
 it('prépare puis mange sans satisfaire la faim pendant la préparation ou le chargement', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
+  w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'cook');
-  const hungry = w.nativeLife.needs.meal;
-  w.nativeLife.needs.rest = 100; // A more urgent need must not replace the meal mid-sequence.
+  const hungry = w.lifeState.needs.meal;
+  w.lifeState.needs.rest = 100; // A more urgent need must not replace the meal mid-sequence.
   w.tick();
-  assert(w.nativeLife.needs.meal > hungry);
-  assert.equal(w.nativeLife.lastActivity, 'work');
+  assert(w.lifeState.needs.meal > hungry);
+  assert.equal(w.lifeState.lastActivity, 'work');
   w.tick();
   assert.equal(w.controller.state.animation, 'eat');
-  const beforeEating = w.nativeLife.needs.meal;
+  const beforeEating = w.lifeState.needs.meal;
   w.tick(1, false);
-  assert(w.nativeLife.needs.meal > beforeEating, 'Loading the eating animation must not feed Lara');
+  assert(w.lifeState.needs.meal > beforeEating, 'Loading the eating animation must not feed Lara');
   w.tick();
-  assert(w.nativeLife.needs.meal < beforeEating);
-  assert.equal(w.nativeLife.lastActivity, 'meal');
+  assert(w.lifeState.needs.meal < beforeEating);
+  assert.equal(w.lifeState.lastActivity, 'meal');
   assert.equal(w.reservations.size, 0);
 });
 
 it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim artificiellement satisfaite', () => {
   const w = world('native', true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
+  w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 };
   w.fail('cuisine-group');
   for (let i = 0; i < 12; i++) w.tick();
   assert.equal(w.attempts.filter(x => x === 40).length, 1);
-  assert(w.nativeLife.needs.meal >= 90);
+  assert(w.lifeState.needs.meal >= 90);
   assert.equal(w.reservations.size, 0);
 });
 
 it('récupère seulement au lit pendant le sommeil, puis se réveille et libère son lit au sol', () => {
   const w = world('native', false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
+  w.lifeState.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
   w.tick(); w.tick();
-  const beforeBed = w.nativeLife.needs.rest;
+  const beforeBed = w.lifeState.needs.rest;
   w.tick();
   assert.equal(w.controller.state.animation, 'laying-sleeping');
   assert.equal(w.controller.state.y, 45);
-  assert(w.nativeLife.needs.rest > beforeBed, 'Reaching the bed must not satisfy fatigue');
-  const beforeSleep = w.nativeLife.needs.rest;
+  assert(w.lifeState.needs.rest > beforeBed, 'Reaching the bed must not satisfy fatigue');
+  const beforeSleep = w.lifeState.needs.rest;
   w.tick(1, false);
-  assert(w.nativeLife.needs.rest > beforeSleep, 'Loading the clip must not satisfy fatigue');
+  assert(w.lifeState.needs.rest > beforeSleep, 'Loading the clip must not satisfy fatigue');
   w.tick();
-  assert(w.nativeLife.needs.rest < beforeSleep);
+  assert(w.lifeState.needs.rest < beforeSleep);
   assert(w.snapshot.activity.includes('Se réveiller'));
-  const beforeWaking = w.nativeLife.needs.rest;
+  const beforeWaking = w.lifeState.needs.rest;
   w.tick();
-  assert(w.nativeLife.needs.rest >= beforeWaking, 'Leaving the bed must stop sleep recovery');
+  assert(w.lifeState.needs.rest >= beforeWaking, 'Leaving the bed must stop sleep recovery');
   assert.equal(w.controller.state.y, 0);
-  assert.equal(w.nativeLife.lastActivity, 'sleep');
+  assert.equal(w.lifeState.lastActivity, 'sleep');
   assert.equal(w.reservations.size, 0);
 });
 
 it('conserve les mains sales après interruption et ne les nettoie qu’après le lavage réellement joué', () => {
   const w = world('native', false, false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
+  w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'toilet');
   w.tick(1, false);
-  assert(!w.nativeLife.handsDirty, 'Loading a clip does not mean using the toilet');
+  assert(!w.lifeState.handsDirty, 'Loading a clip does not mean using the toilet');
   w.tick();
-  assert(w.nativeLife.handsDirty);
+  assert(w.lifeState.handsDirty);
   w.controller.setPosition(10, 0, 10);
-  assert(w.nativeLife.handsDirty, 'Manual interruption must preserve the obligation');
+  assert(w.lifeState.handsDirty, 'Manual interruption must preserve the obligation');
   for (let i = 0; i < 10 && w.controller.state.animation !== 'wash-hands'; i++) w.tick(1, false);
   assert.equal(w.controller.state.animation, 'wash-hands');
   w.tick(1, false);
-  assert(w.nativeLife.handsDirty, 'Loading the washing clip must not clean hands');
+  assert(w.lifeState.handsDirty, 'Loading the washing clip must not clean hands');
   w.tick();
-  assert(!w.nativeLife.handsDirty);
+  assert(!w.lifeState.handsDirty);
 });
 
 it('enchaîne toilettes, chasse puis lavage sans soulager les toilettes pendant la chasse', () => {
   const w = world('native', false, false, true);
   w.tick(); w.tick();
-  w.nativeLife.needs.toilet = 90;
+  w.lifeState.needs.toilet = 90;
   w.tick(); w.tick();
   for (let i = 0; i < 3; i++) w.tick();
-  assert(w.nativeLife.handsDirty);
+  assert(w.lifeState.handsDirty);
   w.tick();
   assert.equal(w.controller.state.animation, 'flush');
-  const beforeFlush = w.nativeLife.needs.toilet;
+  const beforeFlush = w.lifeState.needs.toilet;
   w.tick();
-  assert(w.nativeLife.needs.toilet > beforeFlush);
+  assert(w.lifeState.needs.toilet > beforeFlush);
   w.tick();
   assert.equal(w.controller.state.animation, 'wash-hands');
   w.tick();
-  assert(!w.nativeLife.handsDirty);
-  assert.equal(w.nativeLife.lastActivity, 'toilet');
+  assert(!w.lifeState.handsDirty);
+  assert.equal(w.lifeState.lastActivity, 'toilet');
 });
 
 it('abandonne une conversation sans partenaire sans réessayer en boucle ni satisfaire artificiellement un besoin', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.elapsedSeconds = 13 * 60;
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
+  w.lifeState.elapsedSeconds = 13 * 60;
+  w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
   w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
   w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
     position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
   w.tick(); w.tick();
-  assert(w.nativeLife.needs.company >= 90, 'An unavailable conversation cannot relieve loneliness');
+  assert(w.lifeState.needs.company >= 90, 'An unavailable conversation cannot relieve loneliness');
   for (let i = 0; i < life.LIFE_SETTINGS.socialRetrySeconds / 2; i++) w.tick();
   assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 1);
-  w.nativeLife.elapsedSeconds += life.LIFE_SETTINGS.socialRetrySeconds;
+  w.lifeState.elapsedSeconds += life.LIFE_SETTINGS.socialRetrySeconds;
   w.tick(life.LIFE_SETTINGS.pauseSeconds);
   for (let i = 0; i < 4; i++) w.tick();
   assert.equal(w.logs.filter(log => log.action === 'life_decision' && log.object?.id === 'garden-conversation').length, 2, 'Retry after a break, even if furniture is unchanged');
-  assert(w.nativeLife.elapsedSeconds > 13 * 60);
+  assert(w.lifeState.elapsedSeconds > 13 * 60);
 });
 
 it('mémorise les activités jouées, jamais le chargement, et préserve les goûts après interruption', () => {
   const w = world();
   w.tick(1, false); w.tick(1, false);
-  assert.deepEqual(w.nativeLife.memory, {});
+  assert.deepEqual(w.lifeState.memory, {});
   w.tick();
-  assert(w.nativeLife.memory.work.satisfaction > 0);
-  const memory = structuredClone(w.nativeLife.memory);
+  assert(w.lifeState.memory.work.satisfaction > 0);
+  const memory = structuredClone(w.lifeState.memory);
   w.controller.setPosition(50, 0, 50);
-  assert.deepEqual(w.nativeLife.memory, memory);
+  assert.deepEqual(w.lifeState.memory, memory);
   w.tick(0);
-  assert.deepEqual(w.nativeLife.memory, memory);
+  assert.deepEqual(w.lifeState.memory, memory);
 });
 
 it('distingue une discussion achevée d’une attente expirée ou d’un partenaire parti', () => {
@@ -403,10 +404,10 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
   global.document = new EventTarget();
   try {
     for (const unavailable of [null, 'player', 'hidden']) {
-      const nativeLife = life.createLife();
-      nativeLife.elapsedSeconds = 600;
-      life.rememberLifeConversation(nativeLife, 'rosanna', 120);
-      nativeLife.relationships.rosanna.lastAt = 0;
+      const lifeState = life.createLife('native');
+      lifeState.elapsedSeconds = 600;
+      life.rememberLifeConversation(lifeState, 'rosanna', 120);
+      lifeState.relationships.rosanna.lastAt = 0;
       const positions = { native: { x: 0, z: 0 }, marissa: { x: 20, z: 0 }, rosanna: { x: 200, z: 0 } };
       const def = { id: 'conversation', label: 'Discussion', animA: 'talk', animB: 'listen', duration: 60 };
       const { duoSessionManager } = load('src/features/scene/ai/duoSessionManager.ts', {
@@ -421,11 +422,11 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
         './navigation/duoPlacement': { findDuoAnchor: anchor => anchor },
         './navigation/navigationScope': { navigationValue: (key, fn) => fn() },
         './navigation/service': { getNavigationGraph: () => ({}) }, './navigation/obstacles': { getAgentProfile: () => ({}) },
-        './laraLife': life, './laraLifeStore': { nativeLife },
+        './laraLife': life, './laraLifeStore': { characterLives: { native: lifeState, cha: life.createLife('cha') } },
       });
       const result = duoSessionManager.startDuoSession('garden-conversation', 'chat', 'native');
       assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
-      assert.deepEqual(nativeLife.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
+      assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
     }
   } finally { global.document = originalDocument; }
 });
@@ -433,7 +434,7 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
 it('soulage la solitude seulement pendant la discussion jouée, jamais pendant l’attente ou le chargement', () => {
   const w = world();
   w.tick(); w.tick();
-  w.nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
+  w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 };
   w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
   w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
     position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
@@ -445,23 +446,23 @@ it('soulage la solitude seulement pendant la discussion jouée, jamais pendant l
     getCurrentAnimState: () => playing ? { clipA: 'conversation-gestures', clipB: 'talking-1' } : null,
   });
   for (let i = 0; i < 5; i++) w.tick();
-  assert(w.nativeLife.needs.company >= 90);
-  assert.deepEqual(w.nativeLife.relationships, {});
+  assert(w.lifeState.needs.company >= 90);
+  assert.deepEqual(w.lifeState.relationships, {});
   playing = true;
   w.tick(1, false); w.tick(1, false);
-  const lonely = w.nativeLife.needs.company;
+  const lonely = w.lifeState.needs.company;
   assert(lonely >= 90, 'Loading the talking clip must not satisfy company');
   assert.equal(w.duoTicks.at(-1), 0, 'The conversation timer must wait for actual playback');
   w.tick();
-  assert(w.nativeLife.needs.company < lonely);
-  assert(w.nativeLife.relationships.rosanna.seconds > 0);
-  const needs = { ...w.nativeLife.needs }, relationships = structuredClone(w.nativeLife.relationships);
+  assert(w.lifeState.needs.company < lonely);
+  assert(w.lifeState.relationships.rosanna.seconds > 0);
+  const needs = { ...w.lifeState.needs }, relationships = structuredClone(w.lifeState.relationships);
   const originalDocument = global.document;
   global.document = new EventTarget();
   try { w.controller.setPosition(10, 0, 10); w.tick(0); }
   finally { global.document = originalDocument; }
-  assert.deepEqual(w.nativeLife.needs, needs);
-  assert.deepEqual(w.nativeLife.relationships, relationships);
+  assert.deepEqual(w.lifeState.needs, needs);
+  assert.deepEqual(w.lifeState.relationships, relationships);
 });
 
 it('laisse au partenaire son temps de déplacement normal même quand la vie de Lara est accélérée', () => {
@@ -478,4 +479,16 @@ it('laisse au partenaire son temps de déplacement normal même quand la vie de 
   update(); update(); update();
   assert.equal(waited, 3);
   assert(!ended, 'Three normal seconds must not expire an invitation as thirty accelerated seconds');
+});
+
+it('fait vivre Cha indépendamment de Lara et conserve ses besoins après une interruption', () => {
+  const w = world('cha'), nativeBefore = structuredClone(w.characterLives.native);
+  w.tick(); w.tick(); w.tick();
+  assert.notDeepEqual(w.lifeState.needs, nativeBefore.needs);
+  assert.deepEqual(w.characterLives.native, nativeBefore);
+  assert.equal(w.lifeState.characterId, 'cha');
+  const needs = { ...w.lifeState.needs };
+  w.controller.setPosition(50, 0, 50); w.tick(0);
+  assert.deepEqual(w.lifeState.needs, needs);
+  assert.equal(w.snapshot.activity, 'Commande utilisateur');
 });

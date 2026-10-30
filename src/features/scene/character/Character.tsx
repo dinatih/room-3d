@@ -29,6 +29,7 @@ import {
 import { LAYER_WALKER_DETAIL } from '@config';
 import { buildGuidedTour, buildConciergeTour } from '../ai/scenarios';
 import { buildAutonomousActivities } from '../ai/autonomousActivities';
+import { isLifeCharacter } from '../ai/laraLife';
 import { useLaraLifeStore } from '../ai/laraLifeStore';
 import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
@@ -680,10 +681,10 @@ export function Character({
     let agentAnimationPaused = false;
     const hasCharacterControl = cameraState.isXR || !cameraState.animalTarget;
     const isUserManuallyMoving = hasCharacterControl && cameraState.isUserControlling();
-    const lifeSpeed = id === 'native' && isAutonomous && !isGuidedTour && !hasDynamicTask && (!isActive || !isUserManuallyMoving)
+    const lifeSpeed = isLifeCharacter(id) && isAutonomous && !isGuidedTour && !hasDynamicTask && (!isActive || !isUserManuallyMoving)
       ? useLaraLifeStore.getState().speed : 1;
     frameControl.current.lifeSpeed = lifeSpeed;
-    const agentDelta = id === 'native' && (cameraState.characterHidden || (!isActive && (!showAllLaraStyles
+    const agentDelta = isLifeCharacter(id) && (cameraState.characterHidden || (!isActive && (!showAllLaraStyles
       || !isCharacterVisibleInMode(id, laraCount, activeCharacterId, extraCharacters, activeExtraIds, activeMainIds)))) ? 0 : delta * lifeSpeed;
 
     if (!navigationEnabled && !isPreview) {

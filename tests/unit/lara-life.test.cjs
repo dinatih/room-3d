@@ -47,7 +47,7 @@ describe('Besoins de Lara Native', () => {
 
   it('borne les besoins et signale explicitement les données invalides', () => {
     assert.deepEqual(evolveLife({ rest: 0, work: 100, walk: 100, meal: 100, hygiene: 100, toilet: 100, company: 100 }, 60, 'rest', false), { rest: 0, work: 100, walk: 100, meal: 100, hygiene: 100, toilet: 100, company: 100 });
-    for (const seconds of [-1, NaN, Infinity]) assert.throws(() => evolveLife(createLife().needs, seconds, null, false));
+    for (const seconds of [-1, NaN, Infinity]) assert.throws(() => evolveLife(createLife('native').needs, seconds, null, false));
     assert.throws(() => evolveLife({ rest: NaN, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 }, 1, null, false));
   });
 });
@@ -72,27 +72,27 @@ it('sélectionne uniquement des places de repos adaptées et libres dans la conf
     './occupancyManager': { OccupancyManager: { canUseObject: id => id !== 'private',
       isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
-  const available = getLaraLifeCandidates(false);
+  const available = getLaraLifeCandidates('native', false);
   assert.deepEqual(available.map(c => c.slotId), ['seat-2', 'breathe']);
   assert.deepEqual([available[0].x, available[0].z], [30, 40]);
-  const gardenSteps = buildLaraLifeInstructions(available[1]);
+  const gardenSteps = buildLaraLifeInstructions('native', available[1]);
   assert.equal(gardenSteps[0].targetZoneId, 'garden');
   const garden = gardenSteps[1];
   assert.equal(garden.animation, 'looking');
   assert.equal(garden.repeatCount, 1);
   occupied.clear();
-  assert.equal(getLaraLifeCandidates(false).filter(c => c.activity === 'rest').length, 2);
-  assert(!getLaraLifeCandidates(false).some(c => c.activity === 'meal'), 'No meal without a kitchen');
+  assert.equal(getLaraLifeCandidates('native', false).filter(c => c.activity === 'rest').length, 2);
+  assert(!getLaraLifeCandidates('native', false).some(c => c.activity === 'meal'), 'No meal without a kitchen');
   objects.push({ ...MEAL_PREPARATION, position: [80, 0, 370], slots: [{ slotId: MEAL_PREPARATION.slotId }] });
-  const meals = getLaraLifeCandidates(false).filter(c => c.activity === 'meal');
+  const meals = getLaraLifeCandidates('native', false).filter(c => c.activity === 'meal');
   assert.equal(meals.length, 2, 'Each available real seat is a possible place to eat');
-  const steps = buildLaraLifeInstructions(meals[0]);
+  const steps = buildLaraLifeInstructions('native', meals[0]);
   assert.deepEqual(steps.map(step => step.lifePhase), ['prepare-meal', 'eat-meal']);
   assert.equal(steps[0].smartObjectId, MEAL_PREPARATION.id);
   assert.equal(steps[1].smartObjectId, 'sofa');
   assert.equal(steps[1].animation, 'fab-daily-life-eat-with-fork');
   occupied.add(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`);
-  assert(!getLaraLifeCandidates(false).some(c => c.activity === 'meal'), 'A busy kitchen must prevent starting a meal');
+  assert(!getLaraLifeCandidates('native', false).some(c => c.activity === 'meal'), 'A busy kitchen must prevent starting a meal');
 });
 
 it('fait monter la faim pendant la marche et les autres activités, puis la réduit en mangeant', () => {
@@ -119,7 +119,7 @@ it('réserve le lit à la grande fatigue et choisit une pause assise si tous les
 
 it('finit par choisir le sommeil au cours d’une vie autonome, malgré les pauses courtes', () => {
   const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 0, z: 0 };
-  let needs = createLife().needs, last = 'work', slept = false;
+  let needs = createLife('native').needs, last = 'work', slept = false;
   needs = evolveLife(needs, LIFE_SETTINGS.activitySeconds, 'work', false);
   for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 15 * 60;) {
     const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, 8, {}, 0);
@@ -147,9 +147,9 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
       buildSmartObjectInstructionSequence: (id, slotId) => route.map(step => ({ ...step, smartObjectId: id, slotId })) },
     './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
-  const beds = getLaraLifeCandidates(false);
+  const beds = getLaraLifeCandidates('native', false);
   assert.equal(beds.length, 1);
-  const steps = buildLaraLifeInstructions(beds[0]);
+  const steps = buildLaraLifeInstructions('native', beds[0]);
   assert.deepEqual(steps.map(step => step.type), route.map(step => step.type));
   assert.deepEqual(steps[1].targetLocalPos, route[1].targetLocalPos);
   assert.equal(steps[2].animation, 'laying-sleeping');
@@ -157,14 +157,14 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
   assert.equal(steps[2].duration, LIFE_SETTINGS.sleepSeconds);
   assert(steps.slice(3).every(step => step.lifePhase === 'wake-up'));
   occupied.add('bed-west:lie-down');
-  assert.equal(getLaraLifeCandidates(false).length, 0);
+  assert.equal(getLaraLifeCandidates('native', false).length, 0);
   objects = [{ id: 'bed-double', category: 'bed', position: [0, 0, 0], slots: [{ slotId: 'lie-down-left' }, { slotId: 'lie-down-right' }] }];
-  assert.equal(getLaraLifeCandidates(false).length, 2);
+  assert.equal(getLaraLifeCandidates('native', false).length, 2);
 });
 
 it('distingue toilettes, douche et lavage des mains, sans récupération pendant la chasse ou les trajets', () => {
   const { lifeEffect } = require('../../src/features/scene/ai/laraLife.ts');
-  const needs = { ...createLife().needs, hygiene: 90, toilet: 90 };
+  const needs = { ...createLife('native').needs, hygiene: 90, toilet: 90 };
   assert.equal(evolveLife(needs, 30, 'toilet', false).toilet, 0);
   assert.equal(evolveLife(needs, 60, 'shower', false).hygiene, 0);
   assert(evolveLife(needs, 15, 'wash-hands', false).hygiene > 85, 'Handwashing cannot replace a shower');
@@ -199,18 +199,18 @@ it('préserve la chaîne sanitaire et les événements des objets, et interdit u
     ] },
     './occupancyManager': { OccupancyManager: { canUseObject: id => !(busySink && id === 'vasque-sdb'), isSlotOccupied: () => false } },
   });
-  assert(getLaraLifeCandidates(false).some(c => c.activity === 'meal'));
-  assert(!getLaraLifeCandidates(false).some(c => c.activity === 'wash-hands'));
-  assert(!getLaraLifeCandidates(true).some(c => c.activity === 'meal'));
-  assert(getLaraLifeCandidates(true).some(c => c.activity === 'wash-hands'));
+  assert(getLaraLifeCandidates('native', false).some(c => c.activity === 'meal'));
+  assert(!getLaraLifeCandidates('native', false).some(c => c.activity === 'wash-hands'));
+  assert(!getLaraLifeCandidates('native', true).some(c => c.activity === 'meal'));
+  assert(getLaraLifeCandidates('native', true).some(c => c.activity === 'wash-hands'));
   busySink = true;
-  assert(!getLaraLifeCandidates(true).some(c => c.activity === 'wash-hands'));
-  const steps = buildLaraLifeInstructions({ activity: 'toilet', id: 'toilet', slotId: 'use' });
+  assert(!getLaraLifeCandidates('native', true).some(c => c.activity === 'wash-hands'));
+  const steps = buildLaraLifeInstructions('native', { activity: 'toilet', id: 'toilet', slotId: 'use' });
   assert.deepEqual(steps.map(s => s.triggerEventKey), toilet.map(s => s.triggerEventKey));
   assert.deepEqual(steps.map(s => s.lifePhase), [undefined, undefined, 'use-toilet', undefined, 'flush', 'wash-hands']);
   assert.equal(steps[2].duration, LIFE_SETTINGS.toiletSeconds);
   assert.equal(steps[5].duration, LIFE_SETTINGS.handWashingSeconds);
-  const shower = buildLaraLifeInstructions({ activity: 'shower', id: 'shower', slotId: 'take-shower-1' });
+  const shower = buildLaraLifeInstructions('native', { activity: 'shower', id: 'shower', slotId: 'take-shower-1' });
   assert.deepEqual(shower.map(s => s.type), ['MOVE_TO', 'USE_OBJECT', 'MOVE_TO']);
   assert.equal(shower[1].animation, 'taking-shower');
 });
@@ -266,11 +266,11 @@ it('propose les loisirs libres et conserve leurs phases et les actions de la té
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, ...objects.find(object => object.id === id).slots.find(slot => slot.slotId === slotId) }] },
     './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: () => false } },
   });
-  const options = getLaraLifeCandidates(false);
+  const options = getLaraLifeCandidates('native', false);
   for (const activity of ['read', 'watch-tv', 'social']) {
     const candidate = options.find(c => c.activity === activity);
     assert(candidate);
-    const [step] = buildLaraLifeInstructions(candidate);
+    const [step] = buildLaraLifeInstructions('native', candidate);
     assert.equal(step.lifePhase, activity);
     if (activity === 'watch-tv') {
       assert.equal(step.triggerEventKey, 'tv-toggle');
@@ -282,7 +282,7 @@ it('propose les loisirs libres et conserve leurs phases et les actions de la té
 
 it('apprend ses goûts uniquement grâce au soulagement réel et conserve les souvenirs sans modifier les besoins', () => {
   const { rememberLifeActivity, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife(), before = { ...life.needs, work: 80 };
+  const life = createLife('native'), before = { ...life.needs, work: 80 };
   assert.equal(favoriteLifeActivity(life.memory), null);
   rememberLifeActivity(life, null, before, before);
   assert.deepEqual(life.memory, {});
@@ -314,7 +314,7 @@ it('varie ses loisirs avec la mémoire, garde une affinité pour ses favoris et 
 
 it('construit les affinités seulement avec du temps réellement partagé et préserve les nouvelles rencontres', () => {
   const { rememberLifeConversation, closestLifeFriend, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife();
+  const life = createLife('native');
   assert.equal(closestLifeFriend(life.relationships), null);
   rememberLifeConversation(life, 'rosanna', 0);
   assert.deepEqual(life.relationships, {});
@@ -346,4 +346,45 @@ it('distingue la solitude de l’ennui et recherche une discussion pour le besoi
   assert.equal(chooseLifeActivity({ ...lonely, company: 0, work: 90 }, [conversation], position, null, 21, {}, 0), null, 'Boredom alone must not masquerade as loneliness');
   assert.equal(lifeEffect('social'), null, 'Moving or waiting for someone cannot satisfy company');
   assert.equal(chooseLifeActivity({ ...lonely, rest: 50 }, candidates, position, null, 10, {}, 0).activity, 'rest', 'A lonely Lara must keep living when a conversation is unavailable');
+});
+
+it('conserve les besoins, souvenirs et affinités propres à chacune des colocataires', () => {
+  const { rememberLifeConversation, rememberLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  const native = createLife('native'), cha = createLife('cha');
+  const nativeBefore = structuredClone(native);
+  cha.needs.meal = 90;
+  cha.handsDirty = true;
+  const before = cha.needs;
+  cha.needs = evolveLife(before, 10, 'meal', false);
+  rememberLifeActivity(cha, 'meal', before, cha.needs);
+  rememberLifeConversation(cha, 'native', 10);
+  assert.deepEqual(native, nativeBefore);
+  assert.equal(cha.relationships.native.seconds, 10);
+  assert.throws(() => rememberLifeConversation(cha, 'cha', 1));
+});
+
+it('publie uniquement les jauges du personnage concerné avec une vitesse commune', () => {
+  const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
+    zustand: require('zustand'),
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+  });
+  const native = useLaraLifeStore.getState().characters.native;
+  publishLife('cha', { activity: 'Manger', needs: { ...createLife('cha').needs, meal: 90 } });
+  assert.equal(useLaraLifeStore.getState().characters.native, native);
+  useLaraLifeStore.setState({ selectedCharacterId: 'cha', speed: 10 });
+  assert.equal(useLaraLifeStore.getState().characters.cha.needs.meal, 90);
+  assert.equal(useLaraLifeStore.getState().speed, 10);
+});
+
+it('utilise l’identité de Cha pour vérifier les places et construire ses interactions', () => {
+  const calls = [];
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => [{ id: 'desk-bollsidan-2', position: [0, 0, 0], slots: [{ slotId: 'work-standing' }] }],
+      buildSmartObjectInstructionSequence: (id, slot, character) => (calls.push(character), [{ type: 'USE_OBJECT', smartObjectId: id, slotId: slot }]) },
+    './occupancyManager': { OccupancyManager: { canUseObject: (id, character) => (calls.push(character), true),
+      isSlotOccupied: (id, slot, character) => (calls.push(character), false) } },
+  });
+  buildLaraLifeInstructions('cha', getLaraLifeCandidates('cha', false)[0]);
+  assert(calls.length > 0 && calls.every(id => id === 'cha'));
 });

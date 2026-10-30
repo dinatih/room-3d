@@ -1,4 +1,9 @@
 export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export const LIFE_CHARACTER_IDS = ['native', 'cha'] as const;
+export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
+export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha' };
+export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk' } as const;
+export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => id === 'native' || id === 'cha';
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number };
 export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number }>;
@@ -45,7 +50,7 @@ export function getLifeMood(needs: LifeNeeds) {
     .reduce((highest, key) => needs[key] > needs[highest] ? key : highest);
   return needs[need] >= LIFE_SETTINGS.priority
     ? { label: MOOD_LABELS[need], cause: `${LIFE_NEED_LABELS[need]} : ${Math.round(needs[need])} %.`, uncomfortable: true }
-    : { label: 'Épanouie', cause: 'Les besoins de Lara sont satisfaits.', uncomfortable: false };
+    : { label: 'Épanouie', cause: 'Tous les besoins sont satisfaits.', uncomfortable: false };
 }
 
 const rates: Record<LifeActivity, LifeNeeds> = {
@@ -63,13 +68,13 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   social: { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: -1.5 },
 };
 
-export function createLife() {
-  return { needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10 } as LifeNeeds,
+export function createLife(characterId: LifeCharacterId) {
+  return { characterId, needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10 } as LifeNeeds,
     elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, lastActivity: null as LifeActivity | null };
 }
 
-export function rememberLifeConversation(life: { relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number) {
-  if (!partnerId || partnerId === 'native' || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life conversation');
+export function rememberLifeConversation(life: { characterId: LifeCharacterId; relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number) {
+  if (!partnerId || partnerId === life.characterId || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life conversation');
   if (seconds === 0) return;
   life.relationships[partnerId] = { seconds: (life.relationships[partnerId]?.seconds ?? 0) + seconds, lastAt: life.elapsedSeconds };
 }

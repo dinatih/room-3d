@@ -11,8 +11,8 @@ import { findDuoAnchor } from './navigation/duoPlacement';
 import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
-import { socialPartnerScore } from './laraLife';
-import { nativeLife } from './laraLifeStore';
+import { isLifeCharacter, socialPartnerScore } from './laraLife';
+import { characterLives } from './laraLifeStore';
 
 export type DuoRole = 'roleA' | 'roleB';
 
@@ -562,8 +562,8 @@ class DuoSessionManager {
       return Object.keys(cameraState.positions)
         .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .sort((a, b) => {
-          if (excludeId === 'native' && def.id === 'conversation') {
-            const affinity = socialPartnerScore(nativeLife.relationships, b, nativeLife.elapsedSeconds) - socialPartnerScore(nativeLife.relationships, a, nativeLife.elapsedSeconds);
+          if (isLifeCharacter(excludeId) && def.id === 'conversation') {
+            const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds);
             if (affinity) return affinity;
           }
           const pa = cameraState.positions[a];

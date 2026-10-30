@@ -1,7 +1,9 @@
-import { nativeLife, useLaraLifeStore } from '/src/features/scene/ai/laraLifeStore.ts';
+import { characterLives, useLaraLifeStore } from '/src/features/scene/ai/laraLifeStore.ts';
 import { cameraState } from '/src/features/scene/cameraState.ts';
 import { resolveAnimationId } from '/src/features/scene/animations/animationResolver.ts';
 import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
+
+const nativeLife = characterLives.native;
 
 function observeLife(fixture) {
     const started = performance.now(), observations = [];
@@ -46,12 +48,12 @@ export async function life(fixture) {
 
     // Interrupt an autonomous queue through the actual manual-control path.
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Le contrôle manuel interrompt l’activité autonome');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Le contrôle manuel interrompt l’activité autonome');
     const duringManual = { ...nativeLife.needs };
     await new Promise(resolve => setTimeout(resolve, 1000));
     check(JSON.stringify(nativeLife.needs) === JSON.stringify(duringManual), 'Manual control must preserve needs');
     cameraState.lastUserControlTime = 0;
-    await waitFor(() => useLaraLifeStore.getState().activity !== 'Commande utilisateur', 'L’autonomie reprend après le contrôle manuel');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity !== 'Commande utilisateur', 'L’autonomie reprend après le contrôle manuel');
     const resumed = { ...nativeLife.needs };
     check(Math.abs(resumed.rest - duringManual.rest) < 2, 'Resuming must not reset needs');
     return { observations, decisions: decisions(), manualNeedsPreserved: true, panelValues: values, resumed };
@@ -60,7 +62,7 @@ export async function life(fixture) {
 export async function meal(fixture) {
     const { observations, check, waitFor, openPanel } = observeLife(fixture);
     await openPanel();
-    const speedButton = document.querySelector('[aria-label="Vitesse de la vie de Lara"]');
+    const speedButton = document.querySelector('[aria-label="Vitesse de la colocation"]');
     check(useLaraLifeStore.getState().speed === 1, 'The simulation must start at normal speed');
     const normalHunger = nativeLife.needs.meal;
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -74,7 +76,7 @@ export async function meal(fixture) {
     const fastGrowth = nativeLife.needs.meal - fastHunger;
     check(normalGrowth > 0 && fastGrowth > normalGrowth * 4, `Accelerated needs must advance faster: normal=${normalGrowth}, fast=${fastGrowth}`);
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle initiale');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle initiale');
     nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90, hygiene: 0, toilet: 0, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('cooking-stir-pan'), 'Lara rejoint les plaques et prépare le repas');
@@ -89,7 +91,7 @@ export async function meal(fixture) {
     speedButton.click();
     await waitFor(() => useLaraLifeStore.getState().speed === 1 && speedButton.textContent.includes('×1'), 'Retour à la vitesse normale');
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Interruption manuelle du repas');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Interruption manuelle du repas');
     const interrupted = nativeLife.needs.meal;
     await new Promise(resolve => setTimeout(resolve, 1000));
     check(nativeLife.needs.meal === interrupted, 'An interrupted meal must stop relieving hunger');
@@ -103,7 +105,7 @@ export async function sleep(fixture) {
     useLaraLifeStore.setState({ speed: 10 });
     const startNight = async () => {
         cameraState.recordUserControl();
-        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
+        await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
         nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
         cameraState.lastUserControlTime = 0;
         await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping'), 'Lara rejoint le lit et se couche');
@@ -113,7 +115,7 @@ export async function sleep(fixture) {
     };
     const ownsBed = () => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.slot.startsWith('bed-'));
     let wokeUp = false;
-    const unsubscribe = useLaraLifeStore.subscribe(state => { if (state.activity.includes('Se réveiller')) wokeUp = true; });
+    const unsubscribe = useLaraLifeStore.subscribe(state => { if (state.characters.native.activity.includes('Se réveiller')) wokeUp = true; });
     try {
         await startNight();
         check(document.querySelector('[aria-label="Vie de Lara Native"]').textContent.includes('Dormir'), 'The panel must identify sleep');
@@ -124,7 +126,7 @@ export async function sleep(fixture) {
         check(!ownsBed(), 'The bed must be released after waking');
         await startNight();
         cameraState.recordUserControl();
-        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Le contrôle manuel interrompt le sommeil');
+        await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Le contrôle manuel interrompt le sommeil');
         const fatigue = nativeLife.needs.rest;
         await new Promise(resolve => setTimeout(resolve, 500));
         check(nativeLife.needs.rest === fatigue, 'Sleep recovery must stop after interruption');
@@ -141,19 +143,19 @@ export async function hygiene(fixture) {
     await openPanel();
     useLaraLifeStore.setState({ speed: 10 });
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant les toilettes');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant les toilettes');
     nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 10, toilet: 90, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => nativeLife.handsDirty && nativeLife.needs.toilet < 85, 'Les toilettes soulagent le besoin');
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Interruption des toilettes');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Interruption des toilettes');
     check(nativeLife.handsDirty, 'An interruption must preserve dirty hands');
     nativeLife.needs.meal = 100;
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('fab-daily-life-wash-hands'), 'Lavage des mains prioritaire sur le repas');
     await waitFor(() => !nativeLife.handsDirty, 'Mains propres après le lavage complet');
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant un cycle complet');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant un cycle complet');
     nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
     const traceStart = window.__testTrace.length;
     cameraState.lastUserControlTime = 0;
@@ -163,7 +165,7 @@ export async function hygiene(fixture) {
         .map(entry => entry.executedInstruction.lifePhase);
     check(phases.indexOf('use-toilet') < phases.indexOf('flush') && phases.indexOf('flush') < phases.indexOf('wash-hands'), 'Toilet, flush and handwashing must execute in order');
     cameraState.recordUserControl();
-    await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Contrôle avant la douche');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant la douche');
     nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('taking-shower'), 'Lara rejoint la douche');
@@ -183,7 +185,7 @@ export async function routine(fixture) {
     useLaraLifeStore.setState({ speed: 10 });
     const startEvening = async (lastActivity, blocked = []) => {
         cameraState.recordUserControl();
-        await waitFor(() => useLaraLifeStore.getState().activity === 'Commande utilisateur', 'Prise de contrôle avant le loisir');
+        await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle avant le loisir');
         const clock = nativeLife.elapsedSeconds;
         await new Promise(resolve => setTimeout(resolve, 200));
         check(nativeLife.elapsedSeconds === clock, 'Manual control must pause the simulated clock');
@@ -204,7 +206,7 @@ export async function routine(fixture) {
         reserve('garden-conversation', 'chat');
         reserve('tv-view', 'watch');
         await startEvening('work');
-        await waitFor(() => useLaraLifeStore.getState().activity === 'Lire sur sa tablette'
+        await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Lire sur sa tablette'
             && cameraState.positions.native?.anim === resolveAnimationId('standing-using-touchscreen-tablet'), 'Lara lit sur sa tablette');
         const boredom = nativeLife.needs.work;
         await waitFor(() => nativeLife.needs.work < boredom - 2, 'La lecture réduit son ennui');
@@ -212,7 +214,7 @@ export async function routine(fixture) {
         await waitFor(() => document.querySelector('[aria-label="Loisir favori : Lire sur sa tablette"]'), 'Le goût pour la lecture est visible au survol du cœur');
         OccupancyManager.releaseSlot('tv-view', 'watch', 'test-routine');
         await startEvening('read', [['desk-bollsidan-2', 'work-standing']]);
-        await waitFor(() => useLaraLifeStore.getState().activity === 'Regarder la télé'
+        await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Regarder la télé'
             && cameraState.positions.native?.anim === resolveAnimationId('looking'), 'Lara rejoint la télé');
         check(useSceneStore.getState().furniture.tvOn, 'Watching must turn on the actual TV');
         const beforeTv = nativeLife.needs.work;
@@ -239,4 +241,63 @@ export async function routine(fixture) {
     } finally {
         for (const [id, slot] of reserved) OccupancyManager.releaseSlot(id, slot, 'test-routine');
     }
+}
+
+export async function roommates(fixture) {
+    const { observations, check, waitFor, openPanel } = observeLife(fixture);
+    const { publishLife } = await import('/src/features/scene/ai/laraLifeStore.ts');
+    const { duoSessionManager } = await import('/src/features/scene/ai/duoSessionManager.ts');
+    const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
+    await openPanel();
+    const active = useSceneStore.getState().activeCharacterId;
+    const snapshot = id => useLaraLifeStore.getState().characters[id];
+    const view = id => document.getElementById(`life-tab-${id}`).click();
+    characterLives.cha.needs.meal = 80;
+    publishLife('cha', { needs: { ...characterLives.cha.needs } });
+    view('cha');
+    await waitFor(() => document.querySelector('[aria-label="Vie de Cha"] progress[aria-label="Faim"]')?.value === snapshot('cha').needs.meal, 'Onglet Cha : ses propres jauges');
+    check(document.querySelectorAll('#life-character-panel progress').length === 7, 'Only seven gauges must be displayed at once');
+    check(useSceneStore.getState().activeCharacterId === active, 'Inspecting Cha must preserve player control');
+    document.getElementById('life-tab-cha').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    await waitFor(() => useLaraLifeStore.getState().selectedCharacterId === 'native', 'Navigation clavier vers Lara');
+    await waitFor(() => document.querySelector('#life-character-panel progress[aria-label="Faim"]')?.value === snapshot('native').needs.meal, 'Onglet Lara : ses propres jauges');
+    check(useSceneStore.getState().activeCharacterId === active, 'Keyboard tab selection must preserve player control');
+    useSceneStore.setState({ activeCharacterId: 'xbot', activeMainIds: ['xbot', 'native', 'cha'] });
+    const speedButton = document.querySelector('[aria-label="Vitesse de la colocation"]');
+    speedButton.click();
+    await waitFor(() => useLaraLifeStore.getState().speed === 3, 'Vitesse commune ×3');
+    view('cha');
+    speedButton.click();
+    await waitFor(() => useLaraLifeStore.getState().speed === 10, 'Vitesse commune ×10 depuis l’onglet Cha');
+    const times = Object.fromEntries(['native', 'cha'].map(id => [id, characterLives[id].elapsedSeconds]));
+    await waitFor(() => ['native', 'cha'].every(id => characterLives[id].elapsedSeconds > times[id] + 1), 'Les deux colocataires poursuivent leur vie');
+    const prepare = async (id, needs) => {
+        useSceneStore.setState({ activeCharacterId: id, activeMainIds: ['xbot', 'native', 'cha'] });
+        cameraState.recordUserControl();
+        await waitFor(() => snapshot(id).activity === 'Commande utilisateur', `Contrôle manuel de ${id}`);
+        characterLives[id].needs = needs;
+        cameraState.lastUserControlTime = 0;
+    };
+    await prepare('cha', { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 });
+    useSceneStore.setState({ activeCharacterId: 'xbot' });
+    const nativeHunger = characterLives.native.needs.meal;
+    await waitFor(() => cameraState.positions.cha?.anim === resolveAnimationId('fab-daily-life-eat-with-fork'), 'Cha prépare puis prend son propre repas');
+    const hungry = characterLives.cha.needs.meal;
+    await waitFor(() => characterLives.cha.needs.meal < hungry - 2, 'Le repas satisfait seulement Cha');
+    check(characterLives.native.needs.meal >= nativeHunger, 'Eating for Cha must not feed Lara');
+    check(characterLives.cha.memory.meal?.satisfaction > 0, 'Cha keeps her own memories');
+    const lonely = () => ({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 });
+    await prepare('native', lonely());
+    await prepare('cha', lonely());
+    useSceneStore.setState({ activeCharacterId: 'xbot' });
+    await waitFor(() => duoSessionManager.isPlaying('native') && duoSessionManager.isPlaying('cha'), 'Lara et Cha se retrouvent pour discuter');
+    await waitFor(() => characterLives.native.needs.company < 85 && characterLives.cha.needs.company < 85, 'La conversation satisfait les deux besoins de compagnie');
+    check(characterLives.native.relationships.cha?.seconds > 0 && characterLives.cha.relationships.native?.seconds > 0, 'Both roommates must remember each other');
+    await waitFor(() => characterLives.native.lastActivity === 'social' && characterLives.cha.lastActivity === 'social'
+        && !duoSessionManager.getSessionFor('native') && !duoSessionManager.getSessionFor('cha'), 'Les deux colocataires terminent la discussion et reprennent leur autonomie');
+    view('native');
+    await waitFor(() => document.querySelector('[aria-label="Compagnie préférée : Cha"]'), 'Affinités de Lara visibles');
+    view('cha');
+    await waitFor(() => document.querySelector('[aria-label="Compagnie préférée : Lara"]'), 'Affinités de Cha visibles');
+    return { observations, separateLives: true, commonSpeed: useLaraLifeStore.getState().speed };
 }

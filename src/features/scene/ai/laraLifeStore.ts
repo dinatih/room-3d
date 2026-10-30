@@ -1,9 +1,20 @@
 import { create } from 'zustand';
-import { createLife, type LifeMemory, type LifeNeeds, type LifeRelationships } from './laraLife';
+import { createLife, LIFE_CHARACTER_LABELS, type LifeCharacterId } from './laraLife';
 
-// Session-only state survives controller pauses and guided tours, never page reloads.
-export const nativeLife = createLife();
+// Independent session state survives controller pauses and guided tours.
+export const characterLives = { native: createLife('native'), cha: createLife('cha') };
 export const LIFE_SPEEDS = [1, 3, 10] as const;
-export const useLaraLifeStore = create<{ needs: LifeNeeds; memory: LifeMemory; relationships: LifeRelationships; elapsedSeconds: number; activity: string; reason: string; speed: typeof LIFE_SPEEDS[number] }>(() => ({
-  needs: { ...nativeLife.needs }, memory: {}, relationships: {}, elapsedSeconds: 0, activity: 'En attente', reason: 'Lara rejoint son bureau.', speed: 1,
-}));
+export type LifeSnapshot = Pick<ReturnType<typeof createLife>, 'needs' | 'memory' | 'relationships' | 'elapsedSeconds'> & { activity: string; reason: string };
+const initialSnapshot = (id: LifeCharacterId): LifeSnapshot => ({
+  needs: { ...characterLives[id].needs }, memory: {}, relationships: {}, elapsedSeconds: 0,
+  activity: 'En attente', reason: `${LIFE_CHARACTER_LABELS[id]} commence sa journée.`,
+});
+export const useLaraLifeStore = create<{
+  characters: Record<LifeCharacterId, LifeSnapshot>;
+  selectedCharacterId: LifeCharacterId;
+  speed: typeof LIFE_SPEEDS[number];
+}>(() => ({ characters: { native: initialSnapshot('native'), cha: initialSnapshot('cha') }, selectedCharacterId: 'native', speed: 1 }));
+
+export function publishLife(id: LifeCharacterId, patch: Partial<LifeSnapshot>) {
+  useLaraLifeStore.setState(state => ({ characters: { ...state.characters, [id]: { ...state.characters[id], ...patch } } }));
+}
