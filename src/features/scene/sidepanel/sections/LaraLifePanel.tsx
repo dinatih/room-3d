@@ -15,7 +15,7 @@ export function LaraLifePanel() {
   const company = friend ? `Compagnie préférée : ${isLifeCharacter(friend) ? LIFE_CHARACTER_LABELS[friend] : findCharacter(friend)!.name}` : 'Aucune rencontre pour le moment';
   return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : 'Cha'}`}>
     <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-      <div className="nav nav-pills gap-1" role="tablist" aria-label="Personnage du panneau de vie"
+      <div className="d-flex gap-1" role="tablist" aria-label="Personnage du panneau de vie"
         onKeyDown={event => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
           event.preventDefault();
@@ -24,7 +24,7 @@ export function LaraLifePanel() {
           document.getElementById(`life-tab-${id}`)!.focus();
         }}>
         {LIFE_CHARACTER_IDS.map(id => <button key={id} id={`life-tab-${id}`} type="button" role="tab"
-          className={`nav-link py-0 px-1 ${id === selectedCharacterId ? 'active' : ''}`}
+          className={`btn btn-sm py-0 px-1 ${id === selectedCharacterId ? 'btn-primary active fw-semibold' : 'btn-outline-secondary'}`}
           aria-selected={id === selectedCharacterId} aria-controls="life-character-panel" tabIndex={id === selectedCharacterId ? 0 : -1}
           onClick={() => useLaraLifeStore.setState({ selectedCharacterId: id })}>{LIFE_CHARACTER_LABELS[id]}</button>)}
       </div>
