@@ -2,6 +2,7 @@
 
 blender -b -noaudio -t 2 --python scripts/import-ulotte.py -- /path/to/dashshund-dog.zip
 """
+import json
 import sys
 import tempfile
 import zipfile
@@ -70,7 +71,40 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     muzzle.tail = head.tail + (head.tail - head.head).normalized() * 0.1
     muzzle.parent = head
     bpy.ops.object.mode_set(mode='OBJECT')
-    output.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.export_scene.gltf(filepath=str(output), export_format='GLB',
+
+    # Export intermediate GLB
+    raw_glb = root / 'raw.glb'
+    bpy.ops.export_scene.gltf(filepath=str(raw_glb), export_format='GLB',
                               export_animation_mode='ACTIONS', export_force_sampling=True)
+
+    # Post-process GLB to center on X/Z and ground lowest paws at Y=0 directly at origin
+    with open(raw_glb, 'rb') as f:
+        glb_bytes = f.read()
+    json_len = int.from_bytes(glb_bytes[12:16], 'little')
+    json_data = json.loads(glb_bytes[20:20 + json_len].decode('utf-8'))
+    bin_chunk = glb_bytes[20 + json_len:]
+
+    root_idx = len(json_data['nodes'])
+    json_data['nodes'].append({
+        'name': 'UlotteOriginRoot',
+        # Centers X/Z and grounds lowest paws at Y=0
+        'translation': [-0.001476, -0.2138997, 0.300009],
+        'children': list(json_data['scenes'][0]['nodes'])
+    })
+    json_data['scenes'][0]['nodes'] = [root_idx]
+
+    new_json_bytes = json.dumps(json_data).encode('utf-8')
+    pad = (4 - (len(new_json_bytes) % 4)) % 4
+    new_json_bytes += b' ' * pad
+
+    total_len = 12 + 8 + len(new_json_bytes) + len(bin_chunk)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with open(output, 'wb') as f:
+        f.write(glb_bytes[:8])
+        f.write(total_len.to_bytes(4, 'little'))
+        f.write(len(new_json_bytes).to_bytes(4, 'little'))
+        f.write(b'JSON')
+        f.write(new_json_bytes)
+        f.write(bin_chunk)
+
     print(f'Exported {output}', flush=True)
