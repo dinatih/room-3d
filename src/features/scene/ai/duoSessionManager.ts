@@ -97,7 +97,7 @@ class DuoSessionManager {
   /** Index inversé personnage -> session pour accès instantané O(1) */
   private charToSession = new Map<string, ActiveDuoSession>();
 
-  public repeatsPerAnim = 3;
+  public repeatsPerAnim = 1;
   private listeners = new Set<SessionListener>();
 
   public subscribe(listener: SessionListener): () => void {
@@ -454,14 +454,14 @@ class DuoSessionManager {
     }
     const slot = getSmartObject(objectId)?.slots.find(s => s.slotId === slotId) || getSmartObject(objectId)?.slots[0];
     if (slot?.duoPool?.length) {
-      return [...slot.duoPool].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? 3)
+      return [...slot.duoPool].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? slot.duoPool.length)
         .map(findAnim).filter((d): d is DuoAnimationDef => Boolean(d));
     }
     if (slot?.duoAnimId) {
       const d = findAnim(slot.duoAnimId);
       return d ? [d] : [];
     }
-    return slot?.isDuo ? [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? 3) : [];
+    return slot?.isDuo ? [...DUO_ANIMATIONS].sort(() => Math.random() - 0.5).slice(0, slot.duoCount ?? 1) : [];
   }
 
   /**
@@ -612,7 +612,7 @@ class DuoSessionManager {
       objectId,
       location,
       playlist,
-      slot?.duoCount ? 1 : this.repeatsPerAnim,
+      this.repeatsPerAnim,
       participantA,
       participantB
     );
