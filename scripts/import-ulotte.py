@@ -13,7 +13,7 @@ from mathutils import Quaternion, Vector
 import bpy
 
 archive_path = Path(sys.argv[sys.argv.index('--') + 1])
-output = Path(__file__).resolve().parents[1] / 'public/characters/ulotte/ulotte.glb'
+output = Path('/tmp/ulotte.glb')
 with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     root = Path(directory)
     with zipfile.ZipFile(archive_path) as archive:
@@ -108,25 +108,30 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     bpy.context.scene.frame_set(1)
     p_sit = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
 
-    # Snapshot of lay pose (relaxed sit lowered to ground)
+    # Snapshot of lay pose: lowered chest flat to ground, front legs extended forward
     p_lay = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
-    p_lay['BodyHandle'] = (p_sit['BodyHandle'][0] + Vector((0, 0, 0.05)), p_sit['BodyHandle'][1].copy(), p_sit['BodyHandle'][2].copy())
-    p_lay['Neck'] = (p_sit['Neck'][0].copy(), p_sit['Neck'][1] @ Quaternion((1, 0, 0), -0.2), p_sit['Neck'][2].copy())
-    p_lay['Head'] = (p_sit['Head'][0].copy(), p_sit['Head'][1] @ Quaternion((1, 0, 0), -0.15), p_sit['Head'][2].copy())
+    p_lay['UpperBack'] = (p_sit['UpperBack'][0].copy(), p_sit['UpperBack'][1] @ Quaternion((1, 0, 0), 0.35), p_sit['UpperBack'][2].copy())
+    p_lay['FrontLeg0.L'] = (p_sit['FrontLeg0.L'][0].copy(), p_sit['FrontLeg0.L'][1] @ Quaternion((1, 0, 0), 0.85), p_sit['FrontLeg0.L'][2].copy())
+    p_lay['FrontLeg0.R'] = (p_sit['FrontLeg0.R'][0].copy(), p_sit['FrontLeg0.R'][1] @ Quaternion((1, 0, 0), 0.85), p_sit['FrontLeg0.R'][2].copy())
+    p_lay['Neck'] = (p_sit['Neck'][0].copy(), p_sit['Neck'][1] @ Quaternion((1, 0, 0), -0.15), p_sit['Neck'][2].copy())
+    p_lay['Head'] = (p_sit['Head'][0].copy(), p_sit['Head'][1] @ Quaternion((1, 0, 0), -0.20), p_sit['Head'][2].copy())
 
     tail_bones = ['Tail1', 'Tail2', 'Tail3', 'Tail4', 'Tail5', 'Tail6', 'Tail7']
 
-    # 1. Sit action: transition from standing to sitting (16 frames)
+    # 1. Sit action: transition from standing to sitting with rear leg tuck (16 frames)
     act_sit = bpy.data.actions.new(name="sit")
     rig.animation_data.action = act_sit
     for f in range(1, 17):
         t = (f - 1) / 15.0
         alpha = t * t * (3 - 2 * t)
+        tuck = math.sin(t * math.pi) * -0.5
         bpy.context.scene.frame_set(f)
         for pb in rig.pose.bones:
             pb.location = p_stand[pb.name][0].lerp(p_sit[pb.name][0], alpha)
             pb.rotation_quaternion = p_stand[pb.name][1].slerp(p_sit[pb.name][1], alpha)
             pb.scale = p_stand[pb.name][2].lerp(p_sit[pb.name][2], alpha)
+            if pb.name in ['BackLeg1.L', 'BackLeg1.R']:
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), tuck)
             pb.keyframe_insert(data_path="location", frame=f)
             pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
             pb.keyframe_insert(data_path="scale", frame=f)
@@ -134,17 +139,20 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     act_sit.frame_start = 1
     act_sit.frame_end = 16
 
-    # 2. Lay down action: transition from sit to relaxed lay-down (16 frames)
+    # 2. Lay down action: transition from sit to true lying down on the ground (16 frames)
     act_lay = bpy.data.actions.new(name="lay-down")
     rig.animation_data.action = act_lay
     for f in range(1, 17):
         t = (f - 1) / 15.0
         alpha = t * t * (3 - 2 * t)
+        arc = math.sin(t * math.pi) * 0.7
         bpy.context.scene.frame_set(f)
         for pb in rig.pose.bones:
             pb.location = p_sit[pb.name][0].lerp(p_lay[pb.name][0], alpha)
             pb.rotation_quaternion = p_sit[pb.name][1].slerp(p_lay[pb.name][1], alpha)
             pb.scale = p_sit[pb.name][2].lerp(p_lay[pb.name][2], alpha)
+            if pb.name in ['FrontLeg0.L', 'FrontLeg0.R']:
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), arc)
             pb.keyframe_insert(data_path="location", frame=f)
             pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
             pb.keyframe_insert(data_path="scale", frame=f)
@@ -175,7 +183,7 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     act_wag.frame_start = 1
     act_wag.frame_end = 16
 
-    # 4. Bark action: 2 crisp barks with forward thrust, raised muzzle & ear flip (24 frames)
+    # 4. Bark action: alert head tilt & ear flick, front paws locked to ground (24 frames)
     act_bark = bpy.data.actions.new(name="bark")
     rig.animation_data.action = act_bark
     for f in range(1, 25):
@@ -188,13 +196,11 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
             pb.rotation_quaternion = p_stand[pb.name][1].copy()
             pb.scale = p_stand[pb.name][2].copy()
             if pb.name == 'Head':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.35)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.35)
             elif pb.name == 'Neck':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.15)
-            elif pb.name == 'UpperBack':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.05)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.20)
             elif 'Ear' in pb.name:
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * -0.2)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.25)
             elif pb.name in tail_bones:
                 idx = tail_bones.index(pb.name) + 1
                 pb.rotation_quaternion @= Quaternion((1, 0, 0), bark_intensity * 0.1 * idx)
@@ -235,7 +241,7 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     act_scratch.frame_start = 1
     act_scratch.frame_end = 24
 
-    # 6. Dig action: terrier ground scraping with alternating front paws (24 frames cyclic loop)
+    # 6. Dig action: terrier ground scraping looking down at soil (24 frames cyclic loop)
     act_dig = bpy.data.actions.new(name="dig")
     rig.animation_data.action = act_dig
     for f in range(1, 25):
@@ -246,27 +252,25 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
             pb.rotation_quaternion = p_stand[pb.name][1].copy()
             pb.scale = p_stand[pb.name][2].copy()
             if pb.name == 'Head':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.45)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.30)
             elif pb.name == 'Neck':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.25)
-            elif pb.name == 'UpperBack':
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), -0.1)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.50)
             elif pb.name in tail_bones:
                 idx = tail_bones.index(pb.name) + 1
                 pb.rotation_quaternion @= Quaternion((1, 0, 0), 0.08 * idx)
                 pb.rotation_quaternion @= Quaternion((0, 0, 1), math.sin(phase) * 0.04 * idx)
             elif pb.name == 'FrontLeg0.L':
                 stroke = math.sin(phase)
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.4)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.35)
             elif pb.name == 'FrontLeg1.L':
                 stroke = math.sin(phase)
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), max(0.0, -stroke) * 0.5)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -max(0.0, -stroke) * 0.45)
             elif pb.name == 'FrontLeg0.R':
                 stroke = math.sin(phase + math.pi)
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.4)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), stroke * 0.35)
             elif pb.name == 'FrontLeg1.R':
                 stroke = math.sin(phase + math.pi)
-                pb.rotation_quaternion @= Quaternion((1, 0, 0), max(0.0, -stroke) * 0.5)
+                pb.rotation_quaternion @= Quaternion((1, 0, 0), -max(0.0, -stroke) * 0.45)
             pb.keyframe_insert(data_path="location", frame=f)
             pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
             pb.keyframe_insert(data_path="scale", frame=f)
