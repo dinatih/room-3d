@@ -34,30 +34,52 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
         texture.image = bpy.data.images['Dach_Diff.png']
         material.node_tree.links.new(texture.outputs['Color'], shader.inputs['Base Color'])
 
-    # Rebase cyclic animations so frame 1 starts at t=0 and loop is seamless.
-    # In cyclic animation, sampling frames S to E gives (E - S) unique steps (duration = (E - S)/fps),
-    # where the final step naturally wraps back to frame 1 without holding a duplicated frame.
-    def rebase_action(orig_name, target_name, start_f, end_f):
-        orig_action = bpy.data.actions[orig_name]
-        rig.animation_data.action = orig_action
-        new_action = bpy.data.actions.new(name=target_name)
-        rig.animation_data.action = new_action
-        for frame, f in enumerate(range(start_f, end_f), start=1):
-            bpy.context.scene.frame_set(f)
-            for pb in rig.pose.bones:
-                pb.keyframe_insert(data_path="location", frame=frame)
-                pb.keyframe_insert(data_path="rotation_quaternion", frame=frame)
-                pb.keyframe_insert(data_path="scale", frame=frame)
-        return new_action
+    # Shift cyclic animations so frame 7 becomes frame 1 without freeze
+    def shift_action(action, offset_frames, end_frame):
+        for layer in action.layers:
+            for strip in layer.strips:
+                for cb in strip.channelbags:
+                    for fc in cb.fcurves:
+                        for kp in fc.keyframe_points:
+                            kp.co[0] -= offset_frames
+                            kp.handle_left[0] -= offset_frames
+                            kp.handle_right[0] -= offset_frames
+        action.use_frame_range = True
+        action.frame_start = 1
+        action.frame_end = end_frame
 
-    rebase_action('Armature|Armature|Walk', 'walk', 7, 31)
-    rebase_action('Armature|Armature|Run', 'run', 7, 23)
+    # Walk cycle: frames 7..31 in FBX -> 24 frames (1..24)
+    shift_action(bpy.data.actions['Armature|Armature|Walk'], 6, 24)
+    # Run cycle: frames 7..23 in FBX -> 16 frames (1..16)
+    shift_action(bpy.data.actions['Armature|Armature|Run'], 6, 16)
+
+    # Jump: blend frames 22..27 smoothly back to frame 1 to eliminate loop jump/freeze
+    jump = bpy.data.actions['Armature|Armature|Jump']
+    rig.animation_data.action = jump
+    bpy.context.scene.frame_set(1)
+    p1 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    bpy.context.scene.frame_set(21)
+    p21 = {pb.name: (pb.location.copy(), pb.rotation_quaternion.copy(), pb.scale.copy()) for pb in rig.pose.bones}
+    blend_steps = 6
+    for step in range(1, blend_steps + 1):
+        f = 21 + step
+        t = step / blend_steps
+        alpha = t * t * (3 - 2 * t)
+        bpy.context.scene.frame_set(f)
+        for pb in rig.pose.bones:
+            pb.location = p21[pb.name][0].lerp(p1[pb.name][0], alpha)
+            pb.rotation_quaternion = p21[pb.name][1].slerp(p1[pb.name][1], alpha)
+            pb.scale = p21[pb.name][2].lerp(p1[pb.name][2], alpha)
+            pb.keyframe_insert(data_path="location", frame=f)
+            pb.keyframe_insert(data_path="rotation_quaternion", frame=f)
+            pb.keyframe_insert(data_path="scale", frame=f)
+    jump.use_frame_range = True
+    jump.frame_start = 1
+    jump.frame_end = 21 + blend_steps
 
     for action in list(bpy.data.actions):
-        if action.name in ('walk', 'run'):
-            continue
         name = action.name.split('|')[-1]
-        if name in ('PoseLib', 'Walk', 'Run'):
+        if name == 'PoseLib':
             bpy.data.actions.remove(action)
         else:
             action.name = name.lower().replace('_', '-')
@@ -72,7 +94,6 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     muzzle.parent = head
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Export intermediate GLB
     raw_glb = root / 'raw.glb'
     bpy.ops.export_scene.gltf(filepath=str(raw_glb), export_format='GLB',
                               export_animation_mode='ACTIONS', export_force_sampling=True)
@@ -87,7 +108,6 @@ with tempfile.TemporaryDirectory(prefix='room-ulotte-') as directory:
     root_idx = len(json_data['nodes'])
     json_data['nodes'].append({
         'name': 'UlotteOriginRoot',
-        # Centers X/Z and grounds lowest paws at Y=0
         'translation': [-0.001476, -0.2138997, 0.300009],
         'children': list(json_data['scenes'][0]['nodes'])
     })
