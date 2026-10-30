@@ -235,6 +235,8 @@ export const INVENTORY: InventoryItem[] = [
 
   { id: 'assiette',         name: 'Assiette',                       brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 26,   d: 26,   h: 2    }, notes: 'Placard cuisine — plate plate Ø 26 cm' },
   { id: 'mug-set',          name: 'Mug',                            brand: '',         category: 'kitchen',   qty: 6,  dims: { w: 9,    d: 12,   h: 9.5  }, notes: 'Placard cuisine — anse incluse' },
+  { id: 'philips-hd9318',    name: 'Bouilloire électrique Philips HD9318/20 Série 3000 1.7L', brand: 'Philips', category: 'kitchen', qty: 1, dims: { w: 22.3, d: 16.0, h: 25.3 }, notes: 'Noire, plastique sans BPA, arrêt automatique, témoin lumineux', glbPath: 'items/philips-hd9318/philips-hd9318.glb', url: 'https://www.amazon.fr/dp/B08CXTZF5H', price: '24,99', photos: ['items/philips-hd9318/philips-hd9318_baseColor.jpg', 'items/philips-hd9318/philips-hd9318_3d_preview.png'] },
+  { id: 'grifema-gc1001',    name: 'Bouilloire électrique compacte GRIFEMA GC1001 0.8L', brand: 'GRIFEMA', category: 'kitchen', qty: 1, dims: { w: 17.8, d: 12.4, h: 16.8 }, notes: 'Inox brossé & noire, compacte sans fil, protection anti-chauffe', glbPath: 'items/grifema-gc1001/grifema-gc1001.glb', url: 'https://www.amazon.fr/dp/B093BYRMLH', price: '19,99', photos: ['items/grifema-gc1001/grifema-gc1001_baseColor.png', 'items/grifema-gc1001/grifema-gc1001_3d_preview.png'] },
   { id: 'trash-bin',        name: 'Poubelle TATAY Smart Deco 25L',  brand: 'TATAY',    category: 'kitchen',   qty: 1,  dims: { w: 26,   d: 36,   h: 47   }, notes: 'Effet bois, pédale, B0BJQS1P6C', glbPath: 'items/trash-bin/tatay-smart-deco.glb', photos: [
       'items/trash-bin/tatay-smart-deco_0.png',
       'items/trash-bin/tatay-smart-deco_1.png',
