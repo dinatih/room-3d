@@ -338,6 +338,10 @@ button, input, select, textarea {
 }
 
 /* AppConsole : chaîne flex scrollable dans un conteneur à hauteur fixe */
+.life-panel {
+  contain: inline-size;
+}
+
 .app-console .view-control-bar {
   flex-shrink: 1 !important;
   min-height: 0 !important;

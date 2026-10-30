@@ -738,7 +738,7 @@ export function AppConsole({
       {showLife && (
         <div
           id="lara-life-panel"
-          className="glass-card shadow-lg rounded-2 align-self-end overflow-hidden"
+          className="glass-card shadow-lg rounded-2 align-self-end overflow-hidden life-panel"
           style={{ pointerEvents: 'auto', width: panelWidth, maxWidth: 'calc(100vw - 16px)' }}
         >
           <LaraLifePanel />
