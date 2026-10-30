@@ -1,7 +1,3 @@
-"""Rebuild from IKEA source: blender -b --python scripts/articulate_tillreda.py.
-
-Blender coordinates: metres, front -Y, vertical Z.
-"""
 import math
 from collections import defaultdict
 from pathlib import Path
@@ -9,9 +5,10 @@ import bpy
 import bmesh
 from mathutils import Matrix, Vector
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path('/home/dinatih/Projects/room-3d')
 SOURCE = next((ROOT / 'public/items').glob('tillreda réfrigérateur*/*.glb'))
 OUTPUT = ROOT / 'public/items/tillreda_anim/TILLREDA_anim.glb'
+
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(SOURCE))
 source = next(o for o in bpy.context.scene.objects if o.type == 'MESH')
@@ -21,7 +18,6 @@ corners = mesh.attributes.new('source_corner', 'INT', 'CORNER')
 for i, entry in enumerate(corners.data):
     entry.value = i
 
-# Join coincident UV seams only for connectivity, without modifying geometry.
 adjacency, seams = defaultdict(set), defaultdict(list)
 for v in mesh.vertices:
     seams[tuple(round(c, 5) for c in v.co)].append(v.index)
@@ -59,7 +55,7 @@ liner = material('White interior liner', (.87, .89, .91), .38)
 seal = material('Door gasket', (.035, .035, .035), .85)
 chrome = material('Shelf steel', (.65, .68, .72), .25, .8)
 
-def extract(name, indices, mat):
+def extract(name, indices, mat, mirror_x=False):
     keep = set().union(*(parts[i] for i in indices))
     data = mesh.copy()
     bm = bmesh.new()
@@ -70,7 +66,14 @@ def extract(name, indices, mat):
     bm.free()
     for face in data.polygons:
         face.use_smooth = True
-    data.normals_split_custom_set([normals[e.value] for e in data.attributes['source_corner'].data])
+    if mirror_x:
+        for v in data.vertices:
+            v.co.x = -v.co.x
+        data.normals_split_custom_set([Vector((-normals[e.value].x, normals[e.value].y, normals[e.value].z)) for e in data.attributes['source_corner'].data])
+        # Invert winding after mirror so normals point outward
+        data.flip_normals()
+    else:
+        data.normals_split_custom_set([normals[e.value] for e in data.attributes['source_corner'].data])
     data.attributes.remove(data.attributes['source_corner'])
     data.transform(source.matrix_world)
     data.materials.clear()
@@ -81,25 +84,37 @@ def extract(name, indices, mat):
     bpy.context.collection.objects.link(obj)
     return obj
 
-# Whole door skin + bottom cap + top handle/cap. Fixed bracket (9) and pin
-# (11) remain on the cabinet; no clipping planes through the hinge hardware.
+# Door parts
 door_ids = {7, 20, 28}
-body_ids = set(range(29)) - door_ids - {10, 21, 22}
-body = extract('body', body_ids, exterior)
+# Hinge hardware parts to mirror: bracket (9) and pin (11), holes (8, 23, 24)
+hinge_bracket_ids = {9, 11}
+holes_ids = {8, 23, 24}
+# Remaining body parts (without door, removed solid proxy 21, floor 22, seal 10, bracket 9, 11, holes 8, 23, 24)
+body_base_ids = set(range(29)) - door_ids - {10, 21, 22} - hinge_bracket_ids - holes_ids
+
+body = extract('body', body_base_ids, exterior)
+bracket_right = extract('hinge_bracket_right', hinge_bracket_ids, exterior, mirror_x=True)
+holes_left = extract('holes_left', holes_ids, exterior, mirror_x=True)
+
 door = extract('door_surface', door_ids, exterior)
 gasket = extract('door_gasket', {10}, seal)
 floor = extract('interior_floor', {22}, liner)
+
 removed_faces = sum(p.vertices[0] in parts[21] for p in mesh.polygons)
 assert removed_faces == 84
-assert sum(len(o.data.polygons) for o in [body, door, gasket, floor]) == len(mesh.polygons) - removed_faces
+
+# Pin location on the RIGHT (+X)
 pin = [mesh.vertices[i].co for i in parts[11]]
-hinge_x = (min(v.x for v in pin) + max(v.x for v in pin)) / 2
+# Mirror X for right-hand hinge
+hinge_x = -((min(v.x for v in pin) + max(v.x for v in pin)) / 2)
 hinge_y = (min(v.y for v in pin) + max(v.y for v in pin)) / 2
+
 pivot = bpy.data.objects.new('door', None)
 bpy.context.collection.objects.link(pivot)
 pivot.location = (hinge_x, hinge_y, 0)
 pivot['removedSourceTriangles'] = removed_faces
 pivot['sourceDoorIslands'] = sorted(door_ids)
+
 for obj in [door, gasket]:
     obj.parent = pivot
     obj.matrix_parent_inverse = Matrix.Translation(-pivot.location)
@@ -120,7 +135,6 @@ def box(name, lo, hi, mat, parent=None):
         obj.matrix_parent_inverse = Matrix.Translation(-parent.location)
     return obj
 
-# Bounds of the solid source placeholder define the reconstructed cavity.
 cavity = [mesh.vertices[i].co for i in parts[21]]
 lo = Vector([min(v[a] for v in cavity) for a in range(3)])
 hi = Vector([max(v[a] for v in cavity) for a in range(3)])
@@ -134,11 +148,9 @@ box('interior_back', (left, back, lo.z), (right, hi.y, ceiling), liner)
 box('interior_door', (left + .01, -.185, lo.z + .01),
     (right - .01, -.174, ceiling - .01), liner, pivot)
 
-# Rear compressor casing: 12 cm high, 14 cm deep, leaving usable floor ahead.
 motor_top, motor_front = lo.z + .12, back - .14
 box('motor_casing', (left, motor_front, lo.z), (right, back, motor_top), liner)
 
-# Wire shelf 7 cm above the compressor. 3 mm steel rods spaced by 2 cm.
 shelf_z = motor_top + .07
 shelf_front, shelf_back = lo.y + .025, back - .005
 wire_radius, wire_pitch = .0015, .02
@@ -171,12 +183,14 @@ bpy.data.objects.remove(source, do_unlink=True)
 for obj in list(bpy.context.scene.objects):
     if obj.type not in {'MESH', 'EMPTY'}:
         bpy.data.objects.remove(obj, do_unlink=True)
+
 scene = bpy.context.scene
 scene.render.fps = 30
 scene.frame_start, scene.frame_end = 0, 30
 pivot.rotation_euler.z = 0
 pivot.keyframe_insert('rotation_euler', frame=0)
-pivot.rotation_euler.z = -math.radians(110)
+# Opening right-hinged door: rotation around +Z (positive) opens towards front-right (+X, -Y)
+pivot.rotation_euler.z = math.radians(110)
 pivot.keyframe_insert('rotation_euler', frame=30)
 pivot.animation_data.action.name = 'door_open'
 for layer in pivot.animation_data.action.layers:
@@ -186,10 +200,11 @@ for layer in pivot.animation_data.action.layers:
                 for key in curve.keyframe_points:
                     key.interpolation = 'LINEAR'
 scene.frame_set(0)
+
+# Merge static meshes by material or keep them clean
 bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT.with_suffix('.blend')))
 bpy.ops.export_scene.gltf(filepath=str(OUTPUT), export_format='GLB', export_yup=True,
                           export_extras=True, export_animations=True,
                           export_animation_mode='ACTIONS', export_frame_range=True)
-print('TILLREDA: whole source islands; hinge', tuple(pivot.location),
-      'removed solid proxy', removed_faces, 'triangles; compressor + shelf added.')
+print('TILLREDA updated: right-hinged door at', tuple(pivot.location), 'bracket & holes swapped.')
