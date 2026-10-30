@@ -83,8 +83,8 @@ export function KallaxCuisine({ onSize, actionState = {}, noDrona, isPreview = f
         <NinjaSP101 actionState={actionState} isPreview={isPreview} />
       </group>
 
-      {/* Bouilloire électrique GRIFEMA GC1001 — à gauche du four Ninja */}
-      <group position={[24, PIZZA_Y, 0]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Bouilloire GRIFEMA' }}>
+      {/* Bouilloire électrique GRIFEMA GC1001 — à gauche du four Ninja (poignée vers l'intérieur du studio) */}
+      <group position={[24, PIZZA_Y, 0]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Bouilloire GRIFEMA' }}>
         <GrifemaGC1001 />
       </group>
     </group>
