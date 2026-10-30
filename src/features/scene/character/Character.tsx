@@ -126,7 +126,7 @@ export function Character({
   const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
 
   const [localHairColor, setLocalHairColor] = useState<string | undefined>(variant === 'helena' || id === 'helena' ? 'noir' : undefined);
-  const hairColor = isPreview ? previewHairColor : localHairColor;
+  const hairColor = (isPreview && previewHairColor) ? previewHairColor : localHairColor;
 
   const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
