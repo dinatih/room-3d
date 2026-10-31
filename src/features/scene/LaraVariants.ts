@@ -274,6 +274,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         // TEXTURE REPLACEMENTS FOR CHA (SUPERMAN TOP, RED BOOTS, GOLDEN SOCKS)
         const isShirt = matName.toLowerCase().includes('shirt');
         const isBoot = matName.toLowerCase().includes('boot');
+        const isGloves = matName.toLowerCase().includes('glove') || meshName.toLowerCase().includes('glove');
         const isShorts = matName.toLowerCase().includes('short') || matName.toLowerCase().includes('pant') || meshName.toLowerCase().includes('short');
         if (isCha) {
            if (isShirt) {
@@ -309,7 +310,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                               !(!isDelphina && isGear) &&
                               !(isCha && (isShirt || isBoot)) &&
                               !isRajaa &&
-                              !(isHelena && !isTop && !isShorts);
+                              !(isHelena && !isTop && !isShorts && !isGloves && !isBoot);
 
           if (shouldColor) {
             let color = 0xcc0000; // Brighter default red
@@ -432,8 +433,8 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   forceProcedural = false;
                 }
              } else if (isHelena) {
-                if (isTop) {
-                  color = 0xffffff; // Haut blanc éclatant
+                if (isTop || isGloves || isBoot) {
+                  color = 0xffffff; // Haut, gants et chaussures blanc éclatant
                   forceProcedural = false;
                 } else if (isShorts) {
                   color = 0x151515; // Short noir profond
@@ -448,7 +449,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
              const useMap = mat.map && !forceProcedural;
 
              if (useMap) {
-                const isClothingOrGear = isTop || isShorts || isBackpack || isGear || isBoot;
+                const isClothingOrGear = isTop || isShorts || isBackpack || isGear || isBoot || isGloves;
                 if (isClothingOrGear && mat.map && !(isCha && (isShirt || isBoot))) {
                    let mode: 'vivida' | 'light' | 'white-boost' | 'standard' = 'standard';
                    if (isVivida) {
