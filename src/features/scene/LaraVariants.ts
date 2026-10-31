@@ -170,6 +170,19 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            mat.visible = false;
         }
 
+        // LUNETTES NOIRES TOTALES (branches et verres) pour Helena
+        if (isHelena && isGlasses) {
+           mat.map = null;
+           mat.color.setHex(0x050505);
+           mat.roughness = 0.2;
+           mat.metalness = 0.8;
+           mat.emissive.setHex(0x000000);
+           mat.emissiveIntensity = 0;
+           mat.transparent = false;
+           mat.opacity = 1;
+           mat.needsUpdate = true;
+        }
+
         // HIDE BRAID for Angelina
         if (isAngelina && isHair && (matName.includes('braid') || matName.includes('pony') || meshName.includes('braid') || meshName.includes('pony'))) {
            mat.visible = false;
