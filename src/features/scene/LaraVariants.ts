@@ -156,7 +156,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         const isGlasses = matName.includes('lens') || matName.includes('glass') || matName.includes('frame');
         const isSkin = !isGun && !isHair && !isGlasses && !isEye && !isLash && (matName.includes('skin') || matName.includes('face') || matName.includes('head') || matName.includes('body') || matName.includes('arm') || matName.includes('leg') || meshName.includes('body') || meshName.includes('arm') || isHand);
         if (isHelena && isSkin) {
-          mat.color.setHex(0x42281a);
+          mat.color.setHex(meshName === 'face' ? 0x583524 : 0x42281a);
+          if (meshName === 'face') {
+            mat.emissive.setHex(0x28120c);
+            mat.emissiveIntensity = 0.18;
+          }
           mat.needsUpdate = true;
         }
         const isMouth = matName.includes('mouth') || matName.includes('teeth') || matName.includes('tongue');
