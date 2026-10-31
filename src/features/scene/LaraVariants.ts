@@ -277,12 +277,9 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            } else if (isMarissa) {
               mat.color.setHex(0xffffff);
               mat.map = getTexture('characters/lara/textures/8003_black.png');
-           } else if (isHelena) {
-              mat.color.setHex(0xffffff);
-              mat.map = getTexture('characters/lara/textures/8003_black.png');
            } else {
               mat.color.setHex(0xffffff);
-              // Default brown texture for all other Laras
+              // Default brown texture for Helena and all other Laras
               mat.map = getTexture('characters/lara/textures/8003.png');
            }
            mat.needsUpdate = true;
