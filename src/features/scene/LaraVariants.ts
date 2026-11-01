@@ -447,11 +447,11 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
                   forceProcedural = false;
                 }
              } else if (isHelena) {
-                if (isTop || isGloves || isBoot) {
-                  color = 0xffffff; // Haut, gants et chaussures blanc éclatant
+                if (isTop || isGloves) {
+                  color = 0xffffff; // Haut et gants blanc éclatant
                   forceProcedural = false;
-                } else if (isShorts) {
-                  color = 0x151515; // Short noir profond
+                } else if (isShorts || isBoot) {
+                  color = 0x151515; // Short et chaussures noir profond
                   forceProcedural = false;
                 }
              } else {
