@@ -24,7 +24,6 @@ import { Dachshund } from '../items/Dachshund';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
-import { FemaleAnatomyTrio } from '../items/FemaleAnatomyTrio';
 import { BeachBall } from '../items/BeachBall';
 
 // Pass 1 — Furniture (Structure & gros volumes)
@@ -93,11 +92,6 @@ export function GardenDecor() {
       </group>
       <group position={[340, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Anatomie Féminine (Muscles)' }}>
         <NavigationObstacle id="statue-muscles"><FemaleAnatomyMuscles /></NavigationObstacle>
-      </group>
-
-      {/* Trio Anatomique Féminin (Corps, Squelette, Muscles) */}
-      <group position={[480, 0, -700]} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Trio Anatomique Féminin' }}>
-        <NavigationObstacle id="statue-trio"><FemaleAnatomyTrio /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
