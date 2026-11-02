@@ -170,23 +170,23 @@ export const DEFAULT_LARA_COUNT: LaraCountMode = 8;
 /** Nombres de personnages proposés dans le sélecteur d'options. */
 export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 8, 10, 15];
 
-/** Sélection du mode 10 : Xbot et neuf Laras. */
+/** Sélection du mode 10 : dix Laras. */
 export const TEN_PLAYERS_LARA_IDS = new Set([
-  'xbot', 'native', 'rosanna', 'marissa', 'delphina',
-  'sara', 'sabira', 'cha', 'vivida', 'safa',
+  'vivida', 'native', 'rosanna', 'marissa', 'delphina',
+  'sara', 'sabira', 'cha', 'safa', 'romana',
 ]);
 
-/** Personnages supplémentaires : hors Laras, Xbot et robots. */
+/** Personnages supplémentaires : hors Laras et robots. */
 export function isExtraCharacter(c: CharacterConfig | string): boolean {
   const char = typeof c === 'string' ? findCharacter(c) : c;
   if (!char) return false;
-  return !char.isRobot && char.id !== 'xbot' && char.isLara === false;
+  return !char.isRobot && char.isLara === false;
 }
 
-/** Liste des personnages extras (ni Lara ni Xbot) */
+/** Liste des personnages extras (hors Laras et robots) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
-/** Liste des personnages principaux / non-extras (Laras et Xbot, 15 au total) */
+/** Liste des personnages principaux / non-extras (15 Laras au total) */
 export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c));
 
 /** Sélection numérique exacte, avec le personnage actif inclus dans le total. */
@@ -239,7 +239,7 @@ export function isCharacterVisibleInMode(
     return true;
   }
 
-  // Personnages réguliers (Laras et Xbot)
+  // Personnages réguliers (Laras)
   if (activeCharacterId === id) return true;
 
   if (activeMainIds) {

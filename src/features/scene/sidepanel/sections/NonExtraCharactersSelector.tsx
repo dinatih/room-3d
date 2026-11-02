@@ -30,7 +30,7 @@ export function NonExtraCharactersSelector({
       {/* En-tête */}
       <div className="d-flex justify-content-between align-items-center">
         <div className="text-muted fw-semibold text-dark small text-uppercase" style={{ fontSize: '9px' }}>
-          <i className="bi bi-people-fill me-1" aria-hidden="true" />Personnages Principaux (Laras & Xbot)
+          <i className="bi bi-people-fill me-1" aria-hidden="true" />Personnages Principaux (Laras)
         </div>
         <span className={`badge ${activeCount > 0 ? 'bg-success' : 'bg-secondary'}`} style={{ fontSize: '9px' }}>
           {activeCount} / {totalCount} actifs
@@ -54,7 +54,7 @@ export function NonExtraCharactersSelector({
                 onClick={() => setLaraCount(count)}
                 title={`Charger le preset par défaut de ${count} personnage(s)`}
               >
-                {count === 1 ? '1 (Xbot)' : count === 2 ? '2 (Duo)' : count === 15 ? '15 (Tous)' : count}
+                {count === 1 ? '1 (Vivida)' : count === 2 ? '2 (Duo)' : count === 15 ? '15 (Toutes)' : count}
               </button>
             ))}
           </div>
@@ -89,7 +89,7 @@ export function NonExtraCharactersSelector({
           activeIds={activeMainIds}
           onToggle={toggleMainCharacter}
           isMobile={isMobile}
-          placeholder="Filtrer (ex: Native, Rosanna, Delphina, Xbot...)"
+          placeholder="Filtrer (ex: Native, Rosanna, Delphina, Vivida...)"
         />
 
         {/* Chips / pilules des personnages actifs avec suppression rapide */}

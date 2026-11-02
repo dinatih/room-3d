@@ -649,23 +649,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
     ]
   },
-  'xbot-garden-rest': {
-    id: 'xbot-garden-rest',
-    name: 'Repos de Xbot (Jardin - Observation Mannequins)',
-    ownerCharacterId: 'xbot',
-    category: 'outdoor',
-    exclusive: true,
-    position: [410, 0, -500],
-    slots: [
-      {
-        slotId: 'visit',
-        name: 'Observation des mannequins',
-        rotY: Math.PI,
-        animation: 'looking',
-        animationsRandom: ['looking', 'looking-around', 'standing-idle-looking-ver-1'],
-      },
-    ]
-  },
   'building-b-corridor': {
     id: 'building-b-corridor',
     name: 'Entrée Bâtiment B (Couloir)',

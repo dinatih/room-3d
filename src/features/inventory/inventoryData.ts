@@ -417,8 +417,7 @@ import { CHARACTERS, UNITREE_H2 } from '@features/scene/characterConfig';
 
 const sortedCharacters = [
   ...CHARACTERS.filter(char => char.isLara !== false),
-  ...CHARACTERS.filter(char => char.id === 'xbot'),
-  ...CHARACTERS.filter(char => char.isLara === false && char.id !== 'xbot'),
+  ...CHARACTERS.filter(char => char.isLara === false),
 ];
 
 sortedCharacters.forEach(char => {

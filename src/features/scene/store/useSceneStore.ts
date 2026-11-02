@@ -327,7 +327,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 }
 
 const initialActiveChar = parseUrlActiveCharacter();
-const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'xbot' : 'native');
+const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'vivida' : 'native');
 
 const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount ?? DEFAULT_LARA_COUNT, initialActiveCharacterId);
 const initialActiveMainIds = initialCharacterIds.filter(id => !isExtraCharacter(id));
@@ -507,7 +507,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     cameraState.invalidate?.();
   },
   setLaraCount: (count) => {
-    const activeCharacterId = count === 1 ? 'xbot' : useSceneStore.getState().activeCharacterId;
+    const activeCharacterId = count === 1 ? 'vivida' : useSceneStore.getState().activeCharacterId;
     const ids = getDefaultSceneCharacterIds(count, activeCharacterId);
     const activeMainIds = ids.filter(id => !isExtraCharacter(id));
     const activeExtraIds = ids.filter(isExtraCharacter);

@@ -16,16 +16,3 @@ export function buildGuidedTour(start: { x: number; z: number }): AgentInstructi
   instructions.push({ type: 'RETURN_TO_START' });
   return instructions;
 }
-
-/** Doors and routes are handled by the existing navigation controller. */
-export function buildConciergeTour(): AgentInstruction[] {
-  return [
-    { type: 'MOVE_TO', targetZoneId: 'entrance-outside' },
-    ...['corridor', 'bathroom', 'living', 'garden'].flatMap<AgentInstruction>(targetZoneId => [
-      { type: 'MOVE_TO', targetZoneId },
-      { type: 'ROTATE_360', duration: 3 },
-    ]),
-    { type: 'MOVE_TO', smartObjectId: 'xbot-garden-rest', slotId: 'visit' },
-    { type: 'WAIT', smartObjectId: 'xbot-garden-rest', slotId: 'visit', duration: 90, animation: 'looking' },
-  ];
-}

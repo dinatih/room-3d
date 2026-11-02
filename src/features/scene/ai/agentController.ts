@@ -681,7 +681,7 @@ export function createAgentController(
       return true;
     }
 
-    // Fallback pour les scénarios non basés sur les smart objects (ex: xbot avec tour de conciergerie)
+    // Fallback pour les scénarios non basés sur les smart objects
     if (scenario && scenario.length > 0) {
       const moveSteps = scenario
         .map((s, idx) => ({ s, idx }))
@@ -922,7 +922,7 @@ export function createAgentController(
               retrySmartAction(objId);
               return state;
             }
-            if ((!duoRes && _characterId === 'xbot') || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+            if (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId) {
               agentStatus = 'IDLE';
               state.animation = 'idle';
               releaseClaimedSlot();

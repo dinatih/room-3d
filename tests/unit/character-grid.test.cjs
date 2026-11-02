@@ -39,7 +39,7 @@ it('ajoute Cha aux sept personnages présents par défaut sans remplacer personn
   assert.equal(DEFAULT_LARA_COUNT, 8);
   assert(LARA_COUNT_MODES.includes(DEFAULT_LARA_COUNT));
   assert.deepEqual(getDefaultSceneCharacterIds(DEFAULT_LARA_COUNT, 'native'), [
-    'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha',
+    'vivida', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha',
   ]);
   assert(isCharacterVisibleInMode('cha', DEFAULT_LARA_COUNT, 'native'));
 });

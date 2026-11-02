@@ -87,11 +87,6 @@ export function CharacterSelectionList({ characters, activeIds, onToggle, isMobi
                 </label>
 
                 <div className="d-flex align-items-center gap-1">
-                  {char.id === 'xbot' && (
-                    <span className="badge bg-secondary" style={{ fontSize: '8px' }}>
-                      ROBOT
-                    </span>
-                  )}
                   <button
                     type="button"
                     className={`btn btn-sm py-0 px-2 ${isPlayer ? 'btn-info' : 'btn-outline-info'}`}

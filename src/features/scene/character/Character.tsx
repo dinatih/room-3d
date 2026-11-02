@@ -27,7 +27,7 @@ import {
   isHeadMesh,
 } from '../characterParts';
 import { LAYER_WALKER_DETAIL } from '@config';
-import { buildGuidedTour, buildConciergeTour } from '../ai/scenarios';
+import { buildGuidedTour } from '../ai/scenarios';
 import { buildAutonomousActivities } from '../ai/autonomousActivities';
 import { isLifeCharacter } from '../ai/laraLife';
 import { useLaraLifeStore } from '../ai/laraLifeStore';
@@ -360,13 +360,13 @@ export function Character({
 
   const autonomousScenario = useMemo(() => {
     if (!isAutonomous) return null;
-    return id === 'xbot' ? buildConciergeTour() : buildAutonomousActivities(id);
+    return buildAutonomousActivities(id);
   }, [isAutonomous, id]);
 
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous && !isGuidedTour;
 
-  const hasSkyDrop = id !== 'xbot' && isAutonomous;
+  const hasSkyDrop = isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
 
   const {
