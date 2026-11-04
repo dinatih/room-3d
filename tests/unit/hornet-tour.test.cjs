@@ -53,6 +53,15 @@ it('place chaque observation hors des murs, linteaux et débattements, oscillati
   assert.throws(() => new HornetSpace(NaN), /gabarit/);
 });
 
+it('stationne devant les Dröna nord-est, gabarit et oscillations compris', () => {
+  for (const size of [10, 20, 30]) {
+    const tour = new HornetTour(size, () => {});
+    const position = tour.observations.find(o => o.id === 'under-tv').position;
+    assert(position.z - size - Math.sqrt(3) * HORNET_BOB_CM > doors.DOOR_CONFIGS.glassRight.length);
+    assert(tour.space.safeStop(position, Math.sqrt(3) * HORNET_BOB_CM));
+  }
+});
+
 it('parcourt tout le studio sans traverser de battant et libère les portes après passage', () => {
   const tour = makeTour(), position = start(tour), quaternion = new Quaternion(), visited = new Set();
   let transitions = 0, requestsSeen = new Set();

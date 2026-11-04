@@ -52,6 +52,7 @@ export function hornetObservations(radius: number): HornetObservation[] {
   add('north-60', 'living', 'Séjour Nord — plongée 60°', v(centre.x, high, centre.z - high / Math.tan(Math.PI / 3)), centre.clone());
   add('top', 'living', 'Séjour — vue verticale 90°', centre.clone().setY(high), centre.clone());
   const underTV = new Vector3(...TV_POSITION).add(v(-radius, -TV_H / 2 - 2 * radius, 0));
+  underTV.z = DOOR_CONFIGS.glassRight.length + radius * 4;
   add('under-tv', 'living', 'Sous la télévision — centre du séjour', underTV, centre.clone());
   const desk = currentFurnitureTransforms['desk1-position'] ?? DESK1_POSITIONS[0];
   add('desk', 'living', 'Bureau et écrans', v(centre.x, high, ROOM_D / 3), v(desk.x, 90, desk.z), centre.clone().setY(70));
@@ -183,7 +184,6 @@ export class HornetTour {
       }
     }
     points.push(v(ROOM_W / 2, 180, ROOM_D / 2), v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, 180, ROOM_D - DOOR_CONFIGS.living.length - this.radius * 2));
-    points.push(this.observations.find(o => o.id === 'under-tv')!.position.clone().setZ(DOOR_CONFIGS.glassRight.length + this.radius * 4));
     this.nodes = points.filter(p => !this.space.blocker(p, p));
     this.edges = this.nodes.map(() => []);
     for (let i = 0; i < this.nodes.length; i++) for (let j = i + 1; j < this.nodes.length; j++) {
