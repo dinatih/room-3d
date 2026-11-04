@@ -53,7 +53,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' },
       ] : candidate.activity === 'wash-hands' ? [{ ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' }]
       : candidate.activity === 'meal' ? [
-        { ...sequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId)[0], animation: 'cook', lifePhase: 'prepare-meal' },
+        ...(withMeal === 'shared' && life.claimLifeMeal(characterId) ? [] : [{ ...sequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId)[0], animation: 'cook', lifePhase: 'prepare-meal' }]),
         { ...sequence(candidate.id, candidate.slotId)[0], animation: 'eat', lifePhase: 'eat-meal' },
       ] : candidate.activity === 'sleep' ? [
         { type: 'MOVE_TO', targetPos: [50, 45, 10] },
@@ -112,7 +112,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, scenario, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy,
+  return { controller, scenario, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy, cameraState,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -1266,3 +1266,108 @@ it('une activité commencée par une coloc inspire une danse pendant une pause, 
     assert.equal(w.lifeState.relationships.sabira.seconds, 0, 'Reacting to a friend does not invent shared activity time');
   } finally { disconnect(); global.document = previous; }
 });
+
+function withMealInvitation(id, run) {
+  const previous = global.document; global.document = new EventTarget();
+  Object.assign(life.lifeHousehold, life.createLifeHousehold());
+  const w = world(id, 'shared', false, true), disconnect = w.controller.connect();
+  w.lifeState.needs.work = 0; w.lifeState.needs.meal = 60;
+  const fromId = id === 'native' ? 'cha' : 'native';
+  life.prepareLifeMeals(fromId, [id]);
+  w.invite = (overrides = {}) => {
+    const detail = { targetId: id, fromId, objectId: 'rest', slotId: 'use', activity: 'meal', ...overrides };
+    document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail })); return detail;
+  };
+  try { run(w); } finally { disconnect(); global.document = previous; }
+}
+
+it('accepte un repas déjà prêt même avec une faim urgente, sans recuisiner ni soulager le trajet', () => withMealInvitation('native', w => {
+  w.lifeState.needs.meal = 95;
+  assert(w.invite().accepted);
+  assert(life.lifeHousehold.meals.held.native);
+  assert.equal(w.lifeState.needs.meal, 95);
+  for (let i = 0; i < 8 && !w.logs.some(log => log.action === 'life_started'); i++) w.tick(.25);
+  assert(w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal'));
+  assert(!w.logs.some(log => log.data?.phase === 'prepare-meal'));
+  assert(w.lifeState.needs.meal < 95);
+  assert(!life.lifeHousehold.meals.held.native);
+}));
+
+it('reporte un repas pour se laver les mains puis reprend sur une assise disponible', () => withMealInvitation('native', w => {
+  w.lifeState.handsDirty = true;
+  const response = w.invite();
+  assert(response.deferred && !response.accepted);
+  assert(!life.lifeHousehold.meals.held.native);
+  assert.equal(life.lifeHousehold.meals.portions, 1);
+  for (let i = 0; i < 20 && !w.logs.some(log => log.action === 'life_invitation_resumed'); i++) w.tick(.5);
+  assert(!w.lifeState.handsDirty);
+  assert(w.logs.some(log => log.action === 'life_invitation_resumed' && log.data.activity === 'meal'));
+  assert.equal(life.lifeHousehold.journal.native[1].events.life_invitation_later, 1);
+  assert.equal(life.lifeHousehold.journal.native[1].events.life_invitation_resumed, 1);
+}));
+
+it('cherche une autre assise pour un repas reporté si la place proposée a été prise', () => withMealInvitation('native', w => {
+  w.lifeState.needs.toilet = 95;
+  assert(w.invite().deferred);
+  w.candidates.splice(w.candidates.findIndex(candidate => candidate.activity === 'meal'), 1);
+  w.objects['seat-alternative'] = { ...w.objects.rest, id: 'seat-alternative', position: [30, 0, 10] };
+  w.candidates.push({ activity: 'meal', id: 'seat-alternative', slotId: 'use', x: 30, z: 10 });
+  w.lifeState.needs.toilet = 0;
+  for (let i = 0; i < 12 && !w.logs.some(log => log.action === 'life_invitation_resumed'); i++) w.tick(.5);
+  assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
+  for (let i = 0; i < 8 && !w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal'); i++) w.tick(.25);
+  assert(w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal' && log.object.id === 'seat-alternative'));
+}));
+
+it('annule un repas reporté si le stock est épuisé ou la faim satisfaite, sans reprendre une invitation périmée', () => {
+  for (const unavailable of ['stock', 'hunger']) withMealInvitation('native', w => {
+    w.lifeState.needs.toilet = 95;
+    assert(w.invite().deferred);
+    w.lifeState.needs.toilet = 0;
+    if (unavailable === 'stock') life.lifeHousehold.meals.portions = 0;
+    else w.lifeState.needs.meal = 0;
+    for (let i = 0; i < 12 && !w.logs.some(log => log.action === 'life_invitation_cancelled'); i++) w.tick(.5);
+    assert(w.logs.some(log => log.action === 'life_invitation_cancelled'));
+    assert(!w.logs.some(log => log.action === 'life_invitation_resumed'));
+    assert.equal(life.lifeHousehold.journal.native[1].events.life_invitation_cancelled, 1);
+  });
+});
+
+it('ne réserve jamais la dernière portion à deux invitées', () => withMealInvitation('native', w => {
+  const other = world('vivida', 'shared'), disconnect = other.controller.connect();
+  try {
+    other.lifeState.needs.meal = 60;
+    assert(w.invite().accepted);
+    assert.equal(life.lifeHousehold.meals.portions, 0);
+    assert(!w.invite({ targetId: 'vivida' }).accepted);
+    assert(other.logs.some(log => log.action === 'life_invitation_declined' && log.data.reason.includes('portion')));
+    assert(!life.lifeHousehold.meals.held.vivida);
+  } finally { disconnect(); }
+}));
+
+it('la cuisinière propose une autre place sur son assise une seule fois, même si l’invitée reporte', () => withMealInvitation('native', w => {
+  Object.assign(life.lifeHousehold, life.createLifeHousehold());
+  w.candidates.push({ activity: 'meal', id: 'rest', slotId: 'other', x: 20, z: 10 });
+  w.objects.rest.slots.push({ slotId: 'other', animation: 'eat', duration: 1 });
+  w.cameraState.positions.cha = { x: 30, y: 0, z: 10 };
+  w.characterLives.cha.needs.meal = 60;
+  const invitations = [];
+  const respond = event => { if (event.detail.targetId === 'cha') { invitations.push(event.detail); event.detail.deferred = true; } };
+  document.addEventListener('npc-invite-life-activity', respond);
+  try {
+    for (let i = 0; i < 16 && !invitations.length; i++) w.tick(.5);
+    assert.equal(invitations.length, 1);
+    assert.equal(invitations[0].activity, 'meal');
+    assert.equal(invitations[0].objectId, 'rest');
+    assert.equal(invitations[0].slotId, 'other');
+    assert(w.logs.some(log => log.action === 'life_invitation_proposed' && log.data.deferred));
+    w.tick(.1); w.tick(.1);
+    assert.equal(invitations.length, 1);
+  } finally { document.removeEventListener('npc-invite-life-activity', respond); }
+}));
+
+it('refuse un repas proposé par une colocataire détestée même si une portion est disponible', () => withMealInvitation('marissa', w => {
+  assert(!w.invite({ fromId: 'cha' }).accepted);
+  assert(w.logs.some(log => log.action === 'life_invitation_declined' && log.data.reason.includes('s’entend')));
+  assert(!life.lifeHousehold.meals.held.marissa);
+}));

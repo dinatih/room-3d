@@ -120,7 +120,7 @@ export const createLifeHousehold = () => ({
 export const lifeHousehold = createLifeHousehold();
 export const LIFE_EVENT_LABELS: Record<string, string> = {
   life_reaction: 'Réactions spontanées', life_invitation_accepted: 'Invitations acceptées', life_invitation_declined: 'Invitations refusées',
-  life_invitation_later: 'Invitations reportées', life_invitation_proposed: 'Activités proposées', life_meal_shared: 'Repas préparés à partager',
+  life_invitation_later: 'Invitations reportées', life_invitation_resumed: 'Invitations reprises', life_invitation_cancelled: 'Invitations annulées', life_invitation_proposed: 'Activités proposées', life_meal_shared: 'Repas préparés à partager',
 };
 
 /** Reserve a real portion before setting off; a held meal survives a reload. */
@@ -314,10 +314,10 @@ export const lifeNeed = (activity: LifeCandidate['activity'], needs?: LifeNeeds)
   : activity === 'clean' ? 'environment' : activity === 'social' || activity === 'affection' || activity === 'massage' ? 'company' : activity === 'read' || activity === 'tech' || activity === 'watch-tv' ? 'work' : activity;
 
 /** An invitation must not cancel a personal command or interrupt essential care. */
-export function lifeInvitationResponse(needs: LifeNeeds, activity: LifeActivity | null, handsDirty: boolean, available: boolean) {
+export function lifeInvitationResponse(needs: LifeNeeds, activity: LifeActivity | null, handsDirty: boolean, available: boolean, invitedActivity?: LifeActivity) {
   if (!available) return { status: 'declined', reason: 'Commande utilisateur ou visite en cours.' } as const;
   if (handsDirty) return { status: 'later', reason: 'Doit d’abord se laver les mains.' } as const;
-  const urgent = (['rest', 'meal', 'hygiene', 'toilet'] as const).find(need => needs[need] >= LIFE_SETTINGS.sleepPriority);
+  const urgent = (['rest', 'meal', 'hygiene', 'toilet'] as const).find(need => needs[need] >= LIFE_SETTINGS.sleepPriority && !(need === 'meal' && invitedActivity === 'meal'));
   if (urgent) return { status: 'later', reason: `${LIFE_NEED_LABELS[urgent]} urgent (${Math.round(needs[urgent])} %).` } as const;
   if (activity && ['meal', 'sleep', 'toilet', 'shower', 'wash-hands'].includes(activity)) {
     return { status: 'later', reason: `Termine d’abord : ${LIFE_LABELS[activity]}.` } as const;
