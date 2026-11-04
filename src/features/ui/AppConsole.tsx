@@ -42,7 +42,7 @@ function getTagColor(tag: string): string {
 }
 
 // ── Types & Singleton ──────────────────────────────────────────────────────
-export type AppLogCategory = 'anim' | 'duo' | 'nav' | 'object' | 'system' | 'perf' | 'download';
+export type AppLogCategory = 'anim' | 'duo' | 'nav' | 'object' | 'life' | 'system' | 'perf' | 'download';
 
 export interface AppLogAnimationRef {
   id: string;
@@ -60,6 +60,7 @@ export interface AppLogObjectRef {
 }
 
 export interface AppLogMetadata {
+  data?: unknown;
   category?: AppLogCategory;
   action?: string;
   reason?: string;
@@ -69,6 +70,7 @@ export interface AppLogMetadata {
 }
 
 export interface AppLogEntry {
+  data?: unknown;
   id: number;
   tag: string;
   message: string;
@@ -107,6 +109,7 @@ const LOG_CATEGORY_LABELS: Record<AppLogCategory, string> = {
   duo: '👯 Duo',
   nav: '🧭 Nav',
   object: '🪑 Objet',
+  life: '💚 Vie',
   system: '⚙️ Système',
   perf: '⚡ Perf',
   download: '📥 Réseau',
@@ -142,6 +145,7 @@ export const appLog = (tag: string, message: string, meta?: AppLogMetadata): voi
     category: inferLogCategory(tag, meta),
     action: meta?.action,
     reason: meta?.reason,
+    data: meta?.data,
     actors,
     animation: meta?.animation,
     object: meta?.object,

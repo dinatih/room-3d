@@ -40,3 +40,15 @@ Les choix tiennent compte des besoins, des urgences, de l'heure, des places disp
 Hors urgence, à priorité de routine égale, le besoin est pondéré par le goût appris et le temps écoulé depuis cette activité. Une activité appréciée peut donc être choisie même si un autre besoin est un peu plus élevé. Les activités récentes perdent de l'attrait ; les activités encore inconnues restent des occasions de découverte. Chaque colocataire construit ses propres goûts à partir du soulagement réellement obtenu. Les urgences, les mains à laver et la disponibilité des places restent prioritaires.
 
 Tous les smart objects ne sont pas automatiquement des activités de vie : les associations sont définies dans `src/features/scene/ai/autonomousActivities.ts`. Les effets et la sélection se trouvent dans `src/features/scene/ai/laraLife.ts`, et la saleté partagée dans `src/features/scene/ai/lifeHousekeeping.ts`.
+
+## Journal de vie
+
+Dans la console, sélectionner la catégorie **💚 Vie**, puis éventuellement filtrer sur une colocataire ou une action :
+
+- `life_decision` : activité choisie, besoin, urgence, routine, expérience et récence. Le détail JSON inclut les candidats disponibles avec leurs besoins et coefficients de préférence, ainsi que les cibles temporairement exclues après échec.
+- `life_started` : première animation réellement jouée dans une phase, avec le partenaire éventuel. Le chargement et le trajet ne déclenchent pas cet événement.
+- `life_result` : fin de phase, durée réellement jouée, besoins avant/après et variations. Le message indique les besoins soulagés ; le détail conserve aussi ceux qui ont augmenté.
+- `life_abandoned` : activité indisponible, avant de refaire un choix.
+- `life_interrupted` : interruption par une commande ou une invitation.
+
+Ces événements portent l'identité du PNJ, l'heure simulée et l'objet concerné lorsqu'il existe. Ils sont enregistrés dans le journal JSONL de développement (`/tmp/room-3d-logs/latest.jsonl`) même lorsque la console est fermée ou filtrée. Aucun événement de vie n'est émis à chaque image ; les bilans portent sur les phases d'interaction, pas sur toute la durée du trajet.

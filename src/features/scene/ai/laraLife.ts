@@ -107,7 +107,7 @@ export function favoriteLifeActivity(memory: LifeMemory): LifeActivity | null {
     .sort((a, b) => memory[b]!.satisfaction - memory[a]!.satisfaction)[0] ?? null;
 }
 
-function experienceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number) {
+export function lifePreferenceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number) {
   const experience = memory[activity];
   if (!experience) return 1; // An untried activity is a chance to discover a taste.
   const since = elapsedSeconds - experience.lastAt;
@@ -150,7 +150,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
-  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * experienceScore(candidate.activity, memory, elapsedSeconds);
+  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds);
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')

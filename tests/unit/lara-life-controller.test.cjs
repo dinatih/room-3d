@@ -114,6 +114,45 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
 
+it('journalise la vie au démarrage réel et à la fin de phase, sans spam pendant le chargement', () => {
+  const w = world();
+  w.tick(1, false); w.tick(1, false);
+  assert(!w.logs.some(log => log.action === 'life_started' || log.action === 'life_result'));
+  w.tick(.25);
+  assert.equal(w.logs.filter(log => log.action === 'life_started').length, 1);
+  assert(!w.logs.some(log => log.action === 'life_result'));
+  w.tick(.25); w.tick(.25); w.tick(.25);
+  const started = w.logs.filter(log => log.action === 'life_started');
+  const results = w.logs.filter(log => log.action === 'life_result');
+  assert.equal(started.length, 1);
+  assert.equal(results.length, 1);
+  assert.equal(started[0].category, 'life');
+  assert.deepEqual(started[0].actors, ['native']);
+  assert.equal(results[0].data.seconds, 1);
+  assert(results[0].data.changes.work < 0);
+  assert.equal(results[0].data.after.work - results[0].data.before.work, results[0].data.changes.work);
+  const count = w.logs.length;
+  w.tick(0);
+  assert.equal(w.logs.length, count);
+});
+
+it('explique les décisions et journalise une interruption avant tout bénéfice', () => {
+  const w = world();
+  w.tick(); w.tick();
+  w.lifeState.needs = { ...w.lifeState.needs, work: 95, rest: 0 };
+  w.tick(); w.tick();
+  const decision = w.logs.filter(log => log.action === 'life_decision').at(-1);
+  assert.equal(decision.category, 'life');
+  assert(decision.message.includes('Besoin urgent.'));
+  assert.equal(decision.data.activity, 'work');
+  assert(decision.data.candidates.some(candidate => candidate.activity === 'work' && candidate.need >= 95 && candidate.preference > 0));
+  assert.equal(typeof decision.data.clock.time, 'string');
+  const before = { ...w.lifeState.needs };
+  w.controller.setPosition(50, 0, 50);
+  assert(w.logs.some(log => log.action === 'life_interrupted' && log.message.includes('déplacements')));
+  assert.deepEqual(w.lifeState.needs, before);
+});
+
 it('termine le diagnostic d’attente lorsque l’interaction commence sans déplacement', () => {
   const w = world('rosanna', false, false, false, true);
   w.pauseNavigation(true); w.tick(.1, false);
