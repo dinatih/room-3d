@@ -17,7 +17,8 @@
     "test:studio": "node tests/run.cjs studio",
     "test:perf": "node tests/run.cjs perf",
     "test:screenshots": "node tests/visual/capture.cjs",
-    "test:home-assistant": "node tests/integration/home-assistant.cjs"
+    "test:home-assistant": "node tests/integration/home-assistant.cjs",
+    "render:service": "node scripts/render-service.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

@@ -1240,6 +1240,24 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     }
   };
 
+  const sendBackgroundRender = async () => {
+    try {
+      if (!renderCameraRef.current || !rendererRef.current) throw new Error('Attendre la préparation de la scène.');
+      const c = renderCameraRef.current;
+      const size = rendererRef.current.getSize(new THREE.Vector2());
+      const response = await fetch('http://127.0.0.1:5174/render-jobs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scene: scene.toJSON(), camera: c.toJSON(), width: size.x, height: size.y,
+          samples: targetSamples, bounces, exposure, focusDistance, fStop,
+          bokehSize: c instanceof PhysicalCamera ? c.bokehSize : 0, denoise: enableDenoise }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      const job = await response.json();
+      alert(`Rendu ${job.id} envoyé. Résultat dans renders/. Suivi : http://127.0.0.1:5174/render-jobs.html`);
+      onClose();
+    } catch (error) { setErrorMessage(`Envoi impossible. Lancer npm run render:service. ${String(error)}`); }
+  };
+
   const progressPercent = Math.min(100, Math.round((currentSamples / targetSamples) * 100));
   const isFinished = currentSamples >= targetSamples;
 
@@ -1253,6 +1271,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         WebkitBackdropFilter: 'blur(16px)',
       }}
     >
+      <button className="btn btn-sm btn-primary" disabled={isBuildingScene} onClick={() => void sendBackgroundRender()}>Lancer en arrière-plan</button>
       {/* ── Barre d'en-tête supérieure ─────────────────────────── */}
       <div
         className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
