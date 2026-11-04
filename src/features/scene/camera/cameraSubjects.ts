@@ -15,7 +15,6 @@ export const CAMERA_SUBJECTS = [
   { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart' },
   { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter' },
   { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot' },
-  { id: 'unitree-go2', target: 'go2', label: 'Go2', icon: 'bi-robot' },
   { id: 'unitree-as2w', target: 'as2', label: 'As2', icon: 'bi-robot' },
   { id: 'microduck', target: 'microduck', label: 'Microduck', icon: 'bi-robot' },
   { id: 'raph-rover', target: 'raph', label: 'Raph', icon: 'bi-robot' },
