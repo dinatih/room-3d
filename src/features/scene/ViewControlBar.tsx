@@ -383,13 +383,10 @@ export function ViewControlBar({
         </div>
       )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {zoomButton('in')}
-        {showCharacterModes && zoomButton('out')}
         {cardinalGroup}
         {!showCharacterModes && perspButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {!showCharacterModes && zoomButton('out')}
         {!showCharacterModes && rotButton}
         {!showCharacterModes && elevationGroup}
       </div>
