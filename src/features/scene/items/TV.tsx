@@ -9,7 +9,6 @@ import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
-import { isHomeAssistantLinked, useHomeAssistant } from '../../home-assistant/connection';
 import { getObjectActionIds } from '../objectActions';
 import { TV_W, TV_H } from '../tvData';
 
@@ -20,11 +19,10 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  const remote = useHomeAssistant(state => isHomeAssistantLinked(state) && !isPreview);
   const { isVideoActive: videoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
 
   const isTvOn = actionState[ACTION_KEY] ?? false;
-  const isVideoActive = videoActive && (!remote || isTvOn);
+  const isVideoActive = videoActive && isTvOn;
   const isDisplaying = isVideoActive || isTvOn;
   const activeTex = isVideoActive ? videoTex : (isTvOn ? screenTex : null);
   const [screenZ, setScreenZ] = useState(0);

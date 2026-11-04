@@ -57,12 +57,13 @@ describe('Tirage autonome par slot', () => {
   });
 
   it('mélange tous les slots une seule fois et conserve le meuble de départ du personnage', () => {
-    const { buildAutonomousActivities, getAvailableAutonomousActivities } = fixture();
-    const steps = buildAutonomousActivities('rosanna');
+    const { buildAutonomousActivities, getAvailableAutonomousActivities, INITIAL_SMART_OBJECT_BY_CHAR } = fixture('ybot');
+    INITIAL_SMART_OBJECT_BY_CHAR.ybot = 'bed-east';
+    const steps = buildAutonomousActivities('ybot');
     const entries = steps.filter(step => step.type === 'MOVE_TO');
     assert.equal(entries[0].smartObjectId, 'bed-east');
     assert.deepEqual(entries.map(step => `${step.smartObjectId}:${step.slotId}`).sort(),
-      getAvailableAutonomousActivities('rosanna').map(activity => `${activity.id}:${activity.slotId}`).sort());
+      getAvailableAutonomousActivities('ybot').map(activity => `${activity.id}:${activity.slotId}`).sort());
     for (let i = 0; i < steps.length; i += 2) assert.equal(steps[i].slotId, steps[i + 1].slotId);
   });
 

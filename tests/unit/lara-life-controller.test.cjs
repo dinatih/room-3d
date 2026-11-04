@@ -9,7 +9,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const journal = [];
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
   const dirt = home.createHomeDirt();
-  const characterLives = { native: life.createLife('native'), cha: life.createLife('cha'), vivida: life.createLife('vivida') };
+  const characterLives = Object.fromEntries(life.LIFE_CHARACTER_IDS.map(id => [id, life.createLife(id)]));
   const lifeState = characterLives[life.isLifeCharacter(id) ? id : 'native'], logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
@@ -159,7 +159,7 @@ it('explique les décisions et journalise une interruption avant tout bénéfice
 });
 
 it('termine le diagnostic d’attente lorsque l’interaction commence sans déplacement', () => {
-  const w = world('rosanna', false, false, false, true);
+  const w = world('sara', false, false, false, true);
   w.pauseNavigation(true); w.tick(.1, false);
   assert(w.journal.some(e => e.action === 'nav_stop'));
   w.pauseNavigation(false); w.tick(.1, false);
@@ -171,7 +171,7 @@ it('termine le diagnostic d’attente lorsque l’interaction commence sans dép
 });
 
 it('joue les actions de la manette sur place et attend la fin réelle du clip avant de reprendre', () => {
-  for (const id of ['native', 'rosanna']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {
+  for (const id of ['native', 'sara']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {
     const w = world(id);
     w.controller.playControlAnimation(animation);
     assert(w.controller.hasPendingDynamicTask());
@@ -188,7 +188,7 @@ it('joue les actions de la manette sur place et attend la fin réelle du clip av
 });
 
 it('attend un calcul sans conserver le sad de l’action précédente, puis reprend', () => {
-  const w = world('rosanna');
+  const w = world('sara');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
   w.controller.state.animation = 'sad-idle';
   w.pauseNavigation(true);
@@ -202,7 +202,7 @@ it('attend un calcul sans conserver le sad de l’action précédente, puis repr
 });
 
 it('attend un contournement sans sad et laisse un vrai échec visible jusqu’à sa résolution', () => {
-  const w = world('rosanna');
+  const w = world('sara');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
   w.pauseCrowd(true); w.tick();
   assert.equal(w.controller.getStatus(), 'MOVING');
@@ -220,7 +220,7 @@ it('attend un contournement sans sad et laisse un vrai échec visible jusqu’à
 });
 
 it('préserve une animation sad explicitement demandée par une interaction', () => {
-  const w = world('rosanna');
+  const w = world('sara');
   w.controller.configure({ scenario: [{ type: 'WAIT', duration: 3, animation: 'sad-idle' }], loop: false });
   w.tick(.5, false); w.tick(.5, false);
   assert.equal(w.controller.getStatus(), 'INTERACTING');
@@ -267,7 +267,7 @@ it('ne retente une cible inaccessible qu’après un changement du monde', () =>
 });
 
 it('laisse les autres personnages suivre leur scénario sans simulation de besoins', () => {
-  const w = world('rosanna'), initial = { ...w.lifeState.needs };
+  const w = world('sara'), initial = { ...w.lifeState.needs };
   for (let i = 0; i < 10; i++) w.tick();
   assert.deepEqual(w.lifeState.needs, initial);
   assert(!w.logs.some(entry => entry.action === 'life_decision'));
@@ -500,11 +500,11 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
       let result;
       try { result = duoSessionManager.startDuoSession(objectId, 'chat', 'native', explicitPartner ? 'rosanna' : undefined, undefined, true); }
       finally { document.removeEventListener('npc-check-life-invitation', onCheck); }
-      if (unavailable === 'all-busy' || (explicitPartner && unavailable)) {
+      if (unavailable === 'all-busy' || (explicitPartner && unavailable && unavailable !== 'player')) {
         assert.equal(result, null);
         assert.equal(claims.length, 0, 'A declined invitation must not reserve either participant');
         assert.equal(duoSessionManager.getSessionFor('native'), null);
-      } else assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
+      } else assert.equal(result.targetB, unavailable && !(explicitPartner && unavailable === 'player') ? 'marissa' : 'rosanna');
       assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0, activities: { [activity]: 120 } }, 'An invitation must not increase an affinity');
     }
   } finally { global.document = originalDocument; }
@@ -694,7 +694,7 @@ it('actualise la pièce affichée pendant le contrôle manuel sans faire avancer
 
 it('ignore les balayages autonomes inutiles et compte aussi le ménage des autres PNJ', () => {
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
-  for (const actor of ['native', 'rosanna']) {
+  for (const actor of ['native', 'sara']) {
     const w = world(actor);
     const id = 'clean-floor-living';
     w.objects[id] = { id, name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30, repeatCount: 3 }] };
@@ -713,7 +713,7 @@ it('ignore les balayages autonomes inutiles et compte aussi le ménage des autre
     w.tick();
     assert.notEqual(w.controller.getStatus(), 'INTERACTING', 'A clean floor must end the task without consuming three thirty-second clips');
   }
-  const w = world('rosanna');
+  const w = world('sara');
   w.objects['clean-floor-living'] = { id: 'clean-floor-living', name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30 }] };
   const sweep = { type: 'USE_OBJECT', smartObjectId: 'clean-floor-living', slotId: 'sweep', animation: 'sweep', duration: 30 };
   const scenario = [sweep, { type: 'WAIT', animation: 'idle', duration: 1 }];
@@ -762,7 +762,7 @@ it('salue une connaissance pendant une pause, sans interrompre une réaction ni 
 it('remercie le ménage réellement terminé par un autre PNJ, jamais son chargement', () => {
   const originalDocument = global.document;
   global.document = new EventTarget();
-  const w = world(), cleaner = world('rosanna');
+  const w = world(), cleaner = world('sara');
   const disconnect = w.controller.connect(), disconnectCleaner = cleaner.controller.connect();
   try {
     w.tick(); w.tick();
@@ -880,4 +880,46 @@ it('une reprise confirmée ne prend jamais la main sur un contrôle utilisateur'
     invite(true);
     assert.equal(w.logs.filter(log => log.action === 'life_invitation_accepted').length, 1);
   } finally { disconnect(); global.document = originalDocument; }
+});
+
+it('refuse les invitations entre colocataires en conflit, avec une raison dans le journal', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const [targetId, fromId] of [['cha', 'delphina'], ['delphina', 'cha'], ['cha', 'marissa'], ['marissa', 'cha'], ['sabira', 'marissa'], ['marissa', 'sabira']]) {
+      const w = world(targetId), disconnect = w.controller.connect();
+      try {
+        w.tick();
+        const event = new CustomEvent('npc-check-life-invitation', { cancelable: true, detail: { targetId, fromId, objectId: 'garden-conversation', slotId: 'chat' } });
+        assert.equal(document.dispatchEvent(event), false);
+        const log = w.logs.find(log => log.action === 'life_invitation_declined');
+        assert(log.message.includes('Ne s’entend pas'));
+        assert.equal(log.data.deferred, false);
+      } finally { disconnect(); }
+    }
+  } finally { global.document = originalDocument; }
+});
+
+it('éteint la télé au départ du spectateur sans couper le bureau utilisé par un autre PNJ', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const departure of ['finished', 'manual', 'mode', 'disconnect']) {
+      const w = world(), actions = [];
+      w.scene.desk2ScreenActive = true;
+      w.scene.triggerAction = (key, value) => { actions.push([key, value]); };
+      w.objects['tv-view'] = { id: 'tv-view', name: 'Télé', position: [10, 0, 10], slots: [{ slotId: 'watch', animation: 'looking', duration: 1 }] };
+      w.controller.configure({ scenario: [{ type: 'USE_OBJECT', smartObjectId: 'tv-view', slotId: 'watch', animation: 'looking', duration: 1, triggerEventKey: 'tv-toggle', triggerEventValue: true }], loop: false });
+      const disconnect = w.controller.connect();
+      w.tick(1, false);
+      assert(actions.some(([key, value]) => key === 'tv-toggle' && value === true));
+      if (departure === 'finished') w.tick();
+      else if (departure === 'manual') w.controller.setPosition(20, 0, 10);
+      else if (departure === 'mode') { w.controller.configure({ scenario: [], loop: false }); w.tick(); }
+      else disconnect();
+      assert(actions.some(([key, value]) => key === 'tv-toggle' && value === false), departure);
+      assert.equal(w.scene.desk2ScreenActive, true);
+      if (departure !== 'disconnect') disconnect();
+    }
+  } finally { global.document = originalDocument; }
 });

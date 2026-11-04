@@ -18,8 +18,8 @@ export function LaraLifePanel() {
   const friend = closestLifeFriend(relationships);
   const company = friend ? `Compagnie préférée : ${isLifeCharacter(friend) ? LIFE_CHARACTER_LABELS[friend] : findCharacter(friend)!.name}` : 'Aucune rencontre pour le moment';
   return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : LIFE_CHARACTER_LABELS[selectedCharacterId]}`}>
-    <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-      <div className="d-flex gap-1" role="tablist" aria-label="Personnage du panneau de vie"
+    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+      <div className="d-flex flex-wrap gap-1 w-100" role="tablist" aria-label="Personnage du panneau de vie"
         onKeyDown={event => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
           event.preventDefault();

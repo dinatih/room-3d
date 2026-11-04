@@ -660,3 +660,38 @@ it('utilise des clips de réaction existants avec leur durée naturelle', () => 
     assert(require('node:fs').existsSync(require('node:path').join(__dirname, '../../public', animation.path)));
   }
 });
+
+it('initialise les sept vies et les relations réciproques sans inventer de moments partagés', () => {
+  const { LIFE_CHARACTER_IDS, lifeAffinity, closestLifeFriend, socialPartnerScore, rememberLifeConversation } = require('../../src/features/scene/ai/laraLife.ts');
+  assert.deepEqual(LIFE_CHARACTER_IDS, ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira']);
+  const sabira = createLife('sabira');
+  assert.equal(closestLifeFriend(sabira.relationships), 'cha');
+  assert.equal(closestLifeFriend(createLife('rosanna').relationships), 'sabira');
+  for (const [a, b, affinity] of [['cha', 'delphina', -1], ['cha', 'marissa', -1], ['sabira', 'cha', 2], ['sabira', 'rosanna', 1], ['sabira', 'marissa', -1]]) {
+    assert.equal(lifeAffinity(a, b), affinity);
+    assert.equal(lifeAffinity(b, a), affinity);
+    assert.equal(createLife(a).relationships[b].seconds, 0);
+  }
+  assert(socialPartnerScore(sabira.relationships, 'cha', 0) > socialPartnerScore(sabira.relationships, 'rosanna', 0));
+  assert(socialPartnerScore(sabira.relationships, 'rosanna', 0) > socialPartnerScore(sabira.relationships, 'native', 0));
+  rememberLifeConversation(sabira, 'cha', 10, 'social');
+  assert.equal(sabira.relationships.cha.affinity, 2);
+  assert.equal(sabira.relationships.cha.seconds, 10);
+  assert.equal(createLife('cha').relationships.sabira.seconds, 0);
+});
+
+it('garde le téléviseur éteint même quand la vidéo du bureau est active', () => {
+  const { TV } = load('src/features/scene/items/TV.tsx', {
+    'react/jsx-runtime': require('react/jsx-runtime'), react: { useLayoutEffect: () => {}, useState: () => [0, () => {}] },
+    '@react-three/drei': { useTexture: () => ({}), useGLTF: { preload: () => {} } },
+    '../useGLTFClone': { useGLTFClone: () => ({ scene: {} }) }, three: require('three'),
+    '@features/scene/glbUtils': {}, '@features/scene/utils/deskScreenVideo': { useDeskScreenVideo: () => ({ isVideoActive: true, texture: 'shared-video' }) },
+    '../objectActions': { getObjectActionIds: () => [] }, '../tvData': { TV_W: 73, TV_H: 43 },
+  });
+  for (const on of [false, true]) {
+    const tree = TV({ actionState: { 'tv-toggle': on } });
+    const material = tree.props.children[1].props.children[1].props;
+    assert.equal(material.map, on ? 'shared-video' : null);
+    assert.equal(material.emissiveIntensity, on ? 0.8 : 0);
+  }
+});

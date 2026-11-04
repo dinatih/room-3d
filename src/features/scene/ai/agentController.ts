@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, lifeAffinity, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -303,6 +303,7 @@ export function createAgentController(
     releaseKitchenStorageAccess(_characterId);
     resetRoute(route, _characterId);
     if (claimedSlot) {
+      if (claimedSlot.objectId === 'tv-view') useSceneStore.getState().triggerAction('tv-toggle', false);
       if (claimedSlot.objectId === 'desk-bollsidan-2') {
         setDesk2SmartActionState(_characterId, false);
       }
@@ -502,7 +503,9 @@ export function createAgentController(
         targetId: string; fromId: string; objectId?: string; slotId?: string; forcedAnimId?: string; allowDeferral?: boolean;
       }>).detail;
       if (!hasLife || targetId !== _characterId) return;
-      const response = lifeInvitationResponse(life.needs, lifeActivity, life.handsDirty, loop && !manualOverride && Boolean(lifeActivity));
+      const response = lifeAffinity(_characterId, fromId) < 0
+        ? { status: 'declined', reason: 'Ne s’entend pas avec cette personne.' } as const
+        : lifeInvitationResponse(life.needs, lifeActivity, life.handsDirty, loop && !manualOverride && Boolean(lifeActivity));
       if (response.status === 'accepted') return;
       event.preventDefault();
       const activity = invitedLifeActivity(objectId, slotId);

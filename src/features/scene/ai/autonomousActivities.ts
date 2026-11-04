@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
@@ -14,7 +14,7 @@ const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
 export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn ? {} : {
   native:   'desk-bollsidan-2',
   rosanna:  'bed-east',
-  marissa:  'mirror-south',
+  marissa:  'west-neighbor-flat',
   delphina: 'shower',
   sara:     'inyeong-cha-hugs-point',
   cha:      'garden-fresh-air',
@@ -46,10 +46,13 @@ export function getAvailableAutonomousActivities(characterId: string) {
 
 /** Free activities remain independent from the two scripted tours. */
 export function buildAutonomousActivities(characterId: string): AgentInstruction[] {
-  if (isLifeCharacter(characterId)) return buildLaraLifeInstructions(characterId, characterId === 'native'
-    ? { activity: 'work', id: 'desk-bollsidan-2', slotId: 'work-standing' }
-    : characterId === 'cha' ? { activity: 'walk', id: 'garden-fresh-air', slotId: 'breathe' }
-    : { activity: 'bath', id: 'bathtub-garden', slotId: 'center' });
+  if (isLifeCharacter(characterId)) {
+    const initial = {
+      native: ['desk-bollsidan-2', 'work-standing'], cha: ['garden-fresh-air', 'breathe'], vivida: ['bathtub-garden', 'center'],
+      delphina: ['shower', 'take-shower-1'], marissa: ['west-neighbor-flat', 'yoga'], rosanna: ['bed-east', 'seat-middle'], sabira: ['bed-west', 'seat-middle'],
+    }[characterId];
+    return buildLaraLifeInstructions(characterId, { activity: LIFE_INITIAL_ACTIVITIES[characterId], id: initial[0], slotId: initial[1] });
+  }
   const activities = getAvailableAutonomousActivities(characterId);
   for (let i = activities.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

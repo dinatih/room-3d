@@ -1,15 +1,15 @@
 export type LifeActivity = 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
-export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida'] as const;
+export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
-export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida' };
-export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath' } as const;
+export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira' };
+export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath', delphina: 'shower', marissa: 'yoga', rosanna: 'rest', sabira: 'rest' } as const;
 export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number; environment: number };
 type LifeExperience = { satisfaction: number; lastAt: number };
 export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
   places?: Record<string, LifeExperience>; periods?: Partial<Record<LifePeriod, number>>;
 }>>;
-export type LifeRelationships = Record<string, { seconds: number; lastAt: number; activities?: Partial<Record<LifeActivity, number>> }>;
+export type LifeRelationships = Record<string, { seconds: number; lastAt: number; affinity?: number; activities?: Partial<Record<LifeActivity, number>> }>;
 type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
 const lifePeriod = (hour: number): LifePeriod => hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
 const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
@@ -82,9 +82,17 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   social: socialRates, affection: socialRates,
 };
 
+// Symmetric personal relationships: dislike, friend, best friend. Shared time stays factual.
+const INITIAL_RELATIONSHIPS: [LifeCharacterId, LifeCharacterId, number][] = [
+  ['cha', 'delphina', -1], ['cha', 'marissa', -1], ['sabira', 'cha', 2],
+  ['sabira', 'rosanna', 1], ['sabira', 'marissa', -1],
+];
+export const lifeAffinity = (a: string, b: string) => INITIAL_RELATIONSHIPS.find(([x, y]) => x === a && y === b || x === b && y === a)?.[2] ?? 0;
+
 export function createLife(characterId: LifeCharacterId) {
   return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10, environment: 0 } as LifeNeeds,
-    elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
+    elapsedSeconds: 0, memory: {} as LifeMemory, relationships: Object.fromEntries(INITIAL_RELATIONSHIPS.filter(([a, b]) => a === characterId || b === characterId)
+      .map(([a, b, affinity]) => [a === characterId ? b : a, { seconds: 0, lastAt: 0, affinity }])) as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
 }
 
 export function rememberLifeConversation(life: { characterId: LifeCharacterId; relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number, activity?: LifeActivity) {
@@ -96,15 +104,15 @@ export function rememberLifeConversation(life: { characterId: LifeCharacterId; r
 }
 
 export function closestLifeFriend(relationships: LifeRelationships): string | null {
-  return Object.keys(relationships).sort((a, b) => relationships[b].seconds - relationships[a].seconds || a.localeCompare(b))[0] ?? null;
+  return Object.keys(relationships).filter(id => (relationships[id].affinity ?? 0) >= 0 && (relationships[id].seconds > 0 || (relationships[id].affinity ?? 0) > 0)).sort((a, b) => (relationships[b].affinity ?? 0) - (relationships[a].affinity ?? 0) || relationships[b].seconds - relationships[a].seconds || a.localeCompare(b))[0] ?? null;
 }
 
 /** Familiar company grows attractive again after time apart; new encounters remain possible. */
 export function socialPartnerScore(relationships: LifeRelationships, partnerId: string, elapsedSeconds: number, activity?: LifeActivity) {
   const relationship = relationships[partnerId];
-  if (!relationship) return 1;
+  if (!relationship?.seconds) return 1 + (relationship?.affinity ?? 0);
   const since = elapsedSeconds - relationship.lastAt;
-  return relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds)
+  return (relationship.affinity ?? 0) + relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds)
     + since / (since + LIFE_SETTINGS.activitySeconds)
       * (1 + (activity ? relationship.activities?.[activity] ?? 0 : 0) / (relationship.seconds + LIFE_SETTINGS.activitySeconds));
 }

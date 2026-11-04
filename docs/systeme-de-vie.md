@@ -1,6 +1,6 @@
 # Système de vie des colocataires
 
-Lara Native, Cha et Vivida possèdent chacune leurs besoins, souvenirs, goûts et affinités. La vitesse du temps est commune. Elles commencent avec un besoin de repos à 0 %.
+Lara Native, Cha (Charlotte), Vivida, Delphina, Marissa, Rosanna et Sabira possèdent chacune leurs besoins, souvenirs, goûts et affinités. La vitesse du temps est commune. Elles commencent avec un besoin de repos à 0 %.
 
 ## Lire les jauges
 
@@ -112,3 +112,11 @@ Une invitation, un salut, un chargement ou un combat n'alimente pas cette mémoi
 | 5. Enchaînements naturels | Suites conditionnelles aux besoins et à la saleté. |
 | 6. Réactions aux autres | Saluts, remerciements et réaction à une activité indisponible. |
 | 7. Mémoire des moments partagés | Historique par partenaire et par activité réellement jouée. |
+
+## Relations personnelles initiales
+
+Les relations sont réciproques : Cha et Delphina ne s’aiment pas ; Cha et Marissa non plus. Sabira est la meilleure amie de Cha (Charlotte), amie de Rosanna et ne s’entend pas avec Marissa. Les autres relations restent à découvrir.
+
+Ces affinités sont distinctes du temps réellement partagé : elles ne créent aucun faux souvenir. Elles favorisent les partenaires amis, déterminent la compagnie préférée et font refuser les invitations autonomes entre personnes qui ne s’entendent pas. Les commandes explicites restent possibles.
+
+La télévision s’éteint quand son spectateur libère le spot, y compris lors d’une interruption. La vidéo partagée avec l’ordinateur ne peut plus allumer un téléviseur éteint.
