@@ -50,6 +50,7 @@ declare module 'three-gpu-pathtracer' {
     multipleImportanceSampling: boolean;
     renderToCanvasCallback?: ((target: any, renderer: any, quad: any) => void) | null;
 
+    setBVHWorker(worker: import('three-mesh-bvh/worker').GenerateMeshBVHWorker): void;
     setScene(scene: Scene, camera: Camera, options?: { onProgress?: (progress: number) => void }): void;
     setSceneAsync(scene: Scene, camera: Camera, options?: { onProgress?: (progress: number) => void }): Promise<any>;
     setCamera(camera: Camera): void;
@@ -93,5 +94,11 @@ declare module 'three-gpu-pathtracer' {
       opacity: { value: number };
       [key: string]: any;
     };
+  }
+}
+
+declare module 'three-mesh-bvh/worker' {
+  export class GenerateMeshBVHWorker {
+    dispose(): void;
   }
 }

@@ -7,6 +7,7 @@
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
+import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
@@ -139,6 +140,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // État de l'accumulation
   const [currentSamples, setCurrentSamples] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [bvhProgress, setBvhProgress] = useState<number | null>(null);
   const [isBuildingScene, setIsBuildingScene] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -712,12 +714,15 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     // 2. Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
     setIsBuildingScene(true);
+    setBvhProgress(null);
     setErrorMessage(null);
     setCurrentSamples(0);
     setElapsedSeconds(0);
 
     // Path Tracer
     const pathTracer = new WebGLPathTracer(gl);
+    const bvhWorker = new GenerateMeshBVHWorker();
+    pathTracer.setBVHWorker(bvhWorker);
     pathTracer.bounces = bounces;
     pathTracer.transmissiveBounces = bounces;
     pathTracer.filterGlossyFactor = 0.5;
@@ -931,18 +936,23 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     };
     wakeRenderLoopRef.current = wakeRenderLoop;
 
-    // Laisser le temps au navigateur d'afficher le spinner avant la construction synchrone du BVH
-    const timer = setTimeout(() => {
+    // Afficher le spinner avant la préparation, puis construire le BVH dans un Worker.
+    const timer = setTimeout(async () => {
       if (isDisposed) return;
       try {
         prepareScene();
         console.log('[Raytracing] Construction du BVH pour la scène...');
-        pathTracer.setScene(scene, renderCamera);
+        setBvhProgress(0);
+        await pathTracer.setSceneAsync(scene, renderCamera, {
+          onProgress: progress => { if (!isDisposed) setBvhProgress(progress); },
+        });
+        if (isDisposed) return;
         pathTracerRef.current = pathTracer;
         setIsBuildingScene(false);
         console.log('[Raytracing] Scène prête ! Démarrage de l\'accumulation.');
         wakeRenderLoop();
       } catch (err: any) {
+        if (isDisposed) return;
         restoreScene();
         console.error('[Raytracing] Erreur initialisation WebGLPathTracer:', err);
         setErrorMessage(err?.message || 'Échec de la génération du maillage BVH.');
@@ -954,6 +964,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       isDisposed = true;
       document.removeEventListener('visibilitychange', onVisibilityChange);
       bgWorker.terminate();
+      bvhWorker.dispose();
       clearTimeout(timer);
       if (timeoutId) clearTimeout(timeoutId);
       if (animFrameId) cancelAnimationFrame(animFrameId);
@@ -1271,7 +1282,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         WebkitBackdropFilter: 'blur(16px)',
       }}
     >
-      <button className="btn btn-sm btn-primary" disabled={isBuildingScene} onClick={() => void sendBackgroundRender()}>Lancer en arrière-plan</button>
+      <button className="btn btn-sm btn-primary" disabled={bvhProgress === null} onClick={() => void sendBackgroundRender()}>Lancer en arrière-plan</button>
       {/* ── Barre d'en-tête supérieure ─────────────────────────── */}
       <div
         className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
@@ -1412,7 +1423,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
                 style={{ background: 'rgba(5, 7, 15, 0.94)', zIndex: 10 }}
               >
                 <div className="spinner-border text-warning mb-3" role="status" style={{ width: '3rem', height: '3rem' }} />
-                <h5 className="fw-bold">Génération du maillage BVH spatial…</h5>
+                <h5 className="fw-bold">{bvhProgress === null ? 'Préparation de la scène…' : `Construction du BVH : ${Math.round(bvhProgress * 100)} %`}</h5>
                 <p className="text-white-50 small mb-0">Préparation des géométries et des textures physiques</p>
               </div>
             )}

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 export interface RenderPayload {
@@ -20,11 +21,13 @@ window.renderJob = async p => {
   const debug = context.getExtension('WEBGL_debug_renderer_info');
   if (!debug || /swiftshader|llvmpipe|software/i.test(context.getParameter(debug.UNMASKED_RENDERER_WEBGL))) throw new Error('Accélération GPU matérielle indisponible');
   const tracer = new WebGLPathTracer(renderer);
+  const bvhWorker = new GenerateMeshBVHWorker();
+  tracer.setBVHWorker(bvhWorker);
   tracer.bounces = p.bounces; tracer.transmissiveBounces = p.bounces;
   tracer.tiles.set(Math.max(4, Math.ceil(p.width / 200)), Math.max(4, Math.ceil(p.height / 150)));
   tracer.textureSize.set(512, 512); tracer.renderDelay = 0; tracer.fadeDuration = 0;
   try {
-    tracer.setScene(scene, camera);
+    await tracer.setSceneAsync(scene, camera);
     while (tracer.samples < p.samples) {
       if (window.renderPaused) { await new Promise(resolve => setTimeout(resolve, 100)); continue; }
       tracer.renderSample(); context.finish();
@@ -36,5 +39,5 @@ window.renderJob = async p => {
       const quad = new FullScreenQuad(material); renderer.setRenderTarget(null); quad.render(renderer); quad.dispose(); material.dispose();
     }
     return renderer.domElement.toDataURL('image/png').split(',')[1];
-  } finally { tracer.dispose(); renderer.dispose(); }
+  } finally { bvhWorker.dispose(); tracer.dispose(); renderer.dispose(); }
 };
