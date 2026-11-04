@@ -30,14 +30,14 @@ export function LaraLifePanel() {
           document.getElementById(`life-tab-${id}`)!.focus();
         }}>
         {LIFE_CHARACTER_IDS.map(id => <button key={id} id={`life-tab-${id}`} type="button" role="tab"
-          className={`btn btn-sm py-0 px-1 ${id === selectedCharacterId ? 'btn-primary active fw-semibold' : 'btn-outline-secondary'}`}
+          className={`btn btn-sm py-0 px-1 ${id === selectedCharacterId ? 'btn-primary active fw-semibold' : 'btn-light text-dark border-secondary fw-medium'}`}
           aria-selected={id === selectedCharacterId} aria-controls="life-character-panel" tabIndex={id === selectedCharacterId ? 0 : -1}
           onClick={() => useLaraLifeStore.setState({ selectedCharacterId: id })}>{LIFE_CHARACTER_LABELS[id]}</button>)}
       </div>
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
-      <button type="button" className="btn btn-sm btn-outline-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
+      <button type="button" className="btn btn-sm btn-light text-dark border-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
         title="Accélérer la vie de la colocation : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
         <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
