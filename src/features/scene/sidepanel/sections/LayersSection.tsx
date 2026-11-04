@@ -177,7 +177,6 @@ export function LayersSection({
             </div>
           ) : null}
       </div>
-      {layerBtn(iconLabel('bi-wind', 'Effet fumée (Poof!)'), 'smokeTransition')}
       <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
         <div className="form-check form-switch small mb-0">
           <input
@@ -207,7 +206,6 @@ export function LayersSection({
           </select>
         </div>
       </div>
-      {layerBtn(iconLabel('bi-camera-video', 'Points de vue caméra rouges'), 'cameraViewMarkers')}
       {layerBtn(iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
       {layerBtn(iconLabel('bi-snow', 'Château de glace (murs et plafond)'), 'iceCastle')}
       {layerBtn(iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}

@@ -29,7 +29,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   animals: true,
   robots: true,
   // Visualisation / debug
-  cameraViewMarkers: true,
   wireframe: false,
   wireframeWallStructure: false,
   wireframeStructure: false,

@@ -50,7 +50,6 @@ export function HoverRaycaster() {
     let lastCacheTime = 0;
     const downPos = { x: 0, y: 0 };
     let isDragGesture = false;
-    let overCameraViewMarker = false;
     let pointerInside = false;
     let pointerDirty = false;
     let pointerButtons = 0;
@@ -103,7 +102,7 @@ export function HoverRaycaster() {
         hoverState.visible = false;
         hoverState.onUpdate?.();
       }
-      if (!overCameraViewMarker) canvas.style.cursor = '';
+      canvas.style.cursor = '';
     }
 
     const occlusionRaycaster = new THREE.Raycaster();
@@ -164,7 +163,6 @@ export function HoverRaycaster() {
     }
 
     function raycastAt(clientX: number, clientY: number): { label: string; actionIds: string[] } | null {
-      overCameraViewMarker = false;
       if (cameraState.isDragging) return null;
 
       refreshCaches();
@@ -177,10 +175,7 @@ export function HoverRaycaster() {
       raycaster.layers.enableAll();
       raycaster.layers.disable(LAYER_NEIGHBORS);
       raycaster.layers.disable(LAYER_LIDAR);
-      // Lire les repères actuels directement : ils sont retirés au changement
-      // de vue, sans attendre l'expiration du cache des meubles interactifs.
-      const markers = scene.getObjectByName('camera-view-markers');
-      const hits = raycaster.intersectObjects(markers ? [...interactiveCache, markers] : interactiveCache, true);
+      const hits = raycaster.intersectObjects(interactiveCache, true);
       occlusionHits = null;
       occlusionRaycaster.ray.copy(raycaster.ray);
       occlusionRaycaster.camera = camera;
@@ -194,13 +189,6 @@ export function HoverRaycaster() {
         while (ancestor && ancestor !== scene && ancestor.visible) ancestor = ancestor.parent;
         // Les caches peuvent encore contenir un objet démonté ou masqué par son parent.
         if (ancestor !== scene || !scene.visible) continue;
-        let marker: THREE.Object3D | null = hit.object;
-        while (marker && !marker.userData.isCameraViewMarker) marker = marker.parent;
-        if (marker) {
-          if (isOccluded(hit.point, hit.object)) continue;
-          overCameraViewMarker = true;
-          return null;
-        }
         const mat = (hit.object as THREE.Mesh).material as THREE.Material & {
           transparent?: boolean; opacity?: number;
         };
@@ -265,11 +253,6 @@ export function HoverRaycaster() {
       }
 
       const found = raycastAt(lastClientX, lastClientY);
-      if (overCameraViewMarker) {
-        hideDot();
-        canvas.style.cursor = 'pointer';
-        return;
-      }
       const newKey = found ? found.actionIds.join(',') : null;
 
       if (found && newKey) {
@@ -345,7 +328,6 @@ export function HoverRaycaster() {
     const onLeave = () => { 
       pointerInside = false;
       pointerDirty = false;
-      overCameraViewMarker = false;
       hideDot();
     };
 

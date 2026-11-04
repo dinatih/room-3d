@@ -82,7 +82,6 @@ export interface FurnitureState {
 export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine';
 
 export interface LayerState {
-  cameraViewMarkers: boolean;
   structure: boolean;
   wallStructure: boolean;
   iceCastle?: boolean;
