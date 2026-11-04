@@ -9424,15 +9424,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     duration: 6.7,
   },
   {
-    id: 'wiping-table-small-circles',
-    path: 'animations/npz/kit/anim_wiping_table_small_circles.glb',
-    category: 'interactions',
-    label: 'Essuyer la table (Petits cercles)',
-    aliases: ['wipe-small-circles', 'wipe-table-var'],
-    tags: ['wipe', 'table', 'circle', 'cleaning', 'chore', 'interaction'],
-    duration: 8.3,
-  },
-  {
     id: 'taking-shower',
     path: 'animations/npz/kit/anim_taking_shower.glb',
     category: 'interactions',

@@ -55,14 +55,6 @@ ANIMATIONS = [
         'tags': ['wipe', 'table', 'sponge', 'cleaning', 'chore', 'interaction'],
         'aliases': ['wipe-table', 'essuyer-table'],
     },
-    {
-        'id': 'wiping-table-small-circles',
-        'label': "Essuyer la table (Petits cercles)",
-        'src': '/home/dinatih/3D Resources/animations/KIT/KIT/883/wipe_arm_smallcircle02_poses.npz',
-        'filename': 'anim_wiping_table_small_circles.glb',
-        'tags': ['wipe', 'table', 'circle', 'cleaning', 'chore', 'interaction'],
-        'aliases': ['wipe-small-circles', 'wipe-table-var'],
-    },
     # 3. Douche & toilette
     {
         'id': 'taking-shower',

@@ -3041,23 +3041,6 @@
     "bones": []
   },
   {
-    "id": "wiping-table-small-circles",
-    "file": "public/animations/npz/daily/anim_wiping_table_small_circles.glb",
-    "jumps": 0,
-    "maxJump": 15.33,
-    "duration": 8.266666412353516,
-    "hipsRange": [
-      0.00732527969795585,
-      0.007078399916412348,
-      0.007231753004036145
-    ],
-    "interpolations": [
-      "LINEAR",
-      "STEP"
-    ],
-    "bones": []
-  },
-  {
     "id": "taking-shower",
     "file": "public/animations/npz/daily/anim_taking_shower.glb",
     "jumps": 0,

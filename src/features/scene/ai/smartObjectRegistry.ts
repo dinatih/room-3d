@@ -281,7 +281,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       },
       { slotId: 'clean', name: 'Nettoyer les toilettes',
         offset: [TOILET_BOWL_CENTER[0], 0, TOILET_D / 2 + HUMAN_BODY_RADIUS], rotY: 0,
-        animationsRandom: ['wiping-table', 'wiping-table-small-circles'], repeatCount: 3, repeatVariation: true }
+        animation: 'wiping-table', repeatCount: 3, repeatVariation: true }
     ]
   },
   'vasque-sdb': {

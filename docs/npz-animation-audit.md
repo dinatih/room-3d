@@ -170,7 +170,6 @@ Pour les clips à moins de 150 événements : remplacement des pics isolés (all
 | vacuuming | 0 | 0 | Conservée | 17.800 | 0.250 / 0.275 |
 | vacuuming-alt | 0 | 0 | Conservée | 24.800 | 0.096 / 0.087 |
 | wiping-table | 0 | 0 | Conservée | 6.667 | 0.057 / 0.031 |
-| wiping-table-small-circles | 0 | 0 | Conservée | 8.267 | 0.007 / 0.007 |
 | taking-shower | 0 | 0 | Conservée | 4.800 | 0.103 / 0.254 |
 | washing-body | 0 | 0 | Conservée | 79.300 | 1.166 / 1.843 |
 | pickup-box-floor-male | 0 | 0 | Conservée | 4.467 | 0.045 / 0.212 |
