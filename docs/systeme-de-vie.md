@@ -37,4 +37,6 @@ Les effets dépendent du temps réellement joué : une activité courte peut se 
 
 Les choix tiennent compte des besoins, des urgences, de l'heure, des places disponibles, de l'activité précédente, des expériences et des lieux déjà visités. Le yoga peut être choisi pour la stimulation ou l'envie de bouger. Le bureau et le yoga font partie des possibilités de journée.
 
+Hors urgence, à priorité de routine égale, le besoin est pondéré par le goût appris et le temps écoulé depuis cette activité. Une activité appréciée peut donc être choisie même si un autre besoin est un peu plus élevé. Les activités récentes perdent de l'attrait ; les activités encore inconnues restent des occasions de découverte. Chaque colocataire construit ses propres goûts à partir du soulagement réellement obtenu. Les urgences, les mains à laver et la disponibilité des places restent prioritaires.
+
 Tous les smart objects ne sont pas automatiquement des activités de vie : les associations sont définies dans `src/features/scene/ai/autonomousActivities.ts`. Les effets et la sélection se trouvent dans `src/features/scene/ai/laraLife.ts`, et la saleté partagée dans `src/features/scene/ai/lifeHousekeeping.ts`.

@@ -150,15 +150,15 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
+  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * experienceScore(candidate.activity, memory, elapsedSeconds);
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
       || (Math.max(need(a), need(b)) >= LIFE_SETTINGS.sleepPriority
         ? need(b) - need(a) : 0)
       || routineScore(b) - routineScore(a)
-      || need(b) - need(a)
+      || preferenceScore(b) - preferenceScore(a)
       || Number(a.activity === last) - Number(b.activity === last)
-      || experienceScore(b.activity, memory, elapsedSeconds) - experienceScore(a.activity, memory, elapsedSeconds)
       || (a.visits ?? 0) - (b.visits ?? 0)
       || distance(a) - distance(b) || a.id.localeCompare(b.id) || a.slotId.localeCompare(b.slotId))[0] ?? null;
 }

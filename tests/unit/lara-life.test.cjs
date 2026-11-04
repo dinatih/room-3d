@@ -326,6 +326,19 @@ it('varie ses loisirs avec la mémoire, garde une affinité pour ses favoris et 
   assert.equal(choose(memory, 600, [options[1]]).activity, 'watch-tv', 'An unavailable favorite must not prevent another activity');
 });
 
+it('laisse les goûts départager des besoins différents sans supplanter une urgence', () => {
+  const options = ['read', 'social'].map(activity => ({ ...candidates[0], id: activity, activity }));
+  const needs = { ...createLife('native').needs, rest: 0, work: 50, company: 65, walk: 0 };
+  const reader = { read: { satisfaction: 90, lastAt: 0 }, social: { satisfaction: 10, lastAt: 0 } };
+  const sociable = { read: { satisfaction: 10, lastAt: 0 }, social: { satisfaction: 90, lastAt: 0 } };
+  const choose = (memory, values = needs) => chooseLifeActivity(values, options, position, null, 21, memory, 600);
+  assert.equal(choose(reader).activity, 'read');
+  assert.equal(choose(sociable).activity, 'social');
+  assert.equal(choose(reader, { ...needs, company: LIFE_SETTINGS.sleepPriority }).activity, 'social');
+  assert.equal(choose({ ...reader, read: { ...reader.read, lastAt: 600 } }).activity, 'social');
+  assert.equal(choose(reader, { ...needs, work: 0 }).activity, 'social', 'A favorite cannot create an unmet need');
+});
+
 it('construit les affinités seulement avec du temps réellement partagé et préserve les nouvelles rencontres', () => {
   const { rememberLifeConversation, closestLifeFriend, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
   const life = createLife('native');
