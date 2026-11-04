@@ -131,7 +131,7 @@ it('place la caméra debug sous la TV et vise le centre au tiers des murs', () =
   const constants = load('src/features/scene/camera/cameraConstants.ts', {
     three: THREE,
     '../wallData': { ROOM_W: 316, ROOM_D: 405, WALL_H: 250 },
-    '../tvData': { TV_POSITION: [288, 219.5, 50] },
+    '../tvData': { TV_POSITION: [288, 219.5, 50], TV_H: 41 },
     '../cameraState': { cameraState: {} },
   });
   const { getIntroTargetPose } = load('src/features/scene/camera/cameraIntroTransition.ts', {
@@ -139,6 +139,6 @@ it('place la caméra debug sous la TV et vise le centre au tiers des murs', () =
     './cameraConstants': constants, './cameraUrlParams': camera,
   });
   const pose = getIntroTargetPose('orbit');
-  assert.deepEqual(pose.pos.toArray(), [288, 250 / 3, 50]);
+  assert.deepEqual(pose.pos.toArray(), [288, 178.5, 50]);
   assert.deepEqual(pose.target.toArray(), [158, 250 / 3, 202.5]);
 });

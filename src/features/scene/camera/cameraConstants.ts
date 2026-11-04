@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ROOM_W, ROOM_D, WALL_H } from '../wallData';
-import { TV_POSITION } from '../tvData';
+import { TV_POSITION, TV_H } from '../tvData';
 import { cameraState } from '../cameraState';
 
 export const CX = ROOM_W / 2; // 150 cm — centre X de la pièce
@@ -30,8 +30,8 @@ export const PERSP_POS: [number, number, number] = [
 /** Cible centrale de l'orbite perspective Nord-Ouest, au tiers de la hauteur des murs. */
 export const PERSP_TARGET: [number, number, number] = [ROOM_W / 2, WALL_H / 3, ROOM_D / 2];
 
-/** Caméra de référence raytracing sous la TV, au niveau de la cible centrale. */
-export const RAYTRACING_DEBUG_POS: [number, number, number] = [TV_POSITION[0], WALL_H / 3, TV_POSITION[2]];
+/** Caméra de debug sous la TV : une demi-hauteur d’écran sous son bord inférieur. */
+export const RAYTRACING_DEBUG_POS: [number, number, number] = [TV_POSITION[0], TV_POSITION[1] - TV_H, TV_POSITION[2]];
 
 /** Position et cible de la caméra en mode 2D Top (centré sur la pièce à 20m d'altitude) */
 export const TOP_POS: [number, number, number] = [CX, 2000, CZ];

@@ -65,7 +65,7 @@ const puppeteer = require('puppeteer');
     for (let i = 0; i < 2; i++) {
       if (i) await page.evaluate(() => window.mountPhoto());
       await page.waitForFunction(() => document.body.innerText.includes('Prêt — choisissez où calculer'), { timeout: 120000 });
-      assert.deepEqual(await page.evaluate(() => window.fixture.rasterCamera), [288, 250 / 3, 50]);
+      assert.deepEqual(await page.evaluate(() => window.fixture.rasterCamera), [288, 178.5, 50]);
       if (i === 0) {
         await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent === 'Calculer ici').click());
         await page.waitForFunction(() => document.body.innerText.includes('Calcul en cours'), { timeout: 120000 });
@@ -84,7 +84,7 @@ const puppeteer = require('puppeteer');
           const payload = JSON.parse(options.body);
           if (!payload.scene.object || !payload.camera.object) throw new Error('Missing serialized scene/camera');
           const matrix = payload.camera.object.matrix;
-          const expected = [288, 250 / 3, 50];
+          const expected = [288, 178.5, 50];
           if (expected.some((v, i) => Math.abs(matrix[12 + i] - v) > 1e-9)) throw new Error('Wrong debug camera in submitted job');
           if (JSON.stringify(payload.scene.object).includes('outlined-text-fixture')) throw new Error('Hidden text included in snapshot');
           window.fixture.submitted = true;
