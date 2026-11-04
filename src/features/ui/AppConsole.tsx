@@ -13,8 +13,6 @@ import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { Minimap } from '@features/scene/Minimap';
 import { LaraLifePanel } from '@features/scene/sidepanel/sections/LaraLifePanel';
-import { useLaraLifeStore } from '@features/scene/ai/laraLifeStore';
-import { LIFE_CHARACTER_IDS } from '@features/scene/ai/laraLife';
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
@@ -234,21 +232,7 @@ export function AppConsole({
   useEffect(() => {
     const onToggleMinimap = () => setShowMinimap(v => !v);
     const onTogglePerf = () => setShowPerf(v => !v);
-    const onToggleLife = () => {
-      setShowLife(visible => {
-        if (!visible) {
-          useLaraLifeStore.setState({ selectedCharacterId: 'native' });
-          return true;
-        }
-        const current = useLaraLifeStore.getState().selectedCharacterId;
-        const nextIdx = LIFE_CHARACTER_IDS.indexOf(current) + 1;
-        if (nextIdx < LIFE_CHARACTER_IDS.length) {
-          useLaraLifeStore.setState({ selectedCharacterId: LIFE_CHARACTER_IDS[nextIdx] });
-          return true;
-        }
-        return false;
-      });
-    };
+    const onToggleLife = () => setShowLife(visible => !visible);
     document.addEventListener('toggle-minimap', onToggleMinimap);
     document.addEventListener('toggle-perf', onTogglePerf);
     document.addEventListener('toggle-life', onToggleLife);

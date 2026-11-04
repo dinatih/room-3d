@@ -1,4 +1,5 @@
-import { LIFE_SETTINGS, LIFE_EVENT_LABELS, closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
+import { LIFE_SETTINGS, LIFE_EVENT_LABELS, closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
+import { useSceneStore } from '../../store/useSceneStore';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
@@ -8,8 +9,10 @@ const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABEL
 const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId } = {}) {
-  const { characters, selectedCharacterId: selectedId, speed, home, household, savedAt, saveError } = useLaraLifeStore();
-  const selectedCharacterId = characterId ?? selectedId;
+  const { characters, speed, home, household, savedAt, saveError } = useLaraLifeStore();
+  const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const selectedCharacterId = characterId ?? activeCharacterId;
+  if (!isLifeCharacter(selectedCharacterId)) return <section className="p-2 small">Ce personnage ne participe pas au système de vie.</section>;
   const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
@@ -24,28 +27,7 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
   const relations = Object.entries(relationships).sort(([a, x], [b, y]) => (y.affinity ?? 0) - (x.affinity ?? 0) || y.seconds - x.seconds || a.localeCompare(b));
   return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : LIFE_CHARACTER_LABELS[selectedCharacterId]}`}>
     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
-      {characterId ? <h4 className="fs-6 fw-bold mb-0 w-100">{findCharacter(characterId)!.emoji} Vie de {characterName(characterId)}</h4> : <div className="d-flex flex-wrap gap-1 w-100" role="tablist" aria-label="Personnage du panneau de vie"
-        onKeyDown={event => {
-          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-          event.preventDefault();
-          const index = event.key === 'Home' ? 0 : event.key === 'End' ? LIFE_CHARACTER_IDS.length - 1
-            : (LIFE_CHARACTER_IDS.indexOf(selectedCharacterId) + (event.key === 'ArrowRight' ? 1 : -1) + LIFE_CHARACTER_IDS.length) % LIFE_CHARACTER_IDS.length;
-          const id = LIFE_CHARACTER_IDS[index];
-          useLaraLifeStore.setState({ selectedCharacterId: id });
-          document.getElementById(`life-tab-${id}`)!.focus();
-        }}>
-        {LIFE_CHARACTER_IDS.map(id => {
-          const character = findCharacter(id)!;
-          const selected = id === selectedCharacterId;
-          return <button key={id} id={`life-tab-${id}`} type="button" role="tab"
-            className={`btn btn-sm py-0 px-1 text-dark ${selected ? 'active fw-bold text-decoration-underline' : 'fw-medium'}`}
-            style={{ backgroundColor: selected ? character.color : 'var(--bs-body-bg)', borderColor: character.color }}
-            aria-selected={selected} aria-controls="life-character-panel" tabIndex={selected ? 0 : -1}
-            onClick={() => useLaraLifeStore.setState({ selectedCharacterId: id })}>
-            <span aria-hidden="true">{character.emoji}</span> {LIFE_CHARACTER_LABELS[id]}
-          </button>;
-        })}
-      </div>}
+      <h4 className="fs-6 fw-bold mb-0 w-100"><span style={{ color: findCharacter(selectedCharacterId)!.color }}>{findCharacter(selectedCharacterId)!.emoji}</span> Vie de {characterName(selectedCharacterId)}</h4>
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
@@ -55,7 +37,7 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
         <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
       </button>}
     </div>
-    <div id={characterId ? undefined : 'life-character-panel'} role={characterId ? undefined : 'tabpanel'} aria-labelledby={characterId ? undefined : `life-tab-${selectedCharacterId}`}>
+    <div id={characterId ? undefined : 'life-character-panel'}>
       {(Object.keys(needs) as (keyof LifeNeeds)[]).map(key => <label key={key} className="row align-items-center gx-2 mb-0">
         <span className="col-4" title={key === 'environment' ? cleanliness : LIFE_NEED_LABELS[key]}>{NEED_LABELS[key]}</span>
         <span className="col-6"><progress className="d-block w-100" max={100} value={needs[key]} aria-label={LIFE_NEED_LABELS[key]} /></span>

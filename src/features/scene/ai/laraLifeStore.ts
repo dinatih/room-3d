@@ -31,12 +31,11 @@ export const useLaraLifeStore = create<{
   home: HomeDirt;
   household: typeof lifeHousehold;
   characters: Record<LifeCharacterId, LifeSnapshot>;
-  selectedCharacterId: LifeCharacterId;
   speed: typeof LIFE_SPEEDS[number];
   savedAt: number | null;
   saveError: string | null;
 }>(() => ({ household: { ...lifeHousehold }, home: { ...homeDirt }, characters: Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, initialSnapshot(id)])) as Record<LifeCharacterId, LifeSnapshot>,
-  selectedCharacterId: saved?.selectedCharacterId ?? 'native', speed: saved?.speed ?? 1, savedAt: saved?.savedAt ?? null, saveError: loadError }));
+  speed: saved?.speed ?? 1, savedAt: saved?.savedAt ?? null, saveError: loadError }));
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let resetting = false;
@@ -44,9 +43,9 @@ export function saveLives() {
   clearTimeout(saveTimer);
   saveTimer = undefined;
   if (typeof window === 'undefined' || resetting || loadError) return;
-  const { selectedCharacterId, speed } = useLaraLifeStore.getState(), savedAt = Date.now();
+  const { speed } = useLaraLifeStore.getState(), savedAt = Date.now();
   try {
-    window.localStorage.setItem(LIFE_SAVE_KEY, JSON.stringify({ version: 1, savedAt, characters: characterLives, household: lifeHousehold, home: homeDirt, selectedCharacterId, speed } satisfies LifeSave));
+    window.localStorage.setItem(LIFE_SAVE_KEY, JSON.stringify({ version: 1, savedAt, characters: characterLives, household: lifeHousehold, home: homeDirt, speed } satisfies LifeSave));
     useLaraLifeStore.setState({ savedAt, saveError: null });
   } catch (error) {
     if (!useLaraLifeStore.getState().saveError) console.error('Sauvegarde de la vie impossible', error);
@@ -75,7 +74,7 @@ export function resetLives() {
 if (typeof window !== 'undefined') {
   // At most one write per wall-clock second, even at accelerated simulation speeds.
   useLaraLifeStore.subscribe((state, previous) => {
-    if (!saveTimer && !resetting && !loadError && (state.characters !== previous.characters || state.speed !== previous.speed || state.selectedCharacterId !== previous.selectedCharacterId)) {
+    if (!saveTimer && !resetting && !loadError && (state.characters !== previous.characters || state.speed !== previous.speed)) {
       saveTimer = setTimeout(saveLives, 1000);
     }
   });

@@ -145,7 +145,7 @@ Les réservations des assises, lits et places du bain permettent de repérer une
 
 Les logs de décision expliquent la préférence d’une place à l’écart et indiquent les voisines évitées pour chaque candidat. Après la préparation d’un repas, la place est revérifiée ; `life_meal_seat_changed` signale un changement d’assise lorsque les disponibilités ou le voisinage ont changé.
 
-Les onglets du panneau de vie reprennent l’icône et la couleur définies dans le registre des personnages. L’onglet actif a un fond à sa couleur et un nom souligné ; les autres gardent un fond clair et une bordure à leur couleur.
+Le panneau Vie suit le personnage actif et affiche son icône et sa couleur. Il ne propose plus d’onglets par colocataire. N ouvre ou ferme le panneau ; changer de personnage met directement ses informations à jour. Les fiches Personnages restent fixées au profil consulté. Un personnage sans système de vie affiche une indication explicite, sans emprunter les jauges d’une colocataire.
 
 ## Goûts personnels de départ
 
@@ -177,7 +177,7 @@ Les actions « Massage » des deux points Inter-X utilisent uniquement les duos 
 
 ## Sauvegarde et nouvelle vie globale
 
-La vie de toute la colocation est sauvegardée automatiquement dans le navigateur, au plus une fois par seconde réelle, puis lorsque l’onglet est masqué ou fermé. Les besoins, souvenirs, relations, habitudes de lieux et d’horaires, mains sales, dernières activités, horloges, propreté commune, onglet sélectionné et vitesse sont conservés. Les profils masqués, dont Rajaa et Sandra, font partie du même instantané. Aucun temps ne s’écoule hors de l’application.
+La vie de toute la colocation est sauvegardée automatiquement dans le navigateur, au plus une fois par seconde réelle, puis lorsque l’onglet est masqué ou fermé. Les besoins, souvenirs, relations, habitudes de lieux et d’horaires, mains sales, dernières activités, horloges, propreté commune et vitesse sont conservés. Les profils masqués, dont Rajaa et Sandra, font partie du même instantané. Aucun temps ne s’écoule hors de l’application.
 
 Après rechargement, chacune choisit selon ses besoins sauvegardés. Les positions, trajets, réservations, animations, invitations en attente et sessions duo sont recréés dans la scène courante : une ancienne place ou un ancien partenaire ne restent pas bloqués.
 
@@ -200,3 +200,7 @@ Chaque repas tire au hasard une smart action disponible : prendre un ingrédient
 ### Invitations à partager un repas
 
 Après avoir préparé un repas et choisi son assise, une cuisinière peut inviter une colocataire appréciée qui a faim à une autre place du même meuble. Une réponse « plus tard » suffit : elle ne multiplie pas les invitations pendant chaque répétition de l’animation. L’invitée peut terminer ses soins avant de venir ; une faim urgente autorise à accepter un repas déjà prêt, tout en laissant les autres soins urgents prioritaires. La portion n’est réservée qu’à l’acceptation effective, jamais pendant le report. Si la place initiale a été prise, une autre assise libre est choisie ; si les portions sont épuisées, si toutes les assises sont occupées ou si elle a déjà mangé, l’invitation est annulée et la vie reprend ses choix habituels. Le bilan distingue désormais les invitations reprises et annulées. Seules les animations de repas réellement simultanées au même meuble produisent du temps de compagnie.
+
+## Besoins au démarrage
+
+Toutes les vies démarrent avec Repos, Faim et Toilettes à **0 %**, pour laisser la priorité aux loisirs et aux activités personnelles au début. Cette initialisation s’applique aussi après **Nouvelle vie**.

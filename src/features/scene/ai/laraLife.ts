@@ -167,7 +167,7 @@ export function recordLifeEvent(id: LifeCharacterId, at: number, event: string) 
 }
 
 export function createLife(characterId: LifeCharacterId) {
-  return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10, environment: 0 } as LifeNeeds,
+  return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 0, hygiene: 10, toilet: 0, company: 10, environment: 0 } as LifeNeeds,
     elapsedSeconds: 0, memory: {} as LifeMemory, relationships: Object.fromEntries(INITIAL_RELATIONSHIPS.filter(([a, b]) => a === characterId || b === characterId)
       .map(([a, b, affinity]) => [a === characterId ? b : a, { seconds: 0, lastAt: 0, affinity }])) as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
 }

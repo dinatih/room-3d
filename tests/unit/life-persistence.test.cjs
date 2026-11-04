@@ -5,7 +5,7 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
 const persistence = require('../../src/features/scene/ai/lifePersistence.ts');
 const freshSave = () => ({ version: 1, savedAt: 1000, characters: Object.fromEntries(life.LIFE_CHARACTER_IDS.map(id => [id, life.createLife(id)])),
-  home: home.createHomeDirt(), selectedCharacterId: 'native', speed: 1 });
+  home: home.createHomeDirt(), speed: 1 });
 
 function withBrowser(run, initialSave) {
   const previous = { window: global.window, document: global.document, setTimeout: global.setTimeout, clearTimeout: global.clearTimeout, error: console.error };
@@ -45,7 +45,7 @@ it('valide un instantané complet avec souvenirs, habitudes, propreté et profil
     life.rememberLifeConversation(character, id === 'native' ? 'cha' : 'native', 10, 'meal');
   }
   saved.home.dishes = 60;
-  saved.speed = 10; saved.selectedCharacterId = 'helena';
+  saved.speed = 10;
   assert.deepEqual(persistence.parseLifeSave(JSON.stringify(saved)), saved);
   assert(saved.characters.rajaa.memory.read.satisfaction > 0 && saved.characters.sandra.handsDirty);
 });
@@ -78,7 +78,7 @@ it('sauvegarde toute la colocation une seule fois par seconde et restaure le mod
     life.rememberLifeConversation(native, 'cha', 12, 'social');
     store.publishLife('native', { needs: { ...native.needs } });
     store.publishLife('cha', { activity: 'En route' });
-    store.useLaraLifeStore.setState({ selectedCharacterId: 'helena', speed: 10 });
+    store.useLaraLifeStore.setState({ speed: 10 });
     assert.equal(w.timers.size, 1); assert.equal([...w.timers.values()][0].ms, 1000); assert.equal(w.writes(), 0);
     w.flush();
     assert.equal(w.writes(), 1); assert.equal(w.timers.size, 0, 'Publishing the saved status cannot trigger another save');
@@ -87,7 +87,7 @@ it('sauvegarde toute la colocation une seule fois par seconde et restaure le mod
     const restored = w.loadStore();
     assert.deepEqual(restored.characterLives, data.characters);
     const snapshot = restored.useLaraLifeStore.getState();
-    assert.equal(snapshot.selectedCharacterId, 'helena'); assert.equal(snapshot.speed, 10);
+    assert.equal(snapshot.speed, 10);
     assert.equal(snapshot.characters.native.needs.rest, 82); assert.equal(snapshot.characters.native.elapsedSeconds, 360);
     assert.deepEqual(snapshot.characters.native.memory, native.memory);
     assert.deepEqual(snapshot.characters.native.relationships, native.relationships);
@@ -117,7 +117,7 @@ it('une nouvelle vie efface tous les historiques et empêche la sauvegarde de fe
     saved.characters[id].memory.read = { satisfaction: 5, lastAt: 50 };
     saved.characters[id].places['desk:use'] = 3;
   }
-  saved.home.living = 80; saved.speed = 10; saved.selectedCharacterId = 'sandra';
+  saved.home.living = 80; saved.speed = 10;
   withBrowser(w => {
     const store = w.loadStore();
     store.publishLife('native', { activity: 'En attente' });
@@ -131,7 +131,6 @@ it('une nouvelle vie efface tous les historiques et empêche la sauvegarde de fe
     for (const id of life.LIFE_CHARACTER_IDS) assert.deepEqual(next.characterLives[id], life.createLife(id));
     assert.deepEqual(next.useLaraLifeStore.getState().home, home.createHomeDirt());
     assert.equal(next.useLaraLifeStore.getState().speed, 1);
-    assert.equal(next.useLaraLifeStore.getState().selectedCharacterId, 'native');
   }, JSON.stringify(saved));
 });
 

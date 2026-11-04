@@ -400,7 +400,7 @@ it('publie uniquement les jauges du personnage concerné avec une vitesse commun
   const native = useLaraLifeStore.getState().characters.native;
   publishLife('cha', { activity: 'Manger', needs: { ...createLife('cha').needs, meal: 90 } });
   assert.equal(useLaraLifeStore.getState().characters.native, native);
-  useLaraLifeStore.setState({ selectedCharacterId: 'cha', speed: 10 });
+  useLaraLifeStore.setState({ speed: 10 });
   assert.equal(useLaraLifeStore.getState().characters.cha.needs.meal, 90);
   assert.equal(useLaraLifeStore.getState().speed, 10);
 });
@@ -487,19 +487,17 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
   assert(!getLaraLifeCandidates('vivida', false).some(candidate => candidate.id === 'bathtub-garden' && candidate.slotId === 'center'));
 });
 
-it('isole les jauges de Vivida et la sélection de son onglet', () => {
+it('isole les jauges de Vivida des autres colocataires', () => {
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
     './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'), './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
   });
   const before = useLaraLifeStore.getState();
   publishLife('vivida', { needs: { ...before.characters.vivida.needs, rest: 90 } });
-  useLaraLifeStore.setState({ selectedCharacterId: 'vivida' });
   const after = useLaraLifeStore.getState();
   assert.equal(after.characters.native, before.characters.native);
   assert.equal(after.characters.cha, before.characters.cha);
   assert.equal(after.characters.vivida.needs.rest, 90);
-  assert.equal(after.selectedCharacterId, 'vivida');
 });
 
 it('fait varier les assises et propose les bords de lit pour le repos et les repas', () => {
@@ -565,9 +563,9 @@ it('répond aux invitations selon les soins en cours, les urgences et le contrô
   assert.equal(response(null, needs, false, false).status, 'declined');
 });
 
-it('fait commencer les trois colocataires sans besoin de repos', () => {
+it('fait commencer toutes les vies sans besoin de repos, de repas ou de toilettes', () => {
   const { LIFE_CHARACTER_IDS } = require('../../src/features/scene/ai/laraLife.ts');
-  for (const id of LIFE_CHARACTER_IDS) assert.equal(createLife(id).needs.rest, 0);
+  for (const id of LIFE_CHARACTER_IDS) for (const need of ['rest', 'meal', 'toilet']) assert.equal(createLife(id).needs[need], 0);
 });
 
 it('propose les huit places de yoga libres chez Églantine avec stimulation et exercice réellement joués', () => {

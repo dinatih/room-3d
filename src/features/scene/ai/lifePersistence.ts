@@ -4,7 +4,7 @@ import { createHomeDirt, type HomeDirt } from './lifeHousekeeping';
 
 export const LIFE_SAVE_KEY = 'room-3d-life';
 export type LifeSave = { version: 1; savedAt: number; characters: Record<LifeCharacterId, ReturnType<typeof createLife>>;
-  home: HomeDirt; selectedCharacterId: LifeCharacterId; speed: typeof LIFE_SPEEDS[number]; household?: ReturnType<typeof createLifeHousehold> };
+  home: HomeDirt; selectedCharacterId?: LifeCharacterId; speed: typeof LIFE_SPEEDS[number]; household?: ReturnType<typeof createLifeHousehold> };
 const activities = Object.keys(LIFE_LABELS);
 const characterIds = CHARACTERS.map(character => character.id);
 const number = (value: unknown, min = 0, max = Infinity) => {
@@ -30,8 +30,8 @@ const numericRecord = (value: unknown, allowed?: string[], max = Infinity) => {
 
 /** Validate the whole snapshot before applying any of it. Invalid saves remain untouched. */
 export function parseLifeSave(text: string): LifeSave {
-  const data = keys(JSON.parse(text), ['version', 'savedAt', 'characters', 'home', 'selectedCharacterId', 'speed'], ['household']);
-  if (data.version !== 1 || !LIFE_CHARACTER_IDS.some(id => id === data.selectedCharacterId) || !LIFE_SPEEDS.some(speed => speed === data.speed)) {
+  const data = keys(JSON.parse(text), ['version', 'savedAt', 'characters', 'home', 'speed'], ['household', 'selectedCharacterId']);
+  if (data.version !== 1 || (data.selectedCharacterId !== undefined && !LIFE_CHARACTER_IDS.some(id => id === data.selectedCharacterId)) || !LIFE_SPEEDS.some(speed => speed === data.speed)) {
     throw new Error('Format ou réglages de sauvegarde de vie invalides');
   }
   number(data.savedAt);
