@@ -66,8 +66,8 @@ import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButton
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
-const FPV_DEFAULT_FOV = 70;
-const FPV_DEFAULT_PITCH = 0;
+const FPV_DEFAULT_FOV = 100;
+const FPV_DEFAULT_PITCH = -0.50;
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
@@ -392,10 +392,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
         const fwd = cameraState.activeHeadForward;
         const up = cameraState.activeHeadUp;
 
-        // Reculer de 10 cm depuis les yeux vers le crâne pour cadrer le torse sans incliner le regard.
-        const eyeX = eyes.x - fwd.x * 10;
-        const eyeY = eyes.y - fwd.y * 10 + (followPos.current.y - activeFollowH());
-        const eyeZ = eyes.z - fwd.z * 10;
+        // Petite avance de 2 cm dans la direction du regard pour éliminer tout risque de clipping avec les cils/nez
+        const eyeX = eyes.x + fwd.x * 2.0;
+        const eyeY = eyes.y + fwd.y * 2.0 + (followPos.current.y - activeFollowH());
+        const eyeZ = eyes.z + fwd.z * 2.0;
 
         const storeLayers = useSceneStore.getState().layers;
         const isStabilizationActive = storeLayers.fpvStabilization ?? true;
