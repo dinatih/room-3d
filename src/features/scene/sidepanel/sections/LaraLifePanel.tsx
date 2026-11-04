@@ -32,10 +32,17 @@ export function LaraLifePanel() {
           useLaraLifeStore.setState({ selectedCharacterId: id });
           document.getElementById(`life-tab-${id}`)!.focus();
         }}>
-        {LIFE_CHARACTER_IDS.map(id => <button key={id} id={`life-tab-${id}`} type="button" role="tab"
-          className={`btn btn-sm py-0 px-1 ${id === selectedCharacterId ? 'btn-primary active fw-semibold' : 'btn-light text-dark border-secondary fw-medium'}`}
-          aria-selected={id === selectedCharacterId} aria-controls="life-character-panel" tabIndex={id === selectedCharacterId ? 0 : -1}
-          onClick={() => useLaraLifeStore.setState({ selectedCharacterId: id })}>{LIFE_CHARACTER_LABELS[id]}</button>)}
+        {LIFE_CHARACTER_IDS.map(id => {
+          const character = findCharacter(id)!;
+          const selected = id === selectedCharacterId;
+          return <button key={id} id={`life-tab-${id}`} type="button" role="tab"
+            className={`btn btn-sm py-0 px-1 text-dark ${selected ? 'active fw-bold text-decoration-underline' : 'fw-medium'}`}
+            style={{ backgroundColor: selected ? character.color : 'var(--bs-body-bg)', borderColor: character.color }}
+            aria-selected={selected} aria-controls="life-character-panel" tabIndex={selected ? 0 : -1}
+            onClick={() => useLaraLifeStore.setState({ selectedCharacterId: id })}>
+            <span aria-hidden="true">{character.emoji}</span> {LIFE_CHARACTER_LABELS[id]}
+          </button>;
+        })}
       </div>
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
