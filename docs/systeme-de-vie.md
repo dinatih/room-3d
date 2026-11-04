@@ -130,3 +130,7 @@ Quand elle a faim, une colocataire peut préférer une assise libre sur le même
 Après la préparation en cuisine, les places libres et les repas en cours sont vérifiés à nouveau. Le journal `life_meal_join` indique l’intention de rejoindre une personne. Aucune place voisine n’est réservée pendant la préparation ; la réservation habituelle est vérifiée avant de s’installer.
 
 Chacune joue son animation de repas et finit indépendamment. La faim, le repos et la compagnie peuvent être soulagés simultanément, mais le bénéfice de compagnie et les souvenirs de repas ne comptent que pendant les animations réellement jouées sur des places distinctes du même meuble. Une arrivée, un chargement ou la préparation ne créent aucun temps partagé. Si l’autre part, le repas continue seul ; les logs de début et de résultat distinguent les périodes avec et sans partenaire.
+
+## Lire les relations
+
+La section repliable **Relations** du panneau de vie affiche les relations du personnage sélectionné : meilleure amie, amie, connaissance ou tensions. L’étoile indique sa compagnie préférée. Chaque relation indique le temps réellement partagé, puis sa répartition par activité (repas, discussion, affection, repos…). Les durées sont exprimées en minutes simulées, comme l’horloge de vie. Les relations définies au départ apparaissent même sans rencontre, avec « Aucun moment partagé » ; elles ne créent pas de faux souvenirs. La section est repliée au départ pour garder le panneau compact.

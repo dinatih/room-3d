@@ -1,9 +1,11 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
+const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
+const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export function LaraLifePanel() {
   const { characters, selectedCharacterId, speed, home } = useLaraLifeStore();
@@ -16,7 +18,8 @@ export function LaraLifePanel() {
   const favorite = favoriteLifeActivity(memory);
   const tastes = favorite ? `Loisir favori : ${LIFE_LABELS[favorite]}` : 'Goûts encore à découvrir';
   const friend = closestLifeFriend(relationships);
-  const company = friend ? `Compagnie préférée : ${isLifeCharacter(friend) ? LIFE_CHARACTER_LABELS[friend] : findCharacter(friend)!.name}` : 'Aucune rencontre pour le moment';
+  const company = friend ? `Compagnie préférée : ${characterName(friend)}` : 'Aucune rencontre pour le moment';
+  const relations = Object.entries(relationships).sort(([a, x], [b, y]) => (y.affinity ?? 0) - (x.affinity ?? 0) || y.seconds - x.seconds || a.localeCompare(b));
   return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : LIFE_CHARACTER_LABELS[selectedCharacterId]}`}>
     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
       <div className="d-flex flex-wrap gap-1 w-100" role="tablist" aria-label="Personnage du panneau de vie"
@@ -54,6 +57,27 @@ export function LaraLifePanel() {
         <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
       </div>
       <div className="visually-hidden">{reason}</div>
+      <details className="mt-1">
+        <summary className="fw-semibold">Relations · {relations.length}</summary>
+        {relations.length === 0 ? <div className="mt-1">Aucune rencontre pour le moment.</div> : <ul className="list-unstyled mb-0">
+          {relations.map(([id, relation]) => {
+            const affinity = relation.affinity ?? 0;
+            const label = affinity < 0 ? 'Tensions' : affinity > 1 ? 'Meilleure amie' : affinity > 0 ? 'Amie' : 'Connaissance';
+            return <li key={id} className="border-top pt-1 mt-1 text-break">
+              <div className="d-flex flex-wrap align-items-center gap-1">
+                <span className="fw-semibold">{characterName(id)}</span>
+                <span className={`badge ${affinity < 0 ? 'text-bg-danger' : affinity > 0 ? 'text-bg-success' : 'text-bg-secondary'}`}>{label}</span>
+                {id === friend && <i className="bi bi-star-fill text-primary" title="Compagnie préférée" aria-label="Compagnie préférée" />}
+              </div>
+              <div>{relation.seconds > 0 ? `${minutes.format(relation.seconds)} min ensemble` : 'Aucun moment partagé'}</div>
+              {relation.seconds > 0 && <div title="Minutes simulées, issues des animations réellement jouées.">
+                {Object.entries(relation.activities ?? {}).map(([activity, seconds]) => `${LIFE_LABELS[activity as LifeActivity]} : ${minutes.format(seconds)} min`).join(' · ')}
+              </div>}
+            </li>;
+          })}
+        </ul>}
+        <div className="mt-1">Temps en minutes simulées.</div>
+      </details>
     </div>
   </section>;
 }
