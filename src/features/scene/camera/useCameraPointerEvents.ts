@@ -152,7 +152,7 @@ export function useCameraPointerEvents({
       if (modeRef.current !== 'follow' && modeRef.current !== 'fpv') return;
       e.preventDefault();
       if (modeRef.current === 'follow') {
-        const step = e.deltaY > 0 ? 150 : -150;
+        const step = e.deltaY > 0 ? 45 : -45;
         orbitDistance.current = Math.max(30, orbitDistance.current + step);
         updateFollowLook();
       } else {
