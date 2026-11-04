@@ -534,7 +534,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
             }
           }
 
-          const isLayingAnim = animNameLower.includes('laying') || animNameLower.includes('sleeping') || animNameLower.includes('situps');
+          const isLayingAnim = animNameLower.includes('laying') || animNameLower.includes('sleeping') || animNameLower.includes('situps') || animNameLower.includes('sitting-idle-1');
 
           if (isLayingAnim) {
             const targetHipsHeight = bone.defaultPosition.length();

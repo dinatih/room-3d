@@ -428,6 +428,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         exitAnimation: 'sit-to-stand',
         rotY: - Math.PI / 2,
         animationsRandom: 'seated-front',
+        excludes: ['lie-down'],
       },
       {
         slotId: 'seat-2',
@@ -438,6 +439,16 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         exitAnimation: 'sit-to-stand',
         rotY: - Math.PI / 2,
         animationsRandom: 'seated-front',
+        excludes: ['lie-down'],
+      },
+      {
+        slotId: 'lie-down',
+        name: 'Allongé',
+        offset: [270, 48, -110],
+        approachOffset: [270 - 61 / 2 - HUMAN_BODY_RADIUS, 0, -110],
+        rotY: 0,
+        animationsRandom: 'sitting-idle-1',
+        excludes: ['seat-1', 'seat-2'],
       }
     ]
   },

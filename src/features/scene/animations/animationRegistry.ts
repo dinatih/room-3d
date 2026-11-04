@@ -6956,7 +6956,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_sitting_idle_1.glb',
     category: 'poses_idles',
     label: `Sitting Idle (309f / 10.3s, 302KB)`,
-    tags: ['poses-idles', 'sitting'],
+    tags: ['poses-idles', 'sitting', 'laying', 'laying-front', 'bed', 'sleep'],
     duration: 10.3,
   },
   {
