@@ -7,12 +7,13 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 // GLB playback and posture transitions are covered by the browser scenario.
 function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false, diagnostics = false) {
   const journal = [];
-  const characterLives = { native: life.createLife('native'), cha: life.createLife('cha') };
+  const characterLives = { native: life.createLife('native'), cha: life.createLife('cha'), vivida: life.createLife('vivida') };
   const lifeState = characterLives[life.isLifeCharacter(id) ? id : 'native'], logs = [], reservations = new Map();
   const candidates = ['work', 'rest', 'walk'].map((activity, index) => ({ activity,
     id: activity === 'work' ? 'desk-bollsidan-2' : activity, slotId: 'use', x: 10 + index * 10, z: 10 }));
   const objects = Object.fromEntries(candidates.map(candidate => [candidate.id, { id: candidate.id, name: candidate.id,
     position: [candidate.x, 0, candidate.z], slots: [{ slotId: 'use', animation: candidate.activity, duration: 1 }] }]));
+  objects['bathtub-garden'] = { id: 'bathtub-garden', name: 'Baignoire', position: [120, 0, -300], slots: [{ slotId: 'center', animation: 'bath', duration: 1 }] };
   const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
   objects[MEAL_PREPARATION.id] = { id: MEAL_PREPARATION.id, name: 'Kitchen', position: [40, 0, 10], slots: [{ slotId: MEAL_PREPARATION.slotId, animation: 'cook' }] };
   if (withMeal) candidates.push({ ...candidates[1], activity: 'meal' });
@@ -96,7 +97,8 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
     '@/devLog': { devLog: entry => journal.push(entry), DEV_LOG_ENABLED: diagnostics }, '../idleState': { isAppIdle: () => false },
   });
-  const scenario = sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
+  const scenario = id === 'vivida' ? [{ ...sequence('bathtub-garden', 'center')[0], lifePhase: 'bath' }]
+    : sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
   const controller = createAgentController(id, scenario, true, () => ({ x: 10, y: 0, z: 10, rotY: 0 }));
   controller.configure({ scenario, loop: true, landingAnim: 'idle' });
   const tick = (seconds = 1, playback = true) => {
@@ -494,20 +496,23 @@ it('laisse au partenaire son temps de déplacement normal même quand la vie de 
   assert(!ended, 'Three normal seconds must not expire an invitation as thirty accelerated seconds');
 });
 
-it('fait vivre Cha indépendamment de Lara et conserve ses besoins après une interruption', () => {
-  const w = world('cha'), nativeBefore = structuredClone(w.characterLives.native);
-  w.tick(); w.tick(); w.tick();
-  assert.notDeepEqual(w.lifeState.needs, nativeBefore.needs);
-  assert.deepEqual(w.characterLives.native, nativeBefore);
-  assert.equal(w.lifeState.characterId, 'cha');
-  const needs = { ...w.lifeState.needs };
-  w.controller.setPosition(50, 0, 50); w.tick(0);
-  assert.deepEqual(w.lifeState.needs, needs);
-  assert.equal(w.snapshot.activity, 'Commande utilisateur');
+it('fait vivre Cha et Vivida indépendamment de Lara et conserve leurs besoins après interruption', () => {
+  for (const id of ['cha', 'vivida']) {
+    const w = world(id), nativeBefore = structuredClone(w.characterLives.native);
+    w.tick(); w.tick(); w.tick();
+    assert.notDeepEqual(w.lifeState.needs, nativeBefore.needs);
+    assert.deepEqual(w.characterLives.native, nativeBefore);
+    assert.equal(w.lifeState.characterId, id);
+    if (id === 'vivida') assert(w.lifeState.memory.bath.satisfaction > 0);
+    const needs = { ...w.lifeState.needs };
+    w.controller.setPosition(50, 0, 50); w.tick(0);
+    assert.deepEqual(w.lifeState.needs, needs);
+    assert.equal(w.snapshot.activity, 'Commande utilisateur');
+  }
 });
 
 it('termine les répétitions du slot avec une récupération partielle, puis réévalue les besoins', () => {
-  for (const id of ['native', 'cha']) {
+  for (const id of life.LIFE_CHARACTER_IDS) {
     const w = world(id);
     w.tick(); w.tick(); w.tick();
     w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };

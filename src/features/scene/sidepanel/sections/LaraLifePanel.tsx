@@ -13,13 +13,15 @@ export function LaraLifePanel() {
   const tastes = favorite ? `Loisir favori : ${LIFE_LABELS[favorite]}` : 'Goûts encore à découvrir';
   const friend = closestLifeFriend(relationships);
   const company = friend ? `Compagnie préférée : ${isLifeCharacter(friend) ? LIFE_CHARACTER_LABELS[friend] : findCharacter(friend)!.name}` : 'Aucune rencontre pour le moment';
-  return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : 'Cha'}`}>
+  return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : LIFE_CHARACTER_LABELS[selectedCharacterId]}`}>
     <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
       <div className="d-flex gap-1" role="tablist" aria-label="Personnage du panneau de vie"
         onKeyDown={event => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
           event.preventDefault();
-          const id = event.key === 'Home' ? 'native' : event.key === 'End' ? 'cha' : selectedCharacterId === 'native' ? 'cha' : 'native';
+          const index = event.key === 'Home' ? 0 : event.key === 'End' ? LIFE_CHARACTER_IDS.length - 1
+            : (LIFE_CHARACTER_IDS.indexOf(selectedCharacterId) + (event.key === 'ArrowRight' ? 1 : -1) + LIFE_CHARACTER_IDS.length) % LIFE_CHARACTER_IDS.length;
+          const id = LIFE_CHARACTER_IDS[index];
           useLaraLifeStore.setState({ selectedCharacterId: id });
           document.getElementById(`life-tab-${id}`)!.focus();
         }}>
@@ -32,7 +34,7 @@ export function LaraLifePanel() {
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
       <button type="button" className="btn btn-sm btn-outline-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
-        title="Accélérer la vie de Lara et Cha : ×1, ×3, ×10"
+        title="Accélérer la vie de la colocation : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
         <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
       </button>

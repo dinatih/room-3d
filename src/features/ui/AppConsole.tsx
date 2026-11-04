@@ -690,8 +690,8 @@ export function AppConsole({
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showLife ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
           onClick={() => setShowLife(v => !v)}
-          title="Vie de Lara et Cha (Touche N)"
-          aria-label="Afficher ou masquer la vie de Lara et Cha (Touche N)"
+          title="Vie de la colocation (Touche N)"
+          aria-label="Afficher ou masquer la vie de la colocation (Touche N)"
           aria-expanded={showLife}
           aria-controls="lara-life-panel"
         >

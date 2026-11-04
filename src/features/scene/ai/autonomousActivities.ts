@@ -17,7 +17,7 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn 
   delphina: 'shower',
   sara:     'inyeong-cha-hugs-point',
   cha:      'garden-fresh-air',
-  vivida:   'hugs-point',
+  vivida:   'bathtub-garden',
   sabira:   'bed-west',
   // safa:     'west-neighbor-flat',
   // romana:   'west-neighbor-flat',
@@ -47,7 +47,8 @@ export function getAvailableAutonomousActivities(characterId: string) {
 export function buildAutonomousActivities(characterId: string): AgentInstruction[] {
   if (isLifeCharacter(characterId)) return buildLaraLifeInstructions(characterId, characterId === 'native'
     ? { activity: 'work', id: 'desk-bollsidan-2', slotId: 'work-standing' }
-    : { activity: 'walk', id: 'garden-fresh-air', slotId: 'breathe' });
+    : characterId === 'cha' ? { activity: 'walk', id: 'garden-fresh-air', slotId: 'breathe' }
+    : { activity: 'bath', id: 'bathtub-garden', slotId: 'center' });
   const activities = getAvailableAutonomousActivities(characterId);
   for (let i = activities.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -69,6 +70,7 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
           : object.id === 'tv-view' ? 'watch-tv'
           : object.id === 'garden-conversation' ? 'social'
           : object.id === 'garden-fresh-air' ? 'walk'
+          : object.id === 'bathtub-garden' ? 'bath'
           : object.id === 'toilet' && slot.slotId === 'use' ? 'toilet'
           : object.id === 'shower' ? 'shower'
           : object.id === 'vasque-sdb' && slot.slotId === 'wash-hands' && handsDirty ? 'wash-hands'
@@ -97,7 +99,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
       : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
-        || candidate.activity === 'watch-tv' || candidate.activity === 'social' ? candidate.activity : undefined;
+        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' ? candidate.activity : undefined;
     return lifePhase ? { ...instruction, lifePhase } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.

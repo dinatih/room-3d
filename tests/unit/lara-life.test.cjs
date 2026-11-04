@@ -391,7 +391,7 @@ it('utilise l’identité de Cha pour vérifier les places et construire ses int
   assert(calls.length > 0 && calls.every(id => id === 'cha'));
 });
 
-it('conserve les animations, durées et répétitions des objets pour les deux vies', () => {
+it('conserve les animations, durées et répétitions des objets pour les trois vies', () => {
   const { buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
     './smartObjectRegistry': { buildSmartObjectInstructionSequence: (id, slotId) => [
@@ -401,7 +401,7 @@ it('conserve les animations, durées et répétitions des objets pour les deux v
     ] },
     './occupancyManager': {},
   });
-  for (const character of ['native', 'cha']) for (const activity of ['shower', 'rest', 'sleep', 'walk', 'work', 'read', 'watch-tv', 'social']) {
+  for (const character of ['native', 'cha', 'vivida']) for (const activity of ['shower', 'rest', 'sleep', 'walk', 'work', 'read', 'watch-tv', 'social']) {
     const steps = buildLaraLifeInstructions(character, { activity, id: 'shower', slotId: 'take-shower-1' });
     const use = steps.find(step => step.type === 'USE_OBJECT');
     assert.equal(use.animation, undefined, 'The slot must resolve its own random animation pool');
@@ -414,4 +414,62 @@ it('conserve les animations, durées et répétitions des objets pour les deux v
   const needs = { ...createLife('native').needs, hygiene: 90 };
   const short = evolveLife(needs, 6, 'shower', false), long = evolveLife(needs, 18, 'shower', false);
   assert(needs.hygiene > short.hygiene && short.hygiene > long.hygiene && long.hygiene > 0);
+});
+
+it('propose le bain extérieur pour le repos, seulement sur les places libres', () => {
+  const occupied = new Set();
+  const objects = [
+    { id: 'bathtub-garden', category: 'hygiene', position: [120, 0, -300], slots: ['center', 'west', 'east'].map(slotId => ({ slotId })) },
+    { id: 'garden-fresh-air', position: [150, 0, -600], slots: [{ slotId: 'breathe' }] },
+  ];
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => objects,
+      buildSmartObjectInstructionSequence: (id, slotId) => [
+        { type: 'MOVE_TO', smartObjectId: id, slotId },
+        { type: 'USE_OBJECT', smartObjectId: id, slotId, duration: 30, repeatVariation: true },
+      ] },
+    './occupancyManager': { OccupancyManager: { canUseObject: () => true,
+      isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
+  });
+  const { LIFE_CHARACTER_IDS, lifeEffect, favoriteLifeActivity, rememberLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  for (const id of LIFE_CHARACTER_IDS) {
+    const candidates = getLaraLifeCandidates(id, false);
+    assert.equal(candidates.filter(candidate => candidate.activity === 'bath').length, 3);
+    assert(!candidates.some(candidate => candidate.activity === 'meal'));
+    const life = createLife(id);
+    life.needs = { ...life.needs, rest: 50, work: 0, walk: 0 };
+    const selected = chooseLifeActivity(life.needs, candidates, { x: 120, z: -300 }, null, 10, {}, 0);
+    assert.equal(selected.id, 'bathtub-garden');
+    assert.equal(selected.activity, 'bath');
+    const [move, use] = buildLaraLifeInstructions(id, selected);
+    assert.equal(move.lifePhase, undefined);
+    assert.equal(lifeEffect(selected.activity), null);
+    assert.equal(lifeEffect(selected.activity, use.lifePhase), 'bath');
+    assert.equal(use.duration, 30);
+    assert.equal(use.repeatVariation, true);
+    const after = evolveLife(life.needs, 10, 'bath', false);
+    assert(after.rest < life.needs.rest);
+    assert(after.walk > life.needs.walk, 'A seated outdoor bath must not masquerade as walking');
+    rememberLifeActivity(life, 'bath', life.needs, after);
+    assert.equal(favoriteLifeActivity(life.memory), 'bath');
+    const bed = { activity: 'sleep', id: 'bed-east', slotId: 'lie-down', x: 120, z: -300 };
+    assert.equal(chooseLifeActivity({ ...life.needs, rest: 90 }, [...candidates, bed], { x: 120, z: -300 }, null, 23, {}, 0), bed);
+  }
+  occupied.add('bathtub-garden:center');
+  assert(!getLaraLifeCandidates('vivida', false).some(candidate => candidate.id === 'bathtub-garden' && candidate.slotId === 'center'));
+});
+
+it('isole les jauges de Vivida et la sélection de son onglet', () => {
+  const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
+    zustand: require('zustand'), './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+  });
+  const before = useLaraLifeStore.getState();
+  publishLife('vivida', { needs: { ...before.characters.vivida.needs, rest: 90 } });
+  useLaraLifeStore.setState({ selectedCharacterId: 'vivida' });
+  const after = useLaraLifeStore.getState();
+  assert.equal(after.characters.native, before.characters.native);
+  assert.equal(after.characters.cha, before.characters.cha);
+  assert.equal(after.characters.vivida.needs.rest, 90);
+  assert.equal(after.selectedCharacterId, 'vivida');
 });

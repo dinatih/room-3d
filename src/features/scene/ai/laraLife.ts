@@ -1,23 +1,23 @@
-export type LifeActivity = 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
-export const LIFE_CHARACTER_IDS = ['native', 'cha'] as const;
+export type LifeActivity = 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
-export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha' };
-export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk' } as const;
-export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => id === 'native' || id === 'cha';
+export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida' };
+export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath' } as const;
+export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number };
 export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number }>;
-const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social'];
+const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social', 'bath'];
 export const LIFE_PHASE_LABELS = {
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
-  read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter',
+  read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter', bath: 'Se détendre dans le bain',
 };
 export type LifePhase = keyof typeof LIFE_PHASE_LABELS;
 const LIFE_PHASE_EFFECTS: Record<LifePhase, LifeActivity | null> = {
   'prepare-meal': null, 'eat-meal': 'meal', sleep: 'sleep', 'wake-up': null,
   'use-toilet': 'toilet', flush: null, 'wash-hands': 'wash-hands', shower: 'shower',
-  read: 'read', 'watch-tv': 'watch-tv', social: 'social',
+  read: 'read', 'watch-tv': 'watch-tv', social: 'social', bath: 'bath',
 };
 export interface LifeCandidate {
   activity: Exclude<LifeActivity, 'pause'>;
@@ -31,7 +31,7 @@ export interface LifeCandidate {
 export const LIFE_SETTINGS = { activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
-  rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
+  bath: 'Se détendre dans le bain', rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
   toilet: 'Aller aux toilettes puis se laver les mains', shower: 'Prendre une douche', 'wash-hands': 'Se laver les mains',
   read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter avec un voisin',
 };
@@ -54,6 +54,7 @@ export function getLifeMood(needs: LifeNeeds) {
 
 const rates: Record<LifeActivity, LifeNeeds> = {
   pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
+  bath: { rest: -0.35, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18, company: 0.2 },
   rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
   work: { rest: 0.5, work: -1.5, walk: 0.6, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2 },
   walk: { rest: 0.4, work: -0.8, walk: 0, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2 },
@@ -123,7 +124,7 @@ export function routineActivities(hour: number): LifeActivity[] {
   if (hour < 6 || hour >= 22) return ['sleep'];
   if (hour < 9) return ['shower', 'meal'];
   if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
-  return hour < 18 ? ['work', 'walk'] : ['read', 'watch-tv', 'social'];
+  return hour < 18 ? ['work', 'walk'] : ['read', 'watch-tv', 'social', 'bath'];
 }
 
 /** Activity effects require an actual interaction; only real walking relieves movement. */
@@ -145,7 +146,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
-    : !(candidate.activity === 'rest' && wantsSleep) && needs[lifeNeed(candidate.activity)] >= LIFE_SETTINGS.priority))
+    : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && needs[lifeNeed(candidate.activity)] >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
       || (Math.max(needs[lifeNeed(a.activity)], needs[lifeNeed(b.activity)]) >= LIFE_SETTINGS.sleepPriority
         ? needs[lifeNeed(b.activity)] - needs[lifeNeed(a.activity)] : 0)
@@ -157,7 +158,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
 }
 
 /** A short rest and a night in bed answer the same fatigue, with different recovery rates. */
-export const lifeNeed = (activity: LifeCandidate['activity']): keyof LifeNeeds => activity === 'sleep' ? 'rest'
+export const lifeNeed = (activity: LifeCandidate['activity']): keyof LifeNeeds => activity === 'sleep' || activity === 'bath' ? 'rest'
   : activity === 'shower' || activity === 'wash-hands' ? 'hygiene'
   : activity === 'social' ? 'company' : activity === 'read' || activity === 'watch-tv' ? 'work' : activity;
 
