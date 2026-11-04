@@ -81,6 +81,17 @@ export function HoverRaycaster() {
           occluderCache.push(obj);
         }
       });
+      // intersectObjects est récursif : ne parcourir chaque sous-arbre qu'une fois.
+      for (const cache of [interactiveCache, occluderCache]) {
+        const roots = new Set(cache);
+        const unique = cache.filter(obj => {
+          for (let parent = obj.parent; parent; parent = parent.parent) {
+            if (roots.has(parent)) return false;
+          }
+          return true;
+        });
+        cache.splice(0, cache.length, ...unique);
+      }
       lastCacheTime = now;
     }
 
@@ -96,24 +107,13 @@ export function HoverRaycaster() {
     }
 
     const occlusionRaycaster = new THREE.Raycaster();
+    let occlusionHits: THREE.Intersection[] | null = null;
 
     function isOccluded(targetPoint: THREE.Vector3, targetObj: THREE.Object3D): boolean {
-      const dir = targetPoint.clone().sub(camera.position);
-      const dist = dir.length();
+      const dist = targetPoint.distanceTo(raycaster.ray.origin);
       if (dist < 1.0) return false;
-      dir.normalize();
-
-      occlusionRaycaster.set(camera.position, dir);
-      occlusionRaycaster.camera = camera;
-      occlusionRaycaster.near = 0.5;
-      occlusionRaycaster.far = Math.max(0.6, dist - 1.0);
-      occlusionRaycaster.layers.enableAll();
-      occlusionRaycaster.layers.disable(LAYER_NEIGHBORS);
-      occlusionRaycaster.layers.disable(LAYER_LIDAR);
-
-      refreshCaches();
-      // Test d'occlusion ciblé sur la vingtaine de maillages de murs/portes au lieu des 10 000+ objets de scene.children
-      const occHits = occlusionRaycaster.intersectObjects(occluderCache, true);
+      // Tous les hits de ce survol partagent le même rayon caméra.
+      occlusionHits ??= occlusionRaycaster.intersectObjects(occluderCache, true);
 
       // Trouver la racine de l'objet cible pour éviter l'auto-occlusion
       let targetRoot: THREE.Object3D = targetObj;
@@ -122,7 +122,8 @@ export function HoverRaycaster() {
         targetRoot = targetRoot.parent;
       }
 
-      for (const occ of occHits) {
+      for (const occ of occlusionHits) {
+        if (occ.distance > Math.max(0.6, dist - 1.0)) break;
         let ancestor: THREE.Object3D | null = occ.object;
         while (ancestor && ancestor !== scene && ancestor.visible) ancestor = ancestor.parent;
         if (ancestor !== scene || !scene.visible) continue;
@@ -134,7 +135,7 @@ export function HoverRaycaster() {
         let cur: THREE.Object3D | null = occ.object;
         let isSelf = false;
         while (cur) {
-          if (cur === targetRoot || cur === targetObj || cur.userData?.hoverAction === targetRoot.userData?.hoverAction) {
+          if (cur === targetRoot || cur === targetObj || (targetRoot.userData?.hoverAction && cur.userData?.hoverAction === targetRoot.userData.hoverAction)) {
             isSelf = true;
             break;
           }
@@ -180,6 +181,12 @@ export function HoverRaycaster() {
       // de vue, sans attendre l'expiration du cache des meubles interactifs.
       const markers = scene.getObjectByName('camera-view-markers');
       const hits = raycaster.intersectObjects(markers ? [...interactiveCache, markers] : interactiveCache, true);
+      occlusionHits = null;
+      occlusionRaycaster.ray.copy(raycaster.ray);
+      occlusionRaycaster.camera = camera;
+      occlusionRaycaster.layers.mask = raycaster.layers.mask;
+      occlusionRaycaster.near = 0.5;
+      occlusionRaycaster.far = hits.length ? Math.max(0.6, hits[hits.length - 1].distance - 1.0) : 0.6;
       let bestAction: { label: string; actionIds: string[] } | null = null;
 
       for (const hit of hits) {
