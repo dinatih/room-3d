@@ -23,6 +23,7 @@ const puppeteer = require('puppeteer');
       const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
       const THREE = await import('/node_modules/.vite/deps/three.js');
       const { RaytracingPhotoModal } = await import('/src/features/scene/photo/RaytracingPhotoModal.tsx');
+      history.replaceState(null, '', '/?raytracing=debug');
       document.body.replaceChildren();
       const container = document.createElement('div');
       const canvasParent = document.createElement('div');
@@ -55,12 +56,20 @@ const puppeteer = require('puppeteer');
         window.fixture.compilations.push(promise);
         return promise;
       };
+      scene.onBeforeRender = (renderer, _scene, camera) => {
+        if (renderer !== gl) window.fixture.rasterCamera = camera.position.toArray();
+      };
       window.mountPhoto = () => root.render(React.createElement(RaytracingPhotoModal, { scene, camera, gl, onClose: () => root.render(null) }));
       window.mountPhoto();
     });
     for (let i = 0; i < 2; i++) {
       if (i) await page.evaluate(() => window.mountPhoto());
-      await page.waitForFunction(() => document.body.innerText.includes('Calcul en cours'), { timeout: 120000 });
+      await page.waitForFunction(() => document.body.innerText.includes('Prêt — choisissez où calculer'), { timeout: 120000 });
+      assert.deepEqual(await page.evaluate(() => window.fixture.rasterCamera), [288, 250 / 3, 50]);
+      if (i === 0) {
+        await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent === 'Calculer ici').click());
+        await page.waitForFunction(() => document.body.innerText.includes('Calcul en cours'), { timeout: 120000 });
+      }
       const arrays = await page.evaluate(() => {
         let count = 0;
         window.fixture.scene.traverseVisible(object => { if (object.isMesh && Array.isArray(object.material)) count++; });
@@ -74,6 +83,10 @@ const puppeteer = require('puppeteer');
           if (String(url) !== 'http://127.0.0.1:5174/api/render-jobs') return fetchOriginal(url, options);
           const payload = JSON.parse(options.body);
           if (!payload.scene.object || !payload.camera.object) throw new Error('Missing serialized scene/camera');
+          const matrix = payload.camera.object.matrix;
+          const expected = [288, 250 / 3, 50];
+          if (expected.some((v, i) => Math.abs(matrix[12 + i] - v) > 1e-9)) throw new Error('Wrong debug camera in submitted job');
+          if (JSON.stringify(payload.scene.object).includes('outlined-text-fixture')) throw new Error('Hidden text included in snapshot');
           window.fixture.submitted = true;
           return new Response(JSON.stringify({ id: 'browser-fixture' }));
         };
@@ -91,6 +104,6 @@ const puppeteer = require('puppeteer');
     assert.equal(await page.evaluate(() => window.fixture.submitted), true);
     await page.evaluate(() => Promise.all(window.fixture.compilations));
     assert.deepEqual(errors, []);
-    console.log('Browser fixture: two photo sessions, scalar materials, Escape/button close, exact geometry/material/visibility and canvas restoration verified.');
+    console.log('Browser fixture: two photo sessions, scalar materials, debug camera, explicit local rendering, background submission and scene restoration verified.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

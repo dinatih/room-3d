@@ -19,7 +19,7 @@ async function pump() {
   let browser;
   try {
     job.state = 'rendering';
-    browser = await puppeteer.launch({ headless: true, args: ['--enable-gpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
+    browser = await puppeteer.launch({ headless: true, protocolTimeout: 0, args: ['--enable-gpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
     job.browser = browser;
     const page = await browser.newPage(); job.page = page;
     await page.exposeFunction('progress', samples => { job.samples = samples; });

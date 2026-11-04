@@ -11,6 +11,9 @@ import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
+import { getUrlParams } from '../camera/cameraUrlParams';
+import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
+import { serializeRenderScene } from './serializeRenderScene';
 import { splitMultiMaterialMeshes } from './splitMultiMaterialMeshes';
 import {
   LAYER_STRUCTURE,
@@ -121,6 +124,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const tempLightsRef = useRef<THREE.Object3D[]>([]);
 
   // Mode de comparaison 3D Standard vs Raytracing
+  const [renderLocally, setRenderLocally] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('split');
   const [rasterSnapshot, setRasterSnapshot] = useState<string | null>(null);
 
@@ -658,6 +663,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       renderCamera = physCamera;
     }
 
+    if (getUrlParams().get('raytracing') === 'debug') {
+      renderCamera.position.fromArray(RAYTRACING_DEBUG_POS);
+      renderCamera.lookAt(...PERSP_TARGET);
+      renderCamera.updateMatrixWorld(true);
+    }
+
     // Synchronisation complète des layers Three.js avec la caméra active de la scène
     renderCamera.layers.mask = camera.layers.mask;
     // S'assurer que les calques essentiels du studio sont activés
@@ -951,8 +962,12 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if (isDisposed) return;
       try {
         prepareScene();
-        console.log('[Raytracing] Construction du BVH pour la scène...');
         setBvhProgress(0);
+        if (!renderLocally) {
+          setIsBuildingScene(false);
+          return;
+        }
+        console.log('[Raytracing] Construction du BVH pour la scène...');
         await pathTracer.setSceneAsync(scene, renderCamera, {
           onProgress: progress => { if (!isDisposed) setBvhProgress(progress); },
         });
@@ -1039,6 +1054,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene,
     camera,
     resolution,
+    renderLocally,
     showCharacters,
     prepareScene,
     restoreScene,
@@ -1262,13 +1278,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   };
 
   const sendBackgroundRender = async () => {
+    setIsSubmitting(true);
     try {
+      // Laisser React afficher l'état d'envoi avant de préparer le snapshot.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       if (!renderCameraRef.current || !rendererRef.current) throw new Error('Attendre la préparation de la scène.');
       const c = renderCameraRef.current;
       const size = rendererRef.current.getSize(new THREE.Vector2());
+      const cameraJson = c.toJSON();
+      cameraJson.object.type = c instanceof PhysicalCamera ? 'PerspectiveCamera' : 'OrthographicCamera';
       const response = await fetch('http://127.0.0.1:5174/api/render-jobs', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scene: scene.toJSON(), camera: c.toJSON(), width: size.x, height: size.y,
+        body: JSON.stringify({ scene: serializeRenderScene(scene), camera: cameraJson, width: size.x, height: size.y,
           samples: targetSamples, bounces, exposure, focusDistance, fStop,
           bokehSize: c instanceof PhysicalCamera ? c.bokehSize : 0, denoise: enableDenoise }),
       });
@@ -1277,6 +1298,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       alert(`Rendu ${job.id} envoyé. Résultat dans renders/. Suivi : http://127.0.0.1:5174/render-jobs.html`);
       onClose();
     } catch (error) { setErrorMessage(`Envoi impossible. Lancer npm run render:service. ${String(error)}`); }
+    finally { setIsSubmitting(false); }
   };
 
   const progressPercent = Math.min(100, Math.round((currentSamples / targetSamples) * 100));
@@ -1292,7 +1314,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         WebkitBackdropFilter: 'blur(16px)',
       }}
     >
-      <button className="btn btn-sm btn-primary" disabled={bvhProgress === null} onClick={() => void sendBackgroundRender()}>Lancer en arrière-plan</button>
+      <div className="d-flex align-items-center gap-2 p-2 border-bottom">
+        <button className="btn btn-sm btn-outline-light" disabled={isSubmitting || (isBuildingScene && !renderLocally)} onClick={() => setRenderLocally(value => !value)}>{renderLocally ? 'Arrêter le calcul ici' : 'Calculer ici'}</button>
+        <button className="btn btn-sm btn-primary" disabled={bvhProgress === null || renderLocally || isSubmitting} onClick={() => void sendBackgroundRender()}>{isSubmitting ? 'Envoi en cours…' : 'Lancer en arrière-plan'}</button>
+        <span className="small text-white-50">{renderLocally ? 'Arrêtez le calcul ici pour choisir le service local.' : 'Choisissez où calculer. Le service local démarre un nouveau rendu.'}</span>
+      </div>
       {/* ── Barre d'en-tête supérieure ─────────────────────────── */}
       <div
         className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
@@ -1481,7 +1507,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
               >
                 <div className="d-flex align-items-center gap-2">
                   <span className={`badge ${isFinished ? 'bg-success' : 'bg-primary'}`}>
-                    {isFinished ? '✓ Rendu terminé' : '⚡ Calcul en cours…'}
+                    {!renderLocally ? 'Prêt — choisissez où calculer' : isFinished ? '✓ Rendu terminé' : '⚡ Calcul en cours…'}
                   </span>
                   <span>
                     Échantillon : <strong>{currentSamples}</strong> / {targetSamples} ({progressPercent}%)

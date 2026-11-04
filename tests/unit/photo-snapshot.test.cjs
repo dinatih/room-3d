@@ -1,0 +1,23 @@
+const { it } = require('node:test');
+const assert = require('node:assert/strict');
+const THREE = require('three');
+const { load } = require('../support/load-ts.cjs');
+const { serializeRenderScene } = load('src/features/scene/photo/serializeRenderScene.ts', { three: THREE });
+it('exclut les objets masqués et le fond HDR haute résolution sans modifier la scène', () => {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Texture();
+  scene.background.toJSON = () => { throw new Error('High resolution background serialized'); };
+  scene.environment = new THREE.DataTexture(new Float32Array([1, 1, 1, 1]), 1, 1);
+  const visible = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+  const hidden = new THREE.Group(); hidden.visible = false;
+  hidden.add(new THREE.Mesh(new THREE.SphereGeometry(), visible.material));
+  scene.add(visible, hidden);
+  const background = scene.background;
+  const snapshot = serializeRenderScene(scene);
+  assert.deepEqual(snapshot.object.children.map(child => child.uuid), [visible.uuid]);
+  assert.equal(snapshot.object.background, scene.environment.uuid);
+  assert.equal(snapshot.geometries.length, 1);
+  assert.equal(scene.background, background);
+  assert.deepEqual(scene.children, [visible, hidden]);
+  assert.equal(visible.parent, scene);
+});
