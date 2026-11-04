@@ -1332,6 +1332,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       <OrbitControls
         ref={ctrlRef}
         zoomScope="scene"
+        zoomSpeed={10}
         showTargetMarker={!characterGridActive}
         target={
           mode === 'iso'
