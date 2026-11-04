@@ -14,7 +14,7 @@ const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
 export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn ? {} : {
   native:   'desk-bollsidan-2',
   rosanna:  'bed-east',
-  marissa:  'bed-west',
+  marissa:  'mirror-south',
   delphina: 'shower',
   sara:     'inyeong-cha-hugs-point',
   cha:      'garden-fresh-air',
