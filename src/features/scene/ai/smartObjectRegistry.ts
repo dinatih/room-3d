@@ -56,6 +56,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   }])),
   'tv-view': {
     id: 'tv-view', name: 'Regarder la télé', category: 'appliance',
+    exclusiveGroup: 'desk-tv-standing',
     position: [ROOM_W / 2, 0, TV_POSITION[2]],
     slots: [{ slotId: 'watch', name: 'Regarder la télé', rotY: Math.PI / 2, animation: 'looking', triggerEventKey: 'tv-toggle', triggerEventValue: true }],
   },
@@ -230,6 +231,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   'desk-bollsidan-2': {
     id: 'desk-bollsidan-2',
     exclusive: true,
+    exclusiveGroup: 'desk-tv-standing',
     name: 'Bureau Bollsidan 2',
     category: 'surface',
     itemId: 'desk-bollsidan-2',
@@ -1212,6 +1214,10 @@ export function buildSmartObjectInstructionSequence(
     triggerEventKey: slot.triggerEventKey,
     triggerEventValue: slot.triggerEventValue,
   };
+
+  // Keep the shared standing area reserved until its user has actually left it.
+  if (obj.exclusiveGroup === 'desk-tv-standing') return [baseInstruction,
+    { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId, targetZoneId: 'living' }];
 
   if (objectId.startsWith('clean-floor-')) return [{ ...baseInstruction, targetZoneId: objectId.slice('clean-floor-'.length) }];
 

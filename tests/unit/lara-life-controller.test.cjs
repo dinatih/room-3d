@@ -84,6 +84,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     '../cameraState': { cameraState }, './agent/agentWalkAnimations': { getRandomNpcWalkAnimation: () => 'walk', getWalkSpeedForAnimation: () => 100 },
     './agent/agentInstructionCoords': { resolveInstructionCoords: instruction => {
       if (navigationPending) throw new NavigationPending({ description: 'Construction du réseau de navigation' });
+      if (instruction.targetZoneId === 'living') return { tx: 90, ty: 0, tz: 10, label: 'living' };
       if (actorBlockedId && instruction.smartObjectId === actorBlockedId) throw new NavigationBlockedError();
       const object = objects[instruction.smartObjectId];
       return object ? { tx: object.position[0], ty: object.position[1], tz: object.position[2], anim: object.slots[0].animation, label: object.id }
@@ -922,4 +923,22 @@ it('éteint la télé au départ du spectateur sans couper le bureau utilisé pa
       if (departure !== 'disconnect') disconnect();
     }
   } finally { global.document = originalDocument; }
+});
+
+it('garde le bureau réservé pendant la sortie, même si le trajet attend son calcul', () => {
+  const w = world();
+  const objectId = 'desk-bollsidan-2', slotId = 'use';
+  w.controller.configure({ scenario: [
+    { type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: 'work', duration: 1 },
+    { type: 'MOVE_TO', smartObjectId: objectId, slotId, targetZoneId: 'living' },
+  ], loop: false });
+  w.tick(1, false); w.tick();
+  assert.equal(w.reservations.get(`${objectId}:${slotId}`), 'native', 'Finishing the clip must not free the standing area');
+  w.pauseNavigation(true); w.tick();
+  assert.equal(w.controller.state.x, 10);
+  assert.equal(w.reservations.get(`${objectId}:${slotId}`), 'native');
+  w.pauseNavigation(false);
+  for (let i = 0; i < 5 && w.reservations.size; i++) w.tick();
+  assert.equal(w.controller.state.x, 90, 'The character must leave the desk before pausing');
+  assert.equal(w.reservations.size, 0);
 });

@@ -184,3 +184,34 @@ it('réserve le bureau à une seule personne, puis le libère pour la suivante',
     manager.releaseAllForCharacter(ids[0]);
     assert(manager.claimSlot(desk.id, 'work-standing', ids[1]));
 });
+
+it('exclut le bureau et la télé qui partagent le même espace et prévoit une vraie sortie avant libération', () => {
+    const { objects, manager, ids } = fixture();
+    const { desk, tv, buildSmartObjectInstructionSequence } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixture: { objects, manager } }, source => {
+        const deskStart = source.indexOf("  'desk-bollsidan-2': {");
+        const deskEnd = source.indexOf('// ── HYGIÈNE', deskStart);
+        const tvStart = source.indexOf("  'tv-view': {");
+        const tvEnd = source.indexOf("  'garden-conversation':", tvStart);
+        const fnStart = source.indexOf('export function buildSmartObjectInstructionSequence(');
+        const fnEnd = source.indexOf('export function getSmartObject(', fnStart);
+        return `import { objects, manager } from 'fixture';
+            const ROOM_W = 316, TV_POSITION = [288, 220, 50];
+            const SMART_OBJECTS = objects, OccupancyManager = manager, getSmartObject = id => objects[id];
+            const definitions = {${source.slice(deskStart, deskEnd)}${source.slice(tvStart, tvEnd)}};
+            export const desk = definitions['desk-bollsidan-2'], tv = definitions['tv-view'];
+            ${source.slice(fnStart, fnEnd)}`;
+    });
+    for (const object of [desk, tv]) objects[object.id] = { ...object, position: [100, 0, 100] };
+    for (const [first, second] of [[desk, tv], [tv, desk]]) {
+        const [use, exit] = buildSmartObjectInstructionSequence(first.id, first.slots[0].slotId, ids[0]);
+        assert.equal(use.type, 'USE_OBJECT');
+        assert.deepEqual(exit, { type: 'MOVE_TO', smartObjectId: first.id, slotId: first.slots[0].slotId, targetZoneId: 'living' });
+        assert(manager.claimSlot(first.id, use.slotId, ids[0]));
+        assert.equal(manager.claimSlot(second.id, second.slots[0].slotId, ids[1]), false);
+        assert.equal(manager.getAvailableSlot(second.id, ids[1]), null);
+        assert(manager.claimSlot(first.id, exit.slotId, ids[0]), 'The departure belongs to the same reservation');
+        manager.releaseSlot(first.id, exit.slotId, ids[0]);
+        assert(manager.claimSlot(second.id, second.slots[0].slotId, ids[1]));
+        manager.releaseAllForCharacter(ids[1]);
+    }
+});

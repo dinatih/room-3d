@@ -120,3 +120,5 @@ Les relations sont réciproques : Cha et Delphina ne s’aiment pas ; Cha et Mar
 Ces affinités sont distinctes du temps réellement partagé : elles ne créent aucun faux souvenir. Elles favorisent les partenaires amis, déterminent la compagnie préférée et font refuser les invitations autonomes entre personnes qui ne s’entendent pas. Les commandes explicites restent possibles.
 
 La télévision s’éteint quand son spectateur libère le spot, y compris lors d’une interruption. La vidéo partagée avec l’ordinateur ne peut plus allumer un téléviseur éteint.
+
+Le bureau et le point debout pour regarder la télé partagent le même espace physique : leurs réservations sont mutuellement exclusives. Chaque smart action comprend un trajet de sortie vers une place accessible du séjour, en gardant la réservation jusqu’à l’arrivée. Une pause ne laisse donc plus une colocataire devant l’écran alors que le poste est déjà proposé à une autre.
