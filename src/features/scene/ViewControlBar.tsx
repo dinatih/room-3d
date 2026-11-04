@@ -77,8 +77,6 @@ export function ViewControlBar({
   const toggleCameraProjection = useSceneStore(s => s.toggleCameraProjection);
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
-  const cameraTarget = useSceneStore(s => s.cameraTarget);
-  const setCameraTarget = useSceneStore(s => s.setCameraTarget);
   const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
   const elevationPopoverId = useId();
   const elevationPopoverRef = useRef<HTMLDivElement>(null);
@@ -358,20 +356,6 @@ export function ViewControlBar({
       </div>
       {showCharacterModes && (
         <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-          <button
-            type="button"
-            className={`${TOOLBAR_BUTTON_CLASS} ${cameraTarget === 'studio' && cameraMode === 'orbit' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-            onClick={() => {
-              setCameraTarget('studio');
-              dispatchCameraMode('reset-orbit');
-            }}
-            title="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
-            aria-label="Centrer la caméra sur l'appartement / studio (Alt+O, orbit)"
-            aria-pressed={cameraTarget === 'studio' && cameraMode === 'orbit'}
-          >
-            <i className="bi bi-building" aria-hidden="true" />
-            <span className="fw-semibold">Apt</span>
-          </button>
           {perspButton}
           {rotButton}
           {elevationGroup}

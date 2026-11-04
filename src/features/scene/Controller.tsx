@@ -200,7 +200,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
               ? getAnimationDef(CHARACTER_CONTROL_ANIMATIONS[button.key])!.label
               : animal === 'shiba' || animal === 'ulotte' ? `${button.key === 'Elevate' ? 'Sauter' : 'Assis'} : ${subject.label}`
               : `${piloting || isFlyingSubject(animal) ? button.key === 'Elevate' ? 'Monter' : 'Descendre' : button.key === 'Elevate' ? 'Action haute' : 'Action basse'} : ${piloting ? 'Hornet' : subject.label}` }))
-            : EXTRA_CAMERA_CONTROLS;
+            : [];
           const buttons = [...DIRECTIONS, ...extras];
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">

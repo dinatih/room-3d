@@ -47,7 +47,7 @@ import { SunLight, SunSphere } from '@features/scene/SunLight';
 import { SkySphere } from './SkySphere';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
-import { HornetControls, HornetMenuButton } from './HornetControls';
+import { HornetControls } from './HornetControls';
 import { PaperPlane, type PlaneModelKey, type PlaneViewMode } from '@features/scene/PaperPlane';
 import { AutopilotPlane }             from '@features/scene/AutopilotPlane';
 import { LandingStrips }              from '@features/scene/LandingStrips';
@@ -1108,7 +1108,6 @@ export function Studio() {
                 <i className="bi bi-airplane-fill" aria-hidden="true" />
                 <span className="fw-semibold">Avion</span>
               </button>
-              <HornetMenuButton />
               <ToolbarPanelsRow
                 layers={layers} onToggleLayer={toggleLayer}
                 lidarMode={lidarMode} onCycleLidar={onCycleLidar}

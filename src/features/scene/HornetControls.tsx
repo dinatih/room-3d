@@ -3,15 +3,7 @@ import { useDroneControlStore } from './droneControls';
 import { useSceneStore } from './store/useSceneStore';
 import { selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { getActionLabel } from './objectActionRegistry';
-import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import './HornetControls.css';
-
-export function HornetMenuButton() {
-  const open = useDroneControlStore(state => state.panelOpen);
-  return <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`} title="Afficher les commandes du Hornet" aria-pressed={open} onClick={() => useDroneControlStore.setState({ panelOpen: !open })}>
-    <i className="bi bi-controller" aria-hidden="true" /><span className="fw-semibold">Hornet</span>
-  </button>;
-}
 
 export function HornetControls({ hidden = false }: { hidden?: boolean }) {
   const { available, piloting, speed, pitch, panelOpen, setPiloting, setSpeed } = useDroneControlStore();
