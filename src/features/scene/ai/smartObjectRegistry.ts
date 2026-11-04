@@ -60,8 +60,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [{ slotId: 'watch', name: 'Regarder la télé', rotY: Math.PI / 2, animation: 'looking', triggerEventKey: 'tv-toggle', triggerEventValue: true }],
   },
   'garden-conversation': {
-    id: 'garden-conversation', name: 'Discussion au jardin', category: 'outdoor', position: [150, 0, -300],
-    slots: [{ slotId: 'chat', name: 'Discuter', offset: [150, 0, -300], isDuo: true, duoAnimId: 'conversation', duoCount: 1 }],
+    id: 'garden-conversation', name: 'Discussion au jardin', category: 'outdoor', position: [150, 0, -250],
+    slots: [{ slotId: 'chat', name: 'Discuter', offset: [150, 0, -250], isDuo: true, duoAnimId: 'conversation', duoCount: 1 }],
   },
   // ── LITS ───────────────────────────────────────────────────────────────────
   'bed-double': {
@@ -941,7 +941,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     id: 'interx-affection-garden-point',
     name: '🫂 Point Duo Inter-X Jardin',
     category: 'outdoor',
-    position: [150, 0, -250],
+    position: [150, 0, -200],
     slots: [{
       slotId: 'interx-random',
       name: 'Jouer un duo Inter-X aléatoire',
