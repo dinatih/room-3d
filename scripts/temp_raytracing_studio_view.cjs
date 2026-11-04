@@ -8,10 +8,11 @@ const launch = require('./browser-test-options.cjs');
     await page.screenshot({ path: '/tmp/room-raytracing-debug-loading.png' });
     browser.disconnect(); return;
   }
-  const browser = await launch({ args: ['--enable-gpu', '--disable-dev-shm-usage'] });
+  const browser = await launch({ protocolTimeout: 0, args: ['--enable-gpu', '--disable-dev-shm-usage'] });
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1440, height: 1000 });
+    page.on('console', message => { if (message.text().includes('[Raytracing')) console.log(message.text()); });
     page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
     await page.goto('http://localhost:5173/?raytracing=debug&target=studio&projection=persp&cameraMovement=fix&skipIntro=1&characters=0&character=0&animals=0&robots=0&environment=0&bnfMarker=0&bermudaGrass=0&laraLife=0');
     await page.waitForFunction(() => [...document.querySelectorAll('img')].some(image => image.src.startsWith('data:image/png')), { timeout: 240000 });
@@ -19,20 +20,32 @@ const launch = require('./browser-test-options.cjs');
     const image = await page.$('img[src^="data:image/png"]');
     if (image) await image.screenshot({ path: '/tmp/room-raytracing-debug-raster.png' });
     console.log('Studio réel capturé : /tmp/room-raytracing-debug-studio.png');
-    if (process.argv.includes('--archive')) {
-      await page.evaluate(() => {
+    if (process.argv.includes('--archive') || process.argv.includes('--submit')) {
+      await page.evaluate(real => {
+        window.submitRealJob = real;
         const originalFetch = window.fetch;
         window.fetch = async (url, options) => {
           if (String(url) !== 'http://127.0.0.1:5174/api/render-jobs') return originalFetch(url, options);
           if (!(options.body instanceof Blob) || options.body.type !== 'application/octet-stream') throw new Error('Archive binaire attendue');
           window.archiveBytes = options.body.size;
+          if (window.submitRealJob) {
+            const response = await originalFetch(url, options);
+            const body = await response.clone().text();
+            if (!response.ok) throw new Error(body);
+            window.submittedJob = JSON.parse(body).id;
+            return response;
+          }
           return new Response(JSON.stringify({ id: 'studio-archive-verification' }));
         };
         window.alert = () => {};
         [...document.querySelectorAll('button')].find(button => button.textContent === 'Lancer en arrière-plan').click();
-      });
+      }, process.argv.includes('--submit'));
       await page.waitForFunction(() => window.archiveBytes > 0, { timeout: 180000 });
       console.log('Archive du studio réel générée :', await page.evaluate(() => window.archiveBytes), 'octets');
+      if (process.argv.includes('--submit')) {
+        await page.waitForFunction(() => window.submittedJob, { timeout: 180000 });
+        console.log('Travail réel reçu :', await page.evaluate(() => window.submittedJob));
+      }
     }
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

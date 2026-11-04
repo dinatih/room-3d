@@ -13,20 +13,22 @@ declare global { interface Window { renderPaused: boolean; renderJob: (inputUrl:
 window.renderJob = async inputUrl => {
   const response = await fetch(inputUrl);
   if (!response.ok) throw new Error(await response.text());
-  const p = await unpackRenderArchive<RenderPayload>(await response.blob());
+  const p = await unpackRenderArchive<RenderPayload>(response.body!);
   const loader = new THREE.ObjectLoader();
   const scene = await loader.parseAsync(p.scene) as THREE.Scene;
   const original = await loader.parseAsync(p.camera) as THREE.Camera;
   const camera = original instanceof THREE.PerspectiveCamera ? new PhysicalCamera().copy(original) : original;
   if (camera instanceof PhysicalCamera) Object.assign(camera, { focusDistance: p.focusDistance, fStop: p.fStop, bokehSize: p.bokehSize });
   const renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
-  renderer.setSize(p.width, p.height); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = p.exposure;
+  renderer.setSize(p.width, p.height); renderer.toneMapping = THREE.AgXToneMapping; renderer.toneMappingExposure = p.exposure;
   const context = renderer.getContext();
   const debug = context.getExtension('WEBGL_debug_renderer_info');
   if (!debug || /swiftshader|llvmpipe|software/i.test(context.getParameter(debug.UNMASKED_RENDERER_WEBGL))) throw new Error('Accélération GPU matérielle indisponible');
   const tracer = new WebGLPathTracer(renderer);
   const bvhWorker = new GenerateMeshBVHWorker();
   tracer.setBVHWorker(bvhWorker);
+  tracer.filterGlossyFactor = 0.5;
+  tracer.minSamples = 1;
   tracer.bounces = p.bounces; tracer.transmissiveBounces = p.bounces;
   tracer.tiles.set(Math.max(4, Math.ceil(p.width / 200)), Math.max(4, Math.ceil(p.height / 150)));
   tracer.textureSize.set(512, 512); tracer.renderDelay = 0; tracer.fadeDuration = 0;
@@ -39,7 +41,7 @@ window.renderJob = async inputUrl => {
       await new Promise(resolve => setTimeout(resolve, 25));
     }
     if (p.denoise) {
-      const material = new DenoiseMaterial(); material.uniforms.map.value = tracer.target.texture;
+      const material = new DenoiseMaterial(); material.uniforms.sigma.value = 3.5; material.uniforms.threshold.value = 0.12; material.uniforms.kSigma.value = 1.0; material.uniforms.map.value = tracer.target.texture;
       const quad = new FullScreenQuad(material); renderer.setRenderTarget(null); quad.render(renderer); quad.dispose(); material.dispose();
     }
     return renderer.domElement.toDataURL('image/png').split(',')[1];

@@ -82,7 +82,7 @@ const puppeteer = require('puppeteer');
         window.fetch = async (url, options) => {
           if (String(url) !== 'http://127.0.0.1:5174/api/render-jobs') return fetchOriginal(url, options);
           const { unpackRenderArchive } = await import('/src/features/scene/photo/renderArchive.ts');
-          const payload = await unpackRenderArchive(options.body);
+          const payload = await unpackRenderArchive(options.body.stream());
           if (!payload.scene.object || !payload.camera.object) throw new Error('Missing serialized scene/camera');
           const matrix = payload.camera.object.matrix;
           const expected = [288, 178.5, 50];

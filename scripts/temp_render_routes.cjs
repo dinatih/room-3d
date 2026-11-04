@@ -1,6 +1,25 @@
 const assert = require('node:assert/strict');
 const launch = require('./browser-test-options.cjs');
 (async () => {
+  if (process.argv.includes('--replay')) {
+    const response = await fetch('http://127.0.0.1:5174/api/render-jobs', {
+      method: 'POST', headers: { 'Content-Type': 'application/octet-stream' },
+      body: require('node:fs').createReadStream(process.argv.at(-1)), duplex: 'half',
+    });
+    const body = await response.text(); assert.equal(response.status, 200, body); console.log(body); return;
+  }
+  if (process.argv.includes('--gpu')) {
+    const browser = await launch({ args: ['--enable-gpu'] });
+    try {
+      const page = await browser.newPage();
+      console.log(await page.evaluate(() => {
+        const gl = document.createElement('canvas').getContext('webgl2');
+        const debug = gl.getExtension('WEBGL_debug_renderer_info');
+        return { renderer: gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) };
+      }));
+    } finally { await browser.close(); }
+    return;
+  }
   if (process.argv.includes('--archive')) {
     const THREE = require('three');
     const { load } = require('../tests/support/load-ts.cjs');
@@ -19,7 +38,7 @@ const launch = require('./browser-test-options.cjs');
       assert.equal(input.status, 200);
       const received = await input.blob();
       assert.equal(received.size, archive.size);
-      const payload = await unpackRenderArchive(received);
+      const payload = await unpackRenderArchive(received.stream());
       const restored = await new THREE.ObjectLoader().parseAsync(payload.scene);
       assert(restored.children[0].geometry.attributes.position.array instanceof Float32Array);
       console.log(`PASS: HTTP binary upload, streamed download and Three.js reconstruction (${archive.size} bytes).`);

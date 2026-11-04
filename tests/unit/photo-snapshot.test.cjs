@@ -34,12 +34,36 @@ it('transporte les positions et les pixels en binaire et recharge une scène Thr
   assert(ArrayBuffer.isView(snapshot.geometries[0].data.attributes.position.array));
   assert(ArrayBuffer.isView(snapshot.object.children[0].instanceMatrix.array));
   const archive = packRenderArchive(snapshot);
-  const decoded = await unpackRenderArchive(archive);
+  const decoded = await unpackRenderArchive(archive.stream());
   assert(decoded.geometries[0].data.attributes.position.array instanceof Float32Array);
   const restored = await new THREE.ObjectLoader().parseAsync(decoded);
   assert.deepEqual(restored.children[0].geometry.attributes.position.array, geometry.attributes.position.array);
   assert.deepEqual(restored.environment.image.data, pixels);
   assert.deepEqual(restored.children[0].instanceMatrix.array, scene.children[0].instanceMatrix.array);
   assert.equal(scene.children[0].geometry, geometry);
-  await assert.rejects(unpackRenderArchive(archive.slice(0, archive.size - 1)), /Archive de rendu invalide/);
+  await assert.rejects(unpackRenderArchive(archive.slice(0, archive.size - 1).stream()), /Archive de rendu invalide/);
+});
+
+it('sort les images data URL des métadonnées JSON et les restitue sans perte', async () => {
+  const { packRenderArchive, unpackRenderArchive } = load('src/features/scene/photo/renderArchive.ts', {});
+  const image = 'data:image/png;base64,' + 'A'.repeat(1024 * 1024);
+  const archive = packRenderArchive({ image, sharedImage: image });
+  const metadataSize = new DataView(await archive.slice(0, 4).arrayBuffer()).getUint32(0, true);
+  const metadata = JSON.parse(await archive.slice(4, 4 + metadataSize).text());
+  assert(metadataSize < image.length);
+  assert.equal(metadata.buffers.length, 1);
+  assert(!metadata.json.includes(image));
+  assert.deepEqual(await unpackRenderArchive(archive.stream()), { image, sharedImage: image });
+});
+
+it('préserve l’atténuation infinie des matériaux transmissifs et refuse les scalaires NaN', async () => {
+  const { packRenderArchive, unpackRenderArchive } = load('src/features/scene/photo/renderArchive.ts', {});
+  const material = new THREE.MeshPhysicalMaterial({ transmission: 1 });
+  const scene = new THREE.Scene(); scene.add(new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const snapshot = serializeRenderScene(scene);
+  assert.equal(snapshot.materials[0].attenuationDistance, Infinity);
+  const restored = await new THREE.ObjectLoader().parseAsync(await unpackRenderArchive(packRenderArchive(snapshot).stream()));
+  assert.equal(restored.children[0].material.attenuationDistance, Infinity);
+  assert.equal(restored.children[0].material.transmission, 1);
+  assert.throws(() => packRenderArchive({ value: NaN }), /Valeur numérique invalide/);
 });

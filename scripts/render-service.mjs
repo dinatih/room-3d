@@ -1,6 +1,6 @@
 import { createServer } from 'vite';
 import puppeteer from 'puppeteer';
-import { mkdir, writeFile, readdir, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readdir, readFile, stat } from 'node:fs/promises';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { randomUUID } from 'node:crypto';
@@ -25,13 +25,16 @@ async function pump() {
     job.browser = browser;
     if (job.state === 'cancelled') return;
     const page = await browser.newPage(); job.page = page;
+    page.on('requestfailed', request => console.error('[Raytracing service] Échec réseau', request.url().split(',')[0], request.failure()?.errorText));
+    page.on('console', message => { if (message.type() === 'error') console.error('[Raytracing service]', message.text()); });
+    page.on('pageerror', error => console.error('[Raytracing service]', error.message));
     await page.exposeFunction('progress', samples => { job.samples = samples; });
     await page.goto(`${serviceUrl}/render-worker.html`);
     await page.waitForFunction(() => typeof window.renderJob === 'function');
     const png = await page.evaluate(async url => window.renderJob(url), `${serviceUrl}/api/render-jobs/${job.id}/input`);
     await writeFile(`renders/${job.id}.png`, Buffer.from(png, 'base64'));
     job.state = 'completed';
-  } catch (error) { if (job.state !== 'cancelled') job.state = 'failed'; job.error = String(error); }
+  } catch (error) { if (job.state !== 'cancelled') job.state = 'failed'; job.error = error.stack || String(error); }
   finally { delete job.page; delete job.browser; await browser?.close(); await writeFile(`renders/${job.id}.json`, JSON.stringify(job)); active = false; void pump(); }
 }
 async function handleJobs(req, res) {
@@ -45,7 +48,7 @@ async function handleJobs(req, res) {
     if (action.length) {
       const job = jobs.get(action[0]);
       if (!job) { res.statusCode = 404; res.end(); return; }
-      if (action[1] === 'input') { res.setHeader('Content-Type', 'application/octet-stream'); await pipeline(createReadStream(`renders/${job.id}.bin`), res); return; }
+      if (action[1] === 'input') { res.setHeader('Content-Length', (await stat(`renders/${job.id}.bin`)).size); res.setHeader('Cache-Control', 'no-store'); res.setHeader('Content-Type', 'application/octet-stream'); await pipeline(createReadStream(`renders/${job.id}.bin`), res); return; }
       if (action[1] === 'image') { res.setHeader('Content-Type', 'image/png'); res.end(await readFile(`renders/${job.id}.png`)); return; }
       if (req.method === 'POST') {
         if (action[1] === 'cancel') { job.state = 'cancelled'; await job.browser?.close(); }
