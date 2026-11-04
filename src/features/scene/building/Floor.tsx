@@ -29,7 +29,7 @@ import { P } from './Walls';
 const BLDG_Z_MIN = -30;
 const CEIL_THICK = 20;
 
-const INT_X_DOOR_S = DOOR_START;
+const INT_X_DOOR_S = CORRIDOR_WEST_WALL;
 const BATH_DOOR_CENTER_Z = (pZ('door-bath-n') + pZ('door-bath-s')) / 2;
 const BATH_FRAME_NORTH = BATH_DOOR_CENTER_Z - DOOR_WHITE_WIDTH / 2 - DOOR_FRAME_OVERLAP;
 const BATH_FRAME_SOUTH = BATH_DOOR_CENTER_Z + DOOR_WHITE_WIDTH / 2 + DOOR_FRAME_OVERLAP;
@@ -251,8 +251,8 @@ export function Tile() {
       new THREE.Vector2(BATH_WEST_WALL, -Bz),
       new THREE.Vector2(BATH_EAST_WALL, -Cz),
       new THREE.Vector2(BATH_EAST_WALL, -DOOR_BATH_END),
-      new THREE.Vector2(DOOR_START,     -DOOR_BATH_END),
-      new THREE.Vector2(DOOR_START,     -DOOR_BATH_START),
+      new THREE.Vector2(CORRIDOR_WEST_WALL, -DOOR_BATH_END),
+      new THREE.Vector2(CORRIDOR_WEST_WALL, -DOOR_BATH_START),
       new THREE.Vector2(BATH_EAST_WALL, -DOOR_BATH_START),
       new THREE.Vector2(BATH_EAST_WALL, -BATH_NORTH_WALL),
     ]);

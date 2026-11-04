@@ -225,8 +225,8 @@ export const pNorth = (id: PillarId) => pZ(id) - pD(id) / 2;
 export const pSouth = (id: PillarId) => pZ(id) + pD(id) / 2;
 
 // ── Huisseries et repères de portes ──────────────────────────────────────────
-export const DOOR_BATH_START = pNorth('door-bath-n');
-export const DOOR_BATH_END   = DOOR_BATH_START + (DOOR_END - DOOR_START);
+export const DOOR_BATH_START = pSouth('door-bath-n');
+export const DOOR_BATH_END   = pNorth('door-bath-s');
 
 // ── Faces internes des murs (repères de placement) ─────────────────────────
 
