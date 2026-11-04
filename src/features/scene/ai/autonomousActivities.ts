@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_SETTINGS, isLifeCharacter, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { isLifeCharacter, type LifeCharacterId, type LifeCandidate } from './laraLife';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
 
@@ -83,35 +83,23 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
 
 export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
   if (candidate.activity === 'meal') return [
-    { type: 'USE_OBJECT', smartObjectId: MEAL_PREPARATION.id, slotId: MEAL_PREPARATION.slotId, animation: 'cooking-stir-pan',
-      duration: LIFE_SETTINGS.mealPreparationSeconds, repeatCount: 1, lifePhase: 'prepare-meal' },
+    ...buildSmartObjectInstructionSequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId, characterId)
+      .map(instruction => ({ ...instruction, lifePhase: 'prepare-meal' as const })),
     { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
-      duration: LIFE_SETTINGS.activitySeconds, repeatCount: 1, lifePhase: 'eat-meal' },
+      repeatCount: 1, repeatVariation: false, lifePhase: 'eat-meal' },
   ];
   const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, characterId);
-  if (candidate.activity === 'social') return sequence.map(instruction => ({ ...instruction, lifePhase: 'social' }));
-  if (candidate.activity === 'toilet' || candidate.activity === 'wash-hands' || candidate.activity === 'shower') return sequence.map((instruction): AgentInstruction => {
-    if (instruction.type !== 'USE_OBJECT') return instruction;
-    if (instruction.smartObjectId === 'toilet' && instruction.slotId === 'use') return {
-      ...instruction, duration: LIFE_SETTINGS.toiletSeconds, animation: 'sit-idle', repeatCount: 1, lifePhase: 'use-toilet',
-    };
-    if (instruction.triggerEventKey === 'wc-flush') return { ...instruction, lifePhase: 'flush' };
-    if (instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands') return {
-      ...instruction, duration: LIFE_SETTINGS.handWashingSeconds, animation: 'fab-daily-life-wash-hands', repeatCount: 1, lifePhase: 'wash-hands',
-    };
-    if (instruction.smartObjectId === 'shower') return {
-      ...instruction, duration: LIFE_SETTINGS.activitySeconds, animation: 'taking-shower', repeatCount: 1, repeatVariation: false, lifePhase: 'shower',
-    };
-    return instruction;
-  });
   const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');
-  const instructions = sequence.map((instruction, index): AgentInstruction => instruction.type === 'USE_OBJECT'
-    ? { ...instruction, duration: candidate.activity === 'sleep' ? LIFE_SETTINGS.sleepSeconds : LIFE_SETTINGS.activitySeconds,
-      repeatCount: 1, repeatVariation: false, lifePhase: candidate.activity === 'sleep' ? 'sleep'
-        : candidate.activity === 'read' || candidate.activity === 'watch-tv' ? candidate.activity : undefined,
-      animation: candidate.activity === 'sleep' ? 'laying-sleeping' : candidate.activity === 'rest' ? 'sitting-idle'
-        : candidate.activity === 'walk' || candidate.activity === 'watch-tv' ? 'looking' : 'standing-using-touchscreen-tablet' }
-    : { ...instruction, ...(candidate.activity === 'sleep' && index > sleepStep ? { lifePhase: 'wake-up' as const } : {}) });
+  const instructions = sequence.map((instruction, index): AgentInstruction => {
+    const lifePhase = candidate.activity === 'sleep' && index > sleepStep ? 'wake-up'
+      : instruction.type !== 'USE_OBJECT' ? undefined
+      : instruction.smartObjectId === 'toilet' && instruction.slotId === 'use' ? 'use-toilet'
+      : instruction.triggerEventKey === 'wc-flush' ? 'flush'
+      : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
+      : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
+        || candidate.activity === 'watch-tv' || candidate.activity === 'social' ? candidate.activity : undefined;
+    return lifePhase ? { ...instruction, lifePhase } : instruction;
+  });
   // A stroll has a real itinerary even when Lara is already at the far end.
   return candidate.activity === 'walk' ? [{ type: 'MOVE_TO', targetZoneId: 'garden' }, ...instructions] : instructions;
 }

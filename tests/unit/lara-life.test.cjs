@@ -78,8 +78,8 @@ it('sélectionne uniquement des places de repos adaptées et libres dans la conf
   const gardenSteps = buildLaraLifeInstructions('native', available[1]);
   assert.equal(gardenSteps[0].targetZoneId, 'garden');
   const garden = gardenSteps[1];
-  assert.equal(garden.animation, 'looking');
-  assert.equal(garden.repeatCount, 1);
+  assert.equal(garden.animation, undefined);
+  assert.equal(garden.repeatCount, undefined);
   occupied.clear();
   assert.equal(getLaraLifeCandidates('native', false).filter(c => c.activity === 'rest').length, 2);
   assert(!getLaraLifeCandidates('native', false).some(c => c.activity === 'meal'), 'No meal without a kitchen');
@@ -111,7 +111,7 @@ it('réserve le lit à la grande fatigue et choisit une pause assise si tous les
   assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null, 8, {}, 0).activity, 'sleep', 'The nearer sofa must not replace an available bed');
   assert.equal(chooseLifeActivity(tired, candidates, position, null, 8, {}, 0).activity, 'rest');
   assert.equal(chooseLifeActivity(tired, [], position, null, 8, {}, 0), null);
-  const rested = evolveLife(tired, LIFE_SETTINGS.sleepSeconds, 'sleep', false);
+  const rested = evolveLife(tired, 120, 'sleep', false);
   assert.equal(rested.rest, 0);
   assert(rested.meal > tired.meal);
   assert(evolveLife(tired, 60, 'rest', false).rest > evolveLife(tired, 60, 'sleep', false).rest);
@@ -139,7 +139,8 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
   const occupied = new Set();
   const route = [
     { type: 'MOVE_TO' }, { type: 'MOVE_TO', targetLocalPos: [0, 45, 28], navigation: 'interaction' },
-    { type: 'USE_OBJECT' }, { type: 'MOVE_TO', targetLocalPos: [0, 45, 28], navigation: 'interaction' }, { type: 'MOVE_TO' },
+    { type: 'USE_OBJECT', animation: 'laying-front-variation', duration: 7 },
+    { type: 'MOVE_TO', targetLocalPos: [0, 45, 28], navigation: 'interaction' }, { type: 'MOVE_TO' },
   ];
   const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
@@ -152,9 +153,9 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
   const steps = buildLaraLifeInstructions('native', beds[0]);
   assert.deepEqual(steps.map(step => step.type), route.map(step => step.type));
   assert.deepEqual(steps[1].targetLocalPos, route[1].targetLocalPos);
-  assert.equal(steps[2].animation, 'laying-sleeping');
+  assert.equal(steps[2].animation, route[2].animation);
   assert.equal(steps[2].lifePhase, 'sleep');
-  assert.equal(steps[2].duration, LIFE_SETTINGS.sleepSeconds);
+  assert.equal(steps[2].duration, route[2].duration);
   assert(steps.slice(3).every(step => step.lifePhase === 'wake-up'));
   occupied.add('bed-west:lie-down');
   assert.equal(getLaraLifeCandidates('native', false).length, 0);
@@ -208,11 +209,12 @@ it('préserve la chaîne sanitaire et les événements des objets, et interdit u
   const steps = buildLaraLifeInstructions('native', { activity: 'toilet', id: 'toilet', slotId: 'use' });
   assert.deepEqual(steps.map(s => s.triggerEventKey), toilet.map(s => s.triggerEventKey));
   assert.deepEqual(steps.map(s => s.lifePhase), [undefined, undefined, 'use-toilet', undefined, 'flush', 'wash-hands']);
-  assert.equal(steps[2].duration, LIFE_SETTINGS.toiletSeconds);
-  assert.equal(steps[5].duration, LIFE_SETTINGS.handWashingSeconds);
+  assert.equal(steps[2].duration, toilet[2].duration);
+  assert.equal(steps[5].duration, toilet[5].duration);
   const shower = buildLaraLifeInstructions('native', { activity: 'shower', id: 'shower', slotId: 'take-shower-1' });
   assert.deepEqual(shower.map(s => s.type), ['MOVE_TO', 'USE_OBJECT', 'MOVE_TO']);
-  assert.equal(shower[1].animation, 'taking-shower');
+  assert.equal(shower[1].animation, undefined);
+  assert.equal(shower[1].lifePhase, 'shower');
 });
 
 it('fait évoluer l’humeur avec le besoin dominant puis retrouve son bien-être après satisfaction', () => {
@@ -256,7 +258,7 @@ it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urge
 
 it('propose les loisirs libres et conserve leurs phases et les actions de la télé', () => {
   const objects = [
-    { id: 'desk-bollsidan-2', slots: [{ slotId: 'work-standing' }] },
+    { id: 'desk-bollsidan-2', slots: [{ slotId: 'work-standing', animation: 'standing-using-touchscreen-tablet' }] },
     { id: 'tv-view', slots: [{ slotId: 'watch', triggerEventKey: 'tv-toggle', triggerEventValue: true }] },
     { id: 'garden-conversation', slots: [{ slotId: 'chat', isDuo: true }] },
   ].map(object => ({ ...object, position: [0, 0, 0] }));
@@ -387,4 +389,29 @@ it('utilise l’identité de Cha pour vérifier les places et construire ses int
   });
   buildLaraLifeInstructions('cha', getLaraLifeCandidates('cha', false)[0]);
   assert(calls.length > 0 && calls.every(id => id === 'cha'));
+});
+
+it('conserve les animations, durées et répétitions des objets pour les deux vies', () => {
+  const { buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': require('../../src/features/scene/ai/laraLife.ts'),
+    './smartObjectRegistry': { buildSmartObjectInstructionSequence: (id, slotId) => [
+      { type: 'MOVE_TO', smartObjectId: id, slotId },
+      { type: 'USE_OBJECT', smartObjectId: id, slotId, animation: undefined, repeatCount: 3, repeatVariation: true, triggerEventKey: 'water' },
+      { type: 'MOVE_TO', smartObjectId: id, slotId },
+    ] },
+    './occupancyManager': {},
+  });
+  for (const character of ['native', 'cha']) for (const activity of ['shower', 'rest', 'sleep', 'walk', 'work', 'read', 'watch-tv', 'social']) {
+    const steps = buildLaraLifeInstructions(character, { activity, id: 'shower', slotId: 'take-shower-1' });
+    const use = steps.find(step => step.type === 'USE_OBJECT');
+    assert.equal(use.animation, undefined, 'The slot must resolve its own random animation pool');
+    assert.equal(use.duration, undefined, 'The clip must define its natural duration');
+    assert.equal(use.repeatCount, 3);
+    assert.equal(use.repeatVariation, true);
+    assert.equal(use.triggerEventKey, 'water');
+    assert(steps.filter(step => step.type === 'MOVE_TO').every(step => step.lifePhase !== 'shower'));
+  }
+  const needs = { ...createLife('native').needs, hygiene: 90 };
+  const short = evolveLife(needs, 6, 'shower', false), long = evolveLife(needs, 18, 'shower', false);
+  assert(needs.hygiene > short.hygiene && short.hygiene > long.hygiene && long.hygiene > 0);
 });

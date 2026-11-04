@@ -1,6 +1,7 @@
 import { characterLives, useLaraLifeStore } from '/src/features/scene/ai/laraLifeStore.ts';
 import { cameraState } from '/src/features/scene/cameraState.ts';
-import { resolveAnimationId } from '/src/features/scene/animations/animationResolver.ts';
+import { getAnimationsByTags, resolveAnimationId } from '/src/features/scene/animations/animationResolver.ts';
+import { getSmartObject } from '/src/features/scene/ai/smartObjectRegistry.ts';
 import { OccupancyManager } from '/src/features/scene/ai/occupancyManager.ts';
 
 const nativeLife = characterLives.native;
@@ -35,7 +36,7 @@ export async function life(fixture) {
     const beforeWork = nativeLife.needs.work;
     await new Promise(resolve => setTimeout(resolve, 2000));
     check(nativeLife.needs.work < beforeWork, 'Working must relieve boredom');
-    await waitFor(() => animation('sitting-idle'), 'Lara se repose après le bureau');
+    await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Se reposer', 'Lara se repose après le bureau');
     const beforeRest = nativeLife.needs.rest;
     await new Promise(resolve => setTimeout(resolve, 2000));
     check(nativeLife.needs.rest < beforeRest, 'Fatigue must decrease while seated');
@@ -43,7 +44,7 @@ export async function life(fixture) {
     check(panel.querySelectorAll('progress').length === 7, 'Seven needs must be visible');
     const values = [...panel.querySelectorAll('progress')].map(element => element.value);
     Object.values(nativeLife.needs).forEach((value, index) => check(Math.abs(value - values[index]) < 2, 'Needs panel must track the simulation'));
-    await waitFor(() => animation('looking') && decisions().some(entry => entry.appLog.object?.id === 'garden-fresh-air'), 'Lara se relève, marche puis observe le jardin');
+    await waitFor(() => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.objectId === 'garden-fresh-air') && decisions().some(entry => entry.appLog.object?.id === 'garden-fresh-air'), 'Lara se relève, marche puis observe le jardin');
     check(cameraState.positions.xbot.x !== xbotStart.x || cameraState.positions.xbot.z !== xbotStart.z, 'Xbot must keep its existing autonomous route');
 
     // Interrupt an autonomous queue through the actual manual-control path.
@@ -108,7 +109,7 @@ export async function sleep(fixture) {
         await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
         nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
         cameraState.lastUserControlTime = 0;
-        await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping'), 'Lara rejoint le lit et se couche');
+        await waitFor(() => getAnimationsByTags('laying-front').some(animation => animation.id === cameraState.positions.native?.anim), 'Lara rejoint le lit et se couche');
         check(cameraState.positions.native.y === 45, 'Sleeping must take place on the mattress');
         const beforeSleeping = nativeLife.needs.rest;
         await waitFor(() => nativeLife.needs.rest < beforeSleeping - 2, 'Lara récupère pendant son sommeil');
@@ -121,7 +122,7 @@ export async function sleep(fixture) {
         check(document.querySelector('[aria-label="Vie de Lara Native"]').textContent.includes('Dormir'), 'The panel must identify sleep');
         await waitFor(() => nativeLife.lastActivity === 'sleep', 'Lara se réveille et descend du lit');
         check(wokeUp, 'The wake-up phase must be observable');
-        check(nativeLife.needs.rest < 10, 'A complete night must restore Lara');
+        check(nativeLife.needs.rest < 90, 'Rest recovery follows the actual bed animation duration');
         check(cameraState.positions.native.y === 0, 'Lara must return to ground level after waking');
         check(!ownsBed(), 'The bed must be released after waking');
         await startNight();
@@ -132,7 +133,7 @@ export async function sleep(fixture) {
         check(nativeLife.needs.rest === fatigue, 'Sleep recovery must stop after interruption');
         check(!ownsBed(), 'An interrupted sleep must release the bed');
         cameraState.lastUserControlTime = 0;
-        await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('laying-sleeping')
+        await waitFor(() => getAnimationsByTags('laying-front').some(animation => animation.id === cameraState.positions.native?.anim)
             && cameraState.positions.native.y === 45 && nativeLife.needs.rest < fatigue - 2, 'Lara reprend son sommeil après le contrôle manuel');
         return { observations, wokeUp, interruptedFatigue: fatigue };
     } finally { unsubscribe(); }
@@ -168,12 +169,15 @@ export async function hygiene(fixture) {
     await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant la douche');
     nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };
     cameraState.lastUserControlTime = 0;
-    await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('taking-shower'), 'Lara rejoint la douche');
+    const showerAnimations = getSmartObject('shower').slots.flatMap(slot => slot.animationsRandom).map(resolveAnimationId);
+    await waitFor(() => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.objectId === 'shower')
+        && showerAnimations.includes(cameraState.positions.native?.anim), 'Lara utilise les animations configurées de la douche');
     const beforeShower = nativeLife.needs.hygiene;
     await waitFor(() => nativeLife.needs.hygiene < beforeShower - 2, 'La douche satisfait la propreté');
-    await waitFor(() => nativeLife.lastActivity === 'shower', 'Lara termine sa douche et sort');
+    await waitFor(() => cameraState.positions.native.y === 0
+        && !OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.objectId === 'shower'), 'Lara termine sa douche et sort');
     check(cameraState.positions.native.y === 0, 'Lara must leave the shower at ground level');
-    check(nativeLife.needs.hygiene < 10, 'A full shower must restore cleanliness');
+    check(nativeLife.needs.hygiene < beforeShower, 'Shower recovery follows the actual animation sequence duration');
     return { observations };
 }
 

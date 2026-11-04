@@ -17,7 +17,8 @@ function fixture(characterId = 'rosanna') {
       buildSmartObjectInstructionSequence: (id, slotId, actor) => {
         assert.equal(actor, characterId);
         assert(objects.find(obj => obj.id === id).slots.some(slot => slot.slotId === slotId), 'The selected slot must be passed explicitly');
-        return [{ type: 'MOVE_TO', smartObjectId: id, slotId }, { type: 'USE_OBJECT', smartObjectId: id, slotId }];
+        return [{ type: 'MOVE_TO', smartObjectId: id, slotId },
+          { type: 'USE_OBJECT', smartObjectId: id, slotId, duration: id === 'desk-bollsidan-2' ? 24 : undefined }];
       },
     }, './occupancyManager': { OccupancyManager: {
       canUseObject: id => id !== 'private',
@@ -65,12 +66,12 @@ describe('Tirage autonome par slot', () => {
     for (let i = 0; i < steps.length; i += 2) assert.equal(steps[i].slotId, steps[i + 1].slotId);
   });
 
-  it('limite le départ de Native au bureau, pendant une minute sans séquence mélangée', () => {
+  it('fait démarrer Native au bureau avec la durée et les animations du slot', () => {
     const steps = fixture('native').buildAutonomousActivities('native');
     assert.equal(steps.length, 2);
     assert(steps.every(step => step.smartObjectId === 'desk-bollsidan-2'));
-    assert.equal(steps[1].duration, 60);
-    assert.equal(steps[1].repeatCount, 1);
-    assert.equal(steps[1].animation, 'standing-using-touchscreen-tablet');
+    assert.equal(steps[1].duration, 24);
+    assert.equal(steps[1].repeatCount, undefined);
+    assert.equal(steps[1].animation, undefined);
   });
 });

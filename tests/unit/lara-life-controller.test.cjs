@@ -20,7 +20,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     candidates.push({ activity: 'sleep', id: 'sleep', slotId: 'use', x: 50, z: 10 });
     objects.sleep = { id: 'sleep', name: 'Bed', position: [50, 45, 10], slots: [{ slotId: 'use', animation: 'laying-sleeping' }] };
   }
-  const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, animation: objects[objectId].slots[0].animation, duration: 1 }];
+  const sequence = (objectId, slotId) => [{ type: 'USE_OBJECT', smartObjectId: objectId, slotId, ...objects[objectId].slots[0], duration: objects[objectId].slots[0].duration ?? 1 }];
   if (withHygiene) for (const activity of ['toilet', 'wash-hands']) {
     candidates.push({ activity, id: activity, slotId: 'use', x: 60, z: 10 });
     objects[activity] = { id: activity, name: activity, position: [60, 0, 10], slots: [{ slotId: 'use', animation: activity }] };
@@ -53,7 +53,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { type: 'MOVE_TO', targetPos: [50, 45, 10] },
         { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
         { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
-      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: candidate.activity === 'social' ? 'social' : undefined })) },
+      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: ['social', 'shower'].includes(candidate.activity) ? candidate.activity : undefined })) },
     './laraLife': life, './laraLifeStore': { characterLives, publishLife: (characterId, state) => Object.assign(snapshot, state), useLaraLifeStore: { getState: () => ({ speed: 1 }) } },
     './occupancyManager': { OccupancyManager: occupancy },
     './duoSessionManager': { duoSessionManager: duo },
@@ -504,4 +504,36 @@ it('fait vivre Cha indépendamment de Lara et conserve ses besoins après une in
   w.controller.setPosition(50, 0, 50); w.tick(0);
   assert.deepEqual(w.lifeState.needs, needs);
   assert.equal(w.snapshot.activity, 'Commande utilisateur');
+});
+
+it('termine les répétitions du slot avec une récupération partielle, puis réévalue les besoins', () => {
+  for (const id of ['native', 'cha']) {
+    const w = world(id);
+    w.tick(); w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };
+    const slot = { slotId: 'use', animation: 'wash-a', duration: 2, repeatCount: 3, repeatVariation: true };
+    w.objects.shower = { id: 'shower', name: 'Douche', position: [60, 0, 10], slots: [slot] };
+    w.candidates.push({ activity: 'shower', id: 'shower', slotId: 'use', x: 60, z: 10 });
+    for (let i = 0; i < 10 && w.controller.state.animation !== 'wash-a'; i++) w.tick();
+    assert.equal(w.controller.state.animation, 'wash-a');
+    const before = w.lifeState.needs.hygiene;
+    slot.animation = 'wash-b';
+    w.tick(2);
+    assert.equal(w.controller.state.animation, 'wash-b');
+    const afterFirst = w.lifeState.needs.hygiene;
+    assert(afterFirst < before);
+    w.tick(2, false);
+    assert(w.lifeState.needs.hygiene > afterFirst, 'Loading a variation must not consume its timer or satisfy hygiene');
+    slot.animation = 'wash-c';
+    w.tick(2);
+    assert.equal(w.controller.state.animation, 'wash-c');
+    w.tick(2);
+    assert.equal(w.lifeState.lastActivity, 'shower');
+    assert(w.lifeState.needs.hygiene > 0 && w.lifeState.needs.hygiene < before);
+    assert.equal(w.reservations.size, 0);
+    w.lifeState.needs.work = 100;
+    w.tick();
+    assert.equal(w.logs.filter(log => log.action === 'life_decision').at(-1).object?.id, 'desk-bollsidan-2',
+      'A more pressing need must take priority after the slot sequence, even with hygiene still unmet');
+  }
 });

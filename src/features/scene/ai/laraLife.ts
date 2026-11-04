@@ -28,8 +28,7 @@ export interface LifeCandidate {
 }
 
 // Gameplay seconds: needs become important in roughly two minutes.
-export const LIFE_SETTINGS = { activitySeconds: 60, mealPreparationSeconds: 20, toiletSeconds: 30, handWashingSeconds: 15,
-  sleepSeconds: 120, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
+export const LIFE_SETTINGS = { activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
   rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
