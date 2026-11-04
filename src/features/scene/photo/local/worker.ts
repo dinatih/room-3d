@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { unpackRenderArchive } from '../renderArchive';
 import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
@@ -8,8 +9,11 @@ export interface RenderPayload {
   width: number; height: number; samples: number; bounces: number; exposure: number;
   focusDistance: number; fStop: number; bokehSize: number; denoise: boolean;
 }
-declare global { interface Window { renderPaused: boolean; renderJob: (payload: RenderPayload) => Promise<string>; progress: (samples: number) => Promise<void>; } }
-window.renderJob = async p => {
+declare global { interface Window { renderPaused: boolean; renderJob: (inputUrl: string) => Promise<string>; progress: (samples: number) => Promise<void>; } }
+window.renderJob = async inputUrl => {
+  const response = await fetch(inputUrl);
+  if (!response.ok) throw new Error(await response.text());
+  const p = await unpackRenderArchive<RenderPayload>(await response.blob());
   const loader = new THREE.ObjectLoader();
   const scene = await loader.parseAsync(p.scene) as THREE.Scene;
   const original = await loader.parseAsync(p.camera) as THREE.Camera;

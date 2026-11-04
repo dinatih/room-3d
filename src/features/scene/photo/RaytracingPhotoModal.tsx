@@ -13,6 +13,7 @@ import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { getUrlParams } from '../camera/cameraUrlParams';
 import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
+import { packRenderArchive } from './renderArchive';
 import { serializeRenderScene } from './serializeRenderScene';
 import { splitMultiMaterialMeshes } from './splitMultiMaterialMeshes';
 import {
@@ -1288,8 +1289,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       const cameraJson = c.toJSON();
       cameraJson.object.type = c instanceof PhysicalCamera ? 'PerspectiveCamera' : 'OrthographicCamera';
       const response = await fetch('http://127.0.0.1:5174/api/render-jobs', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scene: serializeRenderScene(scene), camera: cameraJson, width: size.x, height: size.y,
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' },
+        body: packRenderArchive({ scene: serializeRenderScene(scene), camera: cameraJson, width: size.x, height: size.y,
           samples: targetSamples, bounces, exposure, focusDistance, fStop,
           bokehSize: c instanceof PhysicalCamera ? c.bokehSize : 0, denoise: enableDenoise }),
       });

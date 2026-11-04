@@ -1,6 +1,8 @@
 import { createServer } from 'vite';
 import puppeteer from 'puppeteer';
 import { mkdir, writeFile, readdir, readFile } from 'node:fs/promises';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { randomUUID } from 'node:crypto';
 const jobs = new Map();
 const port = Number(process.env.RENDER_PORT || 5174);
@@ -21,15 +23,16 @@ async function pump() {
     job.state = 'rendering';
     browser = await puppeteer.launch({ headless: true, protocolTimeout: 0, args: ['--enable-gpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
     job.browser = browser;
+    if (job.state === 'cancelled') return;
     const page = await browser.newPage(); job.page = page;
     await page.exposeFunction('progress', samples => { job.samples = samples; });
     await page.goto(`${serviceUrl}/render-worker.html`);
     await page.waitForFunction(() => typeof window.renderJob === 'function');
-    const png = await page.evaluate(async payload => window.renderJob(payload), job.payload);
+    const png = await page.evaluate(async url => window.renderJob(url), `${serviceUrl}/api/render-jobs/${job.id}/input`);
     await writeFile(`renders/${job.id}.png`, Buffer.from(png, 'base64'));
     job.state = 'completed';
   } catch (error) { if (job.state !== 'cancelled') job.state = 'failed'; job.error = String(error); }
-  finally { delete job.payload; delete job.page; delete job.browser; await browser?.close(); await writeFile(`renders/${job.id}.json`, JSON.stringify(job)); active = false; void pump(); }
+  finally { delete job.page; delete job.browser; await browser?.close(); await writeFile(`renders/${job.id}.json`, JSON.stringify(job)); active = false; void pump(); }
 }
 async function handleJobs(req, res) {
   const origin = req.headers.origin;
@@ -42,6 +45,7 @@ async function handleJobs(req, res) {
     if (action.length) {
       const job = jobs.get(action[0]);
       if (!job) { res.statusCode = 404; res.end(); return; }
+      if (action[1] === 'input') { res.setHeader('Content-Type', 'application/octet-stream'); await pipeline(createReadStream(`renders/${job.id}.bin`), res); return; }
       if (action[1] === 'image') { res.setHeader('Content-Type', 'image/png'); res.end(await readFile(`renders/${job.id}.png`)); return; }
       if (req.method === 'POST') {
         if (action[1] === 'cancel') { job.state = 'cancelled'; await job.browser?.close(); }
@@ -50,11 +54,11 @@ async function handleJobs(req, res) {
       }
     }
     if (req.method === 'POST') {
-      const chunks = []; for await (const chunk of req) chunks.push(chunk);
-      const payload = JSON.parse(Buffer.concat(chunks).toString());
-      const job = { id: randomUUID(), state: 'queued', samples: 0, payload };
+      if (req.headers['content-type'] !== 'application/octet-stream') throw new Error('Archive binaire de rendu attendue. Rechargez la page.');
+      const job = { id: randomUUID(), state: 'queued', samples: 0 };
+      await pipeline(req, createWriteStream(`renders/${job.id}.bin`));
       jobs.set(job.id, job); await writeFile(`renders/${job.id}.json`, JSON.stringify({ id: job.id, state: 'interrupted', samples: 0 })); res.end(JSON.stringify({ id: job.id })); void pump();
-    } else { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify([...jobs.values()].map(({ payload, page, browser, ...job }) => job))); }
+    } else { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify([...jobs.values()].map(({ page, browser, ...job }) => job))); }
   } catch (error) { res.statusCode = 400; res.end(String(error)); }
 }
 for (const file of await readdir('renders')) {

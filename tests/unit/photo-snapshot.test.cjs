@@ -21,3 +21,25 @@ it('exclut les objets masqués et le fond HDR haute résolution sans modifier la
   assert.deepEqual(scene.children, [visible, hidden]);
   assert.equal(visible.parent, scene);
 });
+
+it('transporte les positions et les pixels en binaire et recharge une scène Three.js', async () => {
+  const { packRenderArchive, unpackRenderArchive } = load('src/features/scene/photo/renderArchive.ts', {});
+  const scene = new THREE.Scene();
+  const pixels = new Float32Array([1, 0.5, 0.25, 1]);
+  scene.environment = new THREE.DataTexture(pixels, 1, 1);
+  const geometry = new THREE.BoxGeometry();
+  geometry.attributes.position.toJSON = () => { throw new RangeError('Invalid string length'); };
+  scene.add(new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial(), 2));
+  const snapshot = serializeRenderScene(scene);
+  assert(ArrayBuffer.isView(snapshot.geometries[0].data.attributes.position.array));
+  assert(ArrayBuffer.isView(snapshot.object.children[0].instanceMatrix.array));
+  const archive = packRenderArchive(snapshot);
+  const decoded = await unpackRenderArchive(archive);
+  assert(decoded.geometries[0].data.attributes.position.array instanceof Float32Array);
+  const restored = await new THREE.ObjectLoader().parseAsync(decoded);
+  assert.deepEqual(restored.children[0].geometry.attributes.position.array, geometry.attributes.position.array);
+  assert.deepEqual(restored.environment.image.data, pixels);
+  assert.deepEqual(restored.children[0].instanceMatrix.array, scene.children[0].instanceMatrix.array);
+  assert.equal(scene.children[0].geometry, geometry);
+  await assert.rejects(unpackRenderArchive(archive.slice(0, archive.size - 1)), /Archive de rendu invalide/);
+});
