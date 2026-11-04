@@ -753,3 +753,46 @@ it('préfère une autre assise à une voisine détestée sans interdire la derni
   occupied.clear(); reservations.length = 0;
   assert.equal(choose().id, 'bed-east', 'The preference disappears when the neighbor leaves');
 });
+
+it('différencie les sept colocataires par leurs goûts initiaux sans forcer les activités ni créer de souvenirs', () => {
+  const { LIFE_INITIAL_PREFERENCES, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  const cases = [
+    ['native', 'read', 'watch-tv', 20], ['cha', 'walk', 'yoga', 10], ['vivida', 'bath', 'rest', 10],
+    ['delphina', 'read', 'watch-tv', 20], ['marissa', 'yoga', 'walk', 10], ['rosanna', 'walk', 'work', 10], ['sabira', 'affection', 'bath', 20],
+  ];
+  for (const [id, preferred, other, hour] of cases) {
+    const life = createLife(id), preferences = LIFE_INITIAL_PREFERENCES[id];
+    const needs = Object.fromEntries(Object.keys(life.needs).map(key => [key, 60]));
+    const favorite = { activity: preferred, id: 'favorite', slotId: 'use', x: 100, z: 0 };
+    const ordinary = { ...favorite, activity: other, id: 'ordinary', x: 0 };
+    const choose = (values = needs, options = [ordinary, favorite]) => chooseLifeActivity(values, options, position, null, hour, life.memory, 0, preferences);
+    assert.equal(choose(), favorite, id);
+    assert.equal(choose(needs, [ordinary]), ordinary, 'Unavailable favorites cannot block daily life');
+    const toilet = { ...ordinary, activity: 'toilet' };
+    assert.equal(choose({ ...needs, toilet: 95 }, [favorite, toilet]), toilet, 'Urgent care wins');
+    const satisfied = Object.fromEntries(Object.keys(needs).map(key => [key, 0]));
+    assert.equal(choose(satisfied), null, 'A taste does not create a need');
+    assert.deepEqual(life.memory, {});
+    assert.equal(favoriteLifeActivity(life.memory), null, 'An initial preference is not a discovered favorite');
+  }
+});
+
+it('laisse les expériences prendre le pas sur les goûts de départ tout en gardant une envie de découverte', () => {
+  const { LIFE_INITIAL_PREFERENCES, lifePreferenceScore, rememberLifeActivity, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  const life = createLife('native'), preferences = LIFE_INITIAL_PREFERENCES.native;
+  const before = lifePreferenceScore('read', life.memory, 600, preferences);
+  const needs = { ...life.needs, work: 80 };
+  rememberLifeActivity(life, 'watch-tv', needs, evolveLife(needs, 60, 'watch-tv', false));
+  const after = lifePreferenceScore('read', life.memory, 600, preferences);
+  assert(after > 1 && after < before, 'The initial bias fades as real experience grows');
+  assert(lifePreferenceScore('watch-tv', life.memory, 600, preferences) > after);
+  assert.equal(favoriteLifeActivity(life.memory), 'watch-tv');
+  assert.equal(life.memory.read, undefined);
+  assert.equal(life.memory['watch-tv'].satisfaction, 60);
+  assert.equal(createLife('cha').memory['watch-tv'], undefined);
+  const fresh = { read: { satisfaction: 1, lastAt: 600 } };
+  const recent = { activity: 'read', id: 'read', slotId: 'use', x: 0, z: 0 };
+  const untried = { ...recent, activity: 'watch-tv', id: 'tv', x: 100 };
+  assert.equal(chooseLifeActivity({ ...createLife('native').needs, work: 50 }, [recent, untried], position, 'read', 20, fresh, 600, preferences), untried,
+    'An initial taste cannot monopolize every choice after being played');
+});

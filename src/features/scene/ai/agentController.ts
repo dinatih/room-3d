@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -766,7 +766,7 @@ export function createAgentController(
         .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
           && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`)));
       const clock = lifeClock(life.elapsedSeconds);
-      let candidate = chooseLifeActivity(life.needs, candidates, state, life.lastActivity, clock.hour, life.memory, life.elapsedSeconds);
+      let candidate = chooseLifeActivity(life.needs, candidates, state, life.lastActivity, clock.hour, life.memory, life.elapsedSeconds, LIFE_INITIAL_PREFERENCES[lifeId]);
       const invitation = deferredInvitation;
       if (invitation) invitation.ready = false;
       if (invitation && lifeInvitationResponse(life.needs, null, life.handsDirty, true).status === 'accepted') {
@@ -793,7 +793,7 @@ export function createAgentController(
         : (candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)]) >= LIFE_SETTINGS.sleepPriority ? 'Besoin urgent.'
         : routine ? `Routine de ${clock.period.toLowerCase()}.` : 'Hors routine.'} ${experience
         ? `Goût appris : ${experience.satisfaction.toFixed(1)} pts ; dernière fois il y a ${Math.max(0, life.elapsedSeconds - experience.lastAt).toFixed(0)} min simulées.`
-        : 'Activité à découvrir.'} ${followUp ?? ''}${personalSpace}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}${candidate.mealPartnerId ? ` Repas près de ${LIFE_CHARACTER_LABELS[candidate.mealPartnerId as LifeCharacterId]}.` : ''}${deferredInvitation?.ready ? ` Invitation reportée de ${deferredInvitation.fromId}.` : ''}`.trim() : needReason;
+        : 'Activité à découvrir.'} ${LIFE_INITIAL_PREFERENCES[lifeId].some(activity => activity === candidate.activity) ? 'Goût initial. ' : ''}${followUp ?? ''}${personalSpace}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}${candidate.mealPartnerId ? ` Repas près de ${LIFE_CHARACTER_LABELS[candidate.mealPartnerId as LifeCharacterId]}.` : ''}${deferredInvitation?.ready ? ` Invitation reportée de ${deferredInvitation.fromId}.` : ''}`.trim() : needReason;
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(lifeId, candidate)
         : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
       if (deferredInvitation?.ready && deferredInvitation.forcedAnimId) {
@@ -809,9 +809,9 @@ export function createAgentController(
       if (!postureTransition) agentStatus = 'IDLE';
       publish({ activity: LIFE_LABELS[lifeActivity], reason, needs: { ...life.needs } });
       logLife('life_decision', `🧭 ${LIFE_LABELS[lifeActivity]} — ${reason}`, {
-        reason, activity: lifeActivity, needs: { ...life.needs }, lastActivity: life.lastActivity, followUp, habit,
+        reason, activity: lifeActivity, initialPreferences: LIFE_INITIAL_PREFERENCES[lifeId], needs: { ...life.needs }, lastActivity: life.lastActivity, followUp, habit,
         candidates: candidates.map(entry => ({ ...entry, need: entry.urgency ?? life.needs[lifeNeed(entry.activity, life.needs)],
-          routine: routineActivities(clock.hour).includes(entry.activity), preference: lifePreferenceScore(entry.activity, life.memory, life.elapsedSeconds),
+          routine: routineActivities(clock.hour).includes(entry.activity), preference: lifePreferenceScore(entry.activity, life.memory, life.elapsedSeconds, LIFE_INITIAL_PREFERENCES[lifeId]),
           habit: lifeHabitScore(entry, life.memory, clock.hour, life.elapsedSeconds), followUp: lifeFollowUp(life.lastActivity, entry, life.needs) })),
         excluded: [...failedLifeTargets.keys()],
       }, candidate ? { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId } : undefined);

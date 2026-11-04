@@ -1,4 +1,4 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
@@ -16,7 +16,8 @@ export function LaraLifePanel() {
   const mood = getLifeMood(needs);
   const clock = lifeClock(elapsedSeconds);
   const favorite = favoriteLifeActivity(memory);
-  const tastes = favorite ? `Loisir favori : ${LIFE_LABELS[favorite]}` : 'Goûts encore à découvrir';
+  const initialTastes = LIFE_INITIAL_PREFERENCES[selectedCharacterId].map(activity => LIFE_LABELS[activity]).join(' · ');
+  const tastes = favorite ? `Loisir favori découvert : ${LIFE_LABELS[favorite]}` : `Goûts initiaux : ${initialTastes}`;
   const friend = closestLifeFriend(relationships);
   const company = friend ? `Compagnie préférée : ${characterName(friend)}` : 'Aucune rencontre pour le moment';
   const relations = Object.entries(relationships).sort(([a, x], [b, y]) => (y.affinity ?? 0) - (x.affinity ?? 0) || y.seconds - x.seconds || a.localeCompare(b));
@@ -64,6 +65,12 @@ export function LaraLifePanel() {
         <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
       </div>
       <div className="visually-hidden">{reason}</div>
+      <details className="mt-1 text-break">
+        <summary className="fw-semibold">Goûts</summary>
+        <div>Au départ : {initialTastes}.</div>
+        <div>{favorite ? `Loisir favori découvert : ${LIFE_LABELS[favorite]}.` : 'Loisir favori encore à découvrir.'}</div>
+        <div>Les expériences prennent progressivement le pas sur les goûts initiaux.</div>
+      </details>
       <details className="mt-1">
         <summary className="fw-semibold">Relations · {relations.length}</summary>
         {relations.length === 0 ? <div className="mt-1">Aucune rencontre pour le moment.</div> : <ul className="list-unstyled mb-0">

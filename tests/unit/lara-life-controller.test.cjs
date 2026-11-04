@@ -1068,3 +1068,15 @@ it('revérifie le voisinage après la cuisine et garde la dernière assise quand
     assert(!w.reservations.size, 'The next seat must still be reserved on arrival');
   }
 });
+
+it('utilise et explique le goût initial de Cha pour la marche dans une décision réelle', () => {
+  const w = world('cha');
+  w.tick(); w.tick(); w.tick();
+  w.lifeState.memory = {};
+  w.lifeState.needs = { ...w.lifeState.needs, rest: 0, work: 60, walk: 60 };
+  for (let i = 0; i < 5 && !w.logs.some(log => log.action === 'life_decision' && log.data.activity === 'walk'); i++) w.tick();
+  const decision = w.logs.find(log => log.action === 'life_decision' && log.data.activity === 'walk');
+  assert(decision.message.includes('Goût initial.'));
+  assert.deepEqual(decision.data.initialPreferences, ['walk', 'social']);
+  assert(decision.data.candidates.find(c => c.activity === 'walk').preference > decision.data.candidates.find(c => c.activity === 'work').preference);
+});

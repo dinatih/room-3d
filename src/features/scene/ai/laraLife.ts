@@ -3,6 +3,10 @@ export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'maris
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
 export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira' };
 export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath', delphina: 'shower', marissa: 'yoga', rosanna: 'rest', sabira: 'rest' } as const;
+export const LIFE_INITIAL_PREFERENCES = {
+  native: ['work', 'read'], cha: ['walk', 'social'], vivida: ['bath', 'affection'], delphina: ['walk', 'read'],
+  marissa: ['yoga', 'watch-tv'], rosanna: ['yoga', 'walk'], sabira: ['social', 'affection'],
+} as const satisfies Record<LifeCharacterId, readonly LifeActivity[]>;
 export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number; environment: number };
 type LifeExperience = { satisfaction: number; lastAt: number };
@@ -164,12 +168,14 @@ export function favoriteLifeActivity(memory: LifeMemory): LifeActivity | null {
     .sort((a, b) => memory[b]!.satisfaction - memory[a]!.satisfaction)[0] ?? null;
 }
 
-export function lifePreferenceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number) {
+export function lifePreferenceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number, preferences: readonly LifeActivity[] = []) {
   const experience = memory[activity];
-  if (!experience) return 1; // An untried activity is a chance to discover a taste.
-  const since = elapsedSeconds - experience.lastAt;
   const total = Object.values(memory).reduce((sum, entry) => sum + entry.satisfaction, 0);
-  return since / (since + LIFE_SETTINGS.activitySeconds) + (total > 0 ? experience.satisfaction / total : 0);
+  // A starting taste has the weight of one decision's worth of need relief, shared between its activities.
+  const initial = preferences.includes(activity) ? LIFE_SETTINGS.priority / (LIFE_SETTINGS.priority + total) / preferences.length : 0;
+  if (!experience) return 1 + initial; // An untried activity remains a chance to discover a taste.
+  const since = elapsedSeconds - experience.lastAt;
+  return since / (since + LIFE_SETTINGS.activitySeconds) * (1 + initial) + (total > 0 ? experience.satisfaction / total : 0);
 }
 
 // One simulation second represents one clock minute; a day lasts 24 minutes at ×1.
@@ -204,14 +210,14 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
 export const preferLifePersonalSpace = (candidates: LifeCandidate[]) => candidates.filter(candidate => !candidate.avoidedNeighbors?.length
   || !candidates.some(other => other.activity === candidate.activity && !other.avoidedNeighbors?.length));
 
-export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number): LifeCandidate | null {
+export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number, preferences: readonly LifeActivity[] = []): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
   const need = (candidate: LifeCandidate) => candidate.urgency ?? needs[lifeNeed(candidate.activity, needs)];
   const routine = routineActivities(hour);
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
-  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds)
+  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds, preferences)
     * lifeHabitScore(candidate, memory, hour, elapsedSeconds) * (1 + (candidate.companyScore ?? 0) * needs.company / 100);
   return preferLifePersonalSpace(candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority)))

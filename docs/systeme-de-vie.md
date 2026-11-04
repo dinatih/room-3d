@@ -142,3 +142,19 @@ Les réservations des assises, lits et places du bain permettent de repérer une
 Les logs de décision expliquent la préférence d’une place à l’écart et indiquent les voisines évitées pour chaque candidat. Après la préparation d’un repas, la place est revérifiée ; `life_meal_seat_changed` signale un changement d’assise lorsque les disponibilités ou le voisinage ont changé.
 
 Les onglets du panneau de vie reprennent l’icône et la couleur définies dans le registre des personnages. L’onglet actif a un fond à sa couleur et un nom souligné ; les autres gardent un fond clair et une bordure à leur couleur.
+
+## Goûts personnels de départ
+
+| Colocataire | Préférences initiales |
+|---|---|
+| Lara | Bureau et lecture |
+| Cha | Marche et discussion |
+| Vivida | Bain et affection |
+| Delphina | Marche et lecture |
+| Marissa | Yoga et télévision |
+| Rosanna | Yoga et marche |
+| Sabira | Discussion et affection |
+
+Ces préférences départagent les activités adaptées aux besoins. Elles ne créent ni besoin, ni souvenir, ni réservation, et ne passent pas devant les urgences, l’hygiène des mains ou le respect de l’espace personnel. La récence continue de favoriser la variété.
+
+Leur poids initial correspond au seuil d’une décision de besoin, réparti entre les activités préférées. Il diminue progressivement avec le soulagement réellement accumulé dans les souvenirs : chacune peut découvrir un loisir favori différent de ses goûts de départ. La section repliable **Goûts** du panneau distingue ces deux informations. Les décisions mentionnent « Goût initial » quand il intervient, et leurs données incluent les préférences du personnage ainsi que les coefficients utilisés.
