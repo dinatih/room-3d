@@ -9,7 +9,9 @@ import { InventoryPreview } from './InventoryPreview';
 import { InventorySmartActions, getInventorySmartObjects, type SmartActionPreviewRequest } from './InventorySmartActions';
 import { SpatialZonePreview } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
-import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
+import { DUO_ANIMATIONS } from '@features/scene/animations/duoAnimations';
+import { LaraLifePanel } from '@features/scene/sidepanel/sections/LaraLifePanel';
+import { isLifeCharacter } from '@features/scene/ai/laraLife';
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
@@ -89,12 +91,9 @@ const WIG_COLOR_OPTIONS = [
 function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string; initialSmartAction?: SmartActionPreviewRequest }) {
   if (!item) return null;
 
-  const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const requestedAction = initialSmartAction && getInventorySmartObjects(item.id).some(object => object.id === initialSmartAction.objectId) ? initialSmartAction : undefined;
   const [smartAction, setSmartAction] = useState(requestedAction);
   useEffect(() => setSmartAction(requestedAction), [requestedAction]);
-  const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
-  const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
   const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
 
   const handleGlbStats = useCallback((s: { fileSize?: number; triangles: number; drawCalls: number } | null) => {
@@ -108,8 +107,6 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
   }, []);
 
   useEffect(() => {
-    setSelectedDuoAnim(undefined);
-    setSelectedDuoPartner(undefined);
     setGlbStats(null);
   }, [item?.id]);
 
@@ -232,8 +229,6 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
           height="100%"
           hideFooter={true}
           smartAction={smartAction}
-          initialDuoAnim={selectedDuoAnim}
-          initialDuoPartner={selectedDuoPartner}
           externalHairColor={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigColor || undefined) : undefined}
           externalLaraVariant={!isStorage && (item as InventoryItem).category === 'wigs' ? (wigBustVariant || 'native') : undefined}
           onGlbStats={handleGlbStats}
@@ -280,6 +275,11 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
             </span>
           )}
         </div>
+
+        {!isStorage && (item as InventoryItem).category === 'characters' && (
+          isLifeCharacter(item.id) ? <LaraLifePanel characterId={item.id} />
+            : <p className="small text-muted">Ce personnage ne participe pas au système de vie.</p>
+        )}
 
         <div className="row g-2 mb-3">
           <div className="col-6">
@@ -412,87 +412,6 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
         <div className="card bg-white bg-opacity-50 border p-2 text-dark small mb-3 text-pre-line">
           {(item as any).notes || "Aucune note descriptive disponible pour cet élément."}
         </div>
-
-        {!isStorage && !isZone && (item as InventoryItem).category === 'characters' && item.id !== 'ushiro' && item.id !== 'ulotte' && item.id !== 'robin-bird' && item.id !== 'jikin-goldfish' && item.id !== 'tosakin-goldfish' && item.id !== 'black-hornet-drone' && !['unitree-g1', 'unitree-go2', 'jumper-robot'].includes(item.id) && (
-          <>
-            <hr className="my-3 opacity-25" />
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <div className="text-uppercase text-muted fw-bold small" style={{ fontSize: '0.7rem' }}>👯‍♀️ Animations Duo (Preview 3D : {(item as any).name})</div>
-              <button
-                type="button"
-                className="btn btn-sm btn-warning text-dark py-0 px-2 fw-bold shadow-sm"
-                title="Lancer une animation de couple aléatoire dans la preview 3D"
-                onClick={() => {
-                  const randomAnim = DUO_ANIMATIONS[Math.floor(Math.random() * DUO_ANIMATIONS.length)];
-                  const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                  const randPartner = otherChars[Math.floor(Math.random() * otherChars.length)]?.id;
-                  if (randomAnim) {
-                    setSelectedDuoAnim(randomAnim);
-                    setSelectedDuoPartner(randPartner);
-                  }
-                }}
-              >
-                <i className="bi bi-shuffle" aria-hidden="true" /> Aléatoire
-              </button>
-            </div>
-
-            <div className="mb-2">
-              <select
-                className="form-select form-select-sm"
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (!val) {
-                    setSelectedDuoAnim(undefined);
-                  } else {
-                    const def = DUO_ANIMATIONS.find(a => a.id === val);
-                    if (def) {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                      const randPartner = otherChars.find(c => c.id === selectedDuoPartner)?.id || otherChars[0]?.id;
-                      setSelectedDuoAnim(def);
-                      setSelectedDuoPartner(randPartner);
-                    }
-                  }
-                }}
-                value={selectedDuoAnim?.id || ""}
-              >
-                <option value="">Sélectionner une animation de couple...</option>
-                {DUO_ANIMATIONS.map(a => (
-                  <option key={a.id} value={a.id}>
-                    {a.icon} {a.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="d-flex flex-column gap-1 overflow-auto" style={{ maxHeight: '180px', paddingRight: '4px' }}>
-              {DUO_ANIMATIONS.map(a => {
-                const isSelected = selectedDuoAnim?.id === a.id;
-                return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => {
-                      const otherChars = CHARACTERS.filter(c => c.id !== item.id && (extraCharacters || !isExtraCharacter(c.id)));
-                      const partner = otherChars.find(c => c.id === selectedDuoPartner)?.id || otherChars[0]?.id;
-                      setSelectedDuoAnim(a);
-                      setSelectedDuoPartner(partner);
-                    }}
-                    className={`btn btn-sm text-start d-flex align-items-center justify-content-between px-2 py-1 border ${
-                      isSelected ? 'btn-primary text-white shadow-sm' : 'btn-outline-secondary bg-white text-dark'
-                    }`}
-                  >
-                    <span className="text-truncate me-2 small">
-                      <span className="me-1">{a.icon}</span> {a.label}
-                    </span>
-                    <span className={`badge border ${isSelected ? 'bg-light text-dark' : 'bg-light text-secondary'}`} style={{ fontSize: '0.65rem' }}>
-                      Preview 3D
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
 
         <hr className="my-3 opacity-25" />
         <DevAnnotationPanel

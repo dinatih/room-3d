@@ -1,4 +1,4 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
@@ -7,8 +7,9 @@ const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Sti
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
 const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
-export function LaraLifePanel() {
-  const { characters, selectedCharacterId, speed, home, savedAt, saveError } = useLaraLifeStore();
+export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId } = {}) {
+  const { characters, selectedCharacterId: selectedId, speed, home, savedAt, saveError } = useLaraLifeStore();
+  const selectedCharacterId = characterId ?? selectedId;
   const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
@@ -23,7 +24,7 @@ export function LaraLifePanel() {
   const relations = Object.entries(relationships).sort(([a, x], [b, y]) => (y.affinity ?? 0) - (x.affinity ?? 0) || y.seconds - x.seconds || a.localeCompare(b));
   return <section className="p-2 border-bottom small lh-sm" aria-label={`Vie de ${selectedCharacterId === 'native' ? 'Lara Native' : LIFE_CHARACTER_LABELS[selectedCharacterId]}`}>
     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
-      <div className="d-flex flex-wrap gap-1 w-100" role="tablist" aria-label="Personnage du panneau de vie"
+      {characterId ? <h4 className="fs-6 fw-bold mb-0 w-100">{findCharacter(characterId)!.emoji} Vie de {characterName(characterId)}</h4> : <div className="d-flex flex-wrap gap-1 w-100" role="tablist" aria-label="Personnage du panneau de vie"
         onKeyDown={event => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
           event.preventDefault();
@@ -44,17 +45,17 @@ export function LaraLifePanel() {
             <span aria-hidden="true">{character.emoji}</span> {LIFE_CHARACTER_LABELS[id]}
           </button>;
         })}
-      </div>
+      </div>}
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
-      <button type="button" className="btn btn-sm btn-light text-dark border-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
+      {!characterId && <button type="button" className="btn btn-sm btn-light text-dark border-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
         title="Accélérer la vie de la colocation : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
         <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
-      </button>
+      </button>}
     </div>
-    <div id="life-character-panel" role="tabpanel" aria-labelledby={`life-tab-${selectedCharacterId}`}>
+    <div id={characterId ? undefined : 'life-character-panel'} role={characterId ? undefined : 'tabpanel'} aria-labelledby={characterId ? undefined : `life-tab-${selectedCharacterId}`}>
       {(Object.keys(needs) as (keyof LifeNeeds)[]).map(key => <label key={key} className="row align-items-center gx-2 mb-0">
         <span className="col-4" title={key === 'environment' ? cleanliness : LIFE_NEED_LABELS[key]}>{NEED_LABELS[key]}</span>
         <span className="col-6"><progress className="d-block w-100" max={100} value={needs[key]} aria-label={LIFE_NEED_LABELS[key]} /></span>
@@ -64,23 +65,23 @@ export function LaraLifePanel() {
         <span className={`badge ${mood.uncomfortable ? 'text-bg-warning' : 'text-bg-success'}`} title={mood.cause} aria-label={`Humeur : ${mood.label}. ${mood.cause}`}>{mood.label}</span>
         <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
       </div>
-      <div className="visually-hidden">{reason}</div>
-      <details className="mt-1 text-break">
+      <div className={characterId ? 'mt-1 text-break' : 'visually-hidden'}>{reason}</div>
+      {!characterId && <details className="mt-1 text-break">
         <summary className="fw-semibold">Sauvegarde de la colocation</summary>
         <div>{savedAt ? `Sauvegardée à ${new Date(savedAt).toLocaleTimeString('fr-FR')}.` : 'Sauvegarde automatique pendant la simulation.'}</div>
         <button type="button" className="btn btn-sm btn-outline-danger mt-1" onClick={() => {
           if (window.confirm('Recommencer toute la colocation ? Les besoins, souvenirs, relations apprises, habitudes et la propreté seront réinitialisés pour tous les personnages.')) resetLives();
         }}>Nouvelle vie</button>
-      </details>
+      </details>}
       {saveError && <div role="alert" className="text-bg-danger rounded p-1 mt-1 text-break">{saveError}</div>}
-      <details className="mt-1 text-break">
+      <details className="mt-1 text-break" open={characterId ? true : undefined}>
         <summary className="fw-semibold">Goûts</summary>
         <div>Au départ : {initialTastes}.</div>
         {LIFE_PERSONALITY[selectedCharacterId] && <div>{LIFE_PERSONALITY[selectedCharacterId]}.</div>}
         <div>{favorite ? `Loisir favori découvert : ${LIFE_LABELS[favorite]}.` : 'Loisir favori encore à découvrir.'}</div>
         <div>Les expériences prennent progressivement le pas sur les goûts initiaux.</div>
       </details>
-      <details className="mt-1">
+      <details className="mt-1" open={characterId ? true : undefined}>
         <summary className="fw-semibold">Relations · {relations.length}</summary>
         {relations.length === 0 ? <div className="mt-1">Aucune rencontre pour le moment.</div> : <ul className="list-unstyled mb-0">
           {relations.map(([id, relation]) => {
@@ -101,6 +102,16 @@ export function LaraLifePanel() {
         </ul>}
         <div className="mt-1">Temps en minutes simulées.</div>
       </details>
+      {characterId && <details className="mt-1 text-break">
+        <summary className="fw-semibold">Souvenirs et habitudes · {Object.keys(memory).length}</summary>
+        {Object.keys(memory).length === 0 ? <div>Les habitudes se découvriront au fil des activités.</div> : <ul className="list-unstyled mb-0">
+          {Object.entries(memory).map(([activity, experience]) => <li key={activity} className="border-top pt-1 mt-1">
+            <div className="fw-semibold">{LIFE_LABELS[activity as LifeActivity]}</div>
+            <div>Satisfaction apprise : {minutes.format(experience.satisfaction)} · Dernière fois : jour {lifeClock(experience.lastAt).day}, {lifeClock(experience.lastAt).time}</div>
+            {experience.periods && <div>{Object.entries(experience.periods).map(([period, count]) => `${period} : ${count}`).join(' · ')}</div>}
+          </li>)}
+        </ul>}
+      </details>}
     </div>
   </section>;
 }
