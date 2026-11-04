@@ -167,3 +167,20 @@ describe('Capacité des pièces', () => {
         for (const point of [{ x: 250, z: 550 }, { x: 100, z: 430 }, { x: -100, z: 550 }, { x: 100, z: 690 }, { x: 100, y: 2500, z: 550 }]) assert.equal(isInRoom('bathroom', point), false);
     });
 });
+
+it('réserve le bureau à une seule personne, puis le libère pour la suivante', () => {
+    const { desk } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
+        const start = source.indexOf("  'desk-bollsidan-2': {");
+        const end = source.indexOf('// ── HYGIÈNE', start);
+        assert(start > 0 && end > start);
+        return `export const desk = ({${source.slice(start, end)}})['desk-bollsidan-2'];`;
+    });
+    const { objects, manager, ids } = fixture();
+    objects[desk.id] = { ...desk, position: [100, 0, 100] };
+    assert.equal(desk.exclusive, true);
+    assert(manager.claimSlot(desk.id, 'work-standing', ids[0]));
+    assert.equal(manager.claimSlot(desk.id, 'work-standing', ids[1]), false);
+    assert.equal(manager.getAvailableSlot(desk.id, ids[1]), null);
+    manager.releaseAllForCharacter(ids[0]);
+    assert(manager.claimSlot(desk.id, 'work-standing', ids[1]));
+});

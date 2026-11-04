@@ -70,6 +70,7 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
         const task = getHomeTask(object.id, slot.slotId);
         const seat = isLifeSeat(object.category, slot);
         const activity = task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
+          : object.id === 'west-neighbor-flat' ? 'yoga'
           : object.id === 'tv-view' ? 'watch-tv'
           : object.id === 'garden-conversation' ? 'social'
           : object.id === 'garden-fresh-air' ? 'walk'
@@ -104,7 +105,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
       : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
-        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' || candidate.activity === 'clean' ? candidate.activity : undefined;
+        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' || candidate.activity === 'clean' || candidate.activity === 'yoga' ? candidate.activity : undefined;
     return lifePhase ? { ...instruction, lifePhase } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.

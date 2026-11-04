@@ -501,3 +501,40 @@ it('fait commencer les trois colocataires sans besoin de repos', () => {
   const { LIFE_CHARACTER_IDS } = require('../../src/features/scene/ai/laraLife.ts');
   for (const id of LIFE_CHARACTER_IDS) assert.equal(createLife(id).needs.rest, 0);
 });
+
+it('propose les huit places de yoga libres chez Églantine avec stimulation et exercice réellement joués', () => {
+  const life = require('../../src/features/scene/ai/laraLife.ts');
+  const occupied = new Set(['yoga-2']);
+  const slots = ['yoga', 'yoga-2', 'yoga-3', 'yoga-4', 'yoga-5', 'yoga-6', 'yoga-7', 'yoga-8'];
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
+    './smartObjectRegistry': {
+      getAllSmartObjects: () => [{ id: 'west-neighbor-flat', category: 'outdoor', position: [-200, 0, 500], slots: slots.map(slotId => ({ slotId })) }],
+      buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId, repeatCount: 6, repeatVariation: true }],
+    },
+    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(slot) } },
+  });
+  for (const id of life.LIFE_CHARACTER_IDS) {
+    const candidates = getLaraLifeCandidates(id, false);
+    assert.equal(candidates.length, 7);
+    assert(candidates.every(candidate => candidate.activity === 'yoga' && candidate.slotId !== 'yoga-2'));
+    const [step] = buildLaraLifeInstructions(id, candidates[0]);
+    assert.equal(step.lifePhase, 'yoga');
+    assert.equal(step.repeatCount, 6);
+    assert.equal(step.repeatVariation, true);
+    assert.equal(step.animation, undefined, 'The smart object must choose its yoga poses');
+    assert.equal(step.duration, undefined, 'Poses must retain their natural duration');
+  }
+  occupied.clear();
+  assert.equal(getLaraLifeCandidates('native', false).length, 8);
+  const needs = { ...createLife('native').needs, work: 80, walk: 80 };
+  const after = evolveLife(needs, 10, life.lifeEffect('yoga', 'yoga'), false);
+  assert(after.work < needs.work && after.walk < needs.walk);
+  assert(after.rest > needs.rest, 'Exercise must not be treated as sleep');
+  assert.equal(life.lifeEffect('yoga'), null, 'Travelling to a yoga slot must not give yoga benefits');
+  const yoga = getLaraLifeCandidates('native', false)[0];
+  assert.equal(chooseLifeActivity({ ...needs, work: 0 }, [yoga], position, null, 10, {}, 0), yoga,
+    'Yoga must also be chosen for exercise when the character is not bored');
+  assert.equal(chooseLifeActivity(needs, [{ ...candidates[0], visits: 1 }, yoga], position, 'work', 10,
+    { work: { satisfaction: 20, lastAt: 0 } }, 0).activity, 'yoga', 'The daytime routine must allow alternatives to the computer');
+});

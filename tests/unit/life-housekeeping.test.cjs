@@ -74,3 +74,19 @@ it('reconnaît un duo même si le tirage assis choisit le clip du partenaire B',
   });
   for (const key of ['talking-1', 'partner.glb', 'partner']) assert.equal(getDuoAnimationForClip(key).id, 'conversation');
 });
+
+it('ne répète pas les smart actions de balayage par défaut', () => {
+  const { HOME_TASKS } = require('../../src/features/scene/ai/lifeHousekeeping.ts');
+  const { floors } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
+    const start = source.indexOf('...Object.fromEntries(Object.values(HOME_TASKS)');
+    const end = source.indexOf("  'tv-view':", start);
+    assert(start > 0 && end > start);
+    return `const HOME_TASKS = ${JSON.stringify(HOME_TASKS)};
+      const floorCenters = {living:[0,0,0],bathroom:[0,0,0],corridor:[0,0,0],garden:[0,0,0]};
+      export const floors = ({${source.slice(start, end)}});`;
+  });
+  for (const object of Object.values(floors)) {
+    assert.equal(object.slots[0].repeatCount, undefined);
+    assert.equal(object.slots[0].repeatVariation, undefined);
+  }
+});

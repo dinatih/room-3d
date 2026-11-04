@@ -52,7 +52,7 @@ const floorCenters: Record<HomeRoom, [number, number, number]> = {
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   ...Object.fromEntries(Object.values(HOME_TASKS).filter(task => task.slotId === 'sweep').map(task => [task.objectId, {
     id: task.objectId, name: task.label, category: 'hygiene', position: floorCenters[task.room],
-    slots: [{ slotId: task.slotId, name: task.label, animationsRandom: ['sweeping-floor', 'cmu-sweep-floor-alt'], repeatCount: 3, repeatVariation: true }],
+    slots: [{ slotId: task.slotId, name: task.label, animationsRandom: ['sweeping-floor', 'cmu-sweep-floor-alt'] }],
   }])),
   'tv-view': {
     id: 'tv-view', name: 'Regarder la télé', category: 'appliance',
@@ -228,6 +228,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'desk-bollsidan-2': {
     id: 'desk-bollsidan-2',
+    exclusive: true,
     name: 'Bureau Bollsidan 2',
     category: 'surface',
     itemId: 'desk-bollsidan-2',

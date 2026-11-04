@@ -639,7 +639,7 @@ export function createAgentController(
           && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), state, life.lastActivity, lifeClock(life.elapsedSeconds).hour, life.memory, life.elapsedSeconds);
       lifeActivity = candidate?.activity ?? 'pause';
       const reason = candidate?.activity === 'wash-hands' ? `${actorName} se lave les mains après les toilettes.` : candidate
-        ? `${candidate.activity === 'clean' ? HOME_TASKS[getHomeTask(candidate.id, candidate.slotId)!].label : LIFE_NEED_LABELS[lifeNeed(candidate.activity)]} : ${Math.round(candidate.urgency ?? life.needs[lifeNeed(candidate.activity)])} %.`
+        ? `${candidate.activity === 'clean' ? HOME_TASKS[getHomeTask(candidate.id, candidate.slotId)!].label : LIFE_NEED_LABELS[lifeNeed(candidate.activity, life.needs)]} : ${Math.round(candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)])} %.`
         : `${actorName} fait une pause ; ses besoins sont faibles ou les activités adaptées sont indisponibles.`;
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(lifeId, candidate)
         : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
