@@ -15,6 +15,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   environment: true,
   bnfMarker: true,
   doors: true,
+  transparentWallsDoors: true,
   ceiling: false,
   // Contenu
   equipment: true,
@@ -89,6 +90,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
+  { layerKey: 'transparentWallsDoors', canonicalParam: 'transparentWallsDoors', urlParams: ['transparentwallsdoors'] },
   { layerKey: 'wigGrid', canonicalParam: 'wigGrid', urlParams: ['wiggrid'] },
   { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
   {

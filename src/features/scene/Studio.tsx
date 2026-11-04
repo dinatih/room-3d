@@ -939,15 +939,15 @@ export function Studio() {
            * LAYER_STRUCTURE (28) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
-          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure}>
+          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
             <Walls pillarsOnly={layers.pillarsOnly} />
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors}>
+          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
             {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={layers.floorCoverings} register={false}>
+          <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={layers.floorCoverings} register={false} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
             {!layers.pillarsOnly && <DoorsPlacement framesOnly />}
           </CategoryLayerGroup>
           <Floor />

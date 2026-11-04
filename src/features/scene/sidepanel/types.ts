@@ -98,6 +98,7 @@ export interface LayerState {
   wireframeWallStructure?: boolean;
   wireframeStructure?: boolean;
   wireframeDoors?: boolean;
+  transparentWallsDoors?: boolean;
   mirrorSurfaces: boolean;
   mirrors:       boolean;
   mirrorsHD:  boolean;

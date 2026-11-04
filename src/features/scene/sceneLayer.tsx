@@ -10,6 +10,7 @@ import { useThree } from '@react-three/fiber';
 import { LAYER_ENVIRONMENT, LAYER_WALKER_DETAIL } from '@config';
 import type { LayerState } from './sidepanel/types';
 import { enableWireframe } from './utils/wireframe';
+import { applyOpacity } from './utils/opacity';
 import {
   categoryLayerRegistry,
   LayerSmokeTransition,
@@ -32,8 +33,8 @@ export const LayerRegistryContext = createContext(true);
  * Supporte le mode filaire localisé via la prop `wireframe`.
  */
 export function CategoryLayerGroup({
-  layer, children, visible = true, wireframe = false, register = true,
-}: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean; register?: boolean }) {
+  layer, children, visible = true, wireframe = false, register = true, opacity = 1,
+}: { layer: number; children: React.ReactNode; visible?: boolean; wireframe?: boolean; register?: boolean; opacity?: number }) {
   const ref = useRef<THREE.Group>(null!);
   const invalidate = useThree(state => state.invalidate);
   const allowRegistry = useContext(LayerRegistryContext);
@@ -76,8 +77,12 @@ export function CategoryLayerGroup({
   }, [layer, visible, shouldRegister]);
 
   useLayoutEffect(() => {
+    if (opacity !== 1) return applyOpacity(ref.current, opacity, invalidate);
+  }, [opacity, invalidate]);
+
+  useLayoutEffect(() => {
     if (wireframe) return enableWireframe(ref.current, invalidate);
-  }, [wireframe, invalidate]);
+  }, [wireframe, opacity, invalidate]);
 
   return (
     <CategoryLayerContext.Provider value={layer}>
