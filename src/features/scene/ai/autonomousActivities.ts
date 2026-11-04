@@ -1,7 +1,8 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { isLifeCharacter, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
 
@@ -59,14 +60,16 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean): LifeCandidate[] {
+export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
   return objects.flatMap(object =>
-    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation') && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
+    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation' || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
-        const activity = object.id === 'desk-bollsidan-2' ? 'work'
+        const task = getHomeTask(object.id, slot.slotId);
+        const seat = isLifeSeat(object.category, slot);
+        const activity = task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'tv-view' ? 'watch-tv'
           : object.id === 'garden-conversation' ? 'social'
           : object.id === 'garden-fresh-air' ? 'walk'
@@ -75,11 +78,13 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
           : object.id === 'shower' ? 'shower'
           : object.id === 'vasque-sdb' && slot.slotId === 'wash-hands' && handsDirty ? 'wash-hands'
           : object.category === 'bed' && slot.slotId.startsWith('lie-down') ? 'sleep'
-          : object.category === 'seating' && slot.entryAnimation && slot.exitAnimation ? 'rest' : null;
+          : seat ? 'rest' : null;
         const position = slot.offset ?? object.position;
-        const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2] };
+        const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
+          visits: places[`${object.id}:${slot.slotId}`] ?? 0, ...(task ? { urgency: homeDirt[task] } : {}) };
         return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
-          ...(activity === 'rest' && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
+          ...(activity === 'rest' && slot.isDuo ? [{ ...candidate, activity: 'social' }] : []),
+          ...(activity === 'rest' && !slot.isDuo && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
       }));
 }
 
@@ -99,7 +104,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
       : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
-        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' ? candidate.activity : undefined;
+        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' || candidate.activity === 'clean' ? candidate.activity : undefined;
     return lifePhase ? { ...instruction, lifePhase } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.

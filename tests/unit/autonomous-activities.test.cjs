@@ -12,7 +12,7 @@ function fixture(characterId = 'rosanna') {
   ];
   const occupied = new Set();
   return { occupied, ...load('src/features/scene/ai/autonomousActivities.ts', {
-    './aiTypes': {}, './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './smartObjectRegistry': {
+    './aiTypes': {}, './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'), './smartObjectRegistry': {
       getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId, actor) => {
         assert.equal(actor, characterId);

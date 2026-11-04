@@ -4,7 +4,7 @@ import { getObjectTransform } from '../objectTransforms';
 import { DUO_ANIMATIONS, getAllDuoAnimationIds } from '../animations/duoAnimations';
 import { INTERX_DUO_ANIMATIONS } from '../animations/interxManifest';
 import { DOOR_CONFIGS, HUMAN_BODY_RADIUS } from '../doorObstacles';
-import { BATH_WEST_WALL, ROOM_D, ROOM_W, pNorth } from '../wallData';
+import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, CORRIDOR_NORTH_WALL, KITCHEN_WEST_WALL, DiagWall, ROOM_D, ROOM_W, pNorth } from '../wallData';
 import { TOILET_HINGE_DURATION } from '../items/toiletAnimation';
 import { TOILET_BOWL_CENTER, TOILET_D } from '../items/Toilet';
 import { NINJA_DOOR_DURATION } from '../items/NinjaSP101';
@@ -19,6 +19,8 @@ import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroom
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
 import { TV_POSITION } from '../tvData';
+
+import { HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 
 export const CLOSET_DOOR_DURATION = 0.8;
 
@@ -41,7 +43,17 @@ const INTERX_AFFECTION_DUO_IDS = INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.s
  * SMART_OBJECTS — Registre des objets intelligents avec affordances (Sims-like).
  * Chaque meuble déclare ses slots d'interaction, ses animations, ses positions et ses orientations.
  */
+const diagonalZ = (x: number) => DiagWall.A.z + (x - DiagWall.A.x) * DiagWall.slope;
+const bathX = (BATH_WEST_WALL + BATH_EAST_WALL) / 2, corridorX = (BATH_EAST_WALL + ROOM_W) / 2;
+const floorCenters: Record<HomeRoom, [number, number, number]> = {
+  living: [ROOM_W / 2, 0, ROOM_D / 2], bathroom: [bathX, 0, (BATH_NORTH_WALL + diagonalZ(bathX)) / 2],
+  corridor: [corridorX, 0, (CORRIDOR_NORTH_WALL + diagonalZ(corridorX)) / 2], garden: BATHTUB.position,
+};
 export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
+  ...Object.fromEntries(Object.values(HOME_TASKS).filter(task => task.slotId === 'sweep').map(task => [task.objectId, {
+    id: task.objectId, name: task.label, category: 'hygiene', position: floorCenters[task.room],
+    slots: [{ slotId: task.slotId, name: task.label, animationsRandom: ['sweeping-floor', 'cmu-sweep-floor-alt'], repeatCount: 3, repeatVariation: true }],
+  }])),
   'tv-view': {
     id: 'tv-view', name: 'Regarder la télé', category: 'appliance',
     position: [ROOM_W / 2, 0, TV_POSITION[2]],
@@ -261,7 +273,10 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         animation: 'button-pushing',
         duration: 2.0,
         triggerEventKey: 'wc-flush'
-      }
+      },
+      { slotId: 'clean', name: 'Nettoyer les toilettes',
+        offset: [TOILET_BOWL_CENTER[0], 0, TOILET_D / 2 + HUMAN_BODY_RADIUS], rotY: 0,
+        animationsRandom: ['wiping-table', 'wiping-table-small-circles'], repeatCount: 3, repeatVariation: true }
     ]
   },
   'vasque-sdb': {
@@ -482,7 +497,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         duration: 9.3,
         offset: [80, 0, ROOM_D - HUMAN_BODY_RADIUS],
         rotY: 0,
-      }
+      },
+      { slotId: 'wash-dishes', name: 'Faire la vaisselle',
+        // Évier centré sur le caisson de 40 cm, devant le plan de travail.
+        offset: [KITCHEN_WEST_WALL + 40 / 2, 0, ROOM_D - HUMAN_BODY_RADIUS], rotY: 0,
+        animation: 'washing-dishes-sink', repeatCount: 4 }
     ]
   },
   'fridge': {
@@ -1181,6 +1200,8 @@ export function buildSmartObjectInstructionSequence(
     triggerEventValue: slot.triggerEventValue,
   };
 
+  if (objectId.startsWith('clean-floor-')) return [{ ...baseInstruction, targetZoneId: objectId.slice('clean-floor-'.length) }];
+
   if (objectId === 'fridge') {
     return [
       { type: 'MOVE_TO', smartObjectId: obj.id, slotId: slot.slotId },
@@ -1317,7 +1338,7 @@ export function buildSmartObjectInstructionSequence(
   }
 
 
-  if (objectId === 'toilet') {
+  if (objectId === 'toilet' && slot.slotId === 'use') {
     return [
       { type: 'MOVE_TO', smartObjectId: 'toilet', slotId: 'use' },
       {

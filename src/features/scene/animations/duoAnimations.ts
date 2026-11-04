@@ -91,15 +91,14 @@ for (const def of DUO_ANIMATIONS) {
   const idLower = def.id.toLowerCase();
   duoDefById.set(idLower, def);
   duoDefByClipOrPath.set(idLower, def);
-  duoDefByClipOrPath.set(def.animA.toLowerCase(), def);
-
-  const animDef = ANIMATION_DEFINITIONS.find((a) => a.id.toLowerCase() === def.animA.toLowerCase());
-  if (animDef) {
-    duoDefByClipOrPath.set(animDef.path.toLowerCase(), def);
-    duoDefByClipOrPath.set(animDef.id.toLowerCase(), def);
-    if (animDef.aliases) {
-      for (const al of animDef.aliases) {
-        duoDefByClipOrPath.set(al.toLowerCase(), def);
+  for (const clip of [def.animA, def.animB]) {
+    duoDefByClipOrPath.set(clip.toLowerCase(), def);
+    const animDef = ANIMATION_DEFINITIONS.find(a => a.id.toLowerCase() === clip.toLowerCase());
+    if (animDef) {
+      duoDefByClipOrPath.set(animDef.path.toLowerCase(), def);
+      duoDefByClipOrPath.set(animDef.id.toLowerCase(), def);
+      for (const alias of animDef.aliases ?? []) {
+        duoDefByClipOrPath.set(alias.toLowerCase(), def);
       }
     }
   }

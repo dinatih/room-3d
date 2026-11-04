@@ -41,7 +41,7 @@ export async function life(fixture) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     check(nativeLife.needs.rest < beforeRest, 'Fatigue must decrease while seated');
     const panel = document.querySelector('[aria-label="Vie de Lara Native"]');
-    check(panel.querySelectorAll('progress').length === 7, 'Seven needs must be visible');
+    check(panel.querySelectorAll('progress').length === 8, 'Eight needs must be visible');
     const values = [...panel.querySelectorAll('progress')].map(element => element.value);
     Object.values(nativeLife.needs).forEach((value, index) => check(Math.abs(value - values[index]) < 2, 'Needs panel must track the simulation'));
     await waitFor(() => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.objectId === 'garden-fresh-air') && decisions().some(entry => entry.appLog.object?.id === 'garden-fresh-air'), 'Lara se relève, marche puis observe le jardin');
@@ -78,7 +78,7 @@ export async function meal(fixture) {
     check(normalGrowth > 0 && fastGrowth > normalGrowth * 4, `Accelerated needs must advance faster: normal=${normalGrowth}, fast=${fastGrowth}`);
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle initiale');
-    nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90, hygiene: 0, toilet: 0, company: 0 };
+    nativeLife.needs = { rest: 5, work: 5, walk: 5, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => cameraState.positions.native?.anim === resolveAnimationId('cooking-stir-pan'), 'Lara rejoint les plaques et prépare le repas');
     const beforePreparation = nativeLife.needs.meal;
@@ -107,7 +107,7 @@ export async function sleep(fixture) {
     const startNight = async () => {
         cameraState.recordUserControl();
         await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Prise de contrôle avant la nuit');
-        nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0 };
+        nativeLife.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
         cameraState.lastUserControlTime = 0;
         await waitFor(() => getAnimationsByTags('laying-front').some(animation => animation.id === cameraState.positions.native?.anim), 'Lara rejoint le lit et se couche');
         check(cameraState.positions.native.y === 45, 'Sleeping must take place on the mattress');
@@ -145,7 +145,7 @@ export async function hygiene(fixture) {
     useLaraLifeStore.setState({ speed: 10 });
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant les toilettes');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 10, toilet: 90, company: 0 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 10, toilet: 90, company: 0, environment: 0 };
     cameraState.lastUserControlTime = 0;
     await waitFor(() => nativeLife.handsDirty && nativeLife.needs.toilet < 85, 'Les toilettes soulagent le besoin');
     cameraState.recordUserControl();
@@ -157,7 +157,7 @@ export async function hygiene(fixture) {
     await waitFor(() => !nativeLife.handsDirty, 'Mains propres après le lavage complet');
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant un cycle complet');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 90, company: 0, environment: 0 };
     const traceStart = window.__testTrace.length;
     cameraState.lastUserControlTime = 0;
     await waitFor(() => nativeLife.lastActivity === 'toilet', 'Cycle toilettes, chasse puis lavage terminé');
@@ -167,7 +167,7 @@ export async function hygiene(fixture) {
     check(phases.indexOf('use-toilet') < phases.indexOf('flush') && phases.indexOf('flush') < phases.indexOf('wash-hands'), 'Toilet, flush and handwashing must execute in order');
     cameraState.recordUserControl();
     await waitFor(() => useLaraLifeStore.getState().characters.native.activity === 'Commande utilisateur', 'Contrôle avant la douche');
-    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0 };
+    nativeLife.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 90, toilet: 0, company: 0, environment: 0 };
     cameraState.lastUserControlTime = 0;
     const showerAnimations = getSmartObject('shower').slots.flatMap(slot => slot.animationsRandom).map(resolveAnimationId);
     await waitFor(() => OccupancyManager.getReservations().some(reservation => reservation.characterId === 'native' && reservation.objectId === 'shower')
@@ -260,7 +260,7 @@ export async function roommates(fixture) {
     publishLife('cha', { needs: { ...characterLives.cha.needs } });
     view('cha');
     await waitFor(() => document.querySelector('[aria-label="Vie de Cha"] progress[aria-label="Faim"]')?.value === snapshot('cha').needs.meal, 'Onglet Cha : ses propres jauges');
-    check(document.querySelectorAll('#life-character-panel progress').length === 7, 'Only seven gauges must be displayed at once');
+    check(document.querySelectorAll('#life-character-panel progress').length === 8, 'Only eight gauges must be displayed at once');
     check(useSceneStore.getState().activeCharacterId === active, 'Inspecting Cha must preserve player control');
     document.getElementById('life-tab-cha').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
     await waitFor(() => useLaraLifeStore.getState().selectedCharacterId === 'native', 'Navigation clavier vers Lara');
@@ -282,7 +282,7 @@ export async function roommates(fixture) {
         characterLives[id].needs = needs;
         cameraState.lastUserControlTime = 0;
     };
-    await prepare('cha', { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0 });
+    await prepare('cha', { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 });
     useSceneStore.setState({ activeCharacterId: 'xbot' });
     const nativeHunger = characterLives.native.needs.meal;
     await waitFor(() => cameraState.positions.cha?.anim === resolveAnimationId('fab-daily-life-eat-with-fork'), 'Cha prépare puis prend son propre repas');
@@ -290,7 +290,7 @@ export async function roommates(fixture) {
     await waitFor(() => characterLives.cha.needs.meal < hungry - 2, 'Le repas satisfait seulement Cha');
     check(characterLives.native.needs.meal >= nativeHunger, 'Eating for Cha must not feed Lara');
     check(characterLives.cha.memory.meal?.satisfaction > 0, 'Cha keeps her own memories');
-    const lonely = () => ({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90 });
+    const lonely = () => ({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90, environment: 0 });
     await prepare('native', lonely());
     await prepare('cha', lonely());
     useSceneStore.setState({ activeCharacterId: 'xbot' });

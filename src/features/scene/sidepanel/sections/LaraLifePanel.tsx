@@ -1,12 +1,16 @@
 import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeNeeds } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
+import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
 
-const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie' };
+const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
 
 export function LaraLifePanel() {
-  const { characters, selectedCharacterId, speed } = useLaraLifeStore();
-  const { needs, memory, relationships, elapsedSeconds, activity, reason } = characters[selectedCharacterId];
+  const { characters, selectedCharacterId, speed, home } = useLaraLifeStore();
+  const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
+  const needs = { ...actorNeeds, environment: roomDirt(home, room) };
+  const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
+    .filter(key => HOME_TASKS[key].room === room).map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
   const mood = getLifeMood(needs);
   const clock = lifeClock(elapsedSeconds);
   const favorite = favoriteLifeActivity(memory);
@@ -41,7 +45,7 @@ export function LaraLifePanel() {
     </div>
     <div id="life-character-panel" role="tabpanel" aria-labelledby={`life-tab-${selectedCharacterId}`}>
       {(Object.keys(needs) as (keyof LifeNeeds)[]).map(key => <label key={key} className="row align-items-center gx-2 mb-0">
-        <span className="col-4" title={LIFE_NEED_LABELS[key]}>{NEED_LABELS[key]}</span>
+        <span className="col-4" title={key === 'environment' ? cleanliness : LIFE_NEED_LABELS[key]}>{NEED_LABELS[key]}</span>
         <span className="col-6"><progress className="d-block w-100" max={100} value={needs[key]} aria-label={LIFE_NEED_LABELS[key]} /></span>
         <span className="col-2 text-end text-nowrap">{Math.round(needs[key])}%</span>
       </label>)}

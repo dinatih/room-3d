@@ -24,7 +24,11 @@ export function resolveInstructionCoords(
   }
   if (instr.targetZoneId) {
     const pos = getZoneDestination(instr.targetZoneId, agentId, currentPosition, departureOwner);
-    return { tx: pos.x, tz: pos.z, label: instr.targetZoneId, rotY: instr.rotY };
+    const object = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
+    const slot = object?.slots.find(slot => slot.slotId === instr.slotId);
+    const resolved = slot ? resolveSlotAnimation(slot) : undefined;
+    return { tx: pos.x, ty: 0, tz: pos.z, label: object?.name ?? instr.targetZoneId,
+      rotY: instr.rotY ?? resolved?.rotY, anim: resolved?.animation, duration: slot?.duration };
   }
   if (instr.targetLocalPos) {
     const obj = instr.smartObjectId ? getSmartObject(instr.smartObjectId) : undefined;
