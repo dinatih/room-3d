@@ -371,3 +371,31 @@ button, input, select, textarea {
 .text-pre-line {
   white-space: pre-line;
 }
+
+/* Zone AI shares the scene's frosted glass surface. */
+.zone-ai-panel {
+  position: fixed;
+  left: max(1rem, env(safe-area-inset-left));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 250;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 6rem);
+  pointer-events: auto;
+}
+.zone-ai-panel--collapsed { width: fit-content; }
+.zone-ai-body { max-height: min(65dvh, 40rem); }
+.zone-ai-list { max-height: 20rem; flex-shrink: 0; }
+.zone-ai-variants { max-height: 8rem; }
+.zone-ai-surface { background: rgba(255, 255, 255, 0.22); }
+.zone-ai-choice, .zone-ai-clickable { cursor: pointer; }
+.zone-ai-choice:hover { background: rgba(255, 255, 255, 0.5); }
+.zone-ai-shrink { min-width: 0; }
+.zone-ai-status { width: 0.4rem; height: 0.4rem; }
+.zone-ai-clip { max-width: 10rem; }
+.zone-ai-panel .form-control, .zone-ai-panel .form-select {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.zone-ai-panel .form-control:focus, .zone-ai-panel .form-select:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 0.15rem rgba(211, 47, 47, 0.15);
+}

@@ -220,78 +220,35 @@ function ZoneAiDebugOverlayContent() {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 72,
-        right: 16,
-        zIndex: 250,
-        width: isOpen ? 360 : 'auto',
-        maxHeight: 'calc(100vh - 120px)',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'rgba(15, 23, 42, 0.92)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(0, 229, 255, 0.4)',
-        borderRadius: 12,
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
-        color: '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: 12,
-        overflow: 'hidden',
-        pointerEvents: 'auto',
-        userSelect: 'text',
-      }}
+      className={`zone-ai-panel glass-card rounded-3 text-dark small overflow-hidden user-select-text ${isOpen ? "" : "zone-ai-panel--collapsed"}`}
     >
       {/* ── En-tête ── */}
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px 12px',
-          backgroundColor: 'rgba(0, 229, 255, 0.12)',
-          borderBottom: '1px solid rgba(0, 229, 255, 0.25)',
-          cursor: 'pointer',
-          userSelect: 'none',
-        }}
+        className="d-flex align-items-center justify-content-between px-2 py-1 border-bottom zone-ai-clickable user-select-none zone-ai-surface"
         onClick={toggleOpen}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700 }}>
+        <div className="d-flex align-items-center gap-1 fw-semibold">
           <span>🤖 Smart Objects</span>
           <span
-            style={{
-              fontSize: 10,
-              padding: '2px 6px',
-              borderRadius: 10,
-              backgroundColor: '#00e5ff',
-              color: '#0f172a',
-              fontWeight: 800,
-            }}
+            className="badge text-bg-danger"
           >
             Zone AI
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, color: '#94a3b8' }}>
+        <div className="d-flex align-items-center gap-1">
+          <span className="text-body-secondary">
             {stats.available} dispo / {stats.total}
           </span>
-          <span style={{ fontSize: 14 }}>{isOpen ? '▾' : '▸'}</span>
+          <span>{isOpen ? '▾' : '▸'}</span>
         </div>
       </div>
 
       {isOpen && (
-        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
+        <div className="zone-ai-body overflow-y-auto">
           {/* ── Notification toast feedback ── */}
           {feedbackMsg && (
             <div
-              style={{
-                backgroundColor: '#065f46',
-                color: '#34d399',
-                padding: '6px 12px',
-                fontSize: 11,
-                fontWeight: 600,
-                borderBottom: '1px solid #10b981',
-              }}
+              className="px-2 py-1 border-bottom fw-semibold" role="status"
             >
               {feedbackMsg}
             </div>
@@ -299,30 +256,15 @@ function ZoneAiDebugOverlayContent() {
 
           {/* ── Sélecteur de PNJ pour l'action ── */}
           <div
-            style={{
-              padding: '8px 12px',
-              backgroundColor: 'rgba(30, 41, 59, 0.7)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
+            className="d-flex flex-column gap-1 px-2 py-1 border-bottom zone-ai-surface"
           >
-            <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#38bdf8', fontWeight: 700 }}>
+            <label htmlFor="zone-ai-npc" className="fw-semibold text-uppercase">
               👤 PNJ à envoyer :
-            </div>
+            </label>
             <select
               value={selectedCharId}
               onChange={(e) => setSelectedCharId(e.target.value)}
-              style={{
-                backgroundColor: '#0f172a',
-                color: '#f1f5f9',
-                border: '1px solid #334155',
-                borderRadius: 6,
-                padding: '4px 8px',
-                fontSize: 11,
-                outline: 'none',
-              }}
+              className="form-select form-select-sm" id="zone-ai-npc"
             >
               <option value="closest">🎯 Plus proche PNJ</option>
               {availableNpcs.map((c) => (
@@ -336,34 +278,20 @@ function ZoneAiDebugOverlayContent() {
           {/* ── Détails du Slot sélectionné ── */}
           {currentObj && currentSlot ? (
             <div
-              style={{
-                padding: '10px 12px',
-                backgroundColor: 'rgba(14, 116, 144, 0.15)',
-                borderBottom: '1px solid rgba(0, 229, 255, 0.3)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 6,
-              }}
+              className="d-flex flex-column gap-1 px-2 py-1 border-bottom zone-ai-surface"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div className="d-flex align-items-start justify-content-between">
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#38bdf8' }}>
+                  <div className="fw-semibold">
                     ✨ {currentObj.name}
                   </div>
-                  <div style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>
+                  <div>
                     🎯 Slot : {currentSlot.name}
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedSlot(null)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    padding: 0,
-                  }}
+                  className="btn btn-sm btn-outline-secondary border-0 p-0"
                   title="Fermer la sélection"
                 >
                   ✕
@@ -371,45 +299,24 @@ function ZoneAiDebugOverlayContent() {
               </div>
 
               {/* État de disponibilité */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+              <div className="d-flex align-items-center gap-1">
                 <span>Statut :</span>
                 {isCurrentOccupied ? (
                   <span
-                    style={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                      color: '#f87171',
-                      border: '1px solid rgba(239, 68, 68, 0.5)',
-                      borderRadius: 4,
-                      padding: '1px 6px',
-                      fontWeight: 700,
-                    }}
+                    className="fw-semibold px-2 py-1 rounded zone-ai-surface"
                   >
                     ❌ Occupé ({currentOccupant ?? 'en cours'})
                   </span>
                 ) : (
                   <span
-                    style={{
-                      backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                      color: '#4ade80',
-                      border: '1px solid rgba(34, 197, 94, 0.5)',
-                      borderRadius: 4,
-                      padding: '1px 6px',
-                      fontWeight: 700,
-                    }}
+                    className="fw-semibold px-2 py-1 rounded zone-ai-surface"
                   >
                     ✅ Disponible
                   </span>
                 )}
                 {currentSlot.isDuo && (
                   <span
-                    style={{
-                      backgroundColor: 'rgba(168, 85, 247, 0.2)',
-                      color: '#c084fc',
-                      border: '1px solid rgba(168, 85, 247, 0.5)',
-                      borderRadius: 4,
-                      padding: '1px 6px',
-                      fontWeight: 700,
-                    }}
+                    className="badge text-bg-secondary"
                   >
                     🛋️ Duo
                   </span>
@@ -465,39 +372,23 @@ function ZoneAiDebugOverlayContent() {
 
                 return (
                   <div
-                    style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                      padding: '8px 10px',
-                      borderRadius: 6,
-                      fontSize: 10,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 5,
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
+                    className="d-flex flex-column gap-1 px-2 py-1 rounded zone-ai-surface"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                      <span style={{ color: '#94a3b8' }}>
+                    <div className="d-flex align-items-center flex-wrap gap-1">
+                      <span className="text-body-secondary">
                         {isPlayingLive ? '🎬 Animation en cours : ' : 'ID Canonique : '}
                       </span>
-                      <span style={{ color: '#38bdf8', fontFamily: 'monospace', fontWeight: 700, fontSize: 11 }}>
+                      <span className="font-monospace text-break fw-semibold">
                         {currentCanonicalId}
                       </span>
                       {currentDuration !== undefined && (
-                        <span style={{ color: '#a7f3d0', fontWeight: 700 }}>
+                        <span className="fw-semibold">
                           ({currentDuration.toFixed(1)}s)
                         </span>
                       )}
                       {isPlayingLive && (
                         <span
-                          style={{
-                            backgroundColor: '#059669',
-                            color: '#ecfdf5',
-                            fontSize: 9,
-                            padding: '1px 5px',
-                            borderRadius: 4,
-                            fontWeight: 700,
-                          }}
+                          className="badge text-bg-success"
                         >
                           ▶ EN COURS
                         </span>
@@ -505,7 +396,7 @@ function ZoneAiDebugOverlayContent() {
                     </div>
 
                     {activeDuoSession && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#fef08a' }}>
+                      <div className="d-flex align-items-center gap-1">
                         <span>
                           🔄 Clip {activeDuoSession.currentAnimIndex + 1}/{activeDuoSession.playlist.length}
                         </span>
@@ -516,7 +407,7 @@ function ZoneAiDebugOverlayContent() {
                         {activeDuoSession.sessionTimer > 0 && (
                           <>
                             <span>•</span>
-                            <span style={{ color: '#94a3b8' }}>
+                            <span className="text-body-secondary">
                               reste {activeDuoSession.sessionTimer.toFixed(1)}s
                             </span>
                           </>
@@ -525,27 +416,19 @@ function ZoneAiDebugOverlayContent() {
                     )}
 
                     <div>
-                      <span style={{ color: '#94a3b8' }}>Clip GLB : </span>
-                      <span style={{ color: '#cbd5e1', fontFamily: 'monospace', fontSize: 9 }}>
+                      <span className="text-body-secondary">Clip GLB : </span>
+                      <span className="font-monospace text-break">
                         {currentClip}
                       </span>
                     </div>
 
                     {animMeta.variants && animMeta.variants.length > 1 && (
-                      <div style={{ marginTop: 4 }}>
-                        <span style={{ color: '#94a3b8', fontSize: 10 }}>
+                      <div className="mt-1">
+                        <span className="text-body-secondary">
                           Smartactions disponibles ({animMeta.variants.length}) :
                         </span>
                         <div
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 3,
-                            marginTop: 4,
-                            maxHeight: 120,
-                            overflowY: 'auto',
-                            paddingRight: 4,
-                          }}
+                          className="zone-ai-variants d-flex flex-column gap-1 overflow-y-auto mt-1 pe-1"
                         >
                           {animMeta.variants.map((v) => {
                             const isSelectedAnim = v.canonicalId === currentCanonicalId;
@@ -553,40 +436,18 @@ function ZoneAiDebugOverlayContent() {
                               <div
                                 key={v.canonicalId}
                                 onClick={() => setSelectedActionId(v.canonicalId)}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  padding: '3px 6px',
-                                  borderRadius: 4,
-                                  backgroundColor: isSelectedAnim
-                                    ? 'rgba(0, 229, 255, 0.25)'
-                                    : 'rgba(255, 255, 255, 0.05)',
-                                  border: isSelectedAnim
-                                    ? '1px solid #00e5ff'
-                                    : '1px solid rgba(255, 255, 255, 0.05)',
-                                  cursor: 'pointer',
-                                  fontSize: 9,
-                                }}
+                                className={`zone-ai-choice d-flex align-items-center justify-content-between gap-1 px-2 py-1 rounded border ${isSelectedAnim ? "border-danger bg-danger-subtle" : "border-light"}`}
                                 title={`Sélectionner ${v.canonicalId} (${v.duration ? `${v.duration.toFixed(1)}s` : ''})`}
                               >
                                 <span
-                                  style={{
-                                    color: isSelectedAnim ? '#38bdf8' : '#e2e8f0',
-                                    fontFamily: 'monospace',
-                                    fontWeight: isSelectedAnim ? 700 : 400,
-                                  }}
+                                  className={isSelectedAnim ? "font-monospace fw-semibold text-danger" : "font-monospace"}
                                 >
                                   {isSelectedAnim ? '▶ ' : '• '}
                                   {v.canonicalId}
                                 </span>
                                 {v.duration !== undefined && (
                                   <span
-                                    style={{
-                                      color: isSelectedAnim ? '#a7f3d0' : '#94a3b8',
-                                      fontSize: 9,
-                                      fontWeight: isSelectedAnim ? 700 : 400,
-                                    }}
+                                    className="text-body-secondary flex-shrink-0"
                                   >
                                     {v.duration.toFixed(1)}s
                                   </span>
@@ -604,97 +465,49 @@ function ZoneAiDebugOverlayContent() {
               {/* Bouton d'action direct */}
               <button
                 onClick={() => handleExecuteAction()}
-                style={{
-                  marginTop: 4,
-                  backgroundColor: '#0284c7',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  fontWeight: 700,
-                  fontSize: 11,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
-                }}
+                className="btn btn-sm btn-danger d-flex align-items-center justify-content-center gap-1"
               >
                 <span>⚡ Faire venir le PNJ ici</span>
               </button>
             </div>
           ) : (
             <div
-              style={{
-                padding: '8px 12px',
-                backgroundColor: 'rgba(15, 23, 42, 0.5)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                color: '#94a3b8',
-                fontSize: 11,
-                fontStyle: 'italic',
-              }}
+              className="fst-italic px-2 py-1 border-bottom zone-ai-surface text-body-secondary"
             >
               💡 Cliquez sur un slot au sol en 3D ou ci-dessous pour inspecter et ordonner l'action.
             </div>
           )}
 
           {/* ── Recherche rapide ── */}
-          <div style={{ padding: '6px 12px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+          <div className="px-2 py-1 border-bottom">
             <input
               type="text"
               placeholder="🔍 Filtrer objets / slots / animations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                backgroundColor: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: 6,
-                padding: '4px 8px',
-                color: '#fff',
-                fontSize: 11,
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
+              className="form-control form-control-sm" aria-label="Filtrer les objets, slots et animations"
             />
           </div>
 
           {/* ── Liste déroulante des SmartObjects et Slots ── */}
           <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '6px 8px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
-              maxHeight: '340px',
-            }}
+            className="zone-ai-list d-flex flex-column gap-1 flex-grow-1 overflow-y-auto px-2 py-1"
           >
             {filteredObjects.map((obj) => (
               <div
                 key={obj.id}
-                style={{
-                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: 8,
-                  padding: '6px 8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                }}
+                className="d-flex flex-column gap-1 px-2 py-1 rounded zone-ai-surface"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 700, color: '#f1f5f9', fontSize: 11 }}>
+                <div className="d-flex align-items-center justify-content-between">
+                  <span className="fw-semibold">
                     ✨ {obj.name}
                   </span>
-                  <span style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>
+                  <span className="text-uppercase text-body-secondary">
                     {obj.category}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 2 }}>
+                <div className="d-flex flex-column gap-1 mt-1">
                   {obj.slots.map((s) => {
                     const isOccupied = OccupancyManager.isSlotOccupied(obj.id, s.slotId);
                     const occupant = OccupancyManager.getOccupant(obj.id, s.slotId);
@@ -732,74 +545,30 @@ function ZoneAiDebugOverlayContent() {
                         key={s.slotId}
                         onClick={() => setSelectedSlot({ objectId: obj.id, slotId: s.slotId })}
                         title={`Slot: ${s.name}\nStatut: ${isOccupied ? `Occupé (${occupant ?? 'PNJ'})` : 'Disponible'}\n${isLivePlaying ? 'Animation en cours' : 'ID Canonique'}: ${sDisplayId}${sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}`}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '3px 6px',
-                          borderRadius: 4,
-                          backgroundColor: isSelected
-                            ? 'rgba(0, 229, 255, 0.2)'
-                            : 'rgba(15, 23, 42, 0.4)',
-                          border: isSelected
-                            ? '1px solid rgba(0, 229, 255, 0.6)'
-                            : '1px solid transparent',
-                          cursor: 'pointer',
-                        }}
+                        className={`zone-ai-choice d-flex align-items-center justify-content-between gap-1 px-2 py-1 rounded border ${isSelected ? "border-danger bg-danger-subtle" : "border-light"}`}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                        <div className="d-flex align-items-center gap-1 zone-ai-shrink">
                           <span
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              backgroundColor: isOccupied ? '#ef4444' : '#22c55e',
-                              flexShrink: 0,
-                            }}
+                            className={`zone-ai-status rounded-circle flex-shrink-0 ${isOccupied ? "bg-danger" : "bg-success"}`}
                           />
                           <span
-                            style={{
-                              color: isSelected ? '#38bdf8' : '#cbd5e1',
-                              fontSize: 10,
-                              fontWeight: 500,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
+                            className="overflow-hidden text-truncate"
                           >
                             {s.name}
                           </span>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
                           {isLivePlaying && (
                             <span
-                              style={{
-                                backgroundColor: '#059669',
-                                color: '#ecfdf5',
-                                fontSize: 8,
-                                padding: '1px 3px',
-                                borderRadius: 3,
-                                fontWeight: 700,
-                              }}
+                              className="badge text-bg-success"
                               title="Animation en cours d'exécution"
                             >
                               ▶ LIVE
                             </span>
                           )}
                           <span
-                            style={{
-                              fontSize: 9,
-                              fontFamily: 'monospace',
-                              color: isLivePlaying ? '#6ee7b7' : '#38bdf8',
-                              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                              padding: '1px 5px',
-                              borderRadius: 3,
-                              maxWidth: 150,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
+                            className="zone-ai-clip overflow-hidden text-truncate font-monospace px-2 py-1 rounded zone-ai-surface"
                             title={`${isLivePlaying ? 'Animation en cours' : 'ID Canonique'}: ${sDisplayId}${sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}`}
                           >
                             🎬 {sDisplayId}{sDisplayDuration !== undefined ? ` (${sDisplayDuration.toFixed(1)}s)` : ''}
@@ -809,16 +578,7 @@ function ZoneAiDebugOverlayContent() {
                               e.stopPropagation();
                               handleExecuteAction(obj.id, s.slotId);
                             }}
-                            style={{
-                              backgroundColor: 'rgba(2, 132, 199, 0.8)',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 3,
-                              padding: '2px 5px',
-                              fontSize: 9,
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                            }}
+                            className="btn btn-sm btn-danger d-flex align-items-center justify-content-center gap-1"
                             title={`Envoyer le PNJ sélectionné sur ${s.name}`}
                           >
                             ▶
