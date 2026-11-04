@@ -392,6 +392,7 @@ it('conserve les besoins, souvenirs et affinités propres à chacune des colocat
 
 it('publie uniquement les jauges du personnage concerné avec une vitesse commune', () => {
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
+    './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'),
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
   });
@@ -487,6 +488,7 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
 
 it('isole les jauges de Vivida et la sélection de son onglet', () => {
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
+    './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'), './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
   });
   const before = useLaraLifeStore.getState();

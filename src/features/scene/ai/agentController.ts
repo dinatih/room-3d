@@ -133,7 +133,7 @@ export function createAgentController(
   const actorName = LIFE_CHARACTER_LABELS[lifeId];
   const publish = (patch: Partial<LifeSnapshot>) => publishLife(lifeId, patch);
   let lifeConversation: ReturnType<typeof duoSessionManager.getSessionFor> = null;
-  let lifeActivity: LifeActivity | null = hasLife && loop ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
+  let lifeActivity: LifeActivity | null = hasLife && loop && life.elapsedSeconds === 0 ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
   const shouldCheckInvitations = () => loop && !manualOverride && (!hasLife || lifeActivity !== null);
   let lifeSnapshotSeconds = 0;
   let connected = false, lastLifeRoom: HomeRoom | undefined;
@@ -598,8 +598,8 @@ export function createAgentController(
       if (hasLife) {
         if (!firstScenario) cancelDeferredInvitation('Changement de mode ou de scénario.');
         lifeConversation = null;
-        lifeActivity = firstScenario && loop ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
-        if (!firstScenario && loop) stepIndex = scenario?.length ?? 0;
+        lifeActivity = firstScenario && loop && life.elapsedSeconds === 0 ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
+        if (loop && (!firstScenario || life.elapsedSeconds > 0)) stepIndex = scenario?.length ?? 0;
         publish({ activity: loop ? 'Reprise de la vie autonome' : 'Visite guidée',
           reason: loop ? `${actorName} choisit selon ses besoins.` : `${actorName} suit la visite demandée.` });
       }

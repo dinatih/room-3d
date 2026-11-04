@@ -1,6 +1,6 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
-import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
+import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
@@ -8,7 +8,7 @@ const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABEL
 const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export function LaraLifePanel() {
-  const { characters, selectedCharacterId, speed, home } = useLaraLifeStore();
+  const { characters, selectedCharacterId, speed, home, savedAt, saveError } = useLaraLifeStore();
   const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
@@ -65,6 +65,14 @@ export function LaraLifePanel() {
         <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
       </div>
       <div className="visually-hidden">{reason}</div>
+      <details className="mt-1 text-break">
+        <summary className="fw-semibold">Sauvegarde de la colocation</summary>
+        <div>{savedAt ? `Sauvegardée à ${new Date(savedAt).toLocaleTimeString('fr-FR')}.` : 'Sauvegarde automatique pendant la simulation.'}</div>
+        <button type="button" className="btn btn-sm btn-outline-danger mt-1" onClick={() => {
+          if (window.confirm('Recommencer toute la colocation ? Les besoins, souvenirs, relations apprises, habitudes et la propreté seront réinitialisés pour tous les personnages.')) resetLives();
+        }}>Nouvelle vie</button>
+      </details>
+      {saveError && <div role="alert" className="text-bg-danger rounded p-1 mt-1 text-break">{saveError}</div>}
       <details className="mt-1 text-break">
         <summary className="fw-semibold">Goûts</summary>
         <div>Au départ : {initialTastes}.</div>

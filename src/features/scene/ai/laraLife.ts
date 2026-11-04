@@ -1,4 +1,5 @@
 export type LifeActivity = 'tech' | 'receive-massage' | 'dance' | 'combat' | 'massage' | 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export const LIFE_SPEEDS = [1, 3, 10] as const;
 export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
 export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira', sara: 'Sara', rajaa: 'Rajaa', sandra: 'Sandra', helena: 'Helena' };

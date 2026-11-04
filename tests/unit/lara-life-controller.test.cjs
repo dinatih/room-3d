@@ -5,7 +5,7 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
-function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false, diagnostics = false) {
+function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false, diagnostics = false, restoredLife) {
   const journal = [];
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
   const dirt = home.createHomeDirt();
@@ -104,6 +104,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   });
   const scenario = id === 'vivida' ? [{ ...sequence('bathtub-garden', 'center')[0], lifePhase: 'bath' }]
     : sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
+  if (restoredLife) Object.assign(lifeState, restoredLife);
   const controller = createAgentController(id, scenario, true, () => ({ x: 10, y: 0, z: 10, rotY: 0 }));
   controller.configure({ scenario, loop: true, landingAnim: 'idle' });
   const tick = (seconds = 1, playback = true) => {
@@ -1180,4 +1181,18 @@ it('reprend une invitation de massage après le repas en conservant le rôle de 
     assert.deepEqual(calls[0], ['interx-affection-point', 'massage', 'native', 'cha', undefined, true, 'roleA']);
     assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
   } finally { disconnect(); global.document = originalDocument; }
+});
+
+it('reprend une vie sauvegardée en choisissant ses besoins actuels plutôt que son activité de départ', () => {
+  const w = world('native', true, false, true, false, {
+    elapsedSeconds: 360, handsDirty: true,
+    needs: { ...life.createLife('native').needs, work: 10, meal: 95 },
+    memory: { yoga: { satisfaction: 20, lastAt: 300 } },
+  });
+  w.tick(1, false); w.tick(1, false);
+  assert.equal(w.controller.state.animation, 'wash-hands');
+  assert(w.logs.some(log => log.action === 'life_decision' && log.data.activity === 'wash-hands'));
+  assert(!w.logs.some(log => log.action === 'life_started' && log.data.activity === 'work'));
+  assert.equal(w.lifeState.memory.yoga.satisfaction, 20);
+  assert(w.lifeState.elapsedSeconds >= 360);
 });
