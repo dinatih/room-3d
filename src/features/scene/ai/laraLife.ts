@@ -36,6 +36,8 @@ export interface LifeCandidate {
   z: number;
   urgency?: number;
   visits?: number;
+  mealPartnerId?: string;
+  companyScore?: number;
 }
 
 // Gameplay seconds: needs become important in roughly two minutes.
@@ -115,6 +117,14 @@ export function socialPartnerScore(relationships: LifeRelationships, partnerId: 
   return (relationship.affinity ?? 0) + relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds)
     + since / (since + LIFE_SETTINGS.activitySeconds)
       * (1 + (activity ? relationship.activities?.[activity] ?? 0 : 0) / (relationship.seconds + LIFE_SETTINGS.activitySeconds));
+}
+
+/** Only controllers playing their eating animation appear here; no seats are reserved by this registry. */
+export const activeLifeMeals = new Map<string, { objectId: string; slotId: string }>();
+export function getLifeMealPartner(characterId: string, objectId: string, slotId: string, relationships: LifeRelationships = {}, elapsedSeconds = 0) {
+  return [...activeLifeMeals].filter(([id, meal]) => id !== characterId && meal.objectId === objectId && meal.slotId !== slotId
+    && lifeAffinity(characterId, id) >= 0).map(([id]) => id)
+    .sort((a, b) => socialPartnerScore(relationships, b, elapsedSeconds, 'meal') - socialPartnerScore(relationships, a, elapsedSeconds, 'meal') || a.localeCompare(b))[0];
 }
 
 /** Only real need relief builds a taste; even an interrupted activity remains a recent experience. */
@@ -197,7 +207,7 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
   const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds)
-    * lifeHabitScore(candidate, memory, hour, elapsedSeconds);
+    * lifeHabitScore(candidate, memory, hour, elapsedSeconds) * (1 + (candidate.companyScore ?? 0) * needs.company / 100);
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')

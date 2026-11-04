@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { LIFE_INITIAL_ACTIVITIES, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
@@ -63,7 +63,7 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}): LifeCandidate[] {
+export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
@@ -86,9 +86,10 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
         const position = slot.offset ?? object.position;
         const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
           visits: places[`${object.id}:${slot.slotId}`] ?? 0, ...(task ? { urgency: homeDirt[task] } : {}) };
+        const mealPartnerId = seat && !slot.isDuo ? getLifeMealPartner(characterId, object.id, slot.slotId, relationships, elapsedSeconds) : undefined;
         return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
           ...(activity === 'rest' && slot.isDuo ? [{ ...candidate, activity: 'social' }] : []),
-          ...(activity === 'rest' && !slot.isDuo && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal' }] : [])] as LifeCandidate[] : [];
+          ...(activity === 'rest' && !slot.isDuo && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal', ...(mealPartnerId ? { mealPartnerId, companyScore: socialPartnerScore(relationships, mealPartnerId, elapsedSeconds, 'meal') } : {}) }] : [])] as LifeCandidate[] : [];
       }));
 }
 

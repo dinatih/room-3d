@@ -110,7 +110,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy,
+  return { controller, scenario, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -941,4 +941,98 @@ it('garde le bureau réservé pendant la sortie, même si le trajet attend son c
   for (let i = 0; i < 5 && w.reservations.size; i++) w.tick();
   assert.equal(w.controller.state.x, 90, 'The character must leave the desk before pausing');
   assert.equal(w.reservations.size, 0);
+});
+
+it('partage faim et compagnie seulement pendant les animations des deux repas, avec des départs indépendants', () => {
+  const { activeLifeMeals } = life;
+  const a = world('native'), b = world('sabira');
+  try {
+    for (const [w, slotId] of [[a, 'seat-a'], [b, 'seat-b']]) {
+      w.objects.bench = { id: 'bench', category: 'seating', position: [10, 0, 10], slots: [{ slotId, animation: 'eat', duration: 20 }] };
+      w.lifeState.needs = { ...w.lifeState.needs, meal: 80, company: 80 };
+      w.scenario.splice(0, w.scenario.length, { type: 'USE_OBJECT', smartObjectId: 'bench', slotId, animation: 'eat', duration: 20, lifePhase: 'eat-meal' });
+      w.tick(1, false);
+    }
+    a.tick();
+    b.tick(1, false);
+    assert(!activeLifeMeals.has('sabira'), 'A loading meal is not company');
+    const alone = a.lifeState.needs.company;
+    a.tick();
+    assert(a.lifeState.needs.company > alone);
+    assert.equal(a.lifeState.relationships.sabira, undefined);
+    b.tick();
+    const before = { ...a.lifeState.needs };
+    a.tick();
+    assert(a.lifeState.needs.meal < before.meal && a.lifeState.needs.company < before.company);
+    assert(a.lifeState.relationships.sabira.activities.meal > 0);
+    assert(b.lifeState.relationships.native.activities.meal > 0);
+    assert(a.logs.some(log => log.action === 'life_started' && log.data.partnerId === 'sabira'));
+    b.controller.setPosition(70, 0, 10);
+    assert(!activeLifeMeals.has('sabira'));
+    const afterDeparture = { ...a.lifeState.needs }, sharedSeconds = a.lifeState.relationships.sabira.seconds;
+    a.tick();
+    assert(a.lifeState.needs.meal < afterDeparture.meal && a.lifeState.needs.company > afterDeparture.company);
+    assert.equal(a.lifeState.relationships.sabira.seconds, sharedSeconds);
+    assert.equal(a.controller.state.animation, 'eat', 'The remaining person finishes her own meal');
+  } finally { activeLifeMeals.clear(); }
+});
+
+it('ne transforme pas un repas entre colocataires en conflit en moment amical', () => {
+  const { activeLifeMeals } = life;
+  const w = world('cha');
+  try {
+    activeLifeMeals.set('delphina', { objectId: 'bench', slotId: 'seat-a' });
+    w.objects.bench = { id: 'bench', category: 'seating', position: [10, 0, 10], slots: [{ slotId: 'seat-b', animation: 'eat' }] };
+    w.scenario.splice(0, w.scenario.length, { type: 'USE_OBJECT', smartObjectId: 'bench', slotId: 'seat-b', animation: 'eat', duration: 10, lifePhase: 'eat-meal' });
+    w.tick(1, false);
+    const before = { ...w.lifeState.needs };
+    w.tick();
+    assert(w.lifeState.needs.meal < before.meal && w.lifeState.needs.company > before.company);
+    assert.equal(w.lifeState.relationships.delphina.seconds, 0);
+  } finally { activeLifeMeals.clear(); }
+});
+
+it('recherche une place partagée après la préparation, sans réserver la place de sa voisine', () => {
+  const w = world('native', true);
+  const { activeLifeMeals } = life;
+  try {
+    w.objects.bench = { id: 'bench', category: 'seating', position: [10, 0, 10], slots: [{ slotId: 'seat-b', animation: 'sit' }] };
+    w.scenario.splice(0, w.scenario.length,
+      { type: 'USE_OBJECT', smartObjectId: 'cuisine-group', slotId: 'cook-stove', animation: 'cook', duration: 2, lifePhase: 'prepare-meal' },
+      { type: 'USE_OBJECT', smartObjectId: 'rest', slotId: 'use', animation: 'eat', duration: 10, lifePhase: 'eat-meal' });
+    w.tick(1, false);
+    activeLifeMeals.set('sabira', { objectId: 'bench', slotId: 'seat-a' });
+    w.candidates.push({ activity: 'meal', id: 'bench', slotId: 'seat-b', x: 10, z: 10, mealPartnerId: 'sabira', companyScore: 1 });
+    w.tick(2);
+    assert.equal(w.scenario[1].smartObjectId, 'bench');
+    assert.equal(w.scenario[1].slotId, 'seat-b');
+    assert(w.logs.some(log => log.action === 'life_meal_join' && log.data.partnerId === 'sabira'));
+    assert(!w.reservations.has('bench:seat-a'));
+    assert(!w.reservations.has('bench:seat-b'), 'Preparing food cannot claim the future seat');
+    assert.equal(w.lifeState.relationships.sabira, undefined, 'The intent to join is not shared time');
+    w.tick(1, false);
+    assert.equal(w.reservations.get('bench:seat-b'), 'native');
+    assert(!activeLifeMeals.has('native'), 'Arrival without playback does not count as eating');
+  } finally { activeLifeMeals.clear(); }
+});
+
+it('retire un repas actif à sa fin, au changement de mode et au démontage du contrôleur', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const stop of ['finished', 'mode', 'disconnect', 'paused']) {
+      const w = world();
+      const disconnect = w.controller.connect();
+      try {
+        w.scenario.splice(0, w.scenario.length, { type: 'USE_OBJECT', smartObjectId: 'rest', slotId: 'use', animation: 'eat', duration: 5, lifePhase: 'eat-meal' });
+        w.tick(1, false); w.tick();
+        assert(life.activeLifeMeals.has('native'));
+        if (stop === 'finished') w.tick(5);
+        else if (stop === 'mode') { w.controller.configure({ scenario: [], loop: false }); w.tick(); }
+        else if (stop === 'paused') w.tick(0);
+        else disconnect();
+        assert(!life.activeLifeMeals.has('native'), stop);
+      } finally { if (stop !== 'disconnect') disconnect(); life.activeLifeMeals.clear(); }
+    }
+  } finally { global.document = originalDocument; }
 });

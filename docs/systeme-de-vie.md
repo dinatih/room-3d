@@ -122,3 +122,11 @@ Ces affinités sont distinctes du temps réellement partagé : elles ne créent 
 La télévision s’éteint quand son spectateur libère le spot, y compris lors d’une interruption. La vidéo partagée avec l’ordinateur ne peut plus allumer un téléviseur éteint.
 
 Le bureau et le point debout pour regarder la télé partagent le même espace physique : leurs réservations sont mutuellement exclusives. Chaque smart action comprend un trajet de sortie vers une place accessible du séjour, en gardant la réservation jusqu’à l’arrivée. Une pause ne laisse donc plus une colocataire devant l’écran alors que le poste est déjà proposé à une autre.
+
+## Repas partagés
+
+Quand elle a faim, une colocataire peut préférer une assise libre sur le même canapé, banc ou bord de lit qu’une personne en train de manger. L’envie de compagnie et les affinités renforcent ce choix ; elles ne forcent pas à manger sans faim et ne passent pas devant un besoin urgent. Les colocataires en conflit ne sont pas recherchées comme partenaires de repas.
+
+Après la préparation en cuisine, les places libres et les repas en cours sont vérifiés à nouveau. Le journal `life_meal_join` indique l’intention de rejoindre une personne. Aucune place voisine n’est réservée pendant la préparation ; la réservation habituelle est vérifiée avant de s’installer.
+
+Chacune joue son animation de repas et finit indépendamment. La faim, le repos et la compagnie peuvent être soulagés simultanément, mais le bénéfice de compagnie et les souvenirs de repas ne comptent que pendant les animations réellement jouées sur des places distinctes du même meuble. Une arrivée, un chargement ou la préparation ne créent aucun temps partagé. Si l’autre part, le repas continue seul ; les logs de début et de résultat distinguent les périodes avec et sans partenaire.

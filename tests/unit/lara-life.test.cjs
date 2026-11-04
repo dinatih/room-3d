@@ -695,3 +695,37 @@ it('garde le téléviseur éteint même quand la vidéo du bureau est active', (
     assert.equal(material.emissiveIntensity, on ? 0.8 : 0);
   }
 });
+
+it('préfère un repas près d’une amie sur une place distincte, en gardant faim et urgences prioritaires', () => {
+  const { activeLifeMeals, getLifeMealPartner } = require('../../src/features/scene/ai/laraLife.ts');
+  try {
+    activeLifeMeals.set('cha', { objectId: 'bed-west', slotId: 'seat-north' });
+    activeLifeMeals.set('rosanna', { objectId: 'bed-east', slotId: 'seat-north' });
+    activeLifeMeals.set('marissa', { objectId: 'bed-west', slotId: 'seat-south' });
+    const occupied = new Set(['bed-west:seat-north', 'bed-west:seat-south', 'bed-east:seat-north']);
+    const objects = ['bed-west', 'bed-east'].map(id => ({ id, category: 'bed', position: [0, 0, 0],
+      slots: ['seat-north', 'seat-middle', 'seat-south'].map(slotId => ({ slotId })) }));
+    objects.push({ id: 'cuisine-group', position: [0, 0, 0], slots: [{ slotId: 'cook-stove' }] });
+    const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
+      './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
+      './smartObjectRegistry': { getAllSmartObjects: () => objects },
+      './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
+    });
+    const sabira = createLife('sabira');
+    const meals = getLaraLifeCandidates('sabira', false, {}, sabira.relationships).filter(c => c.activity === 'meal');
+    const friend = meals.find(c => c.id === 'bed-west');
+    assert.equal(friend.slotId, 'seat-middle');
+    assert.equal(friend.mealPartnerId, 'cha');
+    assert.equal(getLifeMealPartner('sabira', 'bed-west', 'seat-north', sabira.relationships), undefined, 'Neither the same seat nor a disliked neighbor counts');
+    const needs = { ...sabira.needs, rest: 0, work: 0, meal: 50, company: 80 };
+    assert.equal(chooseLifeActivity(needs, meals, position, null, 12, {}, 0), friend);
+    assert.equal(chooseLifeActivity({ ...needs, meal: 0 }, meals, position, null, 12, {}, 0), null, 'Company cannot force a meal without hunger');
+    const toilet = { activity: 'toilet', id: 'toilet', slotId: 'use', x: 0, z: 0 };
+    assert.equal(chooseLifeActivity({ ...needs, toilet: 90 }, [...meals, toilet], position, null, 12, {}, 0), toilet);
+    activeLifeMeals.delete('cha');
+    assert.equal(getLifeMealPartner('sabira', 'bed-west', 'seat-middle', sabira.relationships), undefined);
+    assert(!getLaraLifeCandidates('sabira', true).some(c => c.activity === 'meal'));
+    occupied.add('cuisine-group:cook-stove');
+    assert(!getLaraLifeCandidates('sabira', false).some(c => c.activity === 'meal'));
+  } finally { activeLifeMeals.clear(); }
+});
