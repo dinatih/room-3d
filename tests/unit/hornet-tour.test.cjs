@@ -53,12 +53,16 @@ it('place chaque observation hors des murs, linteaux et débattements, oscillati
   assert.throws(() => new HornetSpace(NaN), /gabarit/);
 });
 
-it('stationne devant les Dröna nord-est, gabarit et oscillations compris', () => {
+it('stationne avant les Dröna du meuble haut cuisine, gabarit et oscillations compris', () => {
+  const drona = { id: 'hornet-test-cuisine-drona', polygon: geometry.rectangle(walls.KITCHEN_WEST_WALL + 50, walls.ROOM_D + 28, 100, 38), yMin: 194, yMax: 227 };
+  obstacles.registerObstacle(drona);
   for (const size of [10, 20, 30]) {
     const tour = new HornetTour(size, () => {});
-    const position = tour.observations.find(o => o.id === 'under-tv').position;
-    assert(position.z - size - Math.sqrt(3) * HORNET_BOB_CM > doors.DOOR_CONFIGS.glassRight.length);
+    const position = tour.observations.find(o => o.id === 'kitchen').position;
+    assert(position.z + size + Math.sqrt(3) * HORNET_BOB_CM < walls.ROOM_D);
+    assert(tour.space.hits(new Vector3(position.x, position.y, (walls.ROOM_D + walls.KITCHEN_SOUTH_WALL) / 2), new Vector3(position.x, position.y, (walls.ROOM_D + walls.KITCHEN_SOUTH_WALL) / 2), drona), 'Ancien arrêt dans les Dröna');
     assert(tour.space.safeStop(position, Math.sqrt(3) * HORNET_BOB_CM));
+    assert(tour.route(start(tour), position), 'Nouvel arrêt accessible depuis le jardin');
   }
 });
 

@@ -93,7 +93,7 @@ export function KitchenFurnishings() {
     <MergedStaticGroup name="merged-kitchen-furnishings">
       {/* Boîtes Drona intégrées à la cuisine */}
       <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ sceneItemRoot: true, itemName: 'Boîtes Drona Cuisine' }}>
-        <CuisineDrona />
+        <NavigationObstacle id="cuisine-drona"><CuisineDrona /></NavigationObstacle>
       </group>
 
       {/* Boîtes Drona intégrées au Kallax Cuisine */}

@@ -52,7 +52,6 @@ export function hornetObservations(radius: number): HornetObservation[] {
   add('north-60', 'living', 'Séjour Nord — plongée 60°', v(centre.x, high, centre.z - high / Math.tan(Math.PI / 3)), centre.clone());
   add('top', 'living', 'Séjour — vue verticale 90°', centre.clone().setY(high), centre.clone());
   const underTV = new Vector3(...TV_POSITION).add(v(-radius, -TV_H / 2 - 2 * radius, 0));
-  underTV.z = DOOR_CONFIGS.glassRight.length + radius * 4;
   add('under-tv', 'living', 'Sous la télévision — centre du séjour', underTV, centre.clone());
   const desk = currentFurnitureTransforms['desk1-position'] ?? DESK1_POSITIONS[0];
   add('desk', 'living', 'Bureau et écrans', v(centre.x, high, ROOM_D / 3), v(desk.x, 90, desk.z), centre.clone().setY(70));
@@ -61,7 +60,7 @@ export function hornetObservations(radius: number): HornetObservation[] {
   const bathCentre = v((BATH_WEST_WALL + BATH_EAST_WALL) / 2, 80, (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2);
   add('bath-mirror', 'bathroom', 'Salle de bain — miroir et vasque', v(bathCentre.x, high, BATH_NORTH_WALL + (BATH_SOUTH_WALL - BATH_NORTH_WALL) / 3), v(BATH_WEST_WALL, 120, bathCentre.z), bathCentre);
   add('bath-shower', 'bathroom', 'Salle de bain — douche', v(bathCentre.x, high, BATH_SOUTH_WALL - radius * 2), v(BATH_WEST_WALL + radius * 2, 80, BATH_SOUTH_WALL + radius * 2));
-  add('kitchen', 'kitchen', 'Cuisine — plan de travail', v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, high, (ROOM_D + KITCHEN_SOUTH_WALL) / 2), v(KITCHEN_WEST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2), v(KITCHEN_EAST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2));
+  add('kitchen', 'kitchen', 'Cuisine — plan de travail', v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, high, ROOM_D - radius * 2), v(KITCHEN_WEST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2), v(KITCHEN_EAST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2));
   add('entry', 'corridor', 'Entrée — perspective du couloir', v((CORRIDOR_WEST_WALL + CORRIDOR_EAST_WALL) / 2, high, (CORRIDOR_NORTH_WALL + DOOR_CONFIGS.bath.pivot.z - DOOR_CONFIGS.bath.length) / 2 + radius * 2), bathCentre.clone().setX(CORRIDOR_EAST_WALL).setY(100));
   add('garden', 'garden', 'Jardin — panorama', v(ROOM_W / 2, 170, -ROOM_D / 2), new Vector3(...BATHTUB.position).setY(BATHTUB.waterHeight), v(ROOM_W / 2, 80, 0));
   add('terrace', 'garden', 'Terrasse — retour vers le studio', v(ROOM_W * 2 / 3, 175, -ROOM_D / 4), centre.clone().setY(100), v(ROOM_W / 4, 80, -ROOM_D / 4));
@@ -184,6 +183,7 @@ export class HornetTour {
       }
     }
     points.push(v(ROOM_W / 2, 180, ROOM_D / 2), v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, 180, ROOM_D - DOOR_CONFIGS.living.length - this.radius * 2));
+    points.push(this.observations.find(o => o.id === 'under-tv')!.position.clone().setZ(DOOR_CONFIGS.glassRight.length + this.radius * 4));
     this.nodes = points.filter(p => !this.space.blocker(p, p));
     this.edges = this.nodes.map(() => []);
     for (let i = 0; i < this.nodes.length; i++) for (let j = i + 1; j < this.nodes.length; j++) {
