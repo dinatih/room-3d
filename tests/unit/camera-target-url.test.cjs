@@ -115,3 +115,30 @@ it('préserve les paramètres étrangers dans une URL avec recherche et hash', (
   assert.equal(window.location.hash, '#/?keep=yes');
   assert.equal(window.location.searchParams.get('character'), 'marissa');
 });
+
+it('ouvre le debug raytracing en perspective fixe sur le studio, sans intro', () => {
+  browser('?raytracing=debug&fpv=1&follow=shiba&target=bird&projection=ortho&cameraPos=top&cameraMovement=orbit');
+  assert.equal(camera.parseUrlCameraMode(), 'orbit');
+  assert.equal(camera.parseUrlCameraTarget(), 'studio');
+  assert.equal(camera.parseUrlCameraProjection(), 'persp');
+  assert.equal(camera.parseUrlCameraMovement(), 'fix');
+  assert.equal(camera.parseUrlCameraPos(), null);
+  assert.equal(camera.parseUrlSkipIntro(), true);
+});
+it('place la caméra debug sous la TV et vise le centre au tiers des murs', () => {
+  browser('?raytracing=debug');
+  const THREE = require('three');
+  const constants = load('src/features/scene/camera/cameraConstants.ts', {
+    three: THREE,
+    '../wallData': { ROOM_W: 316, ROOM_D: 405, WALL_H: 250 },
+    '../tvData': { TV_POSITION: [288, 219.5, 50] },
+    '../cameraState': { cameraState: {} },
+  });
+  const { getIntroTargetPose } = load('src/features/scene/camera/cameraIntroTransition.ts', {
+    three: THREE, '../cameraState': { cameraState: {} },
+    './cameraConstants': constants, './cameraUrlParams': camera,
+  });
+  const pose = getIntroTargetPose('orbit');
+  assert.deepEqual(pose.pos.toArray(), [288, 250 / 3, 50]);
+  assert.deepEqual(pose.target.toArray(), [158, 250 / 3, 202.5]);
+});

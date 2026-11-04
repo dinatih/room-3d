@@ -14,7 +14,7 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
-import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro, getUrlParams } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlInventory, updateUrlInventory } from '@features/inventory/inventoryUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
@@ -820,6 +820,7 @@ export function Studio() {
   const handleLaunch = useCallback(() => {
     setShowLoadingShiba(false);
     revealScene();
+    if (getUrlParams().get('raytracing') === 'debug') useSceneStore.getState().setPhotoModeOpen(true);
   }, [revealScene]);
 
   return (

@@ -8,7 +8,8 @@
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { cameraState } from '../cameraState';
-import { CX, CZ, PERSP_POS, PERSP_TARGET, activeFollowH } from './cameraConstants';
+import { CX, CZ, PERSP_POS, PERSP_TARGET, RAYTRACING_DEBUG_POS, activeFollowH } from './cameraConstants';
+import { getUrlParams } from './cameraUrlParams';
 import type { CameraMode } from './types';
 
 export interface IntroPose {
@@ -24,6 +25,13 @@ export const INTRO_DURATION_SEC = 1.35;
 
 /** Calcule la pose cible exacte de la caméra en fonction du mode actif */
 export function getIntroTargetPose(mode: CameraMode): IntroPose {
+  if (getUrlParams().get('raytracing') === 'debug') {
+    return {
+      pos: new THREE.Vector3(...RAYTRACING_DEBUG_POS),
+      target: new THREE.Vector3(...PERSP_TARGET),
+    };
+  }
+
   if (mode === 'top') {
     const targetX = cameraState.characterX ?? CX;
     const targetZ = cameraState.characterZ ?? CZ;

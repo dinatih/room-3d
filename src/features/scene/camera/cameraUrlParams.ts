@@ -22,6 +22,13 @@ export function getUrlParams(): URLSearchParams {
     search = window.location.hash.substring(window.location.hash.indexOf('?'));
   }
   const params = new URLSearchParams(search);
+  if (params.get('raytracing') === 'debug') {
+    for (const key of ['fpv', 'follow', 'cameraPos']) params.delete(key);
+    params.set('target', 'studio');
+    params.set('projection', 'persp');
+    params.set('cameraMovement', 'fix');
+    params.set('skipIntro', '1');
+  }
   if (params.get('ha') === '1') {
     if (!params.has('projection')) params.set('projection', 'ortho');
     if (!params.has('cameraPos')) params.set('cameraPos', 'north-west');
