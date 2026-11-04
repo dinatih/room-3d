@@ -31,7 +31,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     bulb: THREE.PointLight;
     intensity: number;
   } | null>(null);
-  const { invalidate } = useThree();
+  const { camera, invalidate } = useThree();
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -72,7 +72,8 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     bulb.layers.enableAll();
     bulb.shadow.camera.layers.enableAll();
     bulb.shadow.camera.near = 0.1;
-    bulb.shadow.camera.far = box.getSize(new THREE.Vector3()).length();
+    // Keep walls occluding the unlimited point light throughout the visible scene.
+    bulb.shadow.camera.far = camera.far;
     bulb.shadow.mapSize.set(512, 512);
     bulb.shadow.normalBias = 0.05; // Half a millimetre in scene centimetres.
     bulb.shadow.bias = -0.1 / bulb.shadow.camera.far; // 1 mm depth offset prevents self-shadow acne.
@@ -92,7 +93,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
       anchor.remove(bulb);
       bulb.dispose();
     };
-  }, [scene, animations, invalidate, isPreview]);
+  }, [scene, animations, camera, invalidate, isPreview]);
 
   useLayoutEffect(() => {
     onSize?.(runtime.current!.size.clone());

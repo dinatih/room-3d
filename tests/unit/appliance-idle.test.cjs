@@ -23,6 +23,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   let frame, updates = 0, effectIndex = 0;
   const effects = [], sizes = [];
   const invalidate = () => {};
+  const camera = new THREE.PerspectiveCamera(45, 1, 1, 50000);
   const ref = { current: null }, actionState = {};
   const clone = { useGLTFClone: () => ({ scene, animations }) };
   const utils = { removeGlbLines() {}, glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(10, 10, 10)) };
@@ -36,7 +37,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     } },
     'react/jsx-runtime': require('react/jsx-runtime'),
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate }) },
+    '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ camera, invalidate }) },
     '@features/scene/useGLTFClone': clone, '../useGLTFClone': clone,
     '@features/scene/glbUtils': utils, '../glbUtils': utils,
     '@features/scene/store/useSceneStore': { useSceneStore: select => select({ furniture: { fridge: false, freezerOpen: false }, extraStates: {} }) },
@@ -44,6 +45,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   });
   const render = () => { effectIndex = 0; Component({ actionState, isPreview: true, onSize: size => sizes.push(size.toArray()) }); };
   render();
+  if (name === 'Fridge') assert.equal(anchor.children[0].shadow.camera.far, camera.far, 'les ombres couvrent aussi les pièces voisines');
   const initial = updates; frame(null, 2); assert.equal(updates, initial);
   actionState[primaryKey] = true;
   if (name === 'NinjaSP101') actionState['ninja-light'] = true;
