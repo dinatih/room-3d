@@ -12,7 +12,7 @@ const PRESETS = [
   ...LARA_COUNT_MODES.map(count => ({
     count,
     label: String(count),
-    description: count === 1 ? 'Vivida seule' : count === 2 ? 'Duo' : count === 4 ? '4 Laras' : count === 8 ? '8 Laras' : count === 10 ? 'Éco' : '15 Toutes les Laras',
+    description: count === 1 ? 'Vivida seule' : count === 2 ? 'Duo' : count === 4 ? '4 Laras' : count === 9 ? '9 Laras' : count === 10 ? 'Éco' : '15 Toutes les Laras',
   })),
   { count: CHARACTERS.length, label: 'All', description: 'Tous les personnages, extras compris' },
 ];

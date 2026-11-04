@@ -34,6 +34,7 @@ const SHOWER_APPROACH: [number, number, number] = [
 
 // At 90°, p2 starts in the chest-bench; date_bearhug's walk crosses the fence and garden furniture.
 const INYEONG_CHA_DUO_IDS = ['slow_dance', 'eye_to_eye', 'farewell_kiss', 'kiss_man_woman', 'kiss', 'pop_dance', 'energetic_dance'];
+const INTERX_MASSAGE_DUO_IDS = INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.some(tag => tag.startsWith('massage-'))).map(duo => duo.id);
 const INTERX_AFFECTION_DUO_IDS = INTERX_DUO_ANIMATIONS.filter(duo => duo.tags?.some(tag => [
   'hug', 'kiss-on-cheek', 'pat-on-cheek', 'touch-head', 'imitate',
   'massage-shoulder', 'carry-back', 'posing', 'pat-on-back',
@@ -936,7 +937,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       isDuo: true,
       duoPool: INTERX_AFFECTION_DUO_IDS,
       duoCount: 1,
-    }],
+    }, { slotId: 'massage', name: 'Massage', isDuo: true, duoRole: 'roleB', duoPool: INTERX_MASSAGE_DUO_IDS, duoCount: 1 }],
   },
   'interx-affection-sequence-point': {
     id: 'interx-affection-sequence-point',
@@ -962,7 +963,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       isDuo: true,
       duoPool: INTERX_AFFECTION_DUO_IDS,
       duoCount: 1,
-    }],
+    }, { slotId: 'massage', name: 'Massage', isDuo: true, duoRole: 'roleB', duoPool: INTERX_MASSAGE_DUO_IDS, duoCount: 1 }],
   },
   'inyeong-cha-hugs-point': {
     id: 'inyeong-cha-hugs-point',

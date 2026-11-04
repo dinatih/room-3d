@@ -1,11 +1,12 @@
-export type LifeActivity = 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
-export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira'] as const;
+export type LifeActivity = 'tech' | 'receive-massage' | 'dance' | 'combat' | 'massage' | 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
-export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira' };
-export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath', delphina: 'shower', marissa: 'yoga', rosanna: 'rest', sabira: 'rest' } as const;
+export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira', sara: 'Sara', rajaa: 'Rajaa', sandra: 'Sandra', helena: 'Helena' };
+export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath', delphina: 'shower', marissa: 'yoga', rosanna: 'rest', sabira: 'rest', sara: 'combat', rajaa: 'combat', sandra: 'combat', helena: 'tech' } as const;
 export const LIFE_INITIAL_PREFERENCES = {
-  native: ['work', 'read'], cha: ['walk', 'social'], vivida: ['bath', 'affection'], delphina: ['walk', 'read'],
-  marissa: ['yoga', 'watch-tv'], rosanna: ['yoga', 'walk'], sabira: ['social', 'affection'],
+  native: ['work', 'read'], cha: ['combat', 'massage', 'walk', 'social'], vivida: ['bath', 'massage', 'affection'], delphina: ['dance', 'read'],
+  marissa: ['dance', 'watch-tv'], rosanna: ['dance', 'walk'], sabira: ['dance', 'social'],
+  sara: ['combat', 'walk'], rajaa: ['combat', 'work'], sandra: ['combat', 'yoga'], helena: ['work', 'tech', 'read'],
 } as const satisfies Record<LifeCharacterId, readonly LifeActivity[]>;
 export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number; environment: number };
@@ -16,18 +17,29 @@ export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number; affinity?: number; activities?: Partial<Record<LifeActivity, number>> }>;
 type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
 const lifePeriod = (hour: number): LifePeriod => hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
-const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
-export const lifeSocialActivity = (objectId?: string): 'social' | 'affection' | null => objectId === 'garden-conversation' ? 'social'
+const LEISURE_ACTIVITIES: LifeActivity[] = ['dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
+export const lifeSocialActivity = (objectId?: string, slotId?: string): 'social' | 'affection' | 'massage' | null => slotId?.split(':')[0] === 'massage' && ['interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'massage' : objectId === 'garden-conversation' ? 'social'
   : ['hugs-point', 'inyeong-cha-hugs-point', 'interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'affection' : null;
+export const LIFE_SPECIALTIES = {
+  dance: ['delphina', 'marissa', 'rosanna', 'sabira'], combat: ['cha', 'sara', 'rajaa', 'sandra'], massage: ['cha', 'vivida'],
+} as const;
+export const canStartLifeActivity = (id: string, activity: LifeActivity) => !(activity in LIFE_SPECIALTIES)
+  || LIFE_SPECIALTIES[activity as keyof typeof LIFE_SPECIALTIES].some(characterId => characterId === id);
+export const lifeSpecialtyActivity = (objectId?: string, slotId?: string): 'dance' | 'combat' | 'massage' | null => objectId === 'combat-point' ? 'combat'
+  : objectId === 'rain-dance' ? 'dance' : objectId === 'est-neighbor-flat'
+    ? slotId?.startsWith('combat') ? 'combat' : slotId?.startsWith('locomotion') ? null : 'dance'
+    : lifeSocialActivity(objectId, slotId) === 'massage' ? 'massage' : null;
+export const LIFE_PERSONALITY: Partial<Record<LifeCharacterId, string>> = { helena: 'Timide et geek technologique' };
+
 export const LIFE_PHASE_LABELS = {
-  reaction: 'Réagir',
+  tech: 'Consulter son téléphone', 'receive-massage': 'Recevoir un massage', dance: 'Danser', combat: 'S’entraîner au combat', massage: 'Donner un massage', reaction: 'Réagir',
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
   read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter', affection: 'Partager un moment d’affection', bath: 'Se détendre dans le bain', clean: 'Nettoyer', yoga: 'Faire du yoga chez Églantine',
 };
 export type LifePhase = keyof typeof LIFE_PHASE_LABELS;
 const LIFE_PHASE_EFFECTS: Record<LifePhase, LifeActivity | null> = {
-  reaction: null,
+  tech: 'tech', 'receive-massage': 'receive-massage', dance: 'dance', combat: 'combat', massage: 'massage', reaction: null,
   'prepare-meal': null, 'eat-meal': 'meal', sleep: 'sleep', 'wake-up': null,
   'use-toilet': 'toilet', flush: null, 'wash-hands': 'wash-hands', shower: 'shower',
   read: 'read', 'watch-tv': 'watch-tv', social: 'social', affection: 'affection', bath: 'bath', clean: 'clean', yoga: 'yoga',
@@ -49,7 +61,7 @@ export interface LifeCandidate {
 export const LIFE_SETTINGS = { activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
-  yoga: 'Faire du yoga chez Églantine', clean: 'Entretenir la maison', bath: 'Se détendre dans le bain', rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
+  tech: 'Consulter son téléphone', 'receive-massage': 'Recevoir un massage', dance: 'Danser', combat: 'S’entraîner au combat', massage: 'Donner un massage', yoga: 'Faire du yoga chez Églantine', clean: 'Entretenir la maison', bath: 'Se détendre dans le bain', rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
   toilet: 'Aller aux toilettes puis se laver les mains', shower: 'Prendre une douche', 'wash-hands': 'Se laver les mains',
   read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter avec un voisin', affection: 'Partager un moment d’affection',
 };
@@ -71,9 +83,13 @@ export function getLifeMood(needs: LifeNeeds) {
 }
 
 const socialRates: LifeNeeds = { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: -1.5, environment: 0 };
+const exerciseRates: LifeNeeds = { rest: 0.4, work: -1.2, walk: -0.8, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 };
+const readingRates: LifeNeeds = { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 };
 const rates: Record<LifeActivity, LifeNeeds> = {
+  dance: exerciseRates, combat: exerciseRates, massage: socialRates, 'receive-massage': { ...socialRates, rest: -0.35 },
+  tech: readingRates, read: readingRates,
   pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
-  yoga: { rest: 0.4, work: -1.2, walk: -0.8, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 },
+  yoga: exerciseRates,
   clean: { rest: 0.5, work: -0.3, walk: 0.3, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 },
   bath: { rest: -0.35, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18, company: 0.2, environment: 0 },
   rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
@@ -84,7 +100,6 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   toilet: { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: 0.12, toilet: -3, company: 0.2, environment: 0 },
   shower: { rest: -0.1, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -1.5, toilet: 0.18, company: 0.2, environment: 0 },
   'wash-hands': { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: -0.1, toilet: 0.18, company: 0.2, environment: 0 },
-  read: { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   'watch-tv': { rest: 0.1, work: -1, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   social: socialRates, affection: socialRates,
 };
@@ -155,10 +170,10 @@ export function lifeHabitScore(candidate: Pick<LifeCandidate, 'activity' | 'id' 
 }
 
 export function lifeFollowUp(last: LifeActivity | null, candidate: LifeCandidate, needs: LifeNeeds): string | null {
-  if (last === 'yoga' && candidate.activity === 'shower' && needs.hygiene >= LIFE_SETTINGS.priority) return 'Après le yoga, se laver.';
+  if (last && ['yoga', 'dance', 'combat'].includes(last) && candidate.activity === 'shower' && needs.hygiene >= LIFE_SETTINGS.priority) return 'Après l’activité physique, se laver.';
   if (last === 'meal' && candidate.activity === 'clean' && candidate.id === 'cuisine-group' && candidate.slotId === 'wash-dishes'
     && (candidate.urgency ?? 0) >= LIFE_SETTINGS.priority) return 'Après le repas, faire la vaisselle qui gêne.';
-  if (last && ['work', 'read', 'walk', 'yoga', 'clean'].includes(last) && candidate.activity === 'rest'
+  if (last && ['work', 'read', 'walk', 'yoga', 'dance', 'combat', 'clean'].includes(last) && candidate.activity === 'rest'
     && needs.rest >= LIFE_SETTINGS.priority) return 'Après une activité fatigante, se reposer assise.';
   return null;
 }
@@ -191,7 +206,7 @@ export function routineActivities(hour: number): LifeActivity[] {
   if (hour < 6 || hour >= 22) return ['sleep'];
   if (hour < 9) return ['shower', 'meal'];
   if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
-  return hour < 18 ? ['work', 'yoga', 'walk'] : ['read', 'watch-tv', 'social', 'affection', 'bath', 'yoga'];
+  return hour < 18 ? ['work', 'tech', 'yoga', 'dance', 'combat', 'walk'] : ['dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'social', 'affection', 'bath', 'yoga'];
 }
 
 /** Need relief requires real interactions, walking or played physical exercise. */
@@ -233,11 +248,11 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
 }
 
 /** A short rest and a night in bed answer the same fatigue, with different recovery rates. */
-export const lifeNeed = (activity: LifeCandidate['activity'], needs?: LifeNeeds): keyof LifeNeeds => activity === 'yoga'
+export const lifeNeed = (activity: LifeCandidate['activity'], needs?: LifeNeeds): keyof LifeNeeds => (activity === 'yoga' || activity === 'dance' || activity === 'combat')
   ? needs && needs.walk > needs.work ? 'walk' : 'work'
-  : activity === 'sleep' || activity === 'bath' ? 'rest'
+  : activity === 'sleep' || activity === 'bath' || activity === 'receive-massage' ? 'rest'
   : activity === 'shower' || activity === 'wash-hands' ? 'hygiene'
-  : activity === 'clean' ? 'environment' : activity === 'social' || activity === 'affection' ? 'company' : activity === 'read' || activity === 'watch-tv' ? 'work' : activity;
+  : activity === 'clean' ? 'environment' : activity === 'social' || activity === 'affection' || activity === 'massage' ? 'company' : activity === 'read' || activity === 'tech' || activity === 'watch-tv' ? 'work' : activity;
 
 /** An invitation must not cancel a personal command or interrupt essential care. */
 export function lifeInvitationResponse(needs: LifeNeeds, activity: LifeActivity | null, handsDirty: boolean, available: boolean) {

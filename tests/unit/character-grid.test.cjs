@@ -35,11 +35,11 @@ it('frames every row around the active character in perspective and ortho', () =
   }
 });
 
-it('ajoute Cha aux sept personnages présents par défaut sans remplacer personne', () => {
-  assert.equal(DEFAULT_LARA_COUNT, 8);
+it('ajoute Helena comme neuvième personnage par défaut sans remplacer les huit autres', () => {
+  assert.equal(DEFAULT_LARA_COUNT, 9);
   assert(LARA_COUNT_MODES.includes(DEFAULT_LARA_COUNT));
   assert.deepEqual(getDefaultSceneCharacterIds(DEFAULT_LARA_COUNT, 'native'), [
-    'vivida', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha',
+    'vivida', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'helena',
   ]);
-  assert(isCharacterVisibleInMode('cha', DEFAULT_LARA_COUNT, 'native'));
+  assert(isCharacterVisibleInMode('helena', DEFAULT_LARA_COUNT, 'native'));
 });

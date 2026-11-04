@@ -1,6 +1,6 @@
 # Système de vie des colocataires
 
-Lara Native, Cha (Charlotte), Vivida, Delphina, Marissa, Rosanna et Sabira possèdent chacune leurs besoins, souvenirs, goûts et affinités. La vitesse du temps est commune. Elles commencent avec un besoin de repos à 0 %.
+Lara Native, Cha (Charlotte), Vivida, Delphina, Marissa, Rosanna, Sabira, Sara et Helena possèdent chacune leurs besoins, souvenirs, goûts et affinités. La vitesse du temps est commune. Elles commencent avec un besoin de repos à 0 %.
 
 ## Lire les jauges
 
@@ -14,6 +14,10 @@ Environnement reflète la saleté réelle et partagée des lieux : sols, toilett
 | --- | --- | --- |
 | Bureau Bollsidan 2 / tablette | Stimulation | Une seule place ; travailler ou lire fatigue progressivement. |
 | Yoga du studio voisin Ouest, chez Églantine | Stimulation + Bouger | Huit places ; les exercices eux-mêmes satisfont Bouger, en plus des trajets. Légère fatigue. |
+| Danse au Jardin Nord (Pluie), au Fond du Jardin et chez Damien | Stimulation + Bouger | Delphina, Marissa, Rosanna et Sabira ; légère fatigue et hygiène accrue. Chez Damien : tous les slots sauf locomotion et combat. |
+| Combat solo chez Damien et duos de la Zone de Combat | Stimulation + Bouger | Cha, Sara, Rajaa et Sandra ; pas de bénéfice de compagnie ni de souvenir amical pendant le combat. |
+| Massage sur les points Inter-X du studio et du jardin | Compagnie + Stimulation pour la masseuse ; Repos aussi pour la receveuse | Cha et Vivida donnent les massages, les autres peuvent en recevoir. Rôles et animations synchronisés, invitations soumises aux besoins. |
+| Téléphone dans les couloirs du bâtiment B | Stimulation | Slots « Consulter son téléphone », notamment pour Helena. |
 | Télévision | Stimulation | Ne remplace pas le repos. |
 | Conversation au jardin | Compagnie + Stimulation | Effets pendant la discussion réellement jouée à deux ; attendre seul ne suffit pas. |
 | Points câlins du studio et du jardin, points d'affection Inter-X du studio et du jardin | Compagnie + Stimulation | Séquences des smart actions conservées ; effets uniquement pendant les duos réellement joués. Le point Inter-X ×10 reste hors des choix de vie. |
@@ -67,7 +71,7 @@ Pour les duos non combattants, les colocataires choisissent parmi les partenaire
 
 Avant une invitation autonome, la colocataire consultée peut accepter, répondre « pas maintenant » pour terminer un repas, dormir, aller aux toilettes, se laver ou satisfaire un besoin corporel urgent, ou refuser pendant une commande utilisateur ou une visite. Cette vérification précède les réservations. Le demandeur reste libre de chercher un autre partenaire ou de poursuivre sa vie.
 
-Une réponse « pas maintenant » garde désormais une proposition privée pour une conversation, un moment d'affection ou un repos assis partagé. À la prochaine décision après son activité, la colocataire peut retrouver la personne qui l'avait invitée, même si sa jauge de compagnie est basse. Les soins et les urgences restent prioritaires. La place et le partenaire sont vérifiés à nouveau avant de créer le duo ; aucune réservation n'est conservée pendant le report.
+Une réponse « pas maintenant » garde désormais une proposition privée pour une conversation, un moment d'affection, un massage, un entraînement de combat ou un repos assis partagé. À la prochaine décision après son activité, la colocataire peut retrouver la personne qui l'avait invitée, même si sa jauge de compagnie est basse. Les soins et les urgences restent prioritaires. La place et le partenaire sont vérifiés à nouveau avant de créer le duo ; aucune réservation n'est conservée pendant le report.
 
 Si la personne partage déjà une autre activité, si le spot est indisponible ou si le partenaire devient masqué ou indisponible, la proposition est annulée. Une commande utilisateur, une visite ou la suspension de la vie autonome l'annulent également. Une nouvelle proposition remplace la précédente, avec un log explicatif. Un contrôle de disponibilité lors de la reprise ne crée pas une invitation inverse : il n'y a pas de ping-pong de reports.
 
@@ -148,13 +152,25 @@ Les onglets du panneau de vie reprennent l’icône et la couleur définies dans
 | Colocataire | Préférences initiales |
 |---|---|
 | Lara | Bureau et lecture |
-| Cha | Marche et discussion |
-| Vivida | Bain et affection |
-| Delphina | Marche et lecture |
-| Marissa | Yoga et télévision |
-| Rosanna | Yoga et marche |
-| Sabira | Discussion et affection |
+| Cha | Combat, massage, marche et discussion |
+| Vivida | Bain, massage et affection |
+| Delphina | Danse et lecture |
+| Marissa | Danse et télévision |
+| Rosanna | Danse et marche |
+| Sabira | Danse et discussion |
+| Sara | Combat et marche |
+| Rajaa | Combat et bureau |
+| Sandra | Combat et yoga |
+| Helena | Bureau, téléphone et lecture |
 
 Ces préférences départagent les activités adaptées aux besoins. Elles ne créent ni besoin, ni souvenir, ni réservation, et ne passent pas devant les urgences, l’hygiène des mains ou le respect de l’espace personnel. La récence continue de favoriser la variété.
 
 Leur poids initial correspond au seuil d’une décision de besoin, réparti entre les activités préférées. Il diminue progressivement avec le soulagement réellement accumulé dans les souvenirs : chacune peut découvrir un loisir favori différent de ses goûts de départ. La section repliable **Goûts** du panneau distingue ces deux informations. Les décisions mentionnent « Goût initial » quand il intervient, et leurs données incluent les préférences du personnage ainsi que les coefficients utilisés.
+
+## Spécialités et nouvelle colocataire
+
+Le groupe par défaut passe de huit à neuf personnages : Helena est ajoutée après Cha, sans retirer les huit précédentes. Sara dispose maintenant d’une vie autonome ; Rajaa et Sandra aussi lorsqu’elles sont affichées. Helena est timide et geek technologique : elle commence sur un spot téléphone, préfère les activités technologiques et décline les nouvelles rencontres lorsqu’elle n’a pas encore besoin de compagnie. Une connaissance déjà rencontrée ou une envie de compagnie atteignant le seuil habituel permet l’invitation ; les soins et commandes utilisateur restent prioritaires.
+
+Les spécialités limitent les initiatives autonomes de danse, de combat et de massage aux profils indiqués. Elles conservent les pools, répétitions et durées des smart actions : six variations chez Damien, quatre au Jardin Nord, quatre répétitions au Fond du Jardin et trois duos dans la Zone de Combat. Les combats en duo ne recrutent que des combattantes disponibles et respectent leurs refus ou reports.
+
+Les actions « Massage » des deux points Inter-X utilisent uniquement les duos marqués massage dans le registre. La masseuse prend le rôle B, la receveuse le rôle A. Une colocataire peut demander à recevoir un massage auprès d’une masseuse disponible, et une invitation reportée reprend avec les mêmes rôles. Les bénéfices et souvenirs distinguent donner et recevoir ; ils ne commencent qu’au démarrage réel des animations. Un point déjà occupé par une autre action ne change pas de séquence pour accueillir la nouvelle demande.

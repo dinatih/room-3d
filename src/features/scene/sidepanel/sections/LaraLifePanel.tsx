@@ -1,4 +1,4 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
+import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { LIFE_SPEEDS, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
@@ -68,6 +68,7 @@ export function LaraLifePanel() {
       <details className="mt-1 text-break">
         <summary className="fw-semibold">Goûts</summary>
         <div>Au départ : {initialTastes}.</div>
+        {LIFE_PERSONALITY[selectedCharacterId] && <div>{LIFE_PERSONALITY[selectedCharacterId]}.</div>}
         <div>{favorite ? `Loisir favori découvert : ${LIFE_LABELS[favorite]}.` : 'Loisir favori encore à découvrir.'}</div>
         <div>Les expériences prennent progressivement le pas sur les goûts initiaux.</div>
       </details>

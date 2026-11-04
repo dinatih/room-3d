@@ -536,7 +536,7 @@ it('propose les points câlins pour la compagnie en conservant leurs smart actio
     './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: id => occupied.has(id) } },
   });
   for (const id of life.LIFE_CHARACTER_IDS) {
-    const candidates = getLaraLifeCandidates(id, false);
+    const candidates = getLaraLifeCandidates(id, false).filter(candidate => candidate.activity === 'affection');
     assert.deepEqual(candidates.map(candidate => candidate.id), ids);
     for (const candidate of candidates) {
       assert.equal(candidate.activity, 'affection');
@@ -663,7 +663,7 @@ it('utilise des clips de réaction existants avec leur durée naturelle', () => 
 
 it('initialise les sept vies et les relations réciproques sans inventer de moments partagés', () => {
   const { LIFE_CHARACTER_IDS, lifeAffinity, closestLifeFriend, socialPartnerScore, rememberLifeConversation } = require('../../src/features/scene/ai/laraLife.ts');
-  assert.deepEqual(LIFE_CHARACTER_IDS, ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira']);
+  assert.deepEqual(LIFE_CHARACTER_IDS, ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra']);
   const sabira = createLife('sabira');
   assert.equal(closestLifeFriend(sabira.relationships), 'cha');
   assert.equal(closestLifeFriend(createLife('rosanna').relationships), 'sabira');
@@ -758,7 +758,7 @@ it('différencie les sept colocataires par leurs goûts initiaux sans forcer les
   const { LIFE_INITIAL_PREFERENCES, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
   const cases = [
     ['native', 'read', 'watch-tv', 20], ['cha', 'walk', 'yoga', 10], ['vivida', 'bath', 'rest', 10],
-    ['delphina', 'read', 'watch-tv', 20], ['marissa', 'yoga', 'walk', 10], ['rosanna', 'walk', 'work', 10], ['sabira', 'affection', 'bath', 20],
+    ['delphina', 'read', 'watch-tv', 20], ['marissa', 'dance', 'walk', 10], ['rosanna', 'walk', 'work', 10], ['sabira', 'dance', 'bath', 20],
   ];
   for (const [id, preferred, other, hour] of cases) {
     const life = createLife(id), preferences = LIFE_INITIAL_PREFERENCES[id];

@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_INITIAL_ACTIVITIES, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
@@ -16,7 +16,10 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn 
   rosanna:  'bed-east',
   marissa:  'west-neighbor-flat',
   delphina: 'shower',
-  sara:     'inyeong-cha-hugs-point',
+  sara:     'combat-point',
+  helena:   'building-b-corridor-end',
+  rajaa:    'combat-point',
+  sandra:   'est-neighbor-flat',
   cha:      'garden-fresh-air',
   vivida:   'bathtub-garden',
   sabira:   'bed-west',
@@ -24,8 +27,6 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn 
   // romana:   'west-neighbor-flat',
   // angelina: 'west-neighbor-flat',
   // lgbta:    'hugs-point',
-  // sandra:   'duo-zone',
-  // rajaa:    'duo-zone',
   // valby:    'bathtub-garden',
   // alex:     'est-neighbor-flat',
   // mannequin:'est-neighbor-flat',
@@ -50,6 +51,7 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
     const initial = {
       native: ['desk-bollsidan-2', 'work-standing'], cha: ['garden-fresh-air', 'breathe'], vivida: ['bathtub-garden', 'center'],
       delphina: ['shower', 'take-shower-1'], marissa: ['west-neighbor-flat', 'yoga'], rosanna: ['bed-east', 'seat-middle'], sabira: ['bed-west', 'seat-middle'],
+      sara: ['combat-point', 'combat-session'], rajaa: ['combat-point', 'combat-session'], sandra: ['est-neighbor-flat', 'combat-3'], helena: ['building-b-corridor-end', 'visit'],
     }[characterId];
     return buildLaraLifeInstructions(characterId, { activity: LIFE_INITIAL_ACTIVITIES[characterId], id: initial[0], slotId: initial[1] });
   }
@@ -69,27 +71,30 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
   return objects.flatMap(object =>
-    object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
+    object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
         const task = getHomeTask(object.id, slot.slotId);
         const seat = isLifeSeat(object.category, slot);
-        const activity = task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
+        const activity = lifeSpecialtyActivity(object.id, slot.slotId) ?? (task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'west-neighbor-flat' ? 'yoga'
+          : ['building-b-corridor-end', 'building-b-corridor'].includes(object.id) && slot.slotId === 'visit' ? 'tech'
           : object.id === 'tv-view' ? 'watch-tv'
-          : lifeSocialActivity(object.id) ? lifeSocialActivity(object.id)
-          : object.id === 'garden-fresh-air' ? 'walk'
+          : lifeSocialActivity(object.id, slot.slotId) ? lifeSocialActivity(object.id, slot.slotId)
+          : object.id === 'garden-fresh-air' ? canStartLifeActivity(characterId, 'dance') ? 'dance' : 'walk'
           : object.id === 'bathtub-garden' ? 'bath'
           : object.id === 'toilet' && slot.slotId === 'use' ? 'toilet'
           : object.id === 'shower' ? 'shower'
           : object.id === 'vasque-sdb' && slot.slotId === 'wash-hands' && handsDirty ? 'wash-hands'
           : object.category === 'bed' && slot.slotId.startsWith('lie-down') ? 'sleep'
-          : seat ? 'rest' : null;
+          : seat ? 'rest' : null);
+        if (activity && activity !== 'massage' && !canStartLifeActivity(characterId, activity)) return [];
         const position = slot.offset ?? object.position;
         const avoidedNeighbors = seat || object.category === 'bed' || object.id === 'bathtub-garden' ? [...new Set(reservations
           .filter(reservation => reservation.slot.slice(0, reservation.slot.indexOf(':')) === object.id && lifeAffinity(characterId, reservation.characterId) < 0)
           .map(reservation => reservation.characterId))] : [];
         const candidate = { ...(avoidedNeighbors.length ? { avoidedNeighbors } : {}), id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
           visits: places[`${object.id}:${slot.slotId}`] ?? 0, ...(task ? { urgency: homeDirt[task] } : {}) };
+        if (activity === 'massage') return [{ ...candidate, activity: 'receive-massage' }, ...(canStartLifeActivity(characterId, 'massage') ? [{ ...candidate, activity: 'massage' }] : [])] as LifeCandidate[];
         const mealPartnerId = seat && !slot.isDuo ? getLifeMealPartner(characterId, object.id, slot.slotId, relationships, elapsedSeconds) : undefined;
         return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
           ...(activity === 'rest' && slot.isDuo ? [{ ...candidate, activity: 'social' }] : []),
@@ -105,6 +110,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       repeatCount: 1, repeatVariation: false, lifePhase: 'eat-meal' },
   ];
   const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, characterId);
+  const activityPhase = candidate.activity in LIFE_PHASE_LABELS ? candidate.activity as LifePhase : undefined;
   const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');
   const instructions = sequence.map((instruction, index): AgentInstruction => {
     const lifePhase = candidate.activity === 'sleep' && index > sleepStep ? 'wake-up'
@@ -112,8 +118,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.smartObjectId === 'toilet' && instruction.slotId === 'use' ? 'use-toilet'
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
-      : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
-        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'affection' || candidate.activity === 'bath' || candidate.activity === 'clean' || candidate.activity === 'yoga' ? candidate.activity : undefined;
+      : activityPhase;
     return lifePhase ? { ...instruction, lifePhase } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.

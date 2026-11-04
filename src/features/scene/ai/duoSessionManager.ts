@@ -11,7 +11,7 @@ import { findDuoAnchor } from './navigation/duoPlacement';
 import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
-import { isLifeCharacter, isLifeSeat, lifeSocialActivity, socialPartnerScore, lifeClock } from './laraLife';
+import { isLifeCharacter, isLifeSeat, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, socialPartnerScore, lifeClock } from './laraLife';
 import { characterLives } from './laraLifeStore';
 
 export type DuoRole = 'roleA' | 'roleB';
@@ -474,7 +474,8 @@ class DuoSessionManager {
     leaderId?: string,
     partnerId?: string,
     forcedAnimId?: string,
-    respectLifeNeeds = false
+    respectLifeNeeds = false,
+    initiatorRole?: DuoRole
   ): { targetA: string; targetB: string; posA: [number, number, number]; posB: [number, number, number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
     if (!obj || (leaderId && !OccupancyManager.canUseObject(objectId, leaderId))
@@ -483,13 +484,15 @@ class DuoSessionManager {
     const playlist = navigationValue(`duo:${objectId}:${slotId}:${forcedAnimId}`, () => this.resolveSlotPlaylist(objectId, slotId, forcedAnimId));
     if (playlist.length === 0) return null;
     const def = playlist[0];
-    const canParticipate = (id: string) => playlist.every(anim => canCharacterPerformDuo(id, anim));
+    const canParticipate = (id: string) => (!respectLifeNeeds || !playlist.some(anim => anim.isCombat) || canStartLifeActivity(id, 'combat')) && playlist.every(anim => canCharacterPerformDuo(id, anim));
     const requestedLeaderId = leaderId;
+    if (respectLifeNeeds && leaderId && !canParticipate(leaderId)) return null;
 
     const slot = obj.slots.find(s => s.slotId === slotId)
       || obj.slots.find(s => s.animationsRandom === 'seated-front')
       || obj.slots[0];
     const actualSlotId = slotId || slot?.slotId || 'duo';
+    const requestedRole = initiatorRole ?? slot?.duoRole;
 
     let anchorPos: [number, number, number] = [...(slot?.offset ?? [0, 0, 0])];
     const anchorRotY: number = slot?.rotY ?? obj.rotationY ?? 0;
@@ -497,7 +500,7 @@ class DuoSessionManager {
 
     // Si une session existe déjà pour cet objet
     const existing = this.sessions.get(objectId);
-    if (respectLifeNeeds && partnerId && existing && !existing.isSessionComplete) return null;
+    if (respectLifeNeeds && existing && !existing.isSessionComplete && (partnerId || existing.location.slotId !== actualSlotId)) return null;
     if (existing?.isSessionComplete) {
       const participantId = existing.participantA?.characterId ?? existing.participantB?.characterId;
       if (participantId) this.leaveDuoZone(participantId);
@@ -559,7 +562,9 @@ class DuoSessionManager {
     };
 
     if (respectLifeNeeds && partnerId && (!isVisibleChar(partnerId, isLifeCharacter(partnerId)) || this.getSessionFor(partnerId))) return null;
-    const sharedActivity = lifeSocialActivity(objectId) ?? (slot && isLifeSeat(obj.category, slot) ? 'rest' : undefined);
+    const sharedActivity = lifeSpecialtyActivity(objectId, actualSlotId) ?? lifeSocialActivity(objectId, actualSlotId) ?? (slot && isLifeSeat(obj.category, slot) ? 'rest' : undefined);
+    if (respectLifeNeeds && sharedActivity === 'massage' && (requestedRole === 'roleA'
+      ? partnerId && !canStartLifeActivity(partnerId, 'massage') : leaderId && !canStartLifeActivity(leaderId, 'massage'))) return null;
     const getCandidates = (excludeId?: string, allowPlayer = true) => {
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
         .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
@@ -567,7 +572,8 @@ class DuoSessionManager {
       if (preferred.length > 0 && (!isLifeCharacter(excludeId) || def.isCombat)) return preferred;
 
       return Object.keys(cameraState.positions)
-        .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
+        .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer)
+          && (!respectLifeNeeds || sharedActivity !== 'massage' || requestedRole !== 'roleA' || canStartLifeActivity(id, 'massage')))
         .sort((a, b) => {
           if (isLifeCharacter(excludeId) && !def.isCombat) {
             const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds, sharedActivity) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds, sharedActivity);
@@ -580,13 +586,14 @@ class DuoSessionManager {
     };
 
     const candidates = getCandidates(undefined, true);
-    const targetA = leaderId || candidates.find(id => id !== partnerId);
+    let targetA = leaderId || candidates.find(id => id !== partnerId);
     const partnerCandidates = getCandidates(targetA, false);
-    const acceptsInvitation = (id: string) => !respectLifeNeeds || def.isCombat || document.dispatchEvent(new CustomEvent('npc-check-life-invitation', {
-      cancelable: true, detail: { targetId: id, fromId: targetA, objectId, slotId: actualSlotId, forcedAnimId, allowDeferral: !partnerId },
+    const acceptsInvitation = (id: string) => !respectLifeNeeds || document.dispatchEvent(new CustomEvent('npc-check-life-invitation', {
+      cancelable: true, detail: { targetId: id, fromId: targetA, objectId, slotId: sharedActivity === 'massage' ? `${actualSlotId}:${requestedRole === 'roleA' ? 'roleB' : 'roleA'}` : actualSlotId, forcedAnimId, allowDeferral: !partnerId },
     }));
-    const targetB = partnerId ? (acceptsInvitation(partnerId) ? partnerId : undefined) : partnerCandidates.find(acceptsInvitation);
+    let targetB = partnerId ? (acceptsInvitation(partnerId) ? partnerId : undefined) : partnerCandidates.find(acceptsInvitation);
     if (!targetA || !targetB || targetA === targetB) return null;
+    if (leaderId && requestedRole === 'roleB') [targetA, targetB] = [targetB, targetA];
 
 
     if (slot?.isDuo) {
@@ -654,13 +661,13 @@ class DuoSessionManager {
       }
     );
 
-    if (requestedLeaderId && requestedLeaderId !== targetA && requestedLeaderId !== targetB) {
+    if (requestedLeaderId && requestedLeaderId !== targetA) {
       document.dispatchEvent(new CustomEvent('npc-invite-duo', {
-        detail: { targetId: targetA, fromId: 'SmartObject', objectId, slotId: actualSlotId, forceRole: 'roleA', targetPos: posA, targetRotY: rotA }
+        detail: { targetId: targetA, fromId: 'SmartObject', lifeInvitationConfirmed: respectLifeNeeds && Boolean(partnerId), objectId, slotId: `${actualSlotId}:roleA`, forceRole: 'roleA', targetPos: posA, targetRotY: rotA }
       }));
     }
 
-    document.dispatchEvent(new CustomEvent('npc-invite-duo', {
+    if (targetB !== requestedLeaderId) document.dispatchEvent(new CustomEvent('npc-invite-duo', {
       detail: {
         targetId: targetB,
         fromId: 'SmartObject',

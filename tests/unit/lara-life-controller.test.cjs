@@ -160,7 +160,7 @@ it('explique les décisions et journalise une interruption avant tout bénéfice
 });
 
 it('termine le diagnostic d’attente lorsque l’interaction commence sans déplacement', () => {
-  const w = world('sara', false, false, false, true);
+  const w = world('safa', false, false, false, true);
   w.pauseNavigation(true); w.tick(.1, false);
   assert(w.journal.some(e => e.action === 'nav_stop'));
   w.pauseNavigation(false); w.tick(.1, false);
@@ -172,7 +172,7 @@ it('termine le diagnostic d’attente lorsque l’interaction commence sans dép
 });
 
 it('joue les actions de la manette sur place et attend la fin réelle du clip avant de reprendre', () => {
-  for (const id of ['native', 'sara']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {
+  for (const id of ['native', 'safa']) for (const animation of ['miley-armature-cheer-feminine-jump', 'miley-armature-fall-down-f']) {
     const w = world(id);
     w.controller.playControlAnimation(animation);
     assert(w.controller.hasPendingDynamicTask());
@@ -189,7 +189,7 @@ it('joue les actions de la manette sur place et attend la fin réelle du clip av
 });
 
 it('attend un calcul sans conserver le sad de l’action précédente, puis reprend', () => {
-  const w = world('sara');
+  const w = world('safa');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
   w.controller.state.animation = 'sad-idle';
   w.pauseNavigation(true);
@@ -203,7 +203,7 @@ it('attend un calcul sans conserver le sad de l’action précédente, puis repr
 });
 
 it('attend un contournement sans sad et laisse un vrai échec visible jusqu’à sa résolution', () => {
-  const w = world('sara');
+  const w = world('safa');
   w.controller.configure({ scenario: [{ type: 'MOVE_TO', targetPos: [100, 0, 10] }], loop: false });
   w.pauseCrowd(true); w.tick();
   assert.equal(w.controller.getStatus(), 'MOVING');
@@ -221,7 +221,7 @@ it('attend un contournement sans sad et laisse un vrai échec visible jusqu’à
 });
 
 it('préserve une animation sad explicitement demandée par une interaction', () => {
-  const w = world('sara');
+  const w = world('safa');
   w.controller.configure({ scenario: [{ type: 'WAIT', duration: 3, animation: 'sad-idle' }], loop: false });
   w.tick(.5, false); w.tick(.5, false);
   assert.equal(w.controller.getStatus(), 'INTERACTING');
@@ -268,7 +268,7 @@ it('ne retente une cible inaccessible qu’après un changement du monde', () =>
 });
 
 it('laisse les autres personnages suivre leur scénario sans simulation de besoins', () => {
-  const w = world('sara'), initial = { ...w.lifeState.needs };
+  const w = world('safa'), initial = { ...w.lifeState.needs };
   for (let i = 0; i < 10; i++) w.tick();
   assert.deepEqual(w.lifeState.needs, initial);
   assert(!w.logs.some(entry => entry.action === 'life_decision'));
@@ -695,7 +695,7 @@ it('actualise la pièce affichée pendant le contrôle manuel sans faire avancer
 
 it('ignore les balayages autonomes inutiles et compte aussi le ménage des autres PNJ', () => {
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
-  for (const actor of ['native', 'sara']) {
+  for (const actor of ['native', 'safa']) {
     const w = world(actor);
     const id = 'clean-floor-living';
     w.objects[id] = { id, name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30, repeatCount: 3 }] };
@@ -714,7 +714,7 @@ it('ignore les balayages autonomes inutiles et compte aussi le ménage des autre
     w.tick();
     assert.notEqual(w.controller.getStatus(), 'INTERACTING', 'A clean floor must end the task without consuming three thirty-second clips');
   }
-  const w = world('sara');
+  const w = world('safa');
   w.objects['clean-floor-living'] = { id: 'clean-floor-living', name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30 }] };
   const sweep = { type: 'USE_OBJECT', smartObjectId: 'clean-floor-living', slotId: 'sweep', animation: 'sweep', duration: 30 };
   const scenario = [sweep, { type: 'WAIT', animation: 'idle', duration: 1 }];
@@ -763,7 +763,7 @@ it('salue une connaissance pendant une pause, sans interrompre une réaction ni 
 it('remercie le ménage réellement terminé par un autre PNJ, jamais son chargement', () => {
   const originalDocument = global.document;
   global.document = new EventTarget();
-  const w = world(), cleaner = world('sara');
+  const w = world(), cleaner = world('safa');
   const disconnect = w.controller.connect(), disconnectCleaner = cleaner.controller.connect();
   try {
     w.tick(); w.tick();
@@ -851,7 +851,7 @@ for (const outcome of ['available', 'busy', 'removed', 'manual', 'urgent', 'mode
     }
     if (['available', 'urgent', 'seated', 'replaced'].includes(outcome)) {
       assert.equal(calls.length, 1);
-      assert.deepEqual(calls[0], [objectId, slotId, 'native', outcome === 'replaced' ? 'vivida' : 'cha', seated ? 'seat-duo' : undefined, true]);
+      assert.deepEqual(calls[0], [objectId, slotId, 'native', outcome === 'replaced' ? 'vivida' : 'cha', seated ? 'seat-duo' : undefined, true, undefined]);
       assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
       assert.deepEqual(w.lifeState.relationships, {}, 'Resuming an invitation is not played time together');
     } else if (outcome === 'noreturn') {
@@ -1077,6 +1077,107 @@ it('utilise et explique le goût initial de Cha pour la marche dans une décisio
   for (let i = 0; i < 5 && !w.logs.some(log => log.action === 'life_decision' && log.data.activity === 'walk'); i++) w.tick();
   const decision = w.logs.find(log => log.action === 'life_decision' && log.data.activity === 'walk');
   assert(decision.message.includes('Goût initial.'));
-  assert.deepEqual(decision.data.initialPreferences, ['walk', 'social']);
+  assert.deepEqual(decision.data.initialPreferences, life.LIFE_INITIAL_PREFERENCES.cha);
   assert(decision.data.candidates.find(c => c.activity === 'walk').preference > decision.data.candidates.find(c => c.activity === 'work').preference);
+});
+
+it('Helena accepte les nouvelles rencontres selon son envie de compagnie, puis reconnaît ses connaissances', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world('helena'), disconnect = w.controller.connect();
+  const invite = () => document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
+    detail: { targetId: 'helena', fromId: 'native', objectId: 'garden-conversation', slotId: 'chat' } }));
+  try {
+    w.tick();
+    assert.equal(invite(), false);
+    assert(w.logs.some(log => log.action === 'life_invitation_declined' && log.message.includes('Timide')));
+    w.lifeState.needs.company = 50;
+    assert.equal(invite(), true);
+    w.lifeState.needs.company = 0;
+    life.rememberLifeConversation(w.lifeState, 'native', 1, 'social');
+    assert.equal(invite(), true);
+    w.lifeState.needs.toilet = 95;
+    assert.equal(invite(), false, 'Even a familiar person cannot interrupt urgent care');
+  } finally { disconnect(); global.document = originalDocument; }
+});
+
+it('applique l’exercice des deux rôles d’un combat réel sans remplir la compagnie ni créer une amitié', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const role of ['roleA', 'roleB']) {
+      const w = world('cha');
+      w.tick(); w.tick(); w.tick();
+      w.scene.activeCharacterId = 'player';
+      w.objects['combat-point'] = { id: 'combat-point', name: 'Combat', category: 'outdoor', isDuo: true, position: [60, 0, 10], slots: [{ slotId: 'combat-session' }] };
+      const session = { participantA: { characterId: 'cha' }, participantB: { characterId: 'sara' } };
+      let playing = false;
+      const animation = { def: { isCombat: true }, clipA: 'fight-a', clipB: 'fight-b' };
+      Object.assign(w.duo, { getSessionFor: () => session, isPlaying: () => playing, getCurrentAnimState: () => playing ? animation : null });
+      const disconnect = w.controller.connect();
+      try {
+        w.lifeState.needs = { ...w.lifeState.needs, walk: 80, work: 80, company: 80 };
+        document.dispatchEvent(new CustomEvent('npc-invite-duo', { detail: { targetId: 'cha', fromId: 'sara', objectId: 'combat-point', slotId: `combat-session:${role}`, forceRole: role } }));
+        for (let i = 0; i < 3; i++) w.tick();
+        assert(w.lifeState.needs.walk >= 80 && w.lifeState.needs.work >= 80);
+        playing = true;
+        w.tick(1, false); w.tick(1, false);
+        const before = { ...w.lifeState.needs };
+        w.tick();
+        assert(w.lifeState.needs.work < before.work && w.lifeState.needs.walk < before.walk);
+        assert(w.lifeState.needs.company > before.company);
+        assert.equal(w.lifeState.relationships.sara, undefined);
+      } finally { disconnect(); }
+    }
+  } finally { global.document = originalDocument; }
+});
+
+it('distingue les bénéfices de la masseuse et de la receveuse pendant un vrai duo', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  try {
+    for (const role of ['roleA', 'roleB']) {
+      const w = world('cha');
+      w.tick(); w.tick(); w.tick(); w.scene.activeCharacterId = 'player';
+      w.objects['interx-affection-point'] = { id: 'interx-affection-point', category: 'decor', isDuo: true, position: [60, 0, 10], slots: [{ slotId: 'massage' }] };
+      const session = { participantA: { characterId: role === 'roleA' ? 'cha' : 'native' }, participantB: { characterId: role === 'roleB' ? 'cha' : 'native' } };
+      let playing = false;
+      Object.assign(w.duo, { getSessionFor: () => session, isPlaying: () => playing,
+        getCurrentAnimState: () => playing ? { def: { isCombat: false }, clipA: 'receive', clipB: 'give' } : null });
+      const disconnect = w.controller.connect();
+      try {
+        w.lifeState.needs = { ...w.lifeState.needs, rest: 50, company: 80 };
+        document.dispatchEvent(new CustomEvent('npc-invite-duo', { detail: { targetId: 'cha', fromId: 'native', objectId: 'interx-affection-point', slotId: `massage:${role}`, forceRole: role } }));
+        for (let i = 0; i < 3; i++) w.tick();
+        playing = true; w.tick(1, false); w.tick(1, false);
+        const before = { ...w.lifeState.needs }; w.tick();
+        assert(w.lifeState.needs.company < before.company);
+        assert(role === 'roleA' ? w.lifeState.needs.rest < before.rest : w.lifeState.needs.rest > before.rest);
+        assert(w.lifeState.relationships.native.activities[role === 'roleA' ? 'receive-massage' : 'massage'] > 0);
+      } finally { disconnect(); }
+    }
+  } finally { global.document = originalDocument; }
+});
+
+it('reprend une invitation de massage après le repas en conservant le rôle de receveuse', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world('native', true), calls = [];
+  const disconnect = w.controller.connect();
+  try {
+    w.objects['interx-affection-point'] = { id: 'interx-affection-point', category: 'decor', isDuo: true, position: [60, 0, 10], slots: [{ slotId: 'massage' }] };
+    w.candidates.push({ activity: 'receive-massage', id: 'interx-affection-point', slotId: 'massage', x: 60, z: 10 });
+    w.lifeState.needs = { ...w.lifeState.needs, meal: 95, work: 0 };
+    for (let i = 0; i < 10 && w.controller.state.animation !== 'cook'; i++) w.tick();
+    assert.equal(w.controller.state.animation, 'cook');
+    assert.equal(document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
+      detail: { targetId: 'native', fromId: 'cha', objectId: 'interx-affection-point', slotId: 'massage:roleA' } })), false);
+    w.duo.startDuoSession = (...args) => { calls.push(args); return { targetA: 'native', targetB: 'cha', posA: [60, 0, 10], posB: [60, 0, 110], rotA: 0, rotB: 0, actualSlotId: 'massage' }; };
+    for (let i = 0; i < 15 && !calls.length; i++) {
+      if (w.controller.state.animation === 'eat') w.lifeState.needs.meal = 0;
+      w.tick();
+    }
+    assert.deepEqual(calls[0], ['interx-affection-point', 'massage', 'native', 'cha', undefined, true, 'roleA']);
+    assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
+  } finally { disconnect(); global.document = originalDocument; }
 });
