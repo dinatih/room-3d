@@ -4,10 +4,10 @@ let cleanup: (() => void) | undefined;
 
 export function stopHouseMusic() { cleanup?.(); }
 
-/** The scene reacts to audible playback, never to choosing a file or requesting play. */
-export async function playHouseMusic(file: File) {
+/** The scene reacts to audible playback, never to requesting play. */
+export async function playHouseMusic() {
   stopHouseMusic();
-  const url = URL.createObjectURL(file), audio = new Audio(url);
+  const audio = new Audio('audio/house-music.mp3');
   let running = false, audible = false, disposed = false;
   const notify = () => {
     const next = running && !audio.muted && audio.volume > 0;
@@ -20,7 +20,7 @@ export async function playHouseMusic(file: File) {
   const dispose = () => {
     if (disposed) return;
     disposed = true;
-    paused(); audio.pause(); audio.removeAttribute('src'); audio.load(); URL.revokeObjectURL(url);
+    paused(); audio.pause(); audio.removeAttribute('src'); audio.load();
     if (cleanup === dispose) cleanup = undefined;
   };
   audio.addEventListener('playing', playing);
@@ -29,7 +29,7 @@ export async function playHouseMusic(file: File) {
   audio.addEventListener('ended', dispose, { once: true });
   audio.addEventListener('error', () => {
     if (disposed) return;
-    appLog('Musique', `Lecture audio impossible : ${file.name}`, { category: 'object', action: 'music_error', data: { error: audio.error?.message } });
+    appLog('Musique', 'Lecture de la musique impossible.', { category: 'object', action: 'music_error', data: { error: audio.error?.message } });
     dispose();
   }, { once: true });
   cleanup = dispose;
@@ -37,13 +37,6 @@ export async function playHouseMusic(file: File) {
   catch (error) {
     if (disposed) return;
     dispose();
-    appLog('Musique', `Lecture audio refusée : ${file.name}`, { category: 'object', action: 'music_error', data: { error: String(error) } });
+    appLog('Musique', 'Lecture de la musique refusée.', { category: 'object', action: 'music_error', data: { error: String(error) } });
   }
-}
-
-export function chooseHouseMusic() {
-  const input = document.createElement('input');
-  input.type = 'file'; input.accept = 'audio/*';
-  input.addEventListener('change', () => { if (input.files?.[0]) void playHouseMusic(input.files[0]); }, { once: true });
-  input.click();
 }

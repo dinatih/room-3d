@@ -230,7 +230,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'drone-goto-corridor': { label: '🚪 Aller au Couloir', sceneOnly: true },
   'drone-toggle-land': { label: ['🛬 Atterrir', '🛫 Décoller'], sceneOnly: true },
   nestMini: { label: 'Ok Google 🎙️' },
-  nestMusic: { label: 'Choisir une musique 🎵', sceneOnly: true },
+  nestMusic: { label: 'Jouer la musique 🎵', sceneOnly: true },
   nestMusicStop: { label: 'Arrêter la musique ⏹', sceneOnly: true },
   'tv-toggle': { label: ['Allumer', 'Éteindre'] },
   'bin-toggle': { label: ['Ouvrir', 'Fermer'] },
