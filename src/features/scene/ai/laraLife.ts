@@ -87,7 +87,7 @@ const socialRates: LifeNeeds = { rest: 0.2, work: -1.5, walk: 0.2, meal: 0.2, hy
 const exerciseRates: LifeNeeds = { rest: 0.4, work: -1.2, walk: -0.8, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 };
 const readingRates: LifeNeeds = { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 };
 const rates: Record<LifeActivity, LifeNeeds> = {
-  dance: exerciseRates, combat: exerciseRates, massage: socialRates, 'receive-massage': { ...socialRates, rest: -0.35 },
+  dance: { ...exerciseRates, rest: 0.8 }, combat: { ...exerciseRates, rest: 1 }, massage: { ...socialRates, rest: 0.5 }, 'receive-massage': { ...socialRates, rest: -0.35 },
   tech: readingRates, read: readingRates,
   pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   yoga: exerciseRates,
@@ -111,6 +111,60 @@ const INITIAL_RELATIONSHIPS: [LifeCharacterId, LifeCharacterId, number][] = [
   ['sabira', 'rosanna', 1], ['sabira', 'marissa', -1],
 ];
 export const lifeAffinity = (a: string, b: string) => INITIAL_RELATIONSHIPS.find(([x, y]) => x === a && y === b || x === b && y === a)?.[2] ?? 0;
+
+export type LifeDay = { activities: Partial<Record<LifeActivity, number>>; partners: Record<string, number>; unmet: Partial<Record<keyof LifeNeeds, number>>; events: Record<string, number> };
+export const createLifeHousehold = () => ({
+  meals: { portions: 0, preparedBy: null as LifeCharacterId | null, held: {} as Partial<Record<LifeCharacterId, true>> },
+  journal: {} as Partial<Record<LifeCharacterId, Record<number, LifeDay>>>,
+});
+export const lifeHousehold = createLifeHousehold();
+export const LIFE_EVENT_LABELS: Record<string, string> = {
+  life_reaction: 'Réactions spontanées', life_invitation_accepted: 'Invitations acceptées', life_invitation_declined: 'Invitations refusées',
+  life_invitation_later: 'Invitations reportées', life_invitation_proposed: 'Activités proposées', life_meal_shared: 'Repas préparés à partager',
+};
+
+/** Reserve a real portion before setting off; a held meal survives a reload. */
+export function claimLifeMeal(id: LifeCharacterId) {
+  const meals = lifeHousehold.meals;
+  if (meals.held[id]) return true;
+  if (meals.portions === 0) return false;
+  meals.portions--;
+  meals.held[id] = true;
+  return true;
+}
+export function releaseLifeMeal(id: LifeCharacterId, eaten = false) {
+  if (!lifeHousehold.meals.held[id]) return;
+  delete lifeHousehold.meals.held[id];
+  if (!eaten) lifeHousehold.meals.portions++;
+}
+export function prepareLifeMeals(id: LifeCharacterId, guests: LifeCharacterId[]) {
+  const meals = lifeHousehold.meals;
+  if (!meals.portions && !meals.held[id]) {
+    meals.portions = new Set([id, ...guests].filter(guest => !meals.held[guest])).size;
+    meals.preparedBy = id;
+  }
+  claimLifeMeal(id);
+}
+const lifeDay = (id: LifeCharacterId, at: number) => {
+  const days = lifeHousehold.journal[id] ??= {};
+  return days[lifeClock(at).day] ??= { activities: {}, partners: {}, unmet: {}, events: {} };
+};
+/** Split midnight exactly; durations are simulated minutes, like the life clock. */
+export function recordLifeDay(id: LifeCharacterId, at: number, seconds: number, activity: LifeActivity | null, needs: LifeNeeds, partnerId?: string) {
+  if (!Number.isFinite(at) || at < 0 || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life journal duration');
+  while (seconds > 0) {
+    const duration = Math.min(seconds, 24 * 60 - (8 * 60 + at) % (24 * 60)), day = lifeDay(id, at);
+    if (activity) day.activities[activity] = (day.activities[activity] ?? 0) + duration;
+    if (partnerId) day.partners[partnerId] = (day.partners[partnerId] ?? 0) + duration;
+    for (const key of Object.keys(needs) as (keyof LifeNeeds)[]) if (needs[key] >= LIFE_SETTINGS.priority) day.unmet[key] = (day.unmet[key] ?? 0) + duration;
+    at += duration;
+    seconds -= duration;
+  }
+}
+export function recordLifeEvent(id: LifeCharacterId, at: number, event: string) {
+  const day = lifeDay(id, at);
+  day.events[event] = (day.events[event] ?? 0) + 1;
+}
 
 export function createLife(characterId: LifeCharacterId) {
   return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10, environment: 0 } as LifeNeeds,
@@ -142,6 +196,10 @@ export function socialPartnerScore(relationships: LifeRelationships, partnerId: 
 
 /** Only controllers playing their eating animation appear here; no seats are reserved by this registry. */
 export const activeLifeMeals = new Map<string, { objectId: string; slotId: string }>();
+export const activeLifeDances = new Map<string, string>();
+export const getLifeDancePartner = (id: string, objectId: string, relationships: LifeRelationships, at: number) => [...activeLifeDances]
+  .filter(([other, place]) => other !== id && place === objectId && lifeAffinity(id, other) >= 0)
+  .sort(([a], [b]) => socialPartnerScore(relationships, b, at, 'dance') - socialPartnerScore(relationships, a, at, 'dance'))[0]?.[0];
 export function getLifeMealPartner(characterId: string, objectId: string, slotId: string, relationships: LifeRelationships = {}, elapsedSeconds = 0) {
   return [...activeLifeMeals].filter(([id, meal]) => id !== characterId && meal.objectId === objectId && meal.slotId !== slotId
     && lifeAffinity(characterId, id) >= 0).map(([id]) => id)

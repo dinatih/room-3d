@@ -1,4 +1,4 @@
-import { closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
+import { LIFE_SETTINGS, LIFE_EVENT_LABELS, closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
@@ -8,7 +8,7 @@ const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABEL
 const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId } = {}) {
-  const { characters, selectedCharacterId: selectedId, speed, home, savedAt, saveError } = useLaraLifeStore();
+  const { characters, selectedCharacterId: selectedId, speed, home, household, savedAt, saveError } = useLaraLifeStore();
   const selectedCharacterId = characterId ?? selectedId;
   const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
@@ -101,6 +101,21 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
           })}
         </ul>}
         <div className="mt-1">Temps en minutes simulées.</div>
+      </details>
+      <details className="mt-1 text-break">
+        <summary className="fw-semibold">Journée vécue</summary>
+        <div>{household.meals.portions} portion(s) de repas disponible(s) dans la colocation.</div>
+        {!household.journal[selectedCharacterId] ? <div>Le bilan se construit pendant la simulation.</div> : Object.entries(household.journal[selectedCharacterId]!).sort(([a], [b]) => Number(b) - Number(a)).map(([day, summary]) => <details key={day} className="border-top mt-1 pt-1">
+          <summary>Jour {day}{Number(day) === clock.day ? ' · en cours' : ''}</summary>
+          <div className="fw-semibold">Activités réellement vécues</div>
+          {Object.entries(summary.activities).sort(([, a], [, b]) => b! - a!).map(([activity, duration]) => <div key={activity}>{LIFE_LABELS[activity as LifeActivity]} : {minutes.format(duration!)} min</div>)}
+          <div className="fw-semibold mt-1">Moments partagés</div>
+          {Object.keys(summary.partners).length ? Object.entries(summary.partners).map(([id, duration]) => <div key={id}>{characterName(id)} : {minutes.format(duration)} min</div>) : <div>Aucun moment partagé.</div>}
+          <div className="fw-semibold mt-1">Besoins restés insatisfaits (≥ {LIFE_SETTINGS.priority} %)</div>
+          {Object.keys(summary.unmet).length ? Object.entries(summary.unmet).map(([need, duration]) => <div key={need}>{NEED_LABELS[need as keyof LifeNeeds]} : {minutes.format(duration!)} min</div>) : <div>Aucun besoin au-dessus du seuil.</div>}
+          {Object.entries(summary.events).map(([event, count]) => <div key={event}>{LIFE_EVENT_LABELS[event]} : {count}</div>)}
+          <div className="text-muted mt-1">Durées en minutes simulées. Les trajets comptent comme marche ; les attentes ne comptent pas comme une activité accomplie.</div>
+        </details>)}
       </details>
       {characterId && <details className="mt-1 text-break">
         <summary className="fw-semibold">Souvenirs et habitudes · {Object.keys(memory).length}</summary>

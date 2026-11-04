@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { claimLifeMeal, lifeHousehold, LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 function mealPreparations(characterId: string, excluded: ReadonlySet<string>) {
@@ -72,7 +72,7 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
 export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0, excluded: ReadonlySet<string> = new Set()): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
   const reservations = OccupancyManager.getReservations();
-  const canPrepare = mealPreparations(characterId, excluded).length > 0;
+  const canPrepare = lifeHousehold.meals.portions > 0 || lifeHousehold.meals.held[characterId] || mealPreparations(characterId, excluded).length > 0;
   return objects.flatMap(object =>
     object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
@@ -109,9 +109,10 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
   if (candidate.activity === 'meal') {
     const preparations = mealPreparations(characterId, excluded);
     const preparation = preparations[Math.floor(Math.random() * preparations.length)];
-    if (!preparation) throw new Error(`Aucune préparation de repas disponible pour ${characterId}`);
+    const ready = claimLifeMeal(characterId);
+    if (!ready && !preparation) throw new Error(`Aucune préparation de repas disponible pour ${characterId}`);
     return [
-      ...buildSmartObjectInstructionSequence(preparation.id, preparation.slotId, characterId)
+      ...(ready ? [] : buildSmartObjectInstructionSequence(preparation.id, preparation.slotId, characterId))
         .map(instruction => ({ ...instruction, lifePhase: 'prepare-meal' as const })),
       { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
         repeatCount: 1, repeatVariation: false, lifePhase: 'eat-meal' },

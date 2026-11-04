@@ -1,10 +1,10 @@
 import { CHARACTERS } from '../characterConfig';
-import { createLife, LIFE_CHARACTER_IDS, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_SPEEDS, type LifeCharacterId } from './laraLife';
+import { createLife, createLifeHousehold, lifeClock, LIFE_EVENT_LABELS, LIFE_CHARACTER_IDS, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_SPEEDS, type LifeCharacterId } from './laraLife';
 import { createHomeDirt, type HomeDirt } from './lifeHousekeeping';
 
 export const LIFE_SAVE_KEY = 'room-3d-life';
 export type LifeSave = { version: 1; savedAt: number; characters: Record<LifeCharacterId, ReturnType<typeof createLife>>;
-  home: HomeDirt; selectedCharacterId: LifeCharacterId; speed: typeof LIFE_SPEEDS[number] };
+  home: HomeDirt; selectedCharacterId: LifeCharacterId; speed: typeof LIFE_SPEEDS[number]; household?: ReturnType<typeof createLifeHousehold> };
 const activities = Object.keys(LIFE_LABELS);
 const characterIds = CHARACTERS.map(character => character.id);
 const number = (value: unknown, min = 0, max = Infinity) => {
@@ -30,7 +30,7 @@ const numericRecord = (value: unknown, allowed?: string[], max = Infinity) => {
 
 /** Validate the whole snapshot before applying any of it. Invalid saves remain untouched. */
 export function parseLifeSave(text: string): LifeSave {
-  const data = keys(JSON.parse(text), ['version', 'savedAt', 'characters', 'home', 'selectedCharacterId', 'speed']);
+  const data = keys(JSON.parse(text), ['version', 'savedAt', 'characters', 'home', 'selectedCharacterId', 'speed'], ['household']);
   if (data.version !== 1 || !LIFE_CHARACTER_IDS.some(id => id === data.selectedCharacterId) || !LIFE_SPEEDS.some(speed => speed === data.speed)) {
     throw new Error('Format ou réglages de sauvegarde de vie invalides');
   }
@@ -63,6 +63,24 @@ export function parseLifeSave(text: string): LifeSave {
       number(relationship.seconds); number(relationship.lastAt, 0, life.elapsedSeconds as number);
       if (relationship.affinity !== undefined) number(relationship.affinity, -Infinity);
       if (relationship.activities !== undefined) numericRecord(relationship.activities, activities);
+    }
+  }
+  if (data.household !== undefined) {
+    const household = keys(data.household, ['meals', 'journal']), meals = keys(household.meals, ['portions', 'held', 'preparedBy']);
+    number(meals.portions);
+    if (!Number.isInteger(meals.portions) || (meals.preparedBy !== null && !LIFE_CHARACTER_IDS.includes(meals.preparedBy as LifeCharacterId))) throw new Error('Repas partagé invalide');
+    for (const [id, held] of Object.entries(record(meals.held))) if (!LIFE_CHARACTER_IDS.includes(id as LifeCharacterId) || held !== true) throw new Error('Portion réservée invalide');
+    for (const [id, days] of Object.entries(record(household.journal))) {
+      if (!LIFE_CHARACTER_IDS.includes(id as LifeCharacterId)) throw new Error('Personnage du journal invalide');
+      for (const [day, value] of Object.entries(record(days))) {
+        number(Number(day), 1, lifeClock(record(characters[id]).elapsedSeconds as number).day);
+        if (!/^[1-9]\d*$/.test(day)) throw new Error('Jour du journal invalide');
+        const summary = keys(value, ['activities', 'partners', 'unmet', 'events']);
+        numericRecord(summary.activities, activities, 24 * 60);
+        numericRecord(summary.partners, characterIds.filter(partner => partner !== id), 24 * 60);
+        numericRecord(summary.unmet, Object.keys(LIFE_NEED_LABELS), 24 * 60);
+        numericRecord(summary.events, Object.keys(LIFE_EVENT_LABELS));
+      }
     }
   }
   return data as LifeSave;

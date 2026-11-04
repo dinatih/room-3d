@@ -1197,3 +1197,72 @@ it('reprend une vie sauvegardée en choisissant ses besoins actuels plutôt que 
   assert.equal(w.lifeState.memory.yoga.satisfaction, 20);
   assert(w.lifeState.elapsedSeconds >= 360);
 });
+
+it('accepte une invitation précise à danser sur une autre place et conserve sa spécialité', () => {
+  const previous = global.document; global.document = new EventTarget();
+  const w = world('rosanna'), disconnect = w.controller.connect();
+  try {
+    w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', name: 'Studio Damien', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
+    w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
+    const detail = { targetId: 'rosanna', fromId: 'sabira', objectId: 'est-neighbor-flat', slotId: 'dance-2' };
+    document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail }));
+    assert.equal(detail.accepted, true);
+    assert(w.logs.some(log => log.action === 'life_invitation_accepted' && log.data.activity === 'dance'));
+    for (let i = 0; i < 4; i++) w.tick(.25);
+    assert.equal(w.controller.state.animation, 'dance');
+  } finally { disconnect(); global.document = previous; }
+});
+
+it('reporte une danse pour un besoin urgent puis la reprend, et refuse une invitation hostile', () => {
+  const previous = global.document; global.document = new EventTarget();
+  const w = world('marissa'), disconnect = w.controller.connect();
+  try {
+    w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', name: 'Studio Damien', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
+    w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
+    const invite = fromId => { const detail = { targetId: 'marissa', fromId, objectId: 'est-neighbor-flat', slotId: 'dance-2' }; document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail })); return detail; };
+    assert(!invite('cha').accepted);
+    assert(w.logs.some(log => log.action === 'life_invitation_declined'));
+    w.lifeState.needs.meal = 95;
+    w.reservations.set('est-neighbor-flat:dance-1', 'rosanna');
+    assert(!invite('rosanna').accepted);
+    assert(w.logs.some(log => log.action === 'life_invitation_later'));
+    w.lifeState.needs.meal = 0;
+    for (let i = 0; i < 12 && !w.logs.some(log => log.action === 'life_invitation_resumed'); i++) w.tick(1);
+    assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
+  } finally { disconnect(); global.document = previous; }
+});
+
+it('rend une portion réservée lors d’une commande et compte les activités jouées dans le bilan', () => {
+  const previous = global.document; global.document = new EventTarget();
+  const w = world(), disconnect = w.controller.connect();
+  try {
+    Object.assign(life.lifeHousehold, life.createLifeHousehold());
+    life.prepareLifeMeals('native', ['cha']);
+    document.dispatchEvent(new CustomEvent('agent-force-smartobject', { detail: { targetId: 'native', objectId: 'desk-bollsidan-2', slotId: 'use' } }));
+    assert(!life.lifeHousehold.meals.held.native);
+    assert.equal(life.lifeHousehold.meals.portions, 2);
+  } finally { disconnect(); global.document = previous; }
+  const autonomous = world();
+  Object.assign(life.lifeHousehold, life.createLifeHousehold());
+  autonomous.tick(1, false); autonomous.tick(1, false);
+  assert(!life.lifeHousehold.journal.native[1].activities.work);
+  autonomous.tick(.25); autonomous.tick(.25);
+  assert(life.lifeHousehold.journal.native[1].activities.work > 0);
+});
+
+it('une activité commencée par une coloc inspire une danse pendant une pause, sans interrompre les urgences', () => {
+  const previous = global.document; global.document = new EventTarget();
+  const w = world('rosanna'), disconnect = w.controller.connect();
+  try {
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 10, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', name: 'Studio Damien', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
+    w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
+    document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'activity', activity: 'dance', fromId: 'sabira', room: 'living', objectId: 'est-neighbor-flat' } }));
+    assert(w.logs.some(log => log.action === 'life_reaction'));
+    for (let i = 0; i < 12 && !w.logs.some(log => log.action === 'life_inspired'); i++) w.tick(1);
+    assert(w.logs.some(log => log.action === 'life_inspired'));
+    assert.equal(w.lifeState.relationships.sabira.seconds, 0, 'Reacting to a friend does not invent shared activity time');
+  } finally { disconnect(); global.document = previous; }
+});

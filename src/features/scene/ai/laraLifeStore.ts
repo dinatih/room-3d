@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createLife, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_SPEEDS, type LifeCharacterId } from './laraLife';
+import { createLife, createLifeHousehold, lifeHousehold, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_SPEEDS, type LifeCharacterId } from './laraLife';
 import { homeDirt, type HomeDirt, type HomeRoom } from './lifeHousekeeping';
 import { LIFE_SAVE_KEY, parseLifeSave, type LifeSave } from './lifePersistence';
 
@@ -7,6 +7,7 @@ import { LIFE_SAVE_KEY, parseLifeSave, type LifeSave } from './lifePersistence';
 export const characterLives = Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, createLife(id)])) as Record<LifeCharacterId, ReturnType<typeof createLife>>;
 let saved: LifeSave | undefined;
 let loadError: string | null = null;
+Object.assign(lifeHousehold, createLifeHousehold());
 if (typeof window !== 'undefined') {
   try {
     const text = window.localStorage.getItem(LIFE_SAVE_KEY);
@@ -14,6 +15,7 @@ if (typeof window !== 'undefined') {
       saved = parseLifeSave(text);
       for (const id of LIFE_CHARACTER_IDS) Object.assign(characterLives[id], saved.characters[id]);
       Object.assign(homeDirt, saved.home);
+      if (saved.household) Object.assign(lifeHousehold, saved.household);
     }
   } catch (error) {
     console.error('Chargement de la vie impossible', error);
@@ -27,12 +29,13 @@ const initialSnapshot = (id: LifeCharacterId): LifeSnapshot => ({
 });
 export const useLaraLifeStore = create<{
   home: HomeDirt;
+  household: typeof lifeHousehold;
   characters: Record<LifeCharacterId, LifeSnapshot>;
   selectedCharacterId: LifeCharacterId;
   speed: typeof LIFE_SPEEDS[number];
   savedAt: number | null;
   saveError: string | null;
-}>(() => ({ home: { ...homeDirt }, characters: Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, initialSnapshot(id)])) as Record<LifeCharacterId, LifeSnapshot>,
+}>(() => ({ household: { ...lifeHousehold }, home: { ...homeDirt }, characters: Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, initialSnapshot(id)])) as Record<LifeCharacterId, LifeSnapshot>,
   selectedCharacterId: saved?.selectedCharacterId ?? 'native', speed: saved?.speed ?? 1, savedAt: saved?.savedAt ?? null, saveError: loadError }));
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -43,7 +46,7 @@ export function saveLives() {
   if (typeof window === 'undefined' || resetting || loadError) return;
   const { selectedCharacterId, speed } = useLaraLifeStore.getState(), savedAt = Date.now();
   try {
-    window.localStorage.setItem(LIFE_SAVE_KEY, JSON.stringify({ version: 1, savedAt, characters: characterLives, home: homeDirt, selectedCharacterId, speed } satisfies LifeSave));
+    window.localStorage.setItem(LIFE_SAVE_KEY, JSON.stringify({ version: 1, savedAt, characters: characterLives, household: lifeHousehold, home: homeDirt, selectedCharacterId, speed } satisfies LifeSave));
     useLaraLifeStore.setState({ savedAt, saveError: null });
   } catch (error) {
     if (!useLaraLifeStore.getState().saveError) console.error('Sauvegarde de la vie impossible', error);
@@ -82,5 +85,5 @@ if (typeof window !== 'undefined') {
 }
 
 export function publishLife(id: LifeCharacterId, patch: Partial<LifeSnapshot>) {
-  useLaraLifeStore.setState(state => ({ home: { ...homeDirt }, characters: { ...state.characters, [id]: { ...state.characters[id], ...patch } } }));
+  useLaraLifeStore.setState(state => ({ household: { ...lifeHousehold }, home: { ...homeDirt }, characters: { ...state.characters, [id]: { ...state.characters[id], ...patch } } }));
 }

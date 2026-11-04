@@ -173,3 +173,42 @@ it('applique aussi la remise à zéro globale aux autres onglets sans réécrire
     assert.equal(w.reloads(), 1); assert.equal(w.timers.size, 0); assert.equal(w.writes(), 0);
   });
 });
+
+it('conserve les portions partagées et réservées ainsi que les bilans journaliers, puis efface le tout ensemble', () => {
+  let text, saved;
+  withBrowser(w => {
+    const store = w.loadStore();
+    store.characterLives.native.elapsedSeconds = 1000;
+    life.prepareLifeMeals('native', ['cha', 'vivida']);
+    life.recordLifeDay('native', 959, 3, 'meal', store.characterLives.native.needs, 'cha');
+    life.recordLifeEvent('native', 962, 'life_meal_shared');
+    store.saveLives();
+    text = w.storage.get(persistence.LIFE_SAVE_KEY);
+    saved = persistence.parseLifeSave(text);
+    assert.deepEqual(saved.household, life.lifeHousehold);
+    assert.equal(saved.household.meals.portions, 2);
+  });
+  withBrowser(w => {
+    const restored = w.loadStore();
+    assert.deepEqual(restored.useLaraLifeStore.getState().household, saved.household);
+    assert(life.claimLifeMeal('native'));
+    assert.equal(life.lifeHousehold.meals.portions, 2, 'A restored reservation must not consume a second portion');
+    restored.resetLives(); w.loadStore();
+    assert.deepEqual(life.lifeHousehold, life.createLifeHousehold());
+  }, text);
+});
+
+it('rejette les portions et bilans invalides avant restauration', () => {
+  for (const corrupt of [
+    h => { h.meals.portions = -1; }, h => { h.meals.portions = .5; }, h => { h.meals.held.unknown = true; },
+    h => { h.meals.held.cha = false; }, h => { h.meals.preparedBy = 'unknown'; },
+    h => { h.journal.unknown = {}; }, h => { h.journal.native = { 2: { activities: {}, partners: {}, unmet: {}, events: {} } }; },
+    h => { h.journal.native[1].activities.unknown = 1; }, h => { h.journal.native[1].partners.native = 1; },
+    h => { h.journal.native[1].unmet.work = -1; }, h => { h.journal.native[1].events.unknown = 1; },
+  ]) {
+    const saved = freshSave(); saved.household = life.createLifeHousehold();
+    saved.household.journal.native = { 1: { activities: {}, partners: {}, unmet: {}, events: {} } };
+    corrupt(saved.household);
+    assert.throws(() => persistence.parseLifeSave(JSON.stringify(saved)));
+  }
+});

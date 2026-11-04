@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
-import { chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { LIFE_EVENT_LABELS, activeLifeDances, getLifeDancePartner, lifeHousehold, prepareLifeMeals, releaseLifeMeal, recordLifeDay, recordLifeEvent, socialPartnerScore, chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -136,15 +136,20 @@ export function createAgentController(
   let lifeActivity: LifeActivity | null = hasLife && loop && life.elapsedSeconds === 0 ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
   const shouldCheckInvitations = () => loop && !manualOverride && (!hasLife || lifeActivity !== null);
   let lifeSnapshotSeconds = 0;
+  let announcedLifeActivity = false;
+  let inspiration: { activity: LifeActivity; fromId: string; objectId?: string } | null = null;
   let connected = false, lastLifeRoom: HomeRoom | undefined;
   let deferredInvitation: { fromId: string; objectId: string; slotId: string; activity: 'social' | 'affection' | 'rest' | 'combat' | 'massage' | 'receive-massage' | 'dance'; forcedAnimId?: string; ready: boolean } | null = null;
   let lifeInteraction: { instruction: AgentInstruction; label: string; before: typeof life.needs; seconds: number; partnerId?: string; animation: string } | null = null;
-  const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction, animation?: string) => appLog(_characterId, message, {
-    category: 'life', action, actors: [_characterId], data: { clock: lifeClock(life.elapsedSeconds), ...data },
-    animation: animation ? { id: animation, mode: 'solo', actorId: _characterId, label: getAnimationDef(animation)?.label } : undefined,
-    object: instruction?.smartObjectId ? { id: instruction.smartObjectId, slotId: instruction.slotId,
-      label: SMART_OBJECTS[instruction.smartObjectId]?.name, actorId: _characterId, animationId: animation } : undefined,
-  });
+  const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction, animation?: string) => {
+    if (action in LIFE_EVENT_LABELS) recordLifeEvent(lifeId, life.elapsedSeconds, action);
+    appLog(_characterId, message, {
+      category: 'life', action, actors: [_characterId], data: { clock: lifeClock(life.elapsedSeconds), ...data },
+      animation: animation ? { id: animation, mode: 'solo', actorId: _characterId, label: getAnimationDef(animation)?.label } : undefined,
+      object: instruction?.smartObjectId ? { id: instruction.smartObjectId, slotId: instruction.slotId,
+        label: SMART_OBJECTS[instruction.smartObjectId]?.name, actorId: _characterId, animationId: animation } : undefined,
+    });
+  };
   const cancelDeferredInvitation = (reason: string) => {
     if (!deferredInvitation) return;
     logLife('life_invitation_cancelled', `Invitation reportée annulée : ${reason}`, { ...deferredInvitation, reason });
@@ -184,6 +189,8 @@ export function createAgentController(
   const interruptLife = (reason: string) => {
     if (!hasLife) return;
     cancelDeferredInvitation(reason);
+    inspiration = null;
+    releaseLifeMeal(lifeId);
     endLifeInteraction('interruption');
     if (lifeActivity) logLife('life_interrupted', `${LIFE_LABELS[lifeActivity]} — ${reason}`, { reason, activity: lifeActivity, needs: { ...life.needs } });
     lifeActivity = null;
@@ -301,6 +308,7 @@ export function createAgentController(
 
   const releaseClaimedSlot = () => {
     activeLifeMeals.delete(_characterId);
+    activeLifeDances.delete(_characterId);
     beginSlotExit();
     releaseKitchenStorageAccess(_characterId);
     resetRoute(route, _characterId);
@@ -506,7 +514,7 @@ export function createAgentController(
       }>).detail;
       if (!hasLife || targetId !== _characterId) return;
       const activity = invitedLifeActivity(objectId, slotId);
-      const refusal = activity === 'combat' && !canStartLifeActivity(_characterId, 'combat') ? 'Ne pratique pas le combat.'
+      const refusal = activity && !canStartLifeActivity(_characterId, activity) ? 'Cette activité ne correspond pas à ses spécialités.'
         : activity !== 'combat' && lifeAffinity(_characterId, fromId) < 0 ? 'Ne s’entend pas avec cette personne.'
         : _characterId === 'helena' && !life.relationships[fromId]?.seconds && life.needs.company < LIFE_SETTINGS.priority
           ? 'Timide : préfère une activité calme avant de rencontrer une nouvelle personne.' : null;
@@ -524,14 +532,40 @@ export function createAgentController(
       logLife(`life_invitation_${response.status}`, `${actorName} répond ${response.status === 'later' ? '« pas maintenant »' : '« non »'} : ${response.reason}`,
         { fromId, ...response, activity: lifeActivity, deferred: Boolean(defer), needs: { ...life.needs } });
     };
+    const onActivityInvitation = (event: Event) => {
+      const detail = (event as CustomEvent<{ targetId: string; fromId: string; objectId: string; slotId: string; accepted?: boolean }>).detail;
+      if (!hasLife || detail.targetId !== _characterId || !deployment.hasCompleted) return;
+      const candidate = getLaraLifeCandidates(lifeId, life.handsDirty, life.places, life.relationships, life.elapsedSeconds)
+        .find(candidate => candidate.id === detail.objectId && candidate.slotId === detail.slotId && ['dance', 'combat'].includes(candidate.activity));
+      if (!candidate || isDuoSlot(candidate.id, candidate.slotId)) return;
+      const check = new CustomEvent('npc-check-life-invitation', { cancelable: true, detail: { ...detail, allowDeferral: true } });
+      onCheckInvitation(check);
+      if (check.defaultPrevented) return;
+      interruptLife(`${actorName} accepte l’invitation de ${detail.fromId}.`);
+      resetDuoState();
+      lifeActivity = candidate.activity;
+      announcedLifeActivity = true;
+      dynamicNavQueue = buildLaraLifeInstructions(lifeId, candidate);
+      stepIndex = scenario?.length ?? 0;
+      resetRoute(route, _characterId);
+      routeInstruction = null;
+      cachedCoords = null;
+      if (!postureTransition) agentStatus = 'IDLE';
+      detail.accepted = true;
+      publish({ activity: LIFE_LABELS[candidate.activity], reason: `Invitation de ${LIFE_CHARACTER_LABELS[detail.fromId as LifeCharacterId]}.` });
+      logLife('life_invitation_accepted', `${actorName} rejoint ${detail.fromId} pour ${LIFE_LABELS[candidate.activity]}.`, { fromId: detail.fromId, activity: candidate.activity });
+    };
     const onLifeEvent = (event: Event) => {
       if (!hasLife) return;
-      const { fromId, room, kind } = (event as CustomEvent<{ fromId: string; room: HomeRoom; kind: 'arrival' | 'clean' }>).detail;
+      const { fromId, room, kind, activity, objectId } = (event as CustomEvent<{ fromId: string; room: HomeRoom; kind: 'arrival' | 'clean' | 'activity' | 'meal'; activity?: LifeActivity; objectId?: string }>).detail;
       const ownRoom = LIMITED_ROOMS.find(room => isInRoom(room, state)) ?? 'garden';
       if (fromId === _characterId || room !== ownRoom) return;
-      if (kind === 'clean') reactToLifeEvent('La pièce vient d’être nettoyée, remercie la personne.', 'thankful', fromId);
-      else if (life.relationships[fromId]?.seconds) reactToLifeEvent('Une connaissance arrive dans la pièce, la salue.', 'waving', fromId);
+      if ((kind === 'activity' || kind === 'meal') && activity && lifeActivity === 'pause' && lifeAffinity(_characterId, fromId) >= 0 && canStartLifeActivity(_characterId, activity)) {
+        if (reactToLifeEvent(kind === 'meal' ? 'Un repas est prêt à partager.' : 'Une coloc commence une activité, cela lui donne une idée.', 'waving', fromId)) inspiration = { activity, fromId, objectId: kind === 'meal' ? undefined : objectId };
+      } else if (kind === 'clean') reactToLifeEvent('La pièce vient d’être nettoyée, remercie la personne.', 'thankful', fromId);
+      else if (kind === 'arrival' && (life.relationships[fromId]?.seconds || lifeAffinity(_characterId, fromId) > 0)) reactToLifeEvent('Une connaissance arrive dans la pièce, la salue.', 'waving', fromId);
     };
+    document.addEventListener('npc-invite-life-activity', onActivityInvitation);
     document.addEventListener('npc-life-event', onLifeEvent);
     document.addEventListener('npc-check-life-invitation', onCheckInvitation);
     document.addEventListener('npc-retry-smartaction', onRetrySmartAction);
@@ -541,7 +575,9 @@ export function createAgentController(
       if (hasLife) cancelDeferredInvitation('La vie autonome est suspendue.');
       connected = false;
       navigationScope.clear();
+      document.removeEventListener('npc-invite-life-activity', onActivityInvitation);
       document.removeEventListener('npc-life-event', onLifeEvent);
+      if (hasLife) releaseLifeMeal(lifeId);
       document.removeEventListener('npc-check-life-invitation', onCheckInvitation);
       document.removeEventListener('npc-retry-smartaction', onRetrySmartAction);
       document.removeEventListener('npc-invite-duo', onInvite);
@@ -596,7 +632,7 @@ export function createAgentController(
 
       const firstScenario = prevScenario === undefined;
       if (hasLife) {
-        if (!firstScenario) cancelDeferredInvitation('Changement de mode ou de scénario.');
+        if (!firstScenario) { cancelDeferredInvitation('Changement de mode ou de scénario.'); inspiration = null; releaseLifeMeal(lifeId); }
         lifeConversation = null;
         lifeActivity = firstScenario && loop && life.elapsedSeconds === 0 ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
         if (loop && (!firstScenario || life.elapsedSeconds > 0)) stepIndex = scenario?.length ?? 0;
@@ -645,6 +681,12 @@ export function createAgentController(
 
   const advanceToNextStep = (hasNavStep: boolean) => {
     const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] ?? scenario?.[stepIndex] : scenario?.[stepIndex + 1];
+    const current = hasNavStep ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
+    if (hasLife && loop && next?.lifePhase === 'eat-meal' && current?.lifePhase === 'prepare-meal') {
+      prepareLifeMeals(lifeId, Object.keys(cameraState.positions).filter(isLifeCharacter).filter(id => characterLives[id].needs.meal >= LIFE_SETTINGS.priority && !activeLifeMeals.has(id)));
+      logLife('life_meal_shared', `${actorName} termine un repas : ${lifeHousehold.meals.portions} portion(s) à partager.`, { portions: lifeHousehold.meals.portions }, current);
+      if (connected) document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'meal', activity: 'meal', fromId: _characterId, room: LIMITED_ROOMS.find(room => isInRoom(room, state)) ?? 'garden' } }));
+    }
     if (hasLife && loop && next?.lifePhase === 'eat-meal') {
       const seat = preferLifePersonalSpace(getLaraLifeCandidates(lifeId, life.handsDirty, life.places, life.relationships, life.elapsedSeconds)
         .filter(candidate => candidate.activity === 'meal' && !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)))
@@ -710,6 +752,7 @@ export function createAgentController(
   const retrySmartAction = (objectId: string) => {
     const failedInstruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const failedActivity = hasLife && loop ? lifeActivity : null;
+    if (hasLife) releaseLifeMeal(lifeId);
     const failedDuo = Boolean(duoRole) || isDuoSlot(objectId, failedInstruction?.slotId);
     const failedActors = blockedCoords?.actorBlockers;
     if (failedActivity) {
@@ -769,13 +812,25 @@ export function createAgentController(
       const excluded = new Set(failedLifeTargets.keys());
       const candidates = getLaraLifeCandidates(lifeId, life.handsDirty, life.places, life.relationships, life.elapsedSeconds, excluded)
         .filter(candidate => !excluded.has(`${candidate.id}:${candidate.slotId}`));
+      announcedLifeActivity = false;
       const clock = lifeClock(life.elapsedSeconds);
       let candidate = chooseLifeActivity(life.needs, candidates, state, life.lastActivity, clock.hour, life.memory, life.elapsedSeconds, LIFE_INITIAL_PREFERENCES[lifeId]);
+      if (inspiration) {
+        const inspired = candidates.find(entry => entry.activity === inspiration!.activity && (!inspiration!.objectId || entry.id === inspiration!.objectId)
+          && (entry.activity === 'meal' ? life.needs.meal >= LIFE_SETTINGS.priority : life.needs[lifeNeed(entry.activity, life.needs)] > 0));
+        if (inspired && !life.handsDirty && !Object.values(life.needs).some(need => need >= LIFE_SETTINGS.sleepPriority)) {
+          candidate = inspired;
+          logLife('life_inspired', `${actorName} choisit une activité inspirée par ${inspiration.fromId}.`, { ...inspiration });
+        }
+        inspiration = null;
+      }
       const invitation = deferredInvitation;
       if (invitation) invitation.ready = false;
       if (invitation && lifeInvitationResponse(life.needs, null, life.handsDirty, true).status === 'accepted') {
         const invited = candidates.find(candidate => candidate.id === invitation.objectId && candidate.slotId === invitation.slotId && candidate.activity === invitation.activity);
-        if (!invited || duoSessionManager.getSessionFor(invitation.fromId)) cancelDeferredInvitation('La personne ou la place n’est plus disponible.');
+        const solo = invited && ['dance', 'combat'].includes(invited.activity) && !isDuoSlot(invited.id, invited.slotId);
+        const hostPresent = !solo || OccupancyManager.getReservations().some(reservation => reservation.characterId === invitation.fromId && reservation.slot.startsWith(`${invitation.objectId}:`));
+        if (!invited || !hostPresent || duoSessionManager.getSessionFor(invitation.fromId)) cancelDeferredInvitation('La personne ou la place n’est plus disponible.');
         else if (!candidate || (candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)]) < LIFE_SETTINGS.sleepPriority
           || lifeNeed(candidate.activity, life.needs) === lifeNeed(invited.activity, life.needs)) {
           invitation.ready = true;
@@ -804,6 +859,11 @@ export function createAgentController(
         const duo = getDuoAnimationForClip(deferredInvitation.forcedAnimId);
         if (!duo) throw new Error(`Duo reporté introuvable : ${deferredInvitation.forcedAnimId}`);
         for (const instruction of dynamicNavQueue) if (instruction.type === 'USE_OBJECT' && instruction.smartObjectId === deferredInvitation.objectId && instruction.slotId === deferredInvitation.slotId) instruction.animation = duo.animA;
+      }
+      if (deferredInvitation?.ready && candidate && ['dance', 'combat'].includes(candidate.activity) && !isDuoSlot(candidate.id, candidate.slotId)) {
+        announcedLifeActivity = true;
+        logLife('life_invitation_resumed', `${actorName} reprend l’activité proposée après ses soins.`, { ...deferredInvitation });
+        deferredInvitation = null;
       }
       dynamicNavIndex = 0;
       stepIndex = scenario?.length ?? 0;
@@ -1844,7 +1904,7 @@ export function createAgentController(
   };
 
   const update = (dt: number): AgentState => {
-    if (hasLife && dt === 0) { activeLifeMeals.delete(_characterId); setAgentVelocity(_characterId, null); return state; }
+    if (hasLife && dt === 0) { activeLifeDances.delete(_characterId); activeLifeMeals.delete(_characterId); setAgentVelocity(_characterId, null); return state; }
     const { x, z } = state;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const lifeRunning = hasLife && loop && deployment.hasCompleted && cameraState.isSceneLaunched && !isAppIdle();
@@ -1869,7 +1929,10 @@ export function createAgentController(
     const eating = lifeRunning && !manualOverride && instruction?.lifePhase === 'eat-meal' && interactionSeconds > 0;
     if (eating) activeLifeMeals.set(_characterId, { objectId: instruction.smartObjectId!, slotId: instruction.slotId! });
     else activeLifeMeals.delete(_characterId);
+    if (lifeRunning && previousLifeActivity === 'dance' && interactionSeconds > 0 && instruction?.smartObjectId) activeLifeDances.set(_characterId, instruction.smartObjectId);
+    else activeLifeDances.delete(_characterId);
     const partnerId = [conversation?.participantA?.characterId, conversation?.participantB?.characterId].find(id => id && id !== _characterId)
+      ?? (previousLifeActivity === 'dance' && interactionSeconds > 0 && instruction?.smartObjectId ? getLifeDancePartner(_characterId, instruction.smartObjectId, life.relationships, life.elapsedSeconds) : undefined)
       ?? (eating ? getLifeMealPartner(_characterId, instruction.smartObjectId!, instruction.slotId!, life.relationships, life.elapsedSeconds) : undefined);
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
@@ -1908,6 +1971,7 @@ export function createAgentController(
       }
       if (lifeRunning) {
         life.elapsedSeconds += dt;
+        if (eating) releaseLifeMeal(lifeId, true);
         if (partnerId) rememberLifeConversation(life, partnerId, interactionSeconds, previousLifeActivity ?? undefined);
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) life.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
@@ -1917,11 +1981,29 @@ export function createAgentController(
             endLifeInteraction('changement de phase ou d’animation');
             const label = instruction.lifePhase ? LIFE_PHASE_LABELS[instruction.lifePhase] : LIFE_LABELS[frameLifeActivity];
             lifeInteraction = { instruction, label, before: { ...before }, seconds: 0, partnerId, animation: playedAnimation };
+            if (!announcedLifeActivity && instruction.type === 'USE_OBJECT' && ['dance', 'combat', 'social', 'massage', 'receive-massage'].includes(frameLifeActivity)) {
+              announcedLifeActivity = true;
+              if (connected) document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'activity', activity: frameLifeActivity, fromId: _characterId, room, objectId: instruction.smartObjectId } }));
+              if (connected && ['dance', 'combat'].includes(frameLifeActivity) && !inDuo) {
+                const partners = Object.keys(cameraState.positions).filter(isLifeCharacter).filter(id => id !== lifeId && canStartLifeActivity(id, frameLifeActivity) && lifeAffinity(lifeId, id) >= 0)
+                  .sort((a, b) => socialPartnerScore(life.relationships, b, life.elapsedSeconds, frameLifeActivity) - socialPartnerScore(life.relationships, a, life.elapsedSeconds, frameLifeActivity));
+                for (const targetId of partners) {
+                  const place = getLaraLifeCandidates(targetId, characterLives[targetId].handsDirty).find(candidate => candidate.activity === frameLifeActivity && candidate.id === instruction.smartObjectId && candidate.slotId !== instruction.slotId && !isDuoSlot(candidate.id, candidate.slotId));
+                  if (!place) continue;
+                  const detail = { targetId, fromId: _characterId, objectId: place.id, slotId: place.slotId, accepted: false };
+                  document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail }));
+                  logLife('life_invitation_proposed', `${actorName} propose ${LIFE_LABELS[frameLifeActivity]} à ${targetId}.`, { ...detail, activity: frameLifeActivity });
+                  if (detail.accepted) break;
+                }
+              }
+            }
             logLife('life_started', `${label} — animation réellement jouée${partnerId ? ` avec ${partnerId}` : ''}.`,
               { activity: frameLifeActivity, phase: instruction.lifePhase, partnerId, needs: { ...before } }, instruction, playedAnimation);
           }
           lifeInteraction.seconds += interactionSeconds;
         }
+        recordLifeDay(lifeId, life.elapsedSeconds - dt, interactionSeconds, instruction?.lifePhase === 'prepare-meal' ? 'meal' : previousLifeActivity, before, partnerId);
+        recordLifeDay(lifeId, life.elapsedSeconds - dt + interactionSeconds, dt - interactionSeconds, moving ? 'walk' : null, before);
         life.needs = evolveLife(life.needs, interactionSeconds, previousLifeActivity, false, Boolean(partnerId));
         life.needs = evolveLife(life.needs, dt - interactionSeconds, null, moving);
         life.needs.environment = roomDirt(homeDirt, room);
@@ -1938,7 +2020,7 @@ export function createAgentController(
       }
       const next = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
       if (hasLife && lifeInteraction && (next !== lifeInteraction.instruction || !lifeActivity || !loop)) endLifeInteraction('fin de phase');
-      if (next !== instruction || !lifeRunning || agentStatus !== 'INTERACTING') activeLifeMeals.delete(_characterId);
+      if (next !== instruction || !lifeRunning || agentStatus !== 'INTERACTING') { activeLifeMeals.delete(_characterId); activeLifeDances.delete(_characterId); }
       const continuingInteraction = instruction?.waitForAnimation && instruction.smartObjectId && next?.smartObjectId === instruction.smartObjectId && next.slotId === instruction.slotId;
       if ((agentStatus === 'MOVING' || (agentStatus === 'IDLE' && !continuingInteraction)) && state.x === x && state.z === z) state.animation = NAVIGATION_WAIT_ANIMATION;
       if (pendingReason) {
