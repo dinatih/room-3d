@@ -9,7 +9,6 @@ export const CHARACTER_CONTROL_ANIMATIONS = {
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
   { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane' },
-  { id: 'dji-neo', target: 'dji-neo', label: 'Neo', icon: 'bi-airplane' },
   { id: 'dji-avata-2', target: 'dji-avata-2', label: 'Avata 2', icon: 'bi-airplane' },
   { id: 'dji-fpv', target: 'dji-fpv', label: 'FPV', icon: 'bi-airplane' },
   { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart' },
