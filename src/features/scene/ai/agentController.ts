@@ -909,6 +909,11 @@ export function createAgentController(
 
     // ── 3. État IDLE : Initialisation et réservation de l'instruction ──
     if (agentStatus === 'IDLE') {
+      const cleaningTask = getHomeTask(currentInstruction.smartObjectId, currentInstruction.slotId);
+      if (loop && (!hasNavStep || lifeActivity === 'clean') && cleaningTask && homeDirt[cleaningTask] < LIFE_SETTINGS.priority) {
+        advanceToNextStep(hasNavStep);
+        return state;
+      }
       if (currentInstruction.smartObjectId && currentInstruction.type !== 'OBSERVE_OBJECT') {
         if (!OccupancyManager.canUseObject(currentInstruction.smartObjectId, _characterId)) {
           throw new Error(`Access denied to ${currentInstruction.smartObjectId} for ${_characterId}`);
@@ -1481,8 +1486,10 @@ export function createAgentController(
       }
       if (hasLife && loop && lifeActivity && animationPlayback?.animation !== state.animation) return state;
       timer -= dt;
-      if (timer <= 0) {
-        if (repeatIndex + 1 < targetRepeats) {
+      const cleaningTask = getHomeTask(currentInstruction.smartObjectId, currentInstruction.slotId);
+      const cleaningDone = cleaningTask !== undefined && homeDirt[cleaningTask] === 0;
+      if (timer <= 0 || cleaningDone) {
+        if (repeatIndex + 1 < targetRepeats && !cleaningDone) {
           repeatIndex++;
           if (repeatVariation && currentInstruction.smartObjectId && currentInstruction.slotId) {
             const obj = SMART_OBJECTS[currentInstruction.smartObjectId];

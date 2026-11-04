@@ -72,7 +72,7 @@ const rates: Record<LifeActivity, LifeNeeds> = {
 };
 
 export function createLife(characterId: LifeCharacterId) {
-  return { characterId, needs: { rest: 20, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10, environment: 0 } as LifeNeeds,
+  return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 10, hygiene: 10, toilet: 5, company: 10, environment: 0 } as LifeNeeds,
     elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
 }
 

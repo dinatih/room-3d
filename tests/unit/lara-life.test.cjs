@@ -496,3 +496,8 @@ it('fait varier les assises et propose les bords de lit pour le repos et les rep
   assert(social.rest < needs.rest && social.company < 80);
   assert(evolveLife(needs, 30, null, false).environment === needs.environment, 'A timer cannot invent house dirt');
 });
+
+it('fait commencer les trois colocataires sans besoin de repos', () => {
+  const { LIFE_CHARACTER_IDS } = require('../../src/features/scene/ai/laraLife.ts');
+  for (const id of LIFE_CHARACTER_IDS) assert.equal(createLife(id).needs.rest, 0);
+});

@@ -595,3 +595,37 @@ it('actualise la pièce affichée pendant le contrôle manuel sans faire avancer
   w.controller.setPosition(50, 0, 50);
   assert.equal(w.snapshot.room, 'living');
 });
+
+it('ignore les balayages autonomes inutiles et compte aussi le ménage des autres PNJ', () => {
+  const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
+  for (const actor of ['native', 'rosanna']) {
+    const w = world(actor);
+    const id = 'clean-floor-living';
+    w.objects[id] = { id, name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30, repeatCount: 3 }] };
+    const scenario = [{ type: 'USE_OBJECT', smartObjectId: id, slotId: 'sweep', animation: 'sweep', duration: 30, repeatCount: 3 }];
+    // A guided/manual sequence can explicitly request cleaning even below the autonomous threshold.
+    w.controller.configure({ scenario, loop: false });
+    w.dirt.living = 10;
+    w.tick(1, false);
+    assert.equal(w.controller.state.animation, 'sweep');
+    w.tick(1, false);
+    assert.equal(w.dirt.living, 10, 'Loading an animation cannot clean the floor');
+    w.tick();
+    assert.equal(w.dirt.living, 10 - home.HOME_RATES.cleaning);
+    w.tick();
+    assert.equal(w.dirt.living, 0);
+    w.tick();
+    assert.notEqual(w.controller.getStatus(), 'INTERACTING', 'A clean floor must end the task without consuming three thirty-second clips');
+  }
+  const w = world('rosanna');
+  w.objects['clean-floor-living'] = { id: 'clean-floor-living', name: 'Balayer', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30 }] };
+  const sweep = { type: 'USE_OBJECT', smartObjectId: 'clean-floor-living', slotId: 'sweep', animation: 'sweep', duration: 30 };
+  const scenario = [sweep, { type: 'WAIT', animation: 'idle', duration: 1 }];
+  w.controller.configure({ scenario, loop: true });
+  w.tick();
+  assert(!w.attempts.length, 'A clean room must be skipped before navigating or reserving it');
+  assert.notEqual(w.controller.state.animation, 'sweep');
+  w.dirt.living = life.LIFE_SETTINGS.priority;
+  for (let i = 0; i < 5 && w.controller.state.animation !== 'sweep'; i++) w.tick();
+  assert.equal(w.controller.state.animation, 'sweep', 'A later cycle must still sweep when the room becomes dirty');
+});

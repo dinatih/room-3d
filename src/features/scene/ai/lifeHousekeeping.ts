@@ -12,8 +12,8 @@ export const HOME_TASKS = {
 } as const;
 export type HomeTask = keyof typeof HOME_TASKS;
 export type HomeDirt = Record<HomeTask, number>;
-// Dirt follows use: one six-second toilet visit adds 12%, one metre walked adds 1%.
-export const HOME_RATES = { toilet: 2, dishes: 1, floorPerCm: 0.01, cleaning: 5 };
+// Dirt follows use: one six-second toilet visit adds 12%, ten metres walked add 1%.
+export const HOME_RATES = { toilet: 2, dishes: 1, floorPerCm: 0.001, cleaning: 5 };
 export const createHomeDirt = (): HomeDirt => ({ toilet: 0, dishes: 0, living: 0, bathroom: 0, corridor: 0, garden: 0 });
 export const homeDirt = createHomeDirt();
 
