@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
@@ -65,14 +65,14 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
   return objects.flatMap(object =>
-    object.slots.filter(slot => (!slot.isDuo || object.id === 'garden-conversation' || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
+    object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
         const task = getHomeTask(object.id, slot.slotId);
         const seat = isLifeSeat(object.category, slot);
         const activity = task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
           : object.id === 'west-neighbor-flat' ? 'yoga'
           : object.id === 'tv-view' ? 'watch-tv'
-          : object.id === 'garden-conversation' ? 'social'
+          : lifeSocialActivity(object.id) ? lifeSocialActivity(object.id)
           : object.id === 'garden-fresh-air' ? 'walk'
           : object.id === 'bathtub-garden' ? 'bath'
           : object.id === 'toilet' && slot.slotId === 'use' ? 'toilet'
@@ -105,7 +105,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
       : candidate.activity === 'sleep' || candidate.activity === 'shower' || candidate.activity === 'read'
-        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'bath' || candidate.activity === 'clean' || candidate.activity === 'yoga' ? candidate.activity : undefined;
+        || candidate.activity === 'watch-tv' || candidate.activity === 'social' || candidate.activity === 'affection' || candidate.activity === 'bath' || candidate.activity === 'clean' || candidate.activity === 'yoga' ? candidate.activity : undefined;
     return lifePhase ? { ...instruction, lifePhase } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.

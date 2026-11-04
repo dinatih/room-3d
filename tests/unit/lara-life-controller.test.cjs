@@ -57,7 +57,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { type: 'MOVE_TO', targetPos: [50, 45, 10] },
         { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
         { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
-      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: ['social', 'shower'].includes(candidate.activity) ? candidate.activity : undefined })) },
+      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: ['social', 'affection', 'shower'].includes(candidate.activity) ? candidate.activity : undefined })) },
     './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt }, './laraLifeStore': { characterLives, publishLife: (characterId, state) => Object.assign(snapshot, state), useLaraLifeStore: { getState: () => ({ speed: 1, characters: { [id]: snapshot } }) } },
     './occupancyManager': { OccupancyManager: occupancy, LIMITED_ROOMS: ['living', 'bathroom'], isInRoom: (room, position) => room === 'bathroom' ? position.z >= 500 : position.z < 500 },
     './duoSessionManager': { duoSessionManager: duo },
@@ -460,40 +460,81 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
   const originalDocument = global.document;
   global.document = new EventTarget();
   try {
-    for (const unavailable of [null, 'player', 'hidden']) {
+    for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
       const lifeState = life.createLife('native');
       lifeState.elapsedSeconds = 600;
       life.rememberLifeConversation(lifeState, 'rosanna', 120);
       lifeState.relationships.rosanna.lastAt = 0;
       const positions = { native: { x: 0, z: 0 }, marissa: { x: 20, z: 0 }, rosanna: { x: 200, z: 0 } };
-      const def = { id: 'conversation', label: 'Discussion', animA: 'talk', animB: 'listen', duration: 60 };
+      const def = { id: animationId, label: 'Discussion', isCombat: false, animA: 'talk', animB: 'listen', duration: 60 };
+      const claims = [];
       const { duoSessionManager } = load('src/features/scene/ai/duoSessionManager.ts', {
         '../animations/duoAnimations': { DUO_ANIMATIONS: [def], canCharacterPerformDuo: () => true },
         '../animations/duoWorldTransform': { computeWorldTransform: anchor => ({ posA: anchor, posB: [0, 0, 100], rotA: 0, rotB: Math.PI }) },
-        './occupancyManager': { LIMITED_ROOMS: [], OccupancyManager: { canUseObject: () => true, claimSlot: () => true } },
+        './occupancyManager': { LIMITED_ROOMS: [], OccupancyManager: { canUseObject: () => true, claimSlot: (...args) => (claims.push(args), true) } },
         '@features/ui/AppConsole': { appLog: () => {} }, '../cameraState': { cameraState: { positions } },
         '../characterConfig': { AUTONOMOUS_NPC_IDS: new Set(Object.keys(positions)), isCharacterVisibleInMode: id => !(unavailable === 'hidden' && id === 'rosanna') },
-        './smartObjectRegistry': { getSmartObject: () => ({ id: 'garden-conversation', name: 'Discussion', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: 'conversation', duoCount: 1, offset: [0, 0, 0] }] }) },
-        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: {} },
+        './smartObjectRegistry': { getSmartObject: () => ({ id: 'garden-conversation', name: 'Discussion', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: animationId, duoCount: 1, offset: [0, 0, 0] }] }) },
+        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: { marissa: 'garden-conversation' } },
         '../store/useSceneStore': { useSceneStore: { getState: () => ({ activeCharacterId: unavailable === 'player' ? 'rosanna' : 'native', layers: {} }) } },
         './navigation/duoPlacement': { findDuoAnchor: anchor => anchor },
         './navigation/navigationScope': { navigationValue: (key, fn) => fn() },
         './navigation/service': { getNavigationGraph: () => ({}) }, './navigation/obstacles': { getAgentProfile: () => ({}) },
         './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'), './laraLifeStore': { characterLives: { native: lifeState, cha: life.createLife('cha') } },
       });
-      const result = duoSessionManager.startDuoSession('garden-conversation', 'chat', 'native');
-      assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
+      const onCheck = event => { if (unavailable === 'all-busy' || (unavailable === 'busy' && event.detail.targetId === 'rosanna')) event.preventDefault(); };
+      document.addEventListener('npc-check-life-invitation', onCheck);
+      let result;
+      try { result = duoSessionManager.startDuoSession('garden-conversation', 'chat', 'native', undefined, undefined, true); }
+      finally { document.removeEventListener('npc-check-life-invitation', onCheck); }
+      if (unavailable === 'all-busy') {
+        assert.equal(result, null);
+        assert.equal(claims.length, 0, 'A declined invitation must not reserve either participant');
+        assert.equal(duoSessionManager.getSessionFor('native'), null);
+      } else assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
       assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
     }
   } finally { global.document = originalDocument; }
 });
 
-it('soulage la solitude seulement pendant la discussion jouée, jamais pendant l’attente ou le chargement', () => {
+it('reporte une invitation pendant un repas sans perdre sa place et redevient disponible ensuite', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world('native', true);
+  const disconnect = w.controller.connect();
+  const invite = () => document.dispatchEvent(new CustomEvent('npc-check-life-invitation', {
+    cancelable: true, detail: { targetId: 'native', fromId: 'cha', objectId: 'hugs-point' },
+  }));
+  try {
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    assert.equal(w.controller.state.animation, 'cook');
+    const before = structuredClone(w.lifeState), reservations = [...w.reservations];
+    assert.equal(invite(), false);
+    assert.deepEqual(w.lifeState, before);
+    assert.deepEqual([...w.reservations], reservations);
+    assert(w.logs.some(log => log.action === 'life_invitation_later'));
+    w.tick(); w.tick(); w.tick();
+    w.lifeState.needs = { ...w.lifeState.needs, meal: 0, work: 100 };
+    w.tick(); w.tick();
+    assert.equal(invite(), true);
+    w.controller.setPosition(50, 0, 50);
+    assert.equal(invite(), false);
+    assert(w.logs.some(log => log.action === 'life_invitation_declined'));
+  } finally {
+    disconnect();
+    assert.equal(invite(), true, 'Disconnect must remove the invitation listener');
+    global.document = originalDocument;
+  }
+});
+
+for (const objectId of ['garden-conversation', 'hugs-point', 'inyeong-cha-hugs-point']) it(`soulage la solitude sur ${objectId} seulement pendant le duo joué`, () => {
   const w = world();
   w.tick(); w.tick();
   w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 90, environment: 0 };
-  w.candidates.push({ activity: 'social', id: 'garden-conversation', slotId: 'chat', x: 60, z: 10 });
-  w.objects['garden-conversation'] = { id: 'garden-conversation', name: 'Discussion', isDuo: true,
+  w.candidates.push({ activity: life.lifeSocialActivity(objectId), id: objectId, slotId: 'chat', x: 60, z: 10 });
+  w.objects[objectId] = { id: objectId, name: 'Moment partagé', isDuo: true,
     position: [60, 0, 10], slots: [{ slotId: 'chat', animation: 'conversation-gestures' }] };
   let playing = false;
   Object.assign(w.duo, {

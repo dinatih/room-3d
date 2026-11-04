@@ -522,6 +522,46 @@ it('fait varier les assises et propose les bords de lit pour le repos et les rep
   assert(evolveLife(needs, 30, null, false).environment === needs.environment, 'A timer cannot invent house dirt');
 });
 
+it('propose les points câlins pour la compagnie en conservant leurs smart actions', () => {
+  const life = require('../../src/features/scene/ai/laraLife.ts');
+  const ids = ['hugs-point', 'inyeong-cha-hugs-point', 'interx-affection-point', 'interx-affection-garden-point'];
+  const objects = [...ids, 'combat-point', 'interx-affection-sequence-point'].map(id => ({
+    id, category: 'decor', position: [10, 0, 10], slots: [{ slotId: 'hug', isDuo: true }],
+  }));
+  const occupied = new Set();
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => objects,
+      buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId, repeatCount: 1 }] },
+    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: id => occupied.has(id) } },
+  });
+  for (const id of life.LIFE_CHARACTER_IDS) {
+    const candidates = getLaraLifeCandidates(id, false);
+    assert.deepEqual(candidates.map(candidate => candidate.id), ids);
+    for (const candidate of candidates) {
+      assert.equal(candidate.activity, 'affection');
+      assert.equal(life.lifeNeed(candidate.activity), 'company');
+      assert.equal(buildLaraLifeInstructions(id, candidate)[0].lifePhase, 'affection');
+    }
+  }
+  occupied.add(ids[0]);
+  assert.equal(getLaraLifeCandidates('native', false).length, 3);
+  const needs = { ...createLife('native').needs, company: 80 };
+  assert.equal(life.lifeEffect('affection'), null);
+  assert(evolveLife(needs, 5, life.lifeEffect('affection', 'affection'), false).company < needs.company);
+});
+
+it('répond aux invitations selon les soins en cours, les urgences et le contrôle utilisateur', () => {
+  const { lifeInvitationResponse } = require('../../src/features/scene/ai/laraLife.ts');
+  const needs = { ...createLife('native').needs, work: 0, company: 90 };
+  const response = (activity, values = needs, dirty = false, available = true) => lifeInvitationResponse(values, activity, dirty, available);
+  assert.equal(response('work').status, 'accepted');
+  for (const activity of ['meal', 'sleep', 'toilet', 'shower', 'wash-hands']) assert.equal(response(activity).status, 'later');
+  for (const need of ['rest', 'meal', 'hygiene', 'toilet']) assert.equal(response('rest', { ...needs, [need]: LIFE_SETTINGS.sleepPriority }).status, 'later');
+  assert.equal(response('work', needs, true).status, 'later');
+  assert.equal(response(null, needs, false, false).status, 'declined');
+});
+
 it('fait commencer les trois colocataires sans besoin de repos', () => {
   const { LIFE_CHARACTER_IDS } = require('../../src/features/scene/ai/laraLife.ts');
   for (const id of LIFE_CHARACTER_IDS) assert.equal(createLife(id).needs.rest, 0);

@@ -11,7 +11,7 @@ import { findDuoAnchor } from './navigation/duoPlacement';
 import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
-import { isLifeCharacter, socialPartnerScore } from './laraLife';
+import { isLifeCharacter, socialPartnerScore, lifeClock } from './laraLife';
 import { characterLives } from './laraLifeStore';
 
 export type DuoRole = 'roleA' | 'roleB';
@@ -473,7 +473,8 @@ class DuoSessionManager {
     slotId?: string,
     leaderId?: string,
     partnerId?: string,
-    forcedAnimId?: string
+    forcedAnimId?: string,
+    respectLifeNeeds = false
   ): { targetA: string; targetB: string; posA: [number, number, number]; posB: [number, number, number]; rotA: number; rotB: number; actualSlotId: string } | null {
     const obj = getSmartObject(objectId);
     if (!obj || (leaderId && !OccupancyManager.canUseObject(objectId, leaderId))
@@ -557,12 +558,12 @@ class DuoSessionManager {
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
         .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .map(([id]) => id);
-      if (preferred.length > 0) return preferred;
+      if (preferred.length > 0 && (!isLifeCharacter(excludeId) || def.isCombat)) return preferred;
 
       return Object.keys(cameraState.positions)
         .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .sort((a, b) => {
-          if (isLifeCharacter(excludeId) && def.id === 'conversation') {
+          if (isLifeCharacter(excludeId) && !def.isCombat) {
             const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds);
             if (affinity) return affinity;
           }
@@ -575,7 +576,10 @@ class DuoSessionManager {
     const candidates = getCandidates(undefined, true);
     const targetA = leaderId || candidates.find(id => id !== partnerId);
     const partnerCandidates = getCandidates(targetA, false);
-    const targetB = partnerId || partnerCandidates[0];
+    const acceptsInvitation = (id: string) => !respectLifeNeeds || def.isCombat || document.dispatchEvent(new CustomEvent('npc-check-life-invitation', {
+      cancelable: true, detail: { targetId: id, fromId: targetA, objectId, slotId: actualSlotId },
+    }));
+    const targetB = partnerId ? (acceptsInvitation(partnerId) ? partnerId : undefined) : partnerCandidates.find(acceptsInvitation);
     if (!targetA || !targetB || targetA === targetB) return null;
 
 
@@ -619,6 +623,16 @@ class DuoSessionManager {
     this.sessions.set(objectId, newSession);
     this.charToSession.set(targetA, newSession);
     this.charToSession.set(targetB, newSession);
+
+    if (isLifeCharacter(targetA) && !def.isCombat) {
+      const life = characterLives[targetA];
+      appLog(targetA, `🤝 ${targetA} choisit ${targetB} pour ${obj.name}, selon les affinités et la disponibilité.`, {
+        category: 'life', action: 'life_partner', actors: [targetA, targetB],
+        object: { id: objectId, label: obj.name, slotId: actualSlotId },
+        data: { clock: lifeClock(life.elapsedSeconds), partnerId: targetB, relationship: life.relationships[targetB] ? { ...life.relationships[targetB] } : null,
+          score: socialPartnerScore(life.relationships, targetB, life.elapsedSeconds) },
+      });
+    }
 
     const { posA, posB, rotA, rotB } = computeWorldTransform(anchorPos, anchorRotY, def.offsetB, def.rotB);
 

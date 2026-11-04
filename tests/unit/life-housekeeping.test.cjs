@@ -90,3 +90,22 @@ it('ne répète pas les smart actions de balayage par défaut', () => {
     assert.equal(object.slots[0].repeatVariation, undefined);
   }
 });
+
+it('propose les trois duos de conversation, tous présents dans le registre', () => {
+  const { spot } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
+    const start = source.indexOf("  'garden-conversation': {");
+    const end = source.indexOf('// ── LITS', start);
+    assert(start > 0 && end > start);
+    return `export const spot = ({${source.slice(start, end)}})['garden-conversation'];`;
+  });
+  const slot = spot.slots[0];
+  assert.deepEqual(slot.duoPool, ['conversation', 'interx-g022t008a029r019', 'interx-g041t009a029r008']);
+  assert.equal(slot.duoCount, 1);
+  assert.equal(slot.duoAnimId, undefined);
+  const manifest = require('../../src/features/scene/animations/interx_manifest.json');
+  for (const id of slot.duoPool.slice(1)) {
+    const duo = manifest.duos.find(duo => duo.id === id);
+    assert(duo, `${id} must be available`);
+    assert.equal(manifest.actions.find(action => action.code === duo.actionCode).isCombat, false);
+  }
+});

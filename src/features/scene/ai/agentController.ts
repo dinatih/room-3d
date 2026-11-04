@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, routineActivities, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, routineActivities, lifeSocialActivity, lifeInvitationResponse, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -134,6 +134,7 @@ export function createAgentController(
   const publish = (patch: Partial<LifeSnapshot>) => publishLife(lifeId, patch);
   let lifeConversation: ReturnType<typeof duoSessionManager.getSessionFor> = null;
   let lifeActivity: LifeActivity | null = hasLife && loop ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
+  const shouldCheckInvitations = () => loop && !manualOverride && (!hasLife || lifeActivity !== null);
   let lifeSnapshotSeconds = 0;
   let lifeInteraction: { instruction: AgentInstruction; label: string; before: typeof life.needs; seconds: number; partnerId?: string } | null = null;
   const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction) => appLog(_characterId, message, {
@@ -312,8 +313,8 @@ export function createAgentController(
         if (targetObjId && !OccupancyManager.canUseObject(targetObjId, _characterId)) return;
         const invitedObject = targetObjId ? getSmartObject(targetObjId) : undefined;
         const invitedSlot = invitedObject?.slots.find(slot => slot.slotId === e.detail?.slotId?.split(':')[0]);
-        const invitedActivity = targetObjId === 'garden-conversation' ? 'social'
-          : invitedObject && invitedSlot && isLifeSeat(invitedObject.category, invitedSlot) ? 'rest' : null;
+        const invitedActivity = lifeSocialActivity(targetObjId) ?? (
+          invitedObject && invitedSlot && isLifeSeat(invitedObject.category, invitedSlot) ? 'rest' : null);
         interruptLife(`${actorName} répond à une invitation.`);
         navigationScope.clear();
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
@@ -334,12 +335,14 @@ export function createAgentController(
 
           dynamicNavQueue = [
             { type: 'USE_OBJECT', smartObjectId: targetObjId, slotId: targetSlotId, targetPos: eventTargetPos, rotY: eventTargetRotY,
-              ...(hasLife && loop && invitedActivity === 'social' ? { lifePhase: 'social' as const } : {}) }
+              ...(hasLife && loop && (invitedActivity === 'social' || invitedActivity === 'affection') ? { lifePhase: invitedActivity } : {}) }
           ];
           dynamicNavIndex = 0;
           if (hasLife && loop && invitedActivity) {
             lifeActivity = invitedActivity;
             publish({ activity: LIFE_LABELS[invitedActivity], reason: `${actorName} rejoint une activité à deux.` });
+            logLife('life_invitation_accepted', `${actorName} accepte : ${LIFE_LABELS[invitedActivity]}.`,
+              { fromId: e.detail.fromId, activity: invitedActivity }, dynamicNavQueue[0]);
           }
           resetRoute(route, _characterId);
           routeInstruction = null;
@@ -448,11 +451,22 @@ export function createAgentController(
       const { targetId, objectId } = (event as CustomEvent<{ targetId: string; objectId: string }>).detail;
       if (targetId === _characterId) retrySmartAction(objectId);
     };
+    const onCheckInvitation = (event: Event) => {
+      const { targetId, fromId } = (event as CustomEvent<{ targetId: string; fromId: string }>).detail;
+      if (!hasLife || targetId !== _characterId) return;
+      const response = lifeInvitationResponse(life.needs, lifeActivity, life.handsDirty, loop && !manualOverride && Boolean(lifeActivity));
+      if (response.status === 'accepted') return;
+      event.preventDefault();
+      logLife(`life_invitation_${response.status}`, `${actorName} répond ${response.status === 'later' ? '« pas maintenant »' : '« non »'} : ${response.reason}`,
+        { fromId, ...response, activity: lifeActivity, needs: { ...life.needs } });
+    };
+    document.addEventListener('npc-check-life-invitation', onCheckInvitation);
     document.addEventListener('npc-retry-smartaction', onRetrySmartAction);
     document.addEventListener('npc-invite-duo', onInvite);
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
       navigationScope.clear();
+      document.removeEventListener('npc-check-life-invitation', onCheckInvitation);
       document.removeEventListener('npc-retry-smartaction', onRetrySmartAction);
       document.removeEventListener('npc-invite-duo', onInvite);
       document.removeEventListener('agent-force-smartobject', onForceSmartObject);
@@ -962,7 +976,7 @@ export function createAgentController(
         if (isDuo) {
           let role = duoRole;
           if (!role) {
-            const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId);
+            const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId, undefined, undefined, shouldCheckInvitations());
             if (!duoRes && hasLife && loop && lifeActivity) {
               retrySmartAction(objId);
               return state;
@@ -1366,7 +1380,7 @@ export function createAgentController(
                 currentInstruction.slotId,
                 _characterId,
                 undefined,
-                duoDef.id
+                duoDef.id, shouldCheckInvitations()
               );
               if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                 agentStatus = 'IDLE';
@@ -1542,7 +1556,7 @@ export function createAgentController(
                     currentInstruction.slotId,
                     _characterId,
                     undefined,
-                    duoDef.id
+                    duoDef.id, shouldCheckInvitations()
                   );
                   if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                     agentStatus = 'IDLE';
@@ -1736,7 +1750,7 @@ export function createAgentController(
       && animationPlayback?.animation === state.animation;
     const socialAnimation = interacting && duoSessionManager.isPlaying(_characterId) ? duoSessionManager.getCurrentAnimState(_characterId) : null;
     const socialClip = duoRole === 'roleB' ? socialAnimation?.clipB : socialAnimation?.clipA;
-    const inDuo = Boolean(duoRole) || lifeActivity === 'social';
+    const inDuo = Boolean(duoRole) || lifeActivity === 'social' || lifeActivity === 'affection';
     const interactionSeconds = interacting ? inDuo
       ? (socialClip === state.animation ? dt : 0) : Math.min(dt, Math.max(0, timer)) : 0;
     const conversation = lifeRunning && socialAnimation && !socialAnimation.def?.isCombat && interactionSeconds > 0 ? duoSessionManager.getSessionFor(_characterId) : null;

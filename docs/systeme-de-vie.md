@@ -16,6 +16,7 @@ Environnement reflète la saleté réelle et partagée des lieux : sols, toilett
 | Yoga du studio voisin Ouest, chez Églantine | Stimulation + Bouger | Huit places ; les exercices eux-mêmes satisfont Bouger, en plus des trajets. Légère fatigue. |
 | Télévision | Stimulation | Ne remplace pas le repos. |
 | Conversation au jardin | Compagnie + Stimulation | Effets pendant la discussion réellement jouée à deux ; attendre seul ne suffit pas. |
+| Points câlins du studio et du jardin, points d'affection Inter-X du studio et du jardin | Compagnie + Stimulation | Séquences des smart actions conservées ; effets uniquement pendant les duos réellement joués. Le point Inter-X ×10 reste hors des choix de vie. |
 | Chaises, canapés et bords de lit assis | Repos | Les places assises sont variées selon les visites. Un duo assis réellement joué peut aussi satisfaire Compagnie. |
 | Lits, position couchée | Repos | Récupération plus forte qu'assis ; sommeil favorisé la nuit ou en cas de grande fatigue. |
 | Baignoire extérieure | Repos + petits bénéfices de Stimulation et d'Hygiène | Trois places ; le bain ne satisfait pas Bouger. |
@@ -30,6 +31,8 @@ Environnement reflète la saleté réelle et partagée des lieux : sols, toilett
 Tous les déplacements autonomes réels satisfont Bouger, quelle que soit leur destination. Le trajet ne donne pas les bénéfices de l'activité prévue à l'arrivée. Le yoga apporte en plus un bénéfice physique pendant les poses.
 
 Les activités réutilisent les animations, variations, répétitions et durées définies par les smart actions. Le yoga conserve ses six poses tirées aléatoirement ; le balayage n'a plus les trois répétitions forcées. Les repas utilisent une animation dédiée pour manger sur une assise.
+
+Le spot de conversation debout tire un duo parmi « Discuter » (Mixamo), `interx-g022t008a029r019` et `interx-g041t009a029r008`, avec sa durée naturelle.
 
 Les effets dépendent du temps réellement joué : une activité courte peut se terminer avant de satisfaire complètement une jauge. Une attente, un chargement d'animation ou un trajet ne doit pas être compté comme l'interaction elle-même. Plusieurs besoins peuvent être satisfaits simultanément, par exemple repos et compagnie lors d'un duo assis, ou faim et repos pendant un repas assis.
 
@@ -50,5 +53,17 @@ Dans la console, sélectionner la catégorie **💚 Vie**, puis éventuellement 
 - `life_result` : fin de phase, durée réellement jouée, besoins avant/après et variations. Le message indique les besoins soulagés ; le détail conserve aussi ceux qui ont augmenté.
 - `life_abandoned` : activité indisponible, avant de refaire un choix.
 - `life_interrupted` : interruption par une commande ou une invitation.
+- `life_partner` : partenaire retenu et affinité connue, pour les conversations, câlins et autres duos non combattants.
+- `life_invitation_accepted`, `life_invitation_later`, `life_invitation_declined` : réponse aux invitations et motif.
 
 Ces événements portent l'identité du PNJ, l'heure simulée et l'objet concerné lorsqu'il existe. Ils sont enregistrés dans le journal JSONL de développement (`/tmp/room-3d-logs/latest.jsonl`) même lorsque la console est fermée ou filtrée. Aucun événement de vie n'est émis à chaque image ; les bilans portent sur les phases d'interaction, pas sur toute la durée du trajet.
+
+## Affinités et invitations
+
+Pour les duos non combattants, les colocataires choisissent parmi les partenaires visibles et disponibles en tenant compte de leurs affinités, puis de la proximité. L'affectation initiale d'un PNJ à un objet ne remplace pas cette préférence relationnelle. Le joueur n'est pas sollicité automatiquement, et une invitation seule ne renforce pas les relations : seul le temps réellement partagé compte.
+
+Avant une invitation autonome, la colocataire consultée peut accepter, répondre « pas maintenant » pour terminer un repas, dormir, aller aux toilettes, se laver ou satisfaire un besoin corporel urgent, ou refuser pendant une commande utilisateur ou une visite. Cette vérification précède les réservations. Le demandeur cherche alors un autre partenaire ; si personne n'est disponible, il reprend ses choix de vie après l'échec normal de l'activité. « Pas maintenant » ne crée pas de rendez-vous en attente : une prochaine invitation sera réévaluée lorsque la personne sera disponible. Les commandes explicites de l'utilisateur gardent la main.
+
+## Suite prévue
+
+Les choix expliqués, les affinités étendues aux duos et les réponses aux invitations constituent les trois premières étapes. Les suivantes sont les habitudes personnelles de lieu et d'horaire, les enchaînements naturels (yoga puis douche, repas puis vaisselle…), les réactions courtes à la vie de l'appartement et la mémoire des activités partagées avec chaque partenaire.

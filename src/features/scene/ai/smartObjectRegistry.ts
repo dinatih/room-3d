@@ -61,7 +61,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'garden-conversation': {
     id: 'garden-conversation', name: 'Discussion au jardin', category: 'outdoor', position: [150, 0, -250],
-    slots: [{ slotId: 'chat', name: 'Discuter', offset: [150, 0, -250], isDuo: true, duoAnimId: 'conversation', duoCount: 1 }],
+    slots: [{ slotId: 'chat', name: 'Discuter', offset: [150, 0, -250], isDuo: true,
+      duoPool: ['conversation', 'interx-g022t008a029r019', 'interx-g041t009a029r008'], duoCount: 1 }],
   },
   // ── LITS ───────────────────────────────────────────────────────────────────
   'bed-double': {
