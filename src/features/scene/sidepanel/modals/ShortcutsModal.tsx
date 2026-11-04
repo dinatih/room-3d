@@ -79,6 +79,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Bas bikini (toggle)"        keys={['Shift+C']} />
               <R label="Haut et bas bikini (toggle)" keys={['Shift+X']} />
               <R label="Chaussures Lara (toggle)" keys={['Shift+V']} />
+              <R label="Lunettes Lara (toggle)"   keys={['Shift+B']} />
               <R label="Squelettes / Bones (toggle)" keys={['K']} />
               <R label="Structure murale (toggle)"  keys={['Alt+W']} />
               <R label="Dalle et plafond (toggle)"  keys={['Alt+Q']} />

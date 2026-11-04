@@ -678,6 +678,13 @@ export function Studio() {
           cameraState.invalidate?.();
           return;
         }
+        if (k === 'b' || e.code === 'KeyB') {
+          e.preventDefault();
+          if (e.repeat) return;
+          onToggleLayer('laraGlasses');
+          cameraState.invalidate?.();
+          return;
+        }
       }
 
       if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;

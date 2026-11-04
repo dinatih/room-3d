@@ -292,6 +292,7 @@ export function CharacterSection({
       </div>
       {layerBtn('pink',   iconLabel('bi-droplet-half', 'Peau & tissus réalistes (Mat)'), 'laraRealisticTextures')}
       {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
+      {layerBtn('light',  iconLabel('bi-eyeglasses', 'Lunettes Lara (Shift+B)'), 'laraGlasses')}
       {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
       {(['laraTop', 'laraBottom'] as const).map((key) => (
         <label key={key} className="character-clothing-row w-100 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1">

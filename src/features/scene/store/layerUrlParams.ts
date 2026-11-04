@@ -51,6 +51,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   extraCharacters: false,
   showAllLaraStyles: true,
   accessories: true,
+  laraGlasses: true,
   laraPistols: true,
   laraShoes: true,
   laraRealisticTextures: false,

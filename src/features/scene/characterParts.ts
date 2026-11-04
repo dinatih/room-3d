@@ -45,6 +45,7 @@ export interface CharacterParts {
   bodyFull: CharacterMeshPart[];
 
   // Accessories
+  glasses: CharacterMeshPart[];
   handPistols: CharacterMeshPart[];
   holsterPistols: CharacterMeshPart[];
   holsters: CharacterMeshPart[];
@@ -146,6 +147,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const holsterPistols: CharacterMeshPart[] = [];
   const holsters: CharacterMeshPart[] = [];
   const backpacks: CharacterMeshPart[] = [];
+  const glasses: CharacterMeshPart[] = [];
   const otherAccessories: CharacterMeshPart[] = [];
 
   const nativeHairMeshes: CharacterMeshPart[] = [];
@@ -227,6 +229,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
       const isHolsterPistol = (name.includes('handgun') && name.includes('holster')) || name === 'holster' || name.includes('mp5_holster') || name.endsWith('_holster');
       const isHolster = name.includes('holster') || name.includes('gear') || name.includes('buckle') || matStr.includes('holster') || matStr.includes('gear') || matStr.includes('buckle');
       const isBackpack = name.includes('backpack') || name.includes('bag') || name.includes('pack') || matStr.includes('backpack') || matStr.includes('bag') || matStr.includes('pack');
+      const isGlasses = name === 'glasses' || name.includes('glasses');
 
       if (isHandPistol) {
         handPistols.push({ mesh });
@@ -236,6 +239,8 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
         holsters.push({ mesh });
       } else if (isBackpack) {
         backpacks.push({ mesh });
+      } else if (isGlasses) {
+        glasses.push({ mesh });
       } else if (isAccessory) {
         otherAccessories.push({ mesh });
       }
@@ -320,6 +325,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     holsterPistols,
     holsters,
     backpacks,
+    glasses,
     otherAccessories,
 
     nativeHairMeshes,
@@ -349,6 +355,7 @@ export interface ClothingAndAccessoriesOptions {
   laraTop: LaraClothing;
   laraBottom: LaraClothing;
   laraShoes: boolean;
+  laraGlasses?: boolean;
   showAccessories: boolean;
   laraPistols: boolean;
   equipment: { holster: boolean; pistols: boolean; backpack: boolean };
@@ -390,6 +397,7 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   const showOtherAcc = opts.showAccessories;
 
   applyPistolVisibility(parts, opts);
+  setPartVisibility(parts.glasses, opts.laraGlasses ?? true);
   setPartVisibility(parts.holsters, showHolsters);
   setPartVisibility(parts.backpacks, showBackpacks);
   setPartVisibility(parts.otherAccessories, showOtherAcc);

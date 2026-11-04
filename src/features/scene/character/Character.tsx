@@ -140,6 +140,7 @@ export function Character({
   const laraTop = useSceneStore(state => state.layers.laraTop);
   const laraBottom = useSceneStore(state => state.layers.laraBottom);
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
+  const laraGlasses = useSceneStore(state => state.layers.laraGlasses ?? true);
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
   const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
@@ -499,13 +500,14 @@ export function Character({
       laraTop,
       laraBottom,
       laraShoes,
+      laraGlasses,
       showAccessories,
       laraPistols,
       animationEquipment: animationEquipmentRef.current,
       equipment
     });
     invalidate();
-  }, [parts, scene, equipment, laraTop, laraBottom, laraShoes, showAccessories, laraPistols, invalidate, isLara]);
+  }, [parts, scene, equipment, laraTop, laraBottom, laraShoes, laraGlasses, showAccessories, laraPistols, invalidate, isLara]);
 
   // Propriétés de rendu : ombres, wallhack, fil de fer
   useEffect(() => {

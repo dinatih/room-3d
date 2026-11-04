@@ -123,6 +123,7 @@ export interface LayerState {
   animals:      boolean;
   robots:       boolean;
   accessories:  boolean;
+  laraGlasses?: boolean;
   laraPistols:  boolean;
   laraTop: LaraClothing;
   laraBottom: LaraClothing;
