@@ -137,6 +137,7 @@ export function createAgentController(
   const shouldCheckInvitations = () => loop && !manualOverride && (!hasLife || lifeActivity !== null);
   let lifeSnapshotSeconds = 0;
   let connected = false, lastLifeRoom: HomeRoom | undefined;
+  let deferredInvitation: { fromId: string; objectId: string; slotId: string; activity: 'social' | 'affection' | 'rest'; forcedAnimId?: string; ready: boolean } | null = null;
   let lifeInteraction: { instruction: AgentInstruction; label: string; before: typeof life.needs; seconds: number; partnerId?: string; animation: string } | null = null;
   const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction, animation?: string) => appLog(_characterId, message, {
     category: 'life', action, actors: [_characterId], data: { clock: lifeClock(life.elapsedSeconds), ...data },
@@ -144,6 +145,28 @@ export function createAgentController(
     object: instruction?.smartObjectId ? { id: instruction.smartObjectId, slotId: instruction.slotId,
       label: SMART_OBJECTS[instruction.smartObjectId]?.name, actorId: _characterId, animationId: animation } : undefined,
   });
+  const cancelDeferredInvitation = (reason: string) => {
+    if (!deferredInvitation) return;
+    logLife('life_invitation_cancelled', `Invitation reportée annulée : ${reason}`, { ...deferredInvitation, reason });
+    deferredInvitation = null;
+  };
+  const invitedLifeActivity = (objectId?: string, slotId?: string) => {
+    const object = objectId ? getSmartObject(objectId) : undefined;
+    const slot = object?.slots.find(slot => slot.slotId === slotId?.split(':')[0]);
+    return lifeSocialActivity(objectId) ?? (object && slot && isLifeSeat(object.category, slot) ? 'rest' : null);
+  };
+  const startAgentDuoSession = (objectId: string, slotId?: string, forcedAnimId?: string) => {
+    const invitation = deferredInvitation?.ready && deferredInvitation.objectId === objectId && deferredInvitation.slotId === slotId ? deferredInvitation : null;
+    const result = duoSessionManager.startDuoSession(objectId, slotId, _characterId, invitation?.fromId,
+      invitation?.forcedAnimId ?? forcedAnimId, shouldCheckInvitations());
+    if (invitation) {
+      if (result && [result.targetA, result.targetB].includes(_characterId) && [result.targetA, result.targetB].includes(invitation.fromId)) {
+        logLife('life_invitation_resumed', `${actorName} reprend l’invitation de ${invitation.fromId} après son activité.`, { ...invitation });
+        deferredInvitation = null;
+      } else cancelDeferredInvitation('La personne ou la place n’est plus disponible.');
+    }
+    return result;
+  };
   const endLifeInteraction = (reason: string) => {
     if (!lifeInteraction) return;
     const { instruction, label, before, seconds, partnerId, animation } = lifeInteraction;
@@ -159,6 +182,7 @@ export function createAgentController(
     .filter(reservation => reservation.characterId !== _characterId).map(({ slot, characterId }) => [slot, characterId]).sort()]);
   const interruptLife = (reason: string) => {
     if (!hasLife) return;
+    cancelDeferredInvitation(reason);
     endLifeInteraction('interruption');
     if (lifeActivity) logLife('life_interrupted', `${LIFE_LABELS[lifeActivity]} — ${reason}`, { reason, activity: lifeActivity, needs: { ...life.needs } });
     lifeActivity = null;
@@ -329,16 +353,14 @@ export function createAgentController(
       if (e.detail?.targetId === _characterId) {
         const store = useSceneStore.getState();
         const isFromUI = e.detail?.fromId === 'HoverMenu' || e.detail?.fromId === 'ZoneAiDebug' || e.detail?.fromId === 'Toolbar' || e.detail?.fromId === 'SidePanel' || e.detail?.fromId === 'Inventory';
-        if (_characterId === store.activeCharacterId && !isFromUI) {
+        const confirmedReturn = e.detail?.lifeInvitationConfirmed && hasLife && loop && !manualOverride && lifeActivity !== null;
+        if (_characterId === store.activeCharacterId && !isFromUI && !confirmedReturn) {
           return;
         }
 
         const targetObjId = e.detail?.objectId;
         if (targetObjId && !OccupancyManager.canUseObject(targetObjId, _characterId)) return;
-        const invitedObject = targetObjId ? getSmartObject(targetObjId) : undefined;
-        const invitedSlot = invitedObject?.slots.find(slot => slot.slotId === e.detail?.slotId?.split(':')[0]);
-        const invitedActivity = lifeSocialActivity(targetObjId) ?? (
-          invitedObject && invitedSlot && isLifeSeat(invitedObject.category, invitedSlot) ? 'rest' : null);
+        const invitedActivity = invitedLifeActivity(targetObjId, e.detail?.slotId);
         interruptLife(`${actorName} répond à une invitation.`);
         navigationScope.clear();
         const role = (e.detail?.forceRole as DuoRole) || 'roleB';
@@ -476,13 +498,23 @@ export function createAgentController(
       if (targetId === _characterId) retrySmartAction(objectId);
     };
     const onCheckInvitation = (event: Event) => {
-      const { targetId, fromId } = (event as CustomEvent<{ targetId: string; fromId: string }>).detail;
+      const { targetId, fromId, objectId, slotId, forcedAnimId, allowDeferral } = (event as CustomEvent<{
+        targetId: string; fromId: string; objectId?: string; slotId?: string; forcedAnimId?: string; allowDeferral?: boolean;
+      }>).detail;
       if (!hasLife || targetId !== _characterId) return;
       const response = lifeInvitationResponse(life.needs, lifeActivity, life.handsDirty, loop && !manualOverride && Boolean(lifeActivity));
       if (response.status === 'accepted') return;
       event.preventDefault();
+      const activity = invitedLifeActivity(objectId, slotId);
+      const defer = response.status === 'later' && allowDeferral !== false && fromId && objectId && slotId && activity;
+      if (defer) {
+        if (deferredInvitation && (deferredInvitation.fromId !== fromId || deferredInvitation.objectId !== objectId || deferredInvitation.slotId !== slotId)) {
+          cancelDeferredInvitation('Une nouvelle invitation remplace la précédente.');
+        }
+        deferredInvitation = { fromId, objectId, slotId, forcedAnimId, activity, ready: false };
+      }
       logLife(`life_invitation_${response.status}`, `${actorName} répond ${response.status === 'later' ? '« pas maintenant »' : '« non »'} : ${response.reason}`,
-        { fromId, ...response, activity: lifeActivity, needs: { ...life.needs } });
+        { fromId, ...response, activity: lifeActivity, deferred: Boolean(defer), needs: { ...life.needs } });
     };
     const onLifeEvent = (event: Event) => {
       if (!hasLife) return;
@@ -498,6 +530,7 @@ export function createAgentController(
     document.addEventListener('npc-invite-duo', onInvite);
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
+      if (hasLife) cancelDeferredInvitation('La vie autonome est suspendue.');
       connected = false;
       navigationScope.clear();
       document.removeEventListener('npc-life-event', onLifeEvent);
@@ -555,6 +588,7 @@ export function createAgentController(
 
       const firstScenario = prevScenario === undefined;
       if (hasLife) {
+        if (!firstScenario) cancelDeferredInvitation('Changement de mode ou de scénario.');
         lifeConversation = null;
         lifeActivity = firstScenario && loop ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
         if (!firstScenario && loop) stepIndex = scenario?.length ?? 0;
@@ -711,7 +745,18 @@ export function createAgentController(
         .filter(candidate => !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)
           && (candidate.activity !== 'meal' || !failedLifeTargets.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`)));
       const clock = lifeClock(life.elapsedSeconds);
-      const candidate = chooseLifeActivity(life.needs, candidates, state, life.lastActivity, clock.hour, life.memory, life.elapsedSeconds);
+      let candidate = chooseLifeActivity(life.needs, candidates, state, life.lastActivity, clock.hour, life.memory, life.elapsedSeconds);
+      const invitation = deferredInvitation;
+      if (invitation) invitation.ready = false;
+      if (invitation && lifeInvitationResponse(life.needs, null, life.handsDirty, true).status === 'accepted') {
+        const invited = candidates.find(candidate => candidate.id === invitation.objectId && candidate.slotId === invitation.slotId && candidate.activity === invitation.activity);
+        if (!invited || duoSessionManager.getSessionFor(invitation.fromId)) cancelDeferredInvitation('La personne ou la place n’est plus disponible.');
+        else if (!candidate || (candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)]) < LIFE_SETTINGS.sleepPriority
+          || lifeNeed(candidate.activity, life.needs) === lifeNeed(invited.activity, life.needs)) {
+          invitation.ready = true;
+          candidate = invited;
+        }
+      }
       lifeActivity = candidate?.activity ?? 'pause';
       const needReason = candidate?.activity === 'wash-hands' ? `${actorName} se lave les mains après les toilettes.` : candidate
         ? `${candidate.activity === 'clean' ? HOME_TASKS[getHomeTask(candidate.id, candidate.slotId)!].label : LIFE_NEED_LABELS[lifeNeed(candidate.activity, life.needs)]} : ${Math.round(candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)])} %.`
@@ -724,9 +769,14 @@ export function createAgentController(
         : (candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)]) >= LIFE_SETTINGS.sleepPriority ? 'Besoin urgent.'
         : routine ? `Routine de ${clock.period.toLowerCase()}.` : 'Hors routine.'} ${experience
         ? `Goût appris : ${experience.satisfaction.toFixed(1)} pts ; dernière fois il y a ${Math.max(0, life.elapsedSeconds - experience.lastAt).toFixed(0)} min simulées.`
-        : 'Activité à découvrir.'} ${followUp ?? ''}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}`.trim() : needReason;
+        : 'Activité à découvrir.'} ${followUp ?? ''}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}${deferredInvitation?.ready ? ` Invitation reportée de ${deferredInvitation.fromId}.` : ''}`.trim() : needReason;
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(lifeId, candidate)
         : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
+      if (deferredInvitation?.ready && deferredInvitation.forcedAnimId) {
+        const duo = getDuoAnimationForClip(deferredInvitation.forcedAnimId);
+        if (!duo) throw new Error(`Duo reporté introuvable : ${deferredInvitation.forcedAnimId}`);
+        for (const instruction of dynamicNavQueue) if (instruction.type === 'USE_OBJECT' && instruction.smartObjectId === deferredInvitation.objectId && instruction.slotId === deferredInvitation.slotId) instruction.animation = duo.animA;
+      }
       dynamicNavIndex = 0;
       stepIndex = scenario?.length ?? 0;
       cachedCoords = null;
@@ -1015,7 +1065,7 @@ export function createAgentController(
         if (isDuo) {
           let role = duoRole;
           if (!role) {
-            const duoRes = duoSessionManager.startDuoSession(objId, reqSlotId, _characterId, undefined, undefined, shouldCheckInvitations());
+            const duoRes = startAgentDuoSession(objId, reqSlotId);
             if (!duoRes && hasLife && loop && lifeActivity) {
               retrySmartAction(objId);
               return state;
@@ -1416,13 +1466,7 @@ export function createAgentController(
             const isDuoCooldown = Date.now() - lastDuoEndTime < 15000;
 
             if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRole) {
-              const duoRes = duoSessionManager.startDuoSession(
-                currentInstruction.smartObjectId!,
-                currentInstruction.slotId,
-                _characterId,
-                undefined,
-                duoDef.id, shouldCheckInvitations()
-              );
+              const duoRes = startAgentDuoSession(currentInstruction.smartObjectId!, currentInstruction.slotId, duoDef.id);
               if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                 agentStatus = 'IDLE';
                 state.animation = 'idle';
@@ -1592,13 +1636,7 @@ export function createAgentController(
                 const duoDef = getDuoAnimationForClip(res.animation);
                 const isDuoCooldown = Date.now() - lastDuoEndTime < 15000;
                 if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRole) {
-                  const duoRes = duoSessionManager.startDuoSession(
-                    currentInstruction.smartObjectId,
-                    currentInstruction.slotId,
-                    _characterId,
-                    undefined,
-                    duoDef.id, shouldCheckInvitations()
-                  );
+                  const duoRes = startAgentDuoSession(currentInstruction.smartObjectId, currentInstruction.slotId, duoDef.id);
                   if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                     agentStatus = 'IDLE';
                     state.animation = 'idle';

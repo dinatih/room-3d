@@ -56,15 +56,22 @@ Dans la console, sélectionner la catégorie **💚 Vie**, puis éventuellement 
 - `life_interrupted` : interruption par une commande ou une invitation.
 - `life_partner` : partenaire retenu et affinité connue, pour les conversations, câlins et autres duos non combattants.
 - `life_invitation_accepted`, `life_invitation_later`, `life_invitation_declined` : réponse aux invitations et motif.
+- `life_invitation_resumed`, `life_invitation_cancelled` : reprise d'une invitation reportée ou raison de son annulation. Le détail de la réponse « pas maintenant » indique si une proposition a effectivement été gardée.
 - `life_reaction` : petite réaction à un événement réel, avec le clip choisi et sa raison.
 
 Ces événements portent l'identité du PNJ, l'heure simulée et l'objet concerné lorsqu'il existe. Ils sont enregistrés dans le journal JSONL de développement (`/tmp/room-3d-logs/latest.jsonl`) même lorsque la console est fermée ou filtrée. Aucun événement de vie n'est émis à chaque image ; les bilans portent sur les phases d'interaction, pas sur toute la durée du trajet.
 
 ## Affinités et invitations
 
-Pour les duos non combattants, les colocataires choisissent parmi les partenaires visibles et disponibles en tenant compte de leurs affinités, puis de la proximité. L'affectation initiale d'un PNJ à un objet ne remplace pas cette préférence relationnelle. Le joueur n'est pas sollicité automatiquement, et une invitation seule ne renforce pas les relations : seul le temps réellement partagé compte.
+Pour les duos non combattants, les colocataires choisissent parmi les partenaires visibles et disponibles en tenant compte de leurs affinités, puis de la proximité. L'affectation initiale d'un PNJ à un objet ne remplace pas cette préférence relationnelle. Le joueur n'est pas sollicité spontanément, et une invitation seule ne renforce pas les relations : seul le temps réellement partagé compte.
 
-Avant une invitation autonome, la colocataire consultée peut accepter, répondre « pas maintenant » pour terminer un repas, dormir, aller aux toilettes, se laver ou satisfaire un besoin corporel urgent, ou refuser pendant une commande utilisateur ou une visite. Cette vérification précède les réservations. Le demandeur cherche alors un autre partenaire ; si personne n'est disponible, il reprend ses choix de vie après l'échec normal de l'activité. « Pas maintenant » ne crée pas de rendez-vous en attente : une prochaine invitation sera réévaluée lorsque la personne sera disponible. Les commandes explicites de l'utilisateur gardent la main.
+Avant une invitation autonome, la colocataire consultée peut accepter, répondre « pas maintenant » pour terminer un repas, dormir, aller aux toilettes, se laver ou satisfaire un besoin corporel urgent, ou refuser pendant une commande utilisateur ou une visite. Cette vérification précède les réservations. Le demandeur reste libre de chercher un autre partenaire ou de poursuivre sa vie.
+
+Une réponse « pas maintenant » garde désormais une proposition privée pour une conversation, un moment d'affection ou un repos assis partagé. À la prochaine décision après son activité, la colocataire peut retrouver la personne qui l'avait invitée, même si sa jauge de compagnie est basse. Les soins et les urgences restent prioritaires. La place et le partenaire sont vérifiés à nouveau avant de créer le duo ; aucune réservation n'est conservée pendant le report.
+
+Si la personne partage déjà une autre activité, si le spot est indisponible ou si le partenaire devient masqué ou indisponible, la proposition est annulée. Une commande utilisateur, une visite ou la suspension de la vie autonome l'annulent également. Une nouvelle proposition remplace la précédente, avec un log explicatif. Un contrôle de disponibilité lors de la reprise ne crée pas une invitation inverse : il n'y a pas de ping-pong de reports.
+
+Les séquences des smart actions sont conservées, y compris leurs variations. Pour un duo tiré dans une assise mixte, la reprise conserve le duo proposé. Une colocataire sélectionnée mais encore autonome peut répondre à la reprise de sa propre invitation ; un contrôle manuel n'est jamais interrompu. Les commandes explicites de l'utilisateur gardent la main.
 
 ## Habitudes personnelles
 
@@ -100,7 +107,7 @@ Une invitation, un salut, un chargement ou un combat n'alimente pas cette mémoi
 | --- | --- |
 | 1. Choix plus lisibles | Logs de décision, lecture réelle et bilan. |
 | 2. Activités selon les affinités | Partenaires choisis selon les relations et les moments partagés. |
-| 3. Invitations avec réponse | Accepter, répondre « pas maintenant » ou refuser, sans bloquer de réservation en attente. |
+| 3. Invitations avec réponse | Accepter, reporter puis reprendre après l'activité, ou annuler si la situation a changé ; sans réservation pendant le report. |
 | 4. Petites habitudes personnelles | Préférences apprises de lieu et de période. |
 | 5. Enchaînements naturels | Suites conditionnelles aux besoins et à la saleté. |
 | 6. Réactions aux autres | Saluts, remerciements et réaction à une activité indisponible. |

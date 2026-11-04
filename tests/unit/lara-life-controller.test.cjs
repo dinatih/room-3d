@@ -42,6 +42,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const duo = { leaveDuoZone: noop, getSessionFor: noop, startDuoSession: () => null,
     markReady: noop, isPlaying: () => false, isWaitingPartner: () => true, getCurrentAnimState: () => null };
   const duoTicks = [];
+  const duoDefinitions = {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
@@ -61,7 +62,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt }, './laraLifeStore': { characterLives, publishLife: (characterId, state) => Object.assign(snapshot, state), useLaraLifeStore: { getState: () => ({ speed: 1, characters: { [id]: snapshot } }) } },
     './occupancyManager': { OccupancyManager: occupancy, LIMITED_ROOMS: ['living', 'bathroom'], isInRoom: (room, position) => room === 'bathroom' ? position.z >= 500 : position.z < 500 },
     './duoSessionManager': { duoSessionManager: duo },
-    '../animations/duoAnimations': { getDuoAnimationForClip: noop },
+    '../animations/duoAnimations': { getDuoAnimationForClip: key => Object.values(duoDefinitions).find(def => [def.id, def.animA, def.animB].includes(key)) },
     './navigation/service': { createRouteState: () => ({}), resetRoute: route => { route.error = null; }, recoverDoorContact: () => undefined,
       followRoute: (route, actor, start, goal) => {
         attempts.push(goal.x); route.crowd = crowdWait ? {} : undefined;
@@ -108,7 +109,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives, occupancy,
+  return { controller, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -466,7 +467,7 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
   const originalDocument = global.document;
   global.document = new EventTarget();
   try {
-    for (const objectId of ['garden-conversation', 'hugs-point']) for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
+    for (const explicitPartner of [false, true]) for (const objectId of ['garden-conversation', 'hugs-point']) for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
       const lifeState = life.createLife('native');
       lifeState.elapsedSeconds = 600;
       life.rememberLifeConversation(lifeState, 'rosanna', 120);
@@ -491,12 +492,15 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
         './navigation/service': { getNavigationGraph: () => ({}) }, './navigation/obstacles': { getAgentProfile: () => ({}) },
         './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'), './laraLifeStore': { characterLives: { native: lifeState, cha: life.createLife('cha') } },
       });
-      const onCheck = event => { if (unavailable === 'all-busy' || (unavailable === 'busy' && event.detail.targetId === 'rosanna')) event.preventDefault(); };
+      const onCheck = event => {
+        assert.equal(event.detail.allowDeferral, !explicitPartner);
+        if (unavailable === 'all-busy' || (unavailable === 'busy' && event.detail.targetId === 'rosanna')) event.preventDefault();
+      };
       document.addEventListener('npc-check-life-invitation', onCheck);
       let result;
-      try { result = duoSessionManager.startDuoSession(objectId, 'chat', 'native', undefined, undefined, true); }
+      try { result = duoSessionManager.startDuoSession(objectId, 'chat', 'native', explicitPartner ? 'rosanna' : undefined, undefined, true); }
       finally { document.removeEventListener('npc-check-life-invitation', onCheck); }
-      if (unavailable === 'all-busy') {
+      if (unavailable === 'all-busy' || (explicitPartner && unavailable)) {
         assert.equal(result, null);
         assert.equal(claims.length, 0, 'A declined invitation must not reserve either participant');
         assert.equal(duoSessionManager.getSessionFor('native'), null);
@@ -795,5 +799,85 @@ it('réagit une fois à une place occupée, puis choisit ailleurs sans faux bén
     assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1);
     assert.equal(w.logs.filter(log => log.action === 'life_abandoned').length, 1);
     assert.equal(w.reservations.size, 0);
+  } finally { disconnect(); global.document = originalDocument; }
+});
+
+for (const outcome of ['available', 'busy', 'removed', 'manual', 'urgent', 'mode', 'seated', 'replaced', 'noreturn']) it(`reprend ou annule une invitation reportée après un repas : ${outcome}`, () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world('native', true), disconnect = w.controller.connect(), calls = [];
+  const seated = outcome === 'seated', objectId = seated ? 'bed-west' : 'hugs-point', slotId = seated ? 'seat-middle' : 'hug';
+  const activity = seated ? 'rest' : 'affection';
+  w.objects[objectId] = { id: objectId, name: 'Moment partagé', category: seated ? 'bed' : 'decor', isDuo: !seated,
+    position: [60, 0, 10], slots: [{ slotId, animation: 'sit', isDuo: !seated }] };
+  w.candidates.push({ activity, id: objectId, slotId, x: 60, z: 10 });
+  if (seated) w.duoDefinitions['seat-duo'] = { id: 'seat-duo', animA: 'sit-a', animB: 'sit-b' };
+  Object.assign(w.duo, { startDuoSession: (...args) => {
+    calls.push(args);
+    return { targetA: 'native', targetB: args[3], posA: [60, 0, 10], posB: [60, 0, 100], rotA: 0, rotB: 0, actualSlotId: slotId };
+  } });
+  try {
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    assert.equal(w.controller.state.animation, 'cook');
+    const reservations = [...w.reservations];
+    assert.equal(document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
+      detail: { targetId: 'native', fromId: 'cha', objectId, slotId, forcedAnimId: seated ? 'seat-duo' : undefined, allowDeferral: outcome !== 'noreturn' } })), false);
+    assert(w.logs.some(log => log.action === 'life_invitation_later' && log.data.deferred === (outcome !== 'noreturn')));
+    assert.deepEqual([...w.reservations], reservations, 'Deferring must not reserve a new place');
+    assert.equal(calls.length, 0);
+    assert.equal(w.controller.state.animation, 'cook', 'Finish the meal before returning to the invitation');
+    if (outcome === 'replaced') document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
+      detail: { targetId: 'native', fromId: 'vivida', objectId, slotId } }));
+    if (outcome === 'manual') {
+      w.controller.setPosition(10, 0, 10);
+    } else if (outcome === 'mode') {
+      w.controller.configure({ scenario: [], loop: false, landingAnim: 'idle' });
+    } else {
+      w.tick(); w.tick(); w.tick();
+      w.lifeState.needs.meal = 0;
+      w.lifeState.needs.work = outcome === 'urgent' ? 100 : 0;
+      if (outcome === 'busy') w.duo.getSessionFor = id => id === 'cha' ? {} : undefined;
+      if (outcome === 'removed') w.candidates.splice(w.candidates.findIndex(candidate => candidate.id === objectId), 1);
+      w.tick(); w.tick();
+      if (outcome === 'urgent') {
+        assert.equal(calls.length, 0, 'An unrelated urgent need must still come first');
+        w.tick();
+        w.lifeState.needs.work = 0;
+        w.tick(); w.tick();
+      }
+    }
+    if (['available', 'urgent', 'seated', 'replaced'].includes(outcome)) {
+      assert.equal(calls.length, 1);
+      assert.deepEqual(calls[0], [objectId, slotId, 'native', outcome === 'replaced' ? 'vivida' : 'cha', seated ? 'seat-duo' : undefined, true]);
+      assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
+      assert.deepEqual(w.lifeState.relationships, {}, 'Resuming an invitation is not played time together');
+    } else if (outcome === 'noreturn') {
+      assert.equal(calls.length, 0, 'A return availability check must not create a reverse invitation');
+    } else {
+      assert.equal(calls.length, 0);
+      assert(w.logs.some(log => log.action === 'life_invitation_cancelled'));
+    }
+  } finally { disconnect(); global.document = originalDocument; }
+});
+
+it('une reprise confirmée ne prend jamais la main sur un contrôle utilisateur', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world(), disconnect = w.controller.connect();
+  w.objects['hugs-point'] = { id: 'hugs-point', name: 'Câlins', position: [60, 0, 10], slots: [{ slotId: 'hug', isDuo: true }] };
+  const invite = confirmed => document.dispatchEvent(new CustomEvent('npc-invite-duo', { detail: {
+    targetId: 'native', fromId: 'SmartObject', objectId: 'hugs-point', slotId: 'hug:roleB', forceRole: 'roleB', lifeInvitationConfirmed: confirmed,
+  } }));
+  try {
+    w.tick(); w.tick();
+    invite(false);
+    assert(!w.logs.some(log => log.action === 'life_invitation_accepted'));
+    invite(true);
+    assert.equal(w.logs.filter(log => log.action === 'life_invitation_accepted').length, 1);
+    w.controller.setPosition(10, 0, 10);
+    invite(true);
+    assert.equal(w.logs.filter(log => log.action === 'life_invitation_accepted').length, 1);
   } finally { disconnect(); global.document = originalDocument; }
 });

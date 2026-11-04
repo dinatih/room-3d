@@ -497,6 +497,7 @@ class DuoSessionManager {
 
     // Si une session existe déjà pour cet objet
     const existing = this.sessions.get(objectId);
+    if (respectLifeNeeds && partnerId && existing && !existing.isSessionComplete) return null;
     if (existing?.isSessionComplete) {
       const participantId = existing.participantA?.characterId ?? existing.participantB?.characterId;
       if (participantId) this.leaveDuoZone(participantId);
@@ -541,7 +542,10 @@ class DuoSessionManager {
     }
 
     if (leaderId && !canParticipate(leaderId)) leaderId = undefined;
-    if (partnerId && !canParticipate(partnerId)) partnerId = undefined;
+    if (partnerId && !canParticipate(partnerId)) {
+      if (respectLifeNeeds) return null;
+      partnerId = undefined;
+    }
 
     // Résolution Leader (A) et Partenaire (B)
     const isVisibleChar = (id: string, allowPlayer = true) => {
@@ -554,6 +558,7 @@ class DuoSessionManager {
       );
     };
 
+    if (respectLifeNeeds && partnerId && (!isVisibleChar(partnerId, isLifeCharacter(partnerId)) || this.getSessionFor(partnerId))) return null;
     const sharedActivity = lifeSocialActivity(objectId) ?? (slot && isLifeSeat(obj.category, slot) ? 'rest' : undefined);
     const getCandidates = (excludeId?: string, allowPlayer = true) => {
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
@@ -578,7 +583,7 @@ class DuoSessionManager {
     const targetA = leaderId || candidates.find(id => id !== partnerId);
     const partnerCandidates = getCandidates(targetA, false);
     const acceptsInvitation = (id: string) => !respectLifeNeeds || def.isCombat || document.dispatchEvent(new CustomEvent('npc-check-life-invitation', {
-      cancelable: true, detail: { targetId: id, fromId: targetA, objectId, slotId: actualSlotId },
+      cancelable: true, detail: { targetId: id, fromId: targetA, objectId, slotId: actualSlotId, forcedAnimId, allowDeferral: !partnerId },
     }));
     const targetB = partnerId ? (acceptsInvitation(partnerId) ? partnerId : undefined) : partnerCandidates.find(acceptsInvitation);
     if (!targetA || !targetB || targetA === targetB) return null;
@@ -659,6 +664,7 @@ class DuoSessionManager {
       detail: {
         targetId: targetB,
         fromId: 'SmartObject',
+        lifeInvitationConfirmed: respectLifeNeeds && Boolean(partnerId),
         objectId,
         slotId: `${actualSlotId}:roleB`,
         forceRole: 'roleB',
