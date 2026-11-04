@@ -16,10 +16,11 @@ import {
   filterStudioAnimations, adjacentStudioAnimation, type StudioFilters, type StudioAnimation,
 } from './animationStudioCatalog';
 
-import { consumePendingInventoryTarget, peekPendingInventoryTarget, type AppLogAnimationRef, type OpenInventoryTargetDetail } from '@features/ui/AppConsole';
+import type { AppLogAnimationRef } from '@features/ui/AppConsole';
 
-export function AnimationStudioView({ initialTarget, isMobile = false, listWidth = 380, onResizeStart }: {
+export function AnimationStudioView({ initialTarget, externalTarget, isMobile = false, listWidth = 380, onResizeStart }: {
   initialTarget?: InventoryUrlTarget;
+  externalTarget?: AppLogAnimationRef;
   isMobile?: boolean;
   listWidth?: number;
   onResizeStart?: (event: MouseEvent) => void;
@@ -93,21 +94,8 @@ export function AnimationStudioView({ initialTarget, isMobile = false, listWidth
   }
 
   useEffect(() => {
-    const pending = peekPendingInventoryTarget();
-    if (pending?.type === 'animation') {
-      consumePendingInventoryTarget();
-      applyExternalAnimationTarget(pending.animation);
-    }
-    const onOpenTarget = (e: Event) => {
-      const detail = (e as CustomEvent<OpenInventoryTargetDetail>).detail;
-      if (detail.type === 'animation') {
-        consumePendingInventoryTarget();
-        applyExternalAnimationTarget(detail.animation);
-      }
-    };
-    document.addEventListener('open-inventory-target', onOpenTarget);
-    return () => document.removeEventListener('open-inventory-target', onOpenTarget);
-  }, [characters]);
+    if (externalTarget) applyExternalAnimationTarget(externalTarget);
+  }, [characters, externalTarget]);
 
   useEffect(() => {
     if (!missingTarget) updateUrlInventory(true, 'animations', active ? { type: 'animation', id: active.id, mode } : undefined, 'replace');

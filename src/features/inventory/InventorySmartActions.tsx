@@ -10,6 +10,7 @@ export interface SmartActionPreviewRequest {
   characterId: string;
   runId: number;
   playing: boolean;
+  animation?: string;
 }
 
 export function getInventorySmartObjects(itemId: string) {
@@ -26,7 +27,7 @@ export function InventorySmartActions({ itemId, request, onPreview }: {
   if (!objects.length) return null;
   return (
     <div className="d-flex flex-wrap align-items-center gap-1 px-2 py-1 border-bottom" role="group" aria-label="SmartActions">
-      <select className="form-select form-select-sm w-auto" aria-label="PNJ de la preview" value={agentId} onChange={event => {
+      <select className="form-select form-select-sm w-auto" aria-label="PNJ de la preview" value={request?.characterId ?? agentId} onChange={event => {
         setAgentId(event.target.value);
         if (request) onPreview({ ...request, characterId: event.target.value, runId: request.runId + 1 });
       }}>
@@ -34,7 +35,7 @@ export function InventorySmartActions({ itemId, request, onPreview }: {
       </select>
       <select className="form-select form-select-sm w-auto mw-100 flex-grow-1" aria-label="Smart action de la preview" value={request ? `${request.objectId}:${request.slotId}` : ''} onChange={event => {
         const [objectId, slotId] = event.target.value.split(':');
-        onPreview({ objectId, slotId, characterId: agentId, runId: (request?.runId ?? 0) + 1, playing: true });
+        onPreview({ objectId, slotId, characterId: request?.characterId ?? agentId, runId: (request?.runId ?? 0) + 1, playing: true });
       }}>
         <option value="" disabled>⚡ Smart action…</option>
         {objects.flatMap(object => object.slots.map(slot => (

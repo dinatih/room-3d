@@ -127,6 +127,10 @@ it('journalise la vie au démarrage réel et à la fin de phase, sans spam penda
   assert.equal(started.length, 1);
   assert.equal(results.length, 1);
   assert.equal(started[0].category, 'life');
+  assert.deepEqual(started[0].animation, { id: 'work', mode: 'solo', actorId: 'native', label: undefined });
+  assert.equal(started[0].object.animationId, 'work');
+  assert.equal(started[0].object.actorId, 'native');
+  assert.equal(results[0].animation.id, 'work');
   assert.deepEqual(started[0].actors, ['native']);
   assert.equal(results[0].data.seconds, 1);
   assert(results[0].data.changes.work < 0);
@@ -617,6 +621,8 @@ it('termine les répétitions du slot avec une récupération partielle, puis r�
     assert.equal(w.controller.state.animation, 'wash-c');
     w.tick(2);
     assert.equal(w.lifeState.lastActivity, 'shower');
+    assert.deepEqual(w.logs.filter(log => log.action === 'life_started' && log.object?.id === 'shower').map(log => log.animation.id),
+      ['wash-a', 'wash-b', 'wash-c'], 'Log each clip actually played, including variations of the same smart action');
     assert(w.lifeState.needs.hygiene > 0 && w.lifeState.needs.hygiene < before);
     assert.equal(w.reservations.size, 0);
     w.lifeState.needs.work = 100;

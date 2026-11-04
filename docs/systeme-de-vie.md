@@ -50,6 +50,7 @@ Dans la console, sélectionner la catégorie **💚 Vie**, puis éventuellement 
 
 - `life_decision` : activité choisie, besoin, urgence, routine, expérience et récence. Le détail JSON inclut les candidats disponibles avec leurs besoins et coefficients de préférence, ainsi que les cibles temporairement exclues après échec.
 - `life_started` : première animation réellement jouée dans une phase, avec le partenaire éventuel. Le chargement et le trajet ne déclenchent pas cet événement.
+- Les événements de lecture et de bilan indiquent le clip réellement joué, avec un lien direct vers sa fiche **Animations**. Le lien de l'objet retrouve son produit d'inventaire et lance sa smart action avec le personnage et le clip enregistrés, pour les slots solo. Chaque variation réellement jouée est journalisée séparément.
 - `life_result` : fin de phase, durée réellement jouée, besoins avant/après et variations. Le message indique les besoins soulagés ; le détail conserve aussi ceux qui ont augmenté.
 - `life_abandoned` : activité indisponible, avant de refaire un choix.
 - `life_interrupted` : interruption par une commande ou une invitation.

@@ -9,7 +9,9 @@ const launch = require('../scripts/browser-test-options.cjs');
     await page.setRequestInterception(true);
     page.on('request', request => {
       if (new URL(request.url()).pathname === '/src/features/inventory/InventoryPreview.tsx') {
-        return request.respond({ status: 200, contentType: 'application/javascript', body: 'export function InventoryPreview() { return null; }' });
+        return request.respond({ status: 200, contentType: 'application/javascript', body: `import React from '/node_modules/.vite/deps/react.js';
+          export function InventoryPreview({ smartAction, initialAnim, item }) { return React.createElement('output', { hidden: true,
+            'data-smart-action': smartAction ? JSON.stringify(smartAction) : undefined, 'data-preview-animation': initialAnim, 'data-preview-character': item?.id }); }` });
       }
       return request.continue();
     });
@@ -99,10 +101,48 @@ const launch = require('../scripts/browser-test-options.cjs');
     const duoId = duoUrl.searchParams.get('animation');
     await mount(duoUrl.search);
     await page.waitForFunction(id => document.querySelector('[aria-selected="true"]')?.dataset.animationId === id, {}, duoId);
+    await mount('?inventory=all&item=toilet');
+    const clip = 'standing-using-touchscreen-tablet';
+    await page.evaluate(async () => {
+      const { default: React } = await import('/node_modules/.vite/deps/react.js');
+      const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
+      const { AppConsole } = await import('/src/features/ui/AppConsole.tsx');
+      const root = document.body.appendChild(document.createElement('div'));
+      createRoot(root).render(React.createElement(AppConsole, {}));
+    });
+    await page.waitForSelector('.app-console');
+    await page.evaluate(async clip => {
+      const { appLog } = await import('/src/features/ui/AppConsole.tsx');
+      for (const actorId of ['cha', 'native']) appLog(actorId, `test-vie-${actorId}`, {
+        category: 'life', action: 'life_started', actors: [actorId],
+        object: { id: 'desk-bollsidan-2', slotId: 'work-standing', actorId, animationId: clip },
+        animation: { id: clip, mode: 'solo', actorId },
+      });
+    }, clip);
+    await page.$eval('.app-console button[title="Ouvrir la console (B)"]', button => button.click());
+    for (const actorId of ['cha', 'native']) {
+      await page.waitForFunction(actorId => [...document.querySelectorAll('.app-console span')].some(span => span.textContent === `test-vie-${actorId}`), {}, actorId);
+      await page.evaluate(actorId => [...document.querySelectorAll('.app-console span')].find(span => span.textContent === `test-vie-${actorId}`)
+        .parentElement.querySelector('button[aria-label="Ouvrir l\'objet desk-bollsidan-2 dans l\'inventaire"]').click(), actorId);
+      await page.waitForFunction(actorId => {
+        const request = JSON.parse(document.querySelector('[data-smart-action]')?.dataset.smartAction || 'null');
+        return request?.characterId === actorId && request.objectId === 'desk-bollsidan-2' && request.slotId === 'work-standing';
+      }, {}, actorId);
+      assert.equal(new URL(page.url()).searchParams.get('item'), 'bollsidan30574370');
+      assert.equal(await page.$eval('[data-smart-action]', e => JSON.parse(e.dataset.smartAction).animation), clip);
+      assert.equal(await page.$eval('[aria-label="PNJ de la preview"]', e => e.value), actorId);
+    }
+    await page.evaluate(clip => [...document.querySelectorAll('.app-console span')].find(span => span.textContent === 'test-vie-cha')
+      .parentElement.querySelector(`button[aria-label="Ouvrir l'animation ${clip} dans Inventaire > Animations"]`).click(), clip);
+    await page.waitForSelector('.animation-studio');
+    await page.waitForSelector(`[data-animation-id="${clip}"][aria-selected="true"]`);
+    await page.waitForFunction(() => document.querySelector('[data-preview-animation]')?.dataset.previewCharacter === 'cha');
+    assert.equal(await page.$eval('[data-preview-animation]', e => e.dataset.previewAnimation), clip);
+    assert.equal(await page.$('[data-smart-action]'), null, 'Animation link must not retain the smart object');
     await mount('?inventory=animations&animation=missing&animationMode=duo');
     await page.waitForSelector('[role="alert"]');
     assert.equal(new URL(page.url()).searchParams.get('animation'), 'missing');
     assert.deepEqual(errors, []);
-    console.log('PASS: not found, item/category history, sharing, mobile detail, solo and duo direct links');
+    console.log('PASS: item/category history, sharing, mobile detail, solo/duo links and recorded smart-action links');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

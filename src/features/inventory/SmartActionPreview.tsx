@@ -13,7 +13,7 @@ import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import { PREVIEW_ROTATION_Y } from './previewRegistry';
 
 /** USE_OBJECT instructions inherit defaults from their target slot, like the scene controller. */
-export function resolvePreviewInstruction(step: AgentInstruction): AgentInstruction {
+export function resolvePreviewInstruction(step: AgentInstruction, request?: SmartActionPreviewRequest): AgentInstruction {
   if (step.type !== 'USE_OBJECT') return step;
   const slot = getSmartObject(step.smartObjectId!)?.slots.find(slot => slot.slotId === step.slotId);
   if (!slot) throw new Error(`Slot preview introuvable : ${step.smartObjectId}:${step.slotId}`);
@@ -21,6 +21,7 @@ export function resolvePreviewInstruction(step: AgentInstruction): AgentInstruct
     animation: slot.animation, duration: slot.duration, repeatCount: slot.repeatCount,
     triggerEventKey: slot.triggerEventKey, triggerEventValue: slot.triggerEventValue,
     ...step,
+    ...(request?.animation && step.smartObjectId === request.objectId && step.slotId === request.slotId ? { animation: request.animation } : {}),
   };
 }
 
@@ -32,10 +33,10 @@ export function SmartActionPreview({ Component, item, actionState, onSize, reque
   const sequence = useMemo(() => {
     const steps = buildSmartObjectInstructionSequence(request.objectId, request.slotId, SMART_OBJECTS[request.objectId].ownerCharacterId ?? request.characterId)
       .filter(step => step.type !== 'MOVE_TO' && step.type !== 'PREPARE_OBJECT')
-      .map(resolvePreviewInstruction);
+      .map(step => resolvePreviewInstruction(step, request));
     if (!steps.length) throw new Error(`Aucune séquence preview : ${request.objectId}:${request.slotId}`);
     return steps;
-  }, [request.objectId, request.slotId, request.characterId, request.runId]);
+  }, [request.objectId, request.slotId, request.characterId, request.runId, request.animation]);
   const [index, setIndex] = useState(0);
   const [readyIndex, setReadyIndex] = useState(-1);
   const [objectState, setObjectState] = useState<Record<string, any>>({});

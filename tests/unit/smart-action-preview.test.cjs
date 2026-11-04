@@ -106,6 +106,14 @@ it('resolves each step from its own object and preserves explicit overrides', ()
   assert.equal(resolvePreviewInstruction(wait), wait);
   assert.throws(() => resolvePreviewInstruction({ type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'missing' }), /Slot preview introuvable/);
 });
+it('rejoue le clip enregistré sur la bonne interaction sans modifier les étapes suivantes', () => {
+  const request = { objectId: 'toilet', slotId: 'use', animation: 'recorded-sit', characterId: 'cha', runId: 1, playing: true };
+  const step = { type: 'USE_OBJECT', smartObjectId: 'toilet', slotId: 'use' };
+  assert.equal(resolvePreviewInstruction(step, request).animation, 'recorded-sit');
+  assert.equal(resolvePreviewInstruction(step).animation, 'sit-idle');
+  assert.equal(resolvePreviewInstruction({ type: 'USE_OBJECT', smartObjectId: 'vasque-sdb', slotId: 'wash-hands' }, request).animation, 'fab-daily-life-wash-hands');
+  assert.equal(step.animation, undefined);
+});
 it('rejoint directement les Dröna et joue une seule prise sans détour par la porte', () => {
   const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
   const search = ANIMATION_DEFINITIONS.find(anim => anim.id === 'searching-files-high');

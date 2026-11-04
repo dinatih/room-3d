@@ -136,20 +136,21 @@ export function createAgentController(
   let lifeActivity: LifeActivity | null = hasLife && loop ? LIFE_INITIAL_ACTIVITIES[lifeId] : null;
   const shouldCheckInvitations = () => loop && !manualOverride && (!hasLife || lifeActivity !== null);
   let lifeSnapshotSeconds = 0;
-  let lifeInteraction: { instruction: AgentInstruction; label: string; before: typeof life.needs; seconds: number; partnerId?: string } | null = null;
-  const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction) => appLog(_characterId, message, {
+  let lifeInteraction: { instruction: AgentInstruction; label: string; before: typeof life.needs; seconds: number; partnerId?: string; animation: string } | null = null;
+  const logLife = (action: string, message: string, data: Record<string, unknown>, instruction?: AgentInstruction, animation?: string) => appLog(_characterId, message, {
     category: 'life', action, actors: [_characterId], data: { clock: lifeClock(life.elapsedSeconds), ...data },
+    animation: animation ? { id: animation, mode: 'solo', actorId: _characterId, label: getAnimationDef(animation)?.label } : undefined,
     object: instruction?.smartObjectId ? { id: instruction.smartObjectId, slotId: instruction.slotId,
-      label: SMART_OBJECTS[instruction.smartObjectId]?.name } : undefined,
+      label: SMART_OBJECTS[instruction.smartObjectId]?.name, actorId: _characterId, animationId: animation } : undefined,
   });
   const endLifeInteraction = (reason: string) => {
     if (!lifeInteraction) return;
-    const { instruction, label, before, seconds, partnerId } = lifeInteraction;
+    const { instruction, label, before, seconds, partnerId, animation } = lifeInteraction;
     const changes = Object.fromEntries(Object.entries(before).map(([key, value]) => [key, life.needs[key as keyof typeof before] - value]));
     const relief = Object.entries(changes).filter(([, delta]) => delta < 0)
       .map(([key, delta]) => `${LIFE_NEED_LABELS[key as keyof typeof before]} ${delta.toFixed(1)} pts`).join(', ');
     logLife('life_result', `${label} — ${reason} après ${seconds.toFixed(1)} s jouées ; ${relief || 'aucun besoin soulagé'}.`,
-      { reason, seconds, partnerId, before, after: { ...life.needs }, changes }, instruction);
+      { reason, seconds, partnerId, before, after: { ...life.needs }, changes }, instruction, animation);
     lifeInteraction = null;
   };
   const failedLifeTargets = new Map<string, { environment: string; actors?: ActorBlockers; retryAt?: number }>();
@@ -1748,6 +1749,7 @@ export function createAgentController(
     const wasMoving = agentStatus === 'MOVING';
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
+    const playedAnimation = lifeRunning && interacting ? resolveAnimationId(state.animation) : '';
     const socialAnimation = interacting && duoSessionManager.isPlaying(_characterId) ? duoSessionManager.getCurrentAnimState(_characterId) : null;
     const socialClip = duoRole === 'roleB' ? socialAnimation?.clipB : socialAnimation?.clipA;
     const inDuo = Boolean(duoRole) || lifeActivity === 'social' || lifeActivity === 'affection';
@@ -1790,20 +1792,20 @@ export function createAgentController(
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) life.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
         const before = life.needs;
+        if (frameLifeActivity && instruction && interactionSeconds > 0) {
+          if (lifeInteraction?.instruction !== instruction || lifeInteraction.animation !== playedAnimation) {
+            endLifeInteraction('changement de phase ou d’animation');
+            const label = instruction.lifePhase ? LIFE_PHASE_LABELS[instruction.lifePhase] : LIFE_LABELS[frameLifeActivity];
+            lifeInteraction = { instruction, label, before: { ...before }, seconds: 0, partnerId, animation: playedAnimation };
+            logLife('life_started', `${label} — animation réellement jouée${partnerId ? ` avec ${partnerId}` : ''}.`,
+              { activity: frameLifeActivity, phase: instruction.lifePhase, partnerId, needs: { ...before } }, instruction, playedAnimation);
+          }
+          lifeInteraction.seconds += interactionSeconds;
+        }
         life.needs = evolveLife(life.needs, interactionSeconds, previousLifeActivity, false, Boolean(partnerId));
         life.needs = evolveLife(life.needs, dt - interactionSeconds, null, moving);
         life.needs.environment = roomDirt(homeDirt, room);
         rememberLifeActivity(life, moving && lifeActivity === 'walk' ? 'walk' : interactionSeconds > 0 ? previousLifeActivity : null, before, life.needs);
-        if (frameLifeActivity && instruction && interactionSeconds > 0) {
-          if (lifeInteraction?.instruction !== instruction) {
-            endLifeInteraction('changement de phase');
-            const label = instruction.lifePhase ? LIFE_PHASE_LABELS[instruction.lifePhase] : LIFE_LABELS[frameLifeActivity];
-            lifeInteraction = { instruction, label, before: { ...before }, seconds: 0, partnerId };
-            logLife('life_started', `${label} — animation réellement jouée${partnerId ? ` avec ${partnerId}` : ''}.`,
-              { activity: frameLifeActivity, phase: instruction.lifePhase, partnerId, needs: { ...before } }, instruction);
-          }
-          lifeInteraction.seconds += interactionSeconds;
-        }
         lifeSnapshotSeconds += dt;
         if (lifeSnapshotSeconds >= 1) {
           lifeSnapshotSeconds %= 1;

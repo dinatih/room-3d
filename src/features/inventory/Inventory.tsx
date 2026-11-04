@@ -86,11 +86,13 @@ const WIG_COLOR_OPTIONS = [
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
 
-function ItemDetailContent({ item, wigColor, wigBustVariant }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string }) {
+function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string; initialSmartAction?: SmartActionPreviewRequest }) {
   if (!item) return null;
 
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
-  const [smartAction, setSmartAction] = useState<SmartActionPreviewRequest>();
+  const requestedAction = initialSmartAction && getInventorySmartObjects(item.id).some(object => object.id === initialSmartAction.objectId) ? initialSmartAction : undefined;
+  const [smartAction, setSmartAction] = useState(requestedAction);
+  useEffect(() => setSmartAction(requestedAction), [requestedAction]);
   const [selectedDuoAnim, setSelectedDuoAnim] = useState<DuoAnimationDef | undefined>(undefined);
   const [selectedDuoPartner, setSelectedDuoPartner] = useState<string | undefined>(undefined);
   const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
@@ -550,8 +552,12 @@ export function Inventory({
       ?? (['all', 'storage', 'actionnable'].includes(initialCategory) ? STORAGE_SPACES.find(i => i.id === id) : null) ?? null;
   };
   const [selected, setSelectedState] = useState<PreviewTarget>(resolveInitialTarget);
+  const [smartActionTarget, setSmartActionTarget] = useState<SmartActionPreviewRequest>();
+  const [animationTarget, setAnimationTarget] = useState<import('@features/ui/AppConsole').AppLogAnimationRef>();
   const [missingTarget, setMissingTarget] = useState(() => initialUrl.target?.type === 'item' && !resolveInitialTarget());
   const setSelected = (target: PreviewTarget, category = activeCat) => {
+    setSmartActionTarget(undefined);
+    setAnimationTarget(undefined);
     if (target && 'category' in target && !['all', 'actionnable', 'glbs'].includes(category)) {
       category = target.category;
       setActiveCatState(category);
@@ -625,6 +631,7 @@ export function Inventory({
     const resolveObjectTarget = (rawId: string, label?: string): PreviewTarget => {
       const cleanId = rawId.replace(/[-_]\d+$/, '');
       const directItem = INVENTORY.find(i => i.id === rawId || i.id === cleanId)
+        ?? INVENTORY.find(i => getInventorySmartObjects(i.id).some(object => object.id === rawId))
         ?? (label ? INVENTORY.find(i => i.name.toLowerCase() === label.toLowerCase()) : undefined);
       if (directItem) return directItem;
       const space = STORAGE_SPACES.find(s => s.id === rawId || s.id === cleanId);
@@ -635,13 +642,16 @@ export function Inventory({
     };
 
     const applyTarget = (detail: import('@features/ui/AppConsole').OpenInventoryTargetDetail) => {
+      import('@features/ui/AppConsole').then(({ consumePendingInventoryTarget }) => consumePendingInventoryTarget());
       if (detail.type === 'animation') {
+        setAnimationTarget(detail.animation);
+        updateUrlInventory(true, 'animations', { type: 'animation', id: detail.animation.id,
+          mode: detail.animation.mode ?? (DUO_ANIMATIONS.some(animation => animation.id === detail.animation.id) ? 'duo' : 'solo') });
         setMissingTarget(false);
         setActiveCatState('animations');
         return;
       }
       if (detail.type === 'object') {
-        import('@features/ui/AppConsole').then(({ consumePendingInventoryTarget }) => consumePendingInventoryTarget());
         const targetId = detail.object.inventoryId ?? detail.object.id;
         const found = resolveObjectTarget(targetId, detail.object.label);
         setSearch('');
@@ -649,6 +659,12 @@ export function Inventory({
           const category = found instanceof SpatialZone ? 'spaces' : !('category' in found) ? 'storage' : 'all';
           setActiveCatState(category);
           setSelected(found, category);
+          const slotId = detail.object.slotId?.replace(/:role[AB]$/, '');
+          const object = getInventorySmartObjects(found.id).find(object => object.id === detail.object.id);
+          if (slotId && object?.slots.some(slot => slot.slotId === slotId && !slot.isDuo)) {
+            setSmartActionTarget({ objectId: object.id, slotId, characterId: detail.object.actorId ?? CHARACTERS[0].id,
+              animation: detail.object.animationId, runId: performance.now(), playing: true });
+          }
           setShowMobileModal(isMobile);
           requestAnimationFrame(() => {
             const rowEl = tableContainerRef.current?.querySelector(`div[data-item-id="${found.id}"]`);
@@ -934,7 +950,7 @@ function normalizeSearchStr(str: string): string {
         {/* CONTENU PRINCIPAL */}
         {missingTarget ? <div className="p-4" role="alert">Fiche introuvable. <button className="btn btn-sm btn-outline-secondary" onClick={() => setActiveCat(activeCat)}>Revenir à la catégorie</button></div> : activeCat === 'animations' ? (
           <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
-            <AnimationStudioView initialTarget={parseUrlInventory().target} isMobile={isMobile} listWidth={listWidth} onResizeStart={handleResizeStart} />
+            <AnimationStudioView initialTarget={parseUrlInventory().target} externalTarget={animationTarget} isMobile={isMobile} listWidth={listWidth} onResizeStart={handleResizeStart} />
           </div>
         ) : (
           <div className="d-flex flex-grow-1 overflow-hidden" style={{ userSelect: isResizing ? 'none' : undefined }}>
@@ -1199,7 +1215,7 @@ function normalizeSearchStr(str: string): string {
                 <p className="small mb-0">Sélectionnez un item<br />pour afficher son détail</p>
               </div>
             ) : (
-              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
+              visible && !isMobile && <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} initialSmartAction={smartActionTarget} />
             )}
           </div>
         </div>
@@ -1217,7 +1233,7 @@ function normalizeSearchStr(str: string): string {
                 <button type="button" className="btn-close" aria-label="Close" onClick={() => setShowMobileModal(false)}></button>
               </div>
               <div className="modal-body p-0 pb-5" style={{ overflowY: 'auto' }}>
-                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} />
+                <ItemDetailContent key={selected.id} item={selected} wigColor={wigColor} wigBustVariant={wigBustVariant} initialSmartAction={smartActionTarget} />
               </div>
               <div className="modal-footer glass-card position-absolute bottom-0 start-0 end-0 p-2">
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowMobileModal(false)}>Fermer</button>

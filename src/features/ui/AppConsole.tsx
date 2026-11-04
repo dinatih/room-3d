@@ -57,6 +57,8 @@ export interface AppLogObjectRef {
   inventoryId?: string;
   label?: string;
   slotId?: string;
+  actorId?: string;
+  animationId?: string;
 }
 
 export interface AppLogMetadata {
@@ -620,7 +622,7 @@ export function AppConsole({
                           e.stopPropagation();
                           openInventoryTarget({
                             type: 'object',
-                            object: entry.object!,
+                            object: { ...entry.object!, actorId: entry.object!.actorId ?? entry.actors[0] },
                           });
                         }}
                         title={`Ouvrir l'objet "${entry.object.label ?? entry.object.id}" dans l'Inventaire`}
