@@ -34,6 +34,11 @@ const puppeteer = require('puppeteer');
       const materials = ['red', 'white', 'black'].map(color => new THREE.MeshStandardMaterial({ color }));
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(), [materials[0], materials[1], materials[2], materials[0], materials[1], materials[2]]);
       scene.add(mesh);
+      const { Text } = await import('/node_modules/troika-three-text/dist/troika-three-text.esm.js');
+      const outlinedText = new Text();
+      outlinedText.name = 'outlined-text-fixture';
+      outlinedText.outlineWidth = 0.1;
+      scene.add(outlinedText);
       const character = new THREE.Mesh(new THREE.BoxGeometry(), materials[0]);
       character.name = 'walker-fixture';
       scene.add(character, new THREE.DirectionalLight(0xffffff, 3));
@@ -63,15 +68,27 @@ const puppeteer = require('puppeteer');
       });
       assert.equal(arrays, 0);
       if (i === 0) await page.keyboard.press('Escape');
-      else await page.evaluate(() => document.querySelector('[title="Fermer (Échap)"]').click());
+      else await page.evaluate(() => {
+        const fetchOriginal = window.fetch;
+        window.fetch = async (url, options) => {
+          if (String(url) !== 'http://127.0.0.1:5174/api/render-jobs') return fetchOriginal(url, options);
+          const payload = JSON.parse(options.body);
+          if (!payload.scene.object || !payload.camera.object) throw new Error('Missing serialized scene/camera');
+          window.fixture.submitted = true;
+          return new Response(JSON.stringify({ id: 'browser-fixture' }));
+        };
+        window.alert = () => {};
+        [...document.querySelectorAll('button')].find(button => button.textContent === 'Lancer en arrière-plan').click();
+      });
       await page.waitForFunction(() => !document.querySelector('[title="Fermer (Échap)"]'), { timeout: 120000 });
       const changed = await page.evaluate(() => {
         const { baseline, gl, canvasParent } = window.fixture;
         if (gl.domElement.parentElement !== canvasParent) return ['canvas parent'];
-        return baseline.filter(([object, visible, geometry, material]) => object.visible !== visible || object.geometry !== geometry || object.material !== material).map(([object]) => object.name || object.type);
+        return baseline.filter(([object, visible, geometry, material]) => object.visible !== visible || object.geometry !== geometry || (Array.isArray(material) && Array.isArray(object.material) ? material.some((entry, index) => entry !== object.material[index]) : object.material !== material)).map(([object]) => object.name || object.type);
       });
       assert.deepEqual(changed, []);
     }
+    assert.equal(await page.evaluate(() => window.fixture.submitted), true);
     await page.evaluate(() => Promise.all(window.fixture.compilations));
     assert.deepEqual(errors, []);
     console.log('Browser fixture: two photo sessions, scalar materials, Escape/button close, exact geometry/material/visibility and canvas restoration verified.');

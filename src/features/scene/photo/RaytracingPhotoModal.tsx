@@ -325,6 +325,16 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if ((obj as THREE.Mesh).isMesh) {
         const mesh = obj as THREE.Mesh;
 
+        // Troika génère les glyphes par shader ; son setter material attend un matériau de base unique.
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        if (materials.some(material => (material as THREE.Material & { isTroikaTextMaterial?: boolean })?.isTroikaTextMaterial)) {
+          if (mesh.visible) {
+            mesh.visible = false;
+            hidden.push(mesh);
+          }
+          return;
+        }
+
         // Détecter un miroir réflecteur (Reflector Three.js uniquement, jamais les cadres)
         const isFrame =
           name.includes('frame') ||
