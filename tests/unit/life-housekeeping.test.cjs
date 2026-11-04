@@ -36,7 +36,7 @@ it('partage l’état de la maison entre les colocataires et choisit une tâche 
   const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
     './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt },
     './smartObjectRegistry': { getAllSmartObjects: () => [{ id: 'toilet', category: 'hygiene', position: [50, 0, 550], slots: [{ slotId: 'clean' }] }] },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: () => false } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: () => false } },
   });
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
     zustand: require('zustand'), './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt },

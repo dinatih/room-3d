@@ -1036,3 +1036,35 @@ it('retire un repas actif à sa fin, au changement de mode et au démontage du c
     }
   } finally { global.document = originalDocument; }
 });
+
+it('explique le choix d’une assise à l’écart d’une colocataire détestée', () => {
+  const w = world('cha');
+  w.tick(); w.tick(); w.tick();
+  w.lifeState.needs = { ...w.lifeState.needs, rest: 70, work: 0, walk: 0 };
+  w.candidates.find(c => c.activity === 'rest').avoidedNeighbors = ['delphina'];
+  w.objects['quiet-seat'] = { id: 'quiet-seat', category: 'seating', position: [50, 0, 10], slots: [{ slotId: 'use', animation: 'sit' }] };
+  w.candidates.push({ activity: 'rest', id: 'quiet-seat', slotId: 'use', x: 50, z: 10 });
+  for (let i = 0; i < 5 && !w.logs.some(log => log.action === 'life_decision' && log.object?.id === 'quiet-seat'); i++) w.tick();
+  const decision = w.logs.find(log => log.action === 'life_decision' && log.object?.id === 'quiet-seat');
+  assert(decision.message.includes('à l’écart de Delphina'));
+  assert(decision.data.candidates.some(c => c.avoidedNeighbors?.includes('delphina')));
+});
+
+it('revérifie le voisinage après la cuisine et garde la dernière assise quand aucune alternative n’existe', () => {
+  for (const alternative of [true, false]) {
+    const w = world('cha', true);
+    w.scenario.splice(0, w.scenario.length,
+      { type: 'USE_OBJECT', smartObjectId: 'cuisine-group', slotId: 'cook-stove', animation: 'cook', duration: 2, lifePhase: 'prepare-meal' },
+      { type: 'USE_OBJECT', smartObjectId: 'rest', slotId: 'use', animation: 'eat', duration: 10, lifePhase: 'eat-meal' });
+    w.tick(1, false);
+    w.candidates.find(c => c.activity === 'meal').avoidedNeighbors = ['delphina'];
+    if (alternative) {
+      w.objects['quiet-seat'] = { id: 'quiet-seat', category: 'seating', position: [50, 0, 10], slots: [{ slotId: 'use', animation: 'sit' }] };
+      w.candidates.push({ activity: 'meal', id: 'quiet-seat', slotId: 'use', x: 50, z: 10 });
+    }
+    w.tick(2);
+    assert.equal(w.scenario[1].smartObjectId, alternative ? 'quiet-seat' : 'rest');
+    assert.equal(w.logs.some(log => log.action === 'life_meal_seat_changed'), alternative);
+    assert(!w.reservations.size, 'The next seat must still be reserved on arrival');
+  }
+});

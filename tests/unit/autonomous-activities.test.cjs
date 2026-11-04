@@ -21,7 +21,7 @@ function fixture(characterId = 'rosanna') {
           { type: 'USE_OBJECT', smartObjectId: id, slotId, duration: id === 'desk-bollsidan-2' ? 24 : undefined }];
       },
     }, './occupancyManager': { OccupancyManager: {
-      canUseObject: id => id !== 'private',
+      getReservations: () => [], canUseObject: id => id !== 'private',
       isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`),
     } },
   }) };

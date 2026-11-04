@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } from './autonomousActivities';
-import { chooseLifeActivity, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -642,14 +642,20 @@ export function createAgentController(
   const advanceToNextStep = (hasNavStep: boolean) => {
     const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] ?? scenario?.[stepIndex] : scenario?.[stepIndex + 1];
     if (hasLife && loop && next?.lifePhase === 'eat-meal') {
-      const shared = getLaraLifeCandidates(lifeId, life.handsDirty, life.places, life.relationships, life.elapsedSeconds)
-        .filter(candidate => candidate.activity === 'meal' && candidate.mealPartnerId && !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`))
-        .sort((a, b) => b.companyScore! - a.companyScore! || Math.hypot(a.x - state.x, a.z - state.z) - Math.hypot(b.x - state.x, b.z - state.z))[0];
-      if (shared) {
-        next.smartObjectId = shared.id;
-        next.slotId = shared.slotId;
-        logLife('life_meal_join', `${actorName} va manger auprès de ${LIFE_CHARACTER_LABELS[shared.mealPartnerId as LifeCharacterId]}.`,
-          { partnerId: shared.mealPartnerId, companyScore: shared.companyScore }, next);
+      const seat = preferLifePersonalSpace(getLaraLifeCandidates(lifeId, life.handsDirty, life.places, life.relationships, life.elapsedSeconds)
+        .filter(candidate => candidate.activity === 'meal' && !failedLifeTargets.has(`${candidate.id}:${candidate.slotId}`)))
+        .sort((a, b) => Number(Boolean(b.mealPartnerId)) - Number(Boolean(a.mealPartnerId)) || (b.companyScore ?? 0) - (a.companyScore ?? 0)
+          || Number(b.id === next.smartObjectId && b.slotId === next.slotId) - Number(a.id === next.smartObjectId && a.slotId === next.slotId)
+          || Math.hypot(a.x - state.x, a.z - state.z) - Math.hypot(b.x - state.x, b.z - state.z))[0];
+      if (seat) {
+        if (seat.mealPartnerId || seat.id !== next.smartObjectId || seat.slotId !== next.slotId) {
+          logLife(seat.mealPartnerId ? 'life_meal_join' : 'life_meal_seat_changed', seat.mealPartnerId
+            ? `${actorName} va manger auprès de ${LIFE_CHARACTER_LABELS[seat.mealPartnerId as LifeCharacterId]}.`
+            : `${actorName} choisit une autre assise libre pour son repas.`,
+            { partnerId: seat.mealPartnerId, companyScore: seat.companyScore, avoidedNeighbors: seat.avoidedNeighbors }, { ...next, smartObjectId: seat.id, slotId: seat.slotId });
+        }
+        next.smartObjectId = seat.id;
+        next.slotId = seat.slotId;
       }
     }
     if (hasLife && loop && lifeActivity && next?.lifePhase) publish({ activity: LIFE_PHASE_LABELS[next.lifePhase] });
@@ -780,11 +786,14 @@ export function createAgentController(
       const experience = candidate && life.memory[candidate.activity];
       const followUp = candidate && lifeFollowUp(life.lastActivity, candidate, life.needs);
       const habit = candidate ? lifeHabitScore(candidate, life.memory, clock.hour, life.elapsedSeconds) : 1;
+      const avoided = [...new Set(candidates.filter(entry => entry.activity === candidate?.activity).flatMap(entry => entry.avoidedNeighbors ?? []))];
+      const personalSpace = candidate && !candidate.avoidedNeighbors?.length && avoided.length
+        ? ` Préfère une place à l’écart de ${avoided.map(id => LIFE_CHARACTER_LABELS[id as LifeCharacterId]).join(', ')}.` : '';
       const reason = candidate ? `${needReason} ${candidate.activity === 'wash-hands' ? 'Priorité sanitaire.'
         : (candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)]) >= LIFE_SETTINGS.sleepPriority ? 'Besoin urgent.'
         : routine ? `Routine de ${clock.period.toLowerCase()}.` : 'Hors routine.'} ${experience
         ? `Goût appris : ${experience.satisfaction.toFixed(1)} pts ; dernière fois il y a ${Math.max(0, life.elapsedSeconds - experience.lastAt).toFixed(0)} min simulées.`
-        : 'Activité à découvrir.'} ${followUp ?? ''}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}${candidate.mealPartnerId ? ` Repas près de ${LIFE_CHARACTER_LABELS[candidate.mealPartnerId as LifeCharacterId]}.` : ''}${deferredInvitation?.ready ? ` Invitation reportée de ${deferredInvitation.fromId}.` : ''}`.trim() : needReason;
+        : 'Activité à découvrir.'} ${followUp ?? ''}${personalSpace}${habit > 1 ? ' Préférence apprise de lieu ou de moment.' : ''}${candidate.mealPartnerId ? ` Repas près de ${LIFE_CHARACTER_LABELS[candidate.mealPartnerId as LifeCharacterId]}.` : ''}${deferredInvitation?.ready ? ` Invitation reportée de ${deferredInvitation.fromId}.` : ''}`.trim() : needReason;
       dynamicNavQueue = candidate ? buildLaraLifeInstructions(lifeId, candidate)
         : [{ type: 'WAIT', targetPos: [state.x, state.y, state.z], animation: 'idle', duration: LIFE_SETTINGS.pauseSeconds }];
       if (deferredInvitation?.ready && deferredInvitation.forcedAnimId) {

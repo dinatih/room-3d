@@ -134,3 +134,11 @@ Chacune joue son animation de repas et finit indépendamment. La faim, le repos 
 ## Lire les relations
 
 La section repliable **Relations** du panneau de vie affiche les relations du personnage sélectionné : meilleure amie, amie, connaissance ou tensions. L’étoile indique sa compagnie préférée. Chaque relation indique le temps réellement partagé, puis sa répartition par activité (repas, discussion, affection, repos…). Les durées sont exprimées en minutes simulées, comme l’horloge de vie. Les relations définies au départ apparaissent même sans rencontre, avec « Aucun moment partagé » ; elles ne créent pas de faux souvenirs. La section est repliée au départ pour garder le panneau compact.
+
+## Espace personnel
+
+Les réservations des assises, lits et places du bain permettent de repérer une colocataire détestée sur le même meuble, y compris dans un duo. Une autre place libre pour la même activité est alors privilégiée. Si aucune alternative adaptée n’existe, la place reste utilisable : une tension n’interdit pas de satisfaire un besoin. Les trajets et les autres activités de la même pièce ne sont pas exclus. Le départ de la voisine supprime cette préférence dès la décision suivante.
+
+Les logs de décision expliquent la préférence d’une place à l’écart et indiquent les voisines évitées pour chaque candidat. Après la préparation d’un repas, la place est revérifiée ; `life_meal_seat_changed` signale un changement d’assise lorsque les disponibilités ou le voisinage ont changé.
+
+Les onglets du panneau de vie reprennent l’icône et la couleur définies dans le registre des personnages. L’onglet actif a un fond à sa couleur et un nom souligné ; les autres gardent un fond clair et une bordure à leur couleur.

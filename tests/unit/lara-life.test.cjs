@@ -69,7 +69,7 @@ it('sélectionne uniquement des places de repos adaptées et libres dans la conf
     './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId }] },
-    './occupancyManager': { OccupancyManager: { canUseObject: id => id !== 'private',
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: id => id !== 'private',
       isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
   const available = getLaraLifeCandidates('native', false);
@@ -158,7 +158,7 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId) => route.map(step => ({ ...step, smartObjectId: id, slotId })) },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
   const beds = getLaraLifeCandidates('native', false);
   assert.equal(beds.filter(candidate => candidate.activity === 'sleep').length, 1);
@@ -210,7 +210,7 @@ it('préserve la chaîne sanitaire et les événements des objets, et interdit u
     './smartObjectRegistry': { getAllSmartObjects: () => objects, buildSmartObjectInstructionSequence: id => id === 'toilet' ? toilet : [
       { type: 'MOVE_TO' }, { type: 'USE_OBJECT', smartObjectId: 'shower' }, { type: 'MOVE_TO' },
     ] },
-    './occupancyManager': { OccupancyManager: { canUseObject: id => !(busySink && id === 'vasque-sdb'), isSlotOccupied: () => false } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: id => !(busySink && id === 'vasque-sdb'), isSlotOccupied: () => false } },
   });
   assert(getLaraLifeCandidates('native', false).some(c => c.activity === 'meal'));
   assert(!getLaraLifeCandidates('native', false).some(c => c.activity === 'wash-hands'));
@@ -278,7 +278,7 @@ it('propose les loisirs libres et conserve leurs phases et les actions de la té
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, ...objects.find(object => object.id === id).slots.find(slot => slot.slotId === slotId) }] },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: () => false } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: () => false } },
   });
   const options = getLaraLifeCandidates('native', false);
   for (const activity of ['read', 'watch-tv', 'social']) {
@@ -409,7 +409,7 @@ it('utilise l’identité de Cha pour vérifier les places et construire ses int
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => [{ id: 'desk-bollsidan-2', position: [0, 0, 0], slots: [{ slotId: 'work-standing' }] }],
       buildSmartObjectInstructionSequence: (id, slot, character) => (calls.push(character), [{ type: 'USE_OBJECT', smartObjectId: id, slotId: slot }]) },
-    './occupancyManager': { OccupancyManager: { canUseObject: (id, character) => (calls.push(character), true),
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: (id, character) => (calls.push(character), true),
       isSlotOccupied: (id, slot, character) => (calls.push(character), false) } },
   });
   buildLaraLifeInstructions('cha', getLaraLifeCandidates('cha', false)[0]);
@@ -454,7 +454,7 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
         { type: 'MOVE_TO', smartObjectId: id, slotId },
         { type: 'USE_OBJECT', smartObjectId: id, slotId, duration: 30, repeatVariation: true },
       ] },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true,
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true,
       isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
   const { LIFE_CHARACTER_IDS, lifeEffect, favoriteLifeActivity, rememberLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
@@ -509,7 +509,7 @@ it('fait varier les assises et propose les bords de lit pour le repos et les rep
   const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
     './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: () => false } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: () => false } },
   });
   const candidates = getLaraLifeCandidates('native', false, { 'bed-east:seat-middle': 1 });
   assert(candidates.some(candidate => candidate.id === 'bed-east' && candidate.slotId === 'seat-middle' && candidate.activity === 'meal'));
@@ -533,7 +533,7 @@ it('propose les points câlins pour la compagnie en conservant leurs smart actio
     './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId, repeatCount: 1 }] },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: id => occupied.has(id) } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: id => occupied.has(id) } },
   });
   for (const id of life.LIFE_CHARACTER_IDS) {
     const candidates = getLaraLifeCandidates(id, false);
@@ -577,7 +577,7 @@ it('propose les huit places de yoga libres chez Églantine avec stimulation et e
       getAllSmartObjects: () => [{ id: 'west-neighbor-flat', category: 'outdoor', position: [-200, 0, 500], slots: slots.map(slotId => ({ slotId })) }],
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId, repeatCount: 6, repeatVariation: true }],
     },
-    './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(slot) } },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(slot) } },
   });
   for (const id of life.LIFE_CHARACTER_IDS) {
     const candidates = getLaraLifeCandidates(id, false);
@@ -709,7 +709,7 @@ it('préfère un repas près d’une amie sur une place distincte, en gardant fa
     const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
       './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
       './smartObjectRegistry': { getAllSmartObjects: () => objects },
-      './occupancyManager': { OccupancyManager: { canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
+      './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
     });
     const sabira = createLife('sabira');
     const meals = getLaraLifeCandidates('sabira', false, {}, sabira.relationships).filter(c => c.activity === 'meal');
@@ -728,4 +728,28 @@ it('préfère un repas près d’une amie sur une place distincte, en gardant fa
     occupied.add('cuisine-group:cook-stove');
     assert(!getLaraLifeCandidates('sabira', false).some(c => c.activity === 'meal'));
   } finally { activeLifeMeals.clear(); }
+});
+
+it('préfère une autre assise à une voisine détestée sans interdire la dernière place disponible', () => {
+  const life = require('../../src/features/scene/ai/laraLife.ts');
+  const reservations = [{ slot: 'bed-east:seat-north:roleB', characterId: 'delphina' }];
+  const occupied = new Set(['bed-east:seat-north']);
+  const objects = ['bed-east', 'bed-west'].map((id, index) => ({ id, category: 'bed', position: [index * 100, 0, 0],
+    slots: [{ slotId: 'seat-north' }, { slotId: 'seat-middle' }] }));
+  const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
+    './smartObjectRegistry': { getAllSmartObjects: () => objects },
+    './occupancyManager': { OccupancyManager: { getReservations: () => reservations, canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
+  });
+  const needs = { ...createLife('cha').needs, rest: 70, work: 0, walk: 0 };
+  const choose = (id = 'cha') => chooseLifeActivity(needs, getLaraLifeCandidates(id, false), position, null, 10, {}, 0);
+  assert.equal(choose().id, 'bed-west', 'Another free seat wins over the nearest disliked neighbor');
+  assert.deepEqual(getLaraLifeCandidates('cha', false).find(c => c.id === 'bed-east').avoidedNeighbors, ['delphina']);
+  assert.equal(choose('native').id, 'bed-east', 'Neutral relationships do not invent avoidance');
+  occupied.add('bed-west:seat-north'); occupied.add('bed-west:seat-middle');
+  assert.equal(choose().id, 'bed-east', 'The only place still satisfies the need');
+  const toilet = { activity: 'toilet', id: 'toilet', slotId: 'use', x: 0, z: 0 };
+  assert.equal(chooseLifeActivity({ ...needs, toilet: 95 }, [...getLaraLifeCandidates('cha', false), toilet], position, null, 10, {}, 0), toilet);
+  occupied.clear(); reservations.length = 0;
+  assert.equal(choose().id, 'bed-east', 'The preference disappears when the neighbor leaves');
 });

@@ -38,6 +38,7 @@ export interface LifeCandidate {
   visits?: number;
   mealPartnerId?: string;
   companyScore?: number;
+  avoidedNeighbors?: string[];
 }
 
 // Gameplay seconds: needs become important in roughly two minutes.
@@ -199,6 +200,10 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
   })) as LifeNeeds;
 }
 
+/** Prefer another place for the same activity, without making the only available place unusable. */
+export const preferLifePersonalSpace = (candidates: LifeCandidate[]) => candidates.filter(candidate => !candidate.avoidedNeighbors?.length
+  || !candidates.some(other => other.activity === candidate.activity && !other.avoidedNeighbors?.length));
+
 export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
   const need = (candidate: LifeCandidate) => candidate.urgency ?? needs[lifeNeed(candidate.activity, needs)];
@@ -208,8 +213,8 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
   const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds)
     * lifeHabitScore(candidate, memory, hour, elapsedSeconds) * (1 + (candidate.companyScore ?? 0) * needs.company / 100);
-  return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
-    : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
+  return preferLifePersonalSpace(candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
+    : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority)))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
       || (Math.max(need(a), need(b)) >= LIFE_SETTINGS.sleepPriority
         ? need(b) - need(a) : 0)

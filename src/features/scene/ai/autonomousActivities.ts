@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { LIFE_INITIAL_ACTIVITIES, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { LIFE_INITIAL_ACTIVITIES, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
@@ -65,6 +65,7 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
 
 export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
+  const reservations = OccupancyManager.getReservations();
   const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
     && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
   return objects.flatMap(object =>
@@ -84,7 +85,10 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
           : object.category === 'bed' && slot.slotId.startsWith('lie-down') ? 'sleep'
           : seat ? 'rest' : null;
         const position = slot.offset ?? object.position;
-        const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
+        const avoidedNeighbors = seat || object.category === 'bed' || object.id === 'bathtub-garden' ? [...new Set(reservations
+          .filter(reservation => reservation.slot.slice(0, reservation.slot.indexOf(':')) === object.id && lifeAffinity(characterId, reservation.characterId) < 0)
+          .map(reservation => reservation.characterId))] : [];
+        const candidate = { ...(avoidedNeighbors.length ? { avoidedNeighbors } : {}), id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
           visits: places[`${object.id}:${slot.slotId}`] ?? 0, ...(task ? { urgency: homeDirt[task] } : {}) };
         const mealPartnerId = seat && !slot.isDuo ? getLifeMealPartner(characterId, object.id, slot.slotId, relationships, elapsedSeconds) : undefined;
         return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
