@@ -147,10 +147,8 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
     // 2. Coque extérieure
     const shellFade = THREE.MathUtils.smoothstep(dist, EXTERIOR_FADE_START, EXTERIOR_FADE_END);
     const wireFade = contact ? 1 : THREE.MathUtils.smoothstep(dist, WIREFRAME_FADE_START, WIREFRAME_FADE_END);
-    const visible = shellFade > 0.01 || wireFade > 0.01;
-
-    shell.visible = visible;
-    wire.visible = visible;
+    shell.visible = shellFade > 0.01;
+    wire.visible = wireFade > 0.01;
     shellMaterial.opacity = shellFade * 0.3;
     wireMaterial.opacity = wireFade * 0.62;
   });
@@ -158,7 +156,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
   return (
     <>
       <mesh renderOrder={-1000}>
-        <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
+        <sphereGeometry args={[SKY_RADIUS, 64, 48]} />
         <meshBasicMaterial
           ref={domeMatRef}
           map={texture}
@@ -172,7 +170,7 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
         />
       </mesh>
       <mesh ref={shellRef} material={shellMaterial} renderOrder={-900} visible={false}>
-        <sphereGeometry args={[SKY_RADIUS, 96, 96]} />
+        <sphereGeometry args={[SKY_RADIUS, 48, 32]} />
       </mesh>
       <mesh ref={wireRef} material={wireMaterial} renderOrder={-880} visible={false}>
         <sphereGeometry args={[SKY_RADIUS, 32, 24]} />
