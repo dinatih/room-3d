@@ -1,18 +1,19 @@
 <!doctype html><html lang="fr"><meta charset="utf-8"><title>Rendus locaux</title><body><h1>Rendus locaux</h1><p>Le service doit rester ouvert pendant le calcul. Les images sont enregistrées dans renders/.</p><main></main><script type="module">
 async function refresh() {
-  const response = await fetch('/render-jobs');
+  const response = await fetch('/api/render-jobs');
   if (!response.ok) throw new Error(await response.text());
   const jobs = await response.json();
   const main = document.querySelector('main'); main.replaceChildren();
+  if (!jobs.length) main.textContent = 'Aucun rendu envoyé pour le moment.';
   for (const job of jobs) {
     const row = document.createElement('p');
     row.textContent = `${job.id} — ${job.state} — ${Number(job.samples).toFixed(1)} échantillons ${job.error || ''} `;
     if (job.state === 'completed') {
-      const link = document.createElement('a'); link.href = `/render-jobs/${job.id}/image`; link.download = `${job.id}.png`; link.textContent = 'Télécharger'; row.append(link);
+      const link = document.createElement('a'); link.href = `/api/render-jobs/${job.id}/image`; link.download = `${job.id}.png`; link.textContent = 'Télécharger'; row.append(link);
     }
     for (const [action, label] of job.state === 'rendering' ? [['pause', 'Pause'], ['cancel', 'Annuler']] : job.state === 'paused' ? [['resume', 'Reprendre'], ['cancel', 'Annuler']] : job.state === 'queued' ? [['cancel', 'Annuler']] : []) {
       const button = document.createElement('button'); button.textContent = label;
-      button.onclick = async () => { await fetch(`/render-jobs/${job.id}/${action}`, { method: 'POST' }); await refresh(); }; row.append(button);
+      button.onclick = async () => { await fetch(`/api/render-jobs/${job.id}/${action}`, { method: 'POST' }); await refresh(); }; row.append(button);
     }
     main.append(row);
   }

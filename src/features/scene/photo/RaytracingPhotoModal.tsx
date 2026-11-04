@@ -1245,7 +1245,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if (!renderCameraRef.current || !rendererRef.current) throw new Error('Attendre la préparation de la scène.');
       const c = renderCameraRef.current;
       const size = rendererRef.current.getSize(new THREE.Vector2());
-      const response = await fetch('http://127.0.0.1:5174/render-jobs', {
+      const response = await fetch('http://127.0.0.1:5174/api/render-jobs', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scene: scene.toJSON(), camera: c.toJSON(), width: size.x, height: size.y,
           samples: targetSamples, bounces, exposure, focusDistance, fStop,

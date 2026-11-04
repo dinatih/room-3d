@@ -3,8 +3,13 @@ import puppeteer from 'puppeteer';
 import { mkdir, writeFile, readdir, readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 const jobs = new Map();
+const port = Number(process.env.RENDER_PORT || 5174);
+const serviceUrl = `http://127.0.0.1:${port}`;
 await mkdir('renders', { recursive: true });
-const server = await createServer({ plugins: [{ name: 'render-jobs', configureServer(s) { s.middlewares.use('/render-jobs', handleJobs); } }], server: { host: '127.0.0.1', port: 5174, strictPort: true }, open: false });
+const server = await createServer({ plugins: [{ name: 'render-jobs', configureServer(s) { s.middlewares.use('/api/render-jobs', handleJobs); s.middlewares.use((req, res, next) => {
+  if (req.url !== '/render-jobs') return next();
+  res.writeHead(302, { Location: '/render-jobs.html' }); res.end();
+}); } }], server: { host: '127.0.0.1', port, strictPort: true }, open: false });
 let active = false;
 async function pump() {
   if (active) return;
@@ -18,7 +23,7 @@ async function pump() {
     job.browser = browser;
     const page = await browser.newPage(); job.page = page;
     await page.exposeFunction('progress', samples => { job.samples = samples; });
-    await page.goto('http://127.0.0.1:5174/render-worker.html');
+    await page.goto(`${serviceUrl}/render-worker.html`);
     await page.waitForFunction(() => typeof window.renderJob === 'function');
     const png = await page.evaluate(async payload => window.renderJob(payload), job.payload);
     await writeFile(`renders/${job.id}.png`, Buffer.from(png, 'base64'));
@@ -28,7 +33,7 @@ async function pump() {
 }
 async function handleJobs(req, res) {
   const origin = req.headers.origin;
-  if (origin && !['http://localhost:5173', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'].includes(origin)) { res.statusCode = 403; res.end(); return; }
+  if (origin && !['http://localhost:5173', 'http://127.0.0.1:5173', serviceUrl].includes(origin)) { res.statusCode = 403; res.end(); return; }
   if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.end(); return; }
@@ -57,4 +62,4 @@ for (const file of await readdir('renders')) {
   const job = JSON.parse(await readFile(`renders/${file}`, 'utf8')); jobs.set(job.id, job);
 }
 await server.listen();
-console.log('Service raytracing : http://127.0.0.1:5174/render-jobs — résultats dans renders/');
+console.log(`Service raytracing : ${serviceUrl}/render-jobs.html — résultats dans renders/`);
