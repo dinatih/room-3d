@@ -204,3 +204,7 @@ Après avoir préparé un repas et choisi son assise, une cuisinière peut invit
 ## Besoins au démarrage
 
 Toutes les vies démarrent avec Repos, Faim et Toilettes à **0 %**, pour laisser la priorité aux loisirs et aux activités personnelles au début. Cette initialisation s’applique aussi après **Nouvelle vie**.
+
+## Musique du Nest Mini
+
+Dans la scène, **Choisir une musique** sur le Nest Mini ouvre un fichier audio local ; **Arrêter la musique** coupe sa lecture. Le fichier reste dans le navigateur. Une danseuse disponible dans le séjour peut écouter brièvement puis choisir un spot de danse libre selon la logique existante. Le signal suit la lecture réellement audible : une demande de lecture, un fichier refusé, le silence ou une preview ne lancent pas de réaction. Pause, buffering, fin de piste et arrêt annulent une inspiration encore en attente ; une danse déjà engagée garde sa séquence normale. Besoins urgents, mains sales et commandes utilisateur restent prioritaires. Les réactions et choix sont journalisés ; écouter ne crée ni soulagement artificiel ni faux temps de compagnie.

@@ -1,4 +1,5 @@
 import { getObjectActionIds } from '../objectActions';
+import { chooseHouseMusic, stopHouseMusic } from '../utils/houseMusic';
 /**
  * GoogleNestMini.tsx — Google Nest Mini 2 (GLB items/google-nest/google-nest.glb).
  * Diamètre normalisé 10 cm (réf : Nest Mini ≈ Ø9,8 × 4,2 cm).
@@ -63,13 +64,15 @@ export function GoogleNestMini({ onSize, actionState = {}, isPreview = false }: 
     if (isPreview) return;
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent<{ key: string }>).detail;
+      if (key === 'nestMusic') { chooseHouseMusic(); return; }
+      if (key === 'nestMusicStop') { stopHouseMusic(); return; }
       if (key !== 'nestMini') return;
       animRef.current = true;
       timeRef.current = 0;
       invalidate();
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    return () => { document.removeEventListener('furniture-toggle', handler); stopHouseMusic(); };
   }, [invalidate, isPreview]);
 
   useEffect(() => {

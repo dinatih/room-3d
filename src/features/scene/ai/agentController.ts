@@ -588,6 +588,13 @@ export function createAgentController(
       } else if (kind === 'clean') reactToLifeEvent('La pièce vient d’être nettoyée, remercie la personne.', 'thankful', fromId);
       else if (kind === 'arrival' && (life.relationships[fromId]?.seconds || lifeAffinity(_characterId, fromId) > 0)) reactToLifeEvent('Une connaissance arrive dans la pièce, la salue.', 'waving', fromId);
     };
+    const onMusic = (event: Event) => {
+      const { playing, room } = (event as CustomEvent<{ playing: boolean; room: HomeRoom }>).detail;
+      if (!playing) { if (inspiration?.fromId === 'google-nest-mini') inspiration = null; return; }
+      if (!hasLife || !canStartLifeActivity(lifeId, 'dance') || (LIMITED_ROOMS.find(room => isInRoom(room, state)) ?? 'garden') !== room) return;
+      if (reactToLifeEvent('La musique lui donne envie de danser.', 'listening-to-music')) inspiration = { activity: 'dance', fromId: 'google-nest-mini' };
+    };
+    document.addEventListener('npc-life-music', onMusic);
     document.addEventListener('npc-invite-life-activity', onActivityInvitation);
     document.addEventListener('npc-life-event', onLifeEvent);
     document.addEventListener('npc-check-life-invitation', onCheckInvitation);
@@ -599,6 +606,7 @@ export function createAgentController(
       connected = false;
       navigationScope.clear();
       document.removeEventListener('npc-invite-life-activity', onActivityInvitation);
+      document.removeEventListener('npc-life-music', onMusic);
       document.removeEventListener('npc-life-event', onLifeEvent);
       if (hasLife) releaseLifeMeal(lifeId);
       document.removeEventListener('npc-check-life-invitation', onCheckInvitation);
@@ -844,7 +852,7 @@ export function createAgentController(
           && (entry.activity === 'meal' ? life.needs.meal >= LIFE_SETTINGS.priority : life.needs[lifeNeed(entry.activity, life.needs)] > 0));
         if (inspired && !life.handsDirty && !Object.values(life.needs).some(need => need >= LIFE_SETTINGS.sleepPriority)) {
           candidate = inspired;
-          logLife('life_inspired', `${actorName} choisit une activité inspirée par ${inspiration.fromId}.`, { ...inspiration });
+          logLife('life_inspired', `${actorName} choisit une activité inspirée par ${inspiration.fromId === 'google-nest-mini' ? 'la musique' : inspiration.fromId}.`, { ...inspiration });
         }
         inspiration = null;
       }

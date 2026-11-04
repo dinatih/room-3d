@@ -1371,3 +1371,24 @@ it('refuse un repas proposé par une colocataire détestée même si une portion
   assert(w.logs.some(log => log.action === 'life_invitation_declined' && log.data.reason.includes('s’entend')));
   assert(!life.lifeHousehold.meals.held.marissa);
 }));
+
+it('la musique inspire une danseuse disponible et respecte les urgences, la pièce et son arrêt', () => {
+  for (const outcome of ['dance', 'non-dancer', 'other-room', 'urgent', 'stopped']) {
+    const previous = global.document; global.document = new EventTarget();
+    const w = world(outcome === 'non-dancer' ? 'native' : 'rosanna'), disconnect = w.controller.connect();
+    try {
+      w.tick(); w.tick();
+      w.lifeState.needs = { rest: 0, work: 10, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+      w.tick(); w.tick();
+      w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
+      w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
+      if (outcome === 'urgent') w.lifeState.needs.toilet = 100;
+      document.dispatchEvent(new CustomEvent('npc-life-music', { detail: { playing: true, room: outcome === 'other-room' ? 'garden' : 'living' } }));
+      if (outcome === 'stopped') document.dispatchEvent(new CustomEvent('npc-life-music', { detail: { playing: false, room: 'living' } }));
+      for (let i = 0; i < 12; i++) w.tick(.5);
+      assert.equal(w.logs.some(log => log.action === 'life_inspired'), outcome === 'dance');
+      if (outcome === 'dance') assert(w.logs.some(log => log.action === 'life_reaction' && log.animation.id === 'listening-to-music'));
+      assert.equal(w.lifeState.relationships['google-nest-mini'], undefined);
+    } finally { disconnect(); global.document = previous; }
+  }
+});
