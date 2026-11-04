@@ -118,6 +118,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   return (
     <mesh
       material={material}
+      // Le sol doit précéder les surfaces transparentes verticales, quelle que soit la distance à son centre.
+      renderOrder={-1}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[EXTERIOR_GROUND.x, yPos, EXTERIOR_GROUND.z]}
       receiveShadow
