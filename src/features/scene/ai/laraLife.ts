@@ -62,7 +62,7 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   rest: { rest: -0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   work: { rest: 0.5, work: -1.5, walk: 0.6, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   walk: { rest: 0.4, work: -0.8, walk: 0, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 },
-  meal: { rest: 0.2, work: -0.4, walk: 0.3, meal: -1.5, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
+  meal: { rest: -0.35, work: -0.4, walk: 0.3, meal: -1.5, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   sleep: { rest: -0.8, work: 0.2, walk: 0.2, meal: 0.1, hygiene: 0.06, toilet: 0.09, company: 0.05, environment: 0 },
   toilet: { rest: 0.15, work: 0.2, walk: 0.3, meal: 0.2, hygiene: 0.12, toilet: -3, company: 0.2, environment: 0 },
   shower: { rest: -0.1, work: -0.3, walk: 0.3, meal: 0.2, hygiene: -1.5, toilet: 0.18, company: 0.2, environment: 0 },

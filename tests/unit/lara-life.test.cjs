@@ -103,6 +103,18 @@ it('fait monter la faim pendant la marche et les autres activités, puis la réd
   assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null, 8, {}, 0).activity, 'meal');
 });
 
+it('récupère du repos en mangeant assis, seulement pendant le repas réel', () => {
+  const { lifeEffect } = require('../../src/features/scene/ai/laraLife.ts');
+  const needs = { ...createLife('native').needs, rest: 50, meal: 70, work: 50 };
+  for (const phase of [undefined, 'prepare-meal']) {
+    const beforeEating = evolveLife(needs, 10, lifeEffect('meal', phase), false);
+    assert(beforeEating.rest > needs.rest && beforeEating.meal > needs.meal);
+  }
+  const eating = evolveLife(needs, 10, lifeEffect('meal', 'eat-meal'), false);
+  assert(eating.rest < needs.rest && eating.meal < needs.meal && eating.work < needs.work);
+  assert.equal(eating.rest, evolveLife(needs, 10, 'rest', false).rest);
+});
+
 it('réserve le lit à la grande fatigue et choisit une pause assise si tous les lits sont indisponibles', () => {
   const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 1000, z: 0 };
   const mild = { rest: LIFE_SETTINGS.sleepPriority - 1, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
@@ -223,7 +235,7 @@ it('fait évoluer l’humeur avec le besoin dominant puis retrouve son bien-êtr
   assert.equal(getLifeMood(satisfied).label, 'Épanouie');
   assert.equal(getLifeMood({ ...satisfied, rest: LIFE_SETTINGS.priority - 1 }).uncomfortable, false);
   assert.equal(getLifeMood({ ...satisfied, rest: LIFE_SETTINGS.priority }).label, 'Fatiguée');
-  const hungry = { ...satisfied, meal: 90, rest: 40 };
+  const hungry = { ...satisfied, meal: 90, rest: 60 };
   assert.equal(getLifeMood(hungry).label, 'Affamée');
   const fed = evolveLife(hungry, 60, 'meal', false);
   assert.equal(getLifeMood(fed).label, 'Fatiguée', 'Relieving hunger must reveal the remaining fatigue');
@@ -233,7 +245,7 @@ it('fait évoluer l’humeur avec le besoin dominant puis retrouve son bien-êtr
     assert(mood.uncomfortable);
     assert(mood.cause.includes('80 %'));
   }
-  assert.deepEqual(hungry, { ...satisfied, meal: 90, rest: 40 }, 'Deriving a mood must preserve needs');
+  assert.deepEqual(hungry, { ...satisfied, meal: 90, rest: 60 }, 'Deriving a mood must preserve needs');
 });
 
 it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urgences', () => {
