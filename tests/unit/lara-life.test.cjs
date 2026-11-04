@@ -258,7 +258,7 @@ it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urge
   const needs = { rest: 50, work: 50, walk: 0, meal: 40, hygiene: 0, toilet: 0, company: 50, environment: 0 };
   assert.equal(chooseLifeActivity(needs, options, position, null, 10, {}, 0).activity, 'work');
   assert.equal(chooseLifeActivity(needs, options, position, null, 12, {}, 0).activity, 'meal');
-  assert.equal(chooseLifeActivity(needs, options, position, 'read', 21, {}, 0).activity, 'social');
+  assert.equal(chooseLifeActivity({ ...needs, rest: 0 }, options, position, 'read', 21, {}, 0).activity, 'social');
   assert.equal(chooseLifeActivity(needs, options, position, null, 23, {}, 0).activity, 'sleep');
   assert.equal(chooseLifeActivity({ ...needs, meal: 100 }, options, position, null, 23, {}, 0).activity, 'meal');
   for (const activity of ['read', 'watch-tv', 'social']) {
@@ -602,4 +602,61 @@ it('propose les huit places de yoga libres chez Églantine avec stimulation et e
     'Yoga must also be chosen for exercise when the character is not bored');
   assert.equal(chooseLifeActivity(needs, [{ ...candidates[0], visits: 1 }, yoga], position, 'work', 10,
     { work: { satisfaction: 20, lastAt: 0 } }, 0).activity, 'yoga', 'The daytime routine must allow alternatives to the computer');
+});
+
+it('apprend ses lieux et moments préférés seulement grâce au soulagement réel', () => {
+  const { rememberLifeActivity, lifeHabitScore } = require('../../src/features/scene/ai/laraLife.ts');
+  const life = createLife('native'), needs = { ...life.needs, rest: 60, work: 0, walk: 0 };
+  const favorite = { ...candidates[1], id: 'favorite', slotId: 'seat', visits: 20, x: 100 };
+  const other = { ...favorite, id: 'other', visits: 0, x: 0 };
+  rememberLifeActivity(life, 'rest', needs, needs, 'favorite:seat');
+  assert.equal(life.memory.rest.places, undefined, 'An arrival or a loading wait cannot teach a place preference');
+  rememberLifeActivity(life, 'rest', needs, evolveLife(needs, 10, 'rest', false), 'favorite:seat');
+  assert.equal(life.memory.rest.periods.Matin, 3.5);
+  assert.equal(life.memory.rest.places['favorite:seat'].satisfaction, 3.5);
+  assert(lifeHabitScore(favorite, life.memory, 8, 600) > lifeHabitScore(favorite, life.memory, 20, 600));
+  assert.equal(chooseLifeActivity(needs, [other, favorite], position, null, 8, life.memory, 600), favorite,
+    'A learned favorite may outweigh proximity and raw visit counts');
+  assert.equal(chooseLifeActivity(needs, [other], position, null, 8, life.memory, 600), other);
+  assert.equal(createLife('cha').memory.rest, undefined, 'Habits belong to one character');
+});
+
+it('enchaîne selon les besoins restants sans forcer la douche, la vaisselle ou le repos', () => {
+  const base = { ...createLife('native').needs, rest: 0, meal: 0, hygiene: 0, company: 0, work: 65 };
+  const shower = { ...candidates[0], activity: 'shower', id: 'shower' };
+  const dishes = { ...candidates[0], activity: 'clean', id: 'cuisine-group', slotId: 'wash-dishes', urgency: 40 };
+  const choose = (last, needs, options) => chooseLifeActivity(needs, options, position, last, 10, {}, 0);
+  assert.equal(choose('yoga', { ...base, hygiene: 50 }, [candidates[0], shower]), shower);
+  assert.equal(choose('yoga', base, [candidates[0], shower]), candidates[0]);
+  assert.equal(choose('meal', base, [candidates[0], dishes]), dishes);
+  assert.equal(choose('meal', base, [candidates[0], { ...dishes, urgency: 10 }]), candidates[0]);
+  assert.equal(choose('work', { ...base, rest: 50 }, [candidates[0], candidates[1]]), candidates[1]);
+  assert.equal(choose('work', { ...base, rest: 50, work: 100 }, [candidates[0], candidates[1]]), candidates[0]);
+  assert.equal(choose('meal', base, [candidates[0]]), candidates[0], 'Unavailable follow-ups must not block daily life');
+});
+
+it('se souvient des activités partagées avec chaque partenaire et les utilise pour le retrouver', () => {
+  const { rememberLifeConversation, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
+  const life = createLife('native');
+  rememberLifeConversation(life, 'cha', 0, 'affection');
+  assert.deepEqual(life.relationships, {});
+  rememberLifeConversation(life, 'cha', 60, 'affection');
+  rememberLifeConversation(life, 'vivida', 60, 'social');
+  assert.equal(life.relationships.cha.activities.affection, 60);
+  assert.equal(life.relationships.cha.activities.social, undefined);
+  assert(socialPartnerScore(life.relationships, 'unknown', 0, 'affection') > socialPartnerScore(life.relationships, 'cha', 0, 'affection'),
+    'A recent shared favorite must still leave room for new encounters');
+  assert(socialPartnerScore(life.relationships, 'cha', 600, 'affection') > socialPartnerScore(life.relationships, 'vivida', 600, 'affection'));
+  assert(socialPartnerScore(life.relationships, 'vivida', 600, 'social') > socialPartnerScore(life.relationships, 'cha', 600, 'social'));
+  rememberLifeConversation(life, 'cha', 10, 'rest');
+  assert.deepEqual(life.relationships.cha.activities, { affection: 60, rest: 10 });
+});
+
+it('utilise des clips de réaction existants avec leur durée naturelle', () => {
+  const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
+  for (const id of ['waving', 'thankful', 'thoughtful-head-shake']) {
+    const animation = ANIMATION_DEFINITIONS.find(animation => animation.id === id);
+    assert(animation && animation.duration > 0);
+    assert(require('node:fs').existsSync(require('node:path').join(__dirname, '../../public', animation.path)));
+  }
 });

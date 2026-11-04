@@ -108,7 +108,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     return controller.update(seconds);
   };
-  return { controller, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives,
+  return { controller, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, characterLives, occupancy,
     pauseCrowd: value => { crowdWait = value; },
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
@@ -436,6 +436,8 @@ it('mémorise les activités jouées, jamais le chargement, et préserve les go�
   assert.deepEqual(w.lifeState.memory, {});
   w.tick();
   assert(w.lifeState.memory.work.satisfaction > 0);
+  assert(w.lifeState.memory.work.places['desk-bollsidan-2:use'].satisfaction > 0);
+  assert(w.lifeState.memory.work.periods.Matin > 0);
   const memory = structuredClone(w.lifeState.memory);
   w.controller.setPosition(50, 0, 50);
   assert.deepEqual(w.lifeState.memory, memory);
@@ -464,11 +466,14 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
   const originalDocument = global.document;
   global.document = new EventTarget();
   try {
-    for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
+    for (const objectId of ['garden-conversation', 'hugs-point']) for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
       const lifeState = life.createLife('native');
       lifeState.elapsedSeconds = 600;
       life.rememberLifeConversation(lifeState, 'rosanna', 120);
       lifeState.relationships.rosanna.lastAt = 0;
+      const activity = life.lifeSocialActivity(objectId);
+      lifeState.relationships.rosanna.activities = { [activity]: 120 };
+      lifeState.relationships.marissa = { seconds: 120, lastAt: 0, activities: { [activity === 'social' ? 'affection' : 'social']: 120 } };
       const positions = { native: { x: 0, z: 0 }, marissa: { x: 20, z: 0 }, rosanna: { x: 200, z: 0 } };
       const def = { id: animationId, label: 'Discussion', isCombat: false, animA: 'talk', animB: 'listen', duration: 60 };
       const claims = [];
@@ -478,8 +483,8 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
         './occupancyManager': { LIMITED_ROOMS: [], OccupancyManager: { canUseObject: () => true, claimSlot: (...args) => (claims.push(args), true) } },
         '@features/ui/AppConsole': { appLog: () => {} }, '../cameraState': { cameraState: { positions } },
         '../characterConfig': { AUTONOMOUS_NPC_IDS: new Set(Object.keys(positions)), isCharacterVisibleInMode: id => !(unavailable === 'hidden' && id === 'rosanna') },
-        './smartObjectRegistry': { getSmartObject: () => ({ id: 'garden-conversation', name: 'Discussion', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: animationId, duoCount: 1, offset: [0, 0, 0] }] }) },
-        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: { marissa: 'garden-conversation' } },
+        './smartObjectRegistry': { getSmartObject: () => ({ id: objectId, name: 'Moment partagé', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: animationId, duoCount: 1, offset: [0, 0, 0] }] }) },
+        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: { marissa: objectId } },
         '../store/useSceneStore': { useSceneStore: { getState: () => ({ activeCharacterId: unavailable === 'player' ? 'rosanna' : 'native', layers: {} }) } },
         './navigation/duoPlacement': { findDuoAnchor: anchor => anchor },
         './navigation/navigationScope': { navigationValue: (key, fn) => fn() },
@@ -489,14 +494,14 @@ it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou
       const onCheck = event => { if (unavailable === 'all-busy' || (unavailable === 'busy' && event.detail.targetId === 'rosanna')) event.preventDefault(); };
       document.addEventListener('npc-check-life-invitation', onCheck);
       let result;
-      try { result = duoSessionManager.startDuoSession('garden-conversation', 'chat', 'native', undefined, undefined, true); }
+      try { result = duoSessionManager.startDuoSession(objectId, 'chat', 'native', undefined, undefined, true); }
       finally { document.removeEventListener('npc-check-life-invitation', onCheck); }
       if (unavailable === 'all-busy') {
         assert.equal(result, null);
         assert.equal(claims.length, 0, 'A declined invitation must not reserve either participant');
         assert.equal(duoSessionManager.getSessionFor('native'), null);
       } else assert.equal(result.targetB, unavailable ? 'marissa' : 'rosanna');
-      assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0 }, 'An invitation must not increase an affinity');
+      assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0, activities: { [activity]: 120 } }, 'An invitation must not increase an affinity');
     }
   } finally { global.document = originalDocument; }
 });
@@ -662,6 +667,7 @@ it('récupère repos et compagnie pour les deux rôles d’un duo assis, seuleme
         assert(w.lifeState.needs.rest < before.rest);
         assert(w.lifeState.needs.company < before.company);
         assert.equal(w.lifeState.relationships[partner].seconds, 1);
+        assert.equal(w.lifeState.relationships[partner].activities.rest, 1);
         animation.def.isCombat = true;
         const beforeCombat = { ...w.lifeState.needs };
         w.tick();
@@ -714,4 +720,80 @@ it('ignore les balayages autonomes inutiles et compte aussi le ménage des autre
   w.dirt.living = life.LIFE_SETTINGS.priority;
   for (let i = 0; i < 5 && w.controller.state.animation !== 'sweep'; i++) w.tick();
   assert.equal(w.controller.state.animation, 'sweep', 'A later cycle must still sweep when the room becomes dirty');
+});
+
+it('salue une connaissance pendant une pause, sans interrompre une réaction ni satisfaire un besoin', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world(), disconnect = w.controller.connect();
+  try {
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    life.rememberLifeConversation(w.lifeState, 'cha', 10, 'social');
+    const arrive = room => document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'arrival', room, fromId: 'cha' } }));
+    arrive('bathroom');
+    assert(!w.logs.some(log => log.action === 'life_reaction'));
+    arrive('living'); arrive('living');
+    assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1);
+    w.tick(1, false);
+    assert.equal(w.controller.state.animation, 'waving');
+    const before = { ...w.lifeState.needs };
+    w.controller.reportAnimationPlayback('waving', 1, true);
+    w.controller.update(1);
+    assert(w.lifeState.needs.company >= before.company && w.lifeState.needs.rest >= before.rest);
+    assert.equal(w.lifeState.relationships.cha.seconds, 10, 'A wave is not a conversation');
+    assert.equal(w.lifeState.lastActivity, 'work', 'A reaction must preserve the last meaningful activity');
+    assert.equal(w.lifeState.memory.pause, undefined);
+    w.tick();
+    w.lifeState.needs.meal = 100;
+    arrive('living');
+    assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1, 'An urgent need must take priority over a greeting');
+    w.controller.setPosition(10, 0, 10);
+    arrive('living');
+    assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1, 'Manual control must remain in charge');
+  } finally { disconnect(); global.document = originalDocument; }
+});
+
+it('remercie le ménage réellement terminé par un autre PNJ, jamais son chargement', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world(), cleaner = world('rosanna');
+  const disconnect = w.controller.connect(), disconnectCleaner = cleaner.controller.connect();
+  try {
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    cleaner.objects['clean-floor-living'] = { id: 'clean-floor-living', name: 'Sol', position: [10, 0, 10], slots: [{ slotId: 'sweep', animation: 'sweep', duration: 30 }] };
+    cleaner.dirt.living = 5;
+    cleaner.controller.configure({ scenario: [{ type: 'USE_OBJECT', smartObjectId: 'clean-floor-living', slotId: 'sweep', animation: 'sweep', duration: 30 }], loop: false });
+    cleaner.tick(1, false); cleaner.tick(1, false);
+    assert(!w.logs.some(log => log.action === 'life_reaction'));
+    cleaner.tick();
+    assert.equal(cleaner.dirt.living, 0);
+    const reactions = w.logs.filter(log => log.action === 'life_reaction');
+    assert.equal(reactions.length, 1);
+    assert.equal(reactions[0].animation.id, 'thankful');
+    cleaner.tick();
+    assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1);
+  } finally { disconnect(); disconnectCleaner(); global.document = originalDocument; }
+});
+
+it('réagit une fois à une place occupée, puis choisit ailleurs sans faux bénéfice', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  const w = world(), disconnect = w.controller.connect();
+  try {
+    w.occupancy.isSlotOccupied = id => id === 'desk-bollsidan-2';
+    w.tick(1, false); w.tick(1, false);
+    assert.equal(w.controller.state.animation, 'thoughtful-head-shake');
+    assert(w.lifeState.needs.work >= 65);
+    assert.equal(w.lifeState.memory.work, undefined);
+    w.controller.reportAnimationPlayback('thoughtful-head-shake', 1, true);
+    w.controller.update(1);
+    for (let tick = 0; tick < 5; tick++) w.tick();
+    assert.equal(w.logs.filter(log => log.action === 'life_reaction').length, 1);
+    assert.equal(w.logs.filter(log => log.action === 'life_abandoned').length, 1);
+    assert.equal(w.reservations.size, 0);
+  } finally { disconnect(); global.document = originalDocument; }
 });

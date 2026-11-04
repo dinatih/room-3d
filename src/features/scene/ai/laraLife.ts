@@ -5,18 +5,25 @@ export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivi
 export const LIFE_INITIAL_ACTIVITIES = { native: 'work', cha: 'walk', vivida: 'bath' } as const;
 export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number; environment: number };
-export type LifeMemory = Partial<Record<LifeActivity, { satisfaction: number; lastAt: number }>>;
-export type LifeRelationships = Record<string, { seconds: number; lastAt: number }>;
+type LifeExperience = { satisfaction: number; lastAt: number };
+export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
+  places?: Record<string, LifeExperience>; periods?: Partial<Record<LifePeriod, number>>;
+}>>;
+export type LifeRelationships = Record<string, { seconds: number; lastAt: number; activities?: Partial<Record<LifeActivity, number>> }>;
+type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
+const lifePeriod = (hour: number): LifePeriod => hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
 const LEISURE_ACTIVITIES: LifeActivity[] = ['read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
 export const lifeSocialActivity = (objectId?: string): 'social' | 'affection' | null => objectId === 'garden-conversation' ? 'social'
   : ['hugs-point', 'inyeong-cha-hugs-point', 'interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'affection' : null;
 export const LIFE_PHASE_LABELS = {
+  reaction: 'Réagir',
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
   read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter', affection: 'Partager un moment d’affection', bath: 'Se détendre dans le bain', clean: 'Nettoyer', yoga: 'Faire du yoga chez Églantine',
 };
 export type LifePhase = keyof typeof LIFE_PHASE_LABELS;
 const LIFE_PHASE_EFFECTS: Record<LifePhase, LifeActivity | null> = {
+  reaction: null,
   'prepare-meal': null, 'eat-meal': 'meal', sleep: 'sleep', 'wake-up': null,
   'use-toilet': 'toilet', flush: null, 'wash-hands': 'wash-hands', shower: 'shower',
   read: 'read', 'watch-tv': 'watch-tv', social: 'social', affection: 'affection', bath: 'bath', clean: 'clean', yoga: 'yoga',
@@ -80,10 +87,12 @@ export function createLife(characterId: LifeCharacterId) {
     elapsedSeconds: 0, memory: {} as LifeMemory, relationships: {} as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
 }
 
-export function rememberLifeConversation(life: { characterId: LifeCharacterId; relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number) {
+export function rememberLifeConversation(life: { characterId: LifeCharacterId; relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number, activity?: LifeActivity) {
   if (!partnerId || partnerId === life.characterId || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life conversation');
   if (seconds === 0) return;
-  life.relationships[partnerId] = { seconds: (life.relationships[partnerId]?.seconds ?? 0) + seconds, lastAt: life.elapsedSeconds };
+  const previous = life.relationships[partnerId];
+  life.relationships[partnerId] = { ...previous, seconds: (previous?.seconds ?? 0) + seconds, lastAt: life.elapsedSeconds,
+    ...(activity ? { activities: { ...previous?.activities, [activity]: (previous?.activities?.[activity] ?? 0) + seconds } } : {}) };
 }
 
 export function closestLifeFriend(relationships: LifeRelationships): string | null {
@@ -91,18 +100,44 @@ export function closestLifeFriend(relationships: LifeRelationships): string | nu
 }
 
 /** Familiar company grows attractive again after time apart; new encounters remain possible. */
-export function socialPartnerScore(relationships: LifeRelationships, partnerId: string, elapsedSeconds: number) {
+export function socialPartnerScore(relationships: LifeRelationships, partnerId: string, elapsedSeconds: number, activity?: LifeActivity) {
   const relationship = relationships[partnerId];
   if (!relationship) return 1;
   const since = elapsedSeconds - relationship.lastAt;
-  return relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds) + since / (since + LIFE_SETTINGS.activitySeconds);
+  return relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds)
+    + since / (since + LIFE_SETTINGS.activitySeconds)
+      * (1 + (activity ? relationship.activities?.[activity] ?? 0 : 0) / (relationship.seconds + LIFE_SETTINGS.activitySeconds));
 }
 
 /** Only real need relief builds a taste; even an interrupted activity remains a recent experience. */
-export function rememberLifeActivity(life: { memory: LifeMemory; elapsedSeconds: number }, activity: LifeActivity | null, before: LifeNeeds, after: LifeNeeds) {
+export function rememberLifeActivity(life: { memory: LifeMemory; elapsedSeconds: number }, activity: LifeActivity | null, before: LifeNeeds, after: LifeNeeds, place?: string) {
   if (!activity || activity === 'pause') return;
   const need = lifeNeed(activity, before);
-  life.memory[activity] = { satisfaction: (life.memory[activity]?.satisfaction ?? 0) + Math.max(0, before[need] - after[need]), lastAt: life.elapsedSeconds };
+  const previous = life.memory[activity], relief = Math.max(0, before[need] - after[need]);
+  const period = lifeClock(life.elapsedSeconds).period;
+  life.memory[activity] = { ...previous, satisfaction: (previous?.satisfaction ?? 0) + relief, lastAt: life.elapsedSeconds,
+    ...(relief > 0 ? { periods: { ...previous?.periods, [period]: (previous?.periods?.[period] ?? 0) + relief },
+      ...(place ? { places: { ...previous?.places, [place]: { satisfaction: (previous?.places?.[place]?.satisfaction ?? 0) + relief, lastAt: life.elapsedSeconds } } } : {}) } : {}) };
+}
+
+/** Learned context is a preference, never a source of need relief. */
+export function lifeHabitScore(candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>, memory: LifeMemory, hour: number, elapsedSeconds: number) {
+  const experience = memory[candidate.activity];
+  if (!experience?.satisfaction) return 1;
+  const place = experience.places?.[`${candidate.id}:${candidate.slotId}`];
+  const since = place ? elapsedSeconds - place.lastAt : 0;
+  const total = experience.satisfaction + LIFE_SETTINGS.priority;
+  return 1 + (experience.periods?.[lifePeriod(hour)] ?? 0) / total
+    + (place ? place.satisfaction / total * since / (since + LIFE_SETTINGS.activitySeconds) : 0);
+}
+
+export function lifeFollowUp(last: LifeActivity | null, candidate: LifeCandidate, needs: LifeNeeds): string | null {
+  if (last === 'yoga' && candidate.activity === 'shower' && needs.hygiene >= LIFE_SETTINGS.priority) return 'Après le yoga, se laver.';
+  if (last === 'meal' && candidate.activity === 'clean' && candidate.id === 'cuisine-group' && candidate.slotId === 'wash-dishes'
+    && (candidate.urgency ?? 0) >= LIFE_SETTINGS.priority) return 'Après le repas, faire la vaisselle qui gêne.';
+  if (last && ['work', 'read', 'walk', 'yoga', 'clean'].includes(last) && candidate.activity === 'rest'
+    && needs.rest >= LIFE_SETTINGS.priority) return 'Après une activité fatigante, se reposer assise.';
+  return null;
 }
 
 export function favoriteLifeActivity(memory: LifeMemory): LifeActivity | null {
@@ -124,7 +159,7 @@ export function lifeClock(elapsedSeconds: number) {
   const hour = Math.floor(minutes / 60) % 24;
   return { day: Math.floor(minutes / (24 * 60)) + 1, hour,
     time: `${String(hour).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`,
-    period: hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée' };
+    period: lifePeriod(hour) };
 }
 
 export function routineActivities(hour: number): LifeActivity[] {
@@ -153,12 +188,14 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
-  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds);
+  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds)
+    * lifeHabitScore(candidate, memory, hour, elapsedSeconds);
   return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
     : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
       || (Math.max(need(a), need(b)) >= LIFE_SETTINGS.sleepPriority
         ? need(b) - need(a) : 0)
+      || Number(Boolean(lifeFollowUp(last, b, needs))) - Number(Boolean(lifeFollowUp(last, a, needs)))
       || routineScore(b) - routineScore(a)
       || preferenceScore(b) - preferenceScore(a)
       || Number(a.activity === last) - Number(b.activity === last)

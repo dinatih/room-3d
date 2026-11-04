@@ -56,6 +56,7 @@ Dans la console, sélectionner la catégorie **💚 Vie**, puis éventuellement 
 - `life_interrupted` : interruption par une commande ou une invitation.
 - `life_partner` : partenaire retenu et affinité connue, pour les conversations, câlins et autres duos non combattants.
 - `life_invitation_accepted`, `life_invitation_later`, `life_invitation_declined` : réponse aux invitations et motif.
+- `life_reaction` : petite réaction à un événement réel, avec le clip choisi et sa raison.
 
 Ces événements portent l'identité du PNJ, l'heure simulée et l'objet concerné lorsqu'il existe. Ils sont enregistrés dans le journal JSONL de développement (`/tmp/room-3d-logs/latest.jsonl`) même lorsque la console est fermée ou filtrée. Aucun événement de vie n'est émis à chaque image ; les bilans portent sur les phases d'interaction, pas sur toute la durée du trajet.
 
@@ -65,6 +66,42 @@ Pour les duos non combattants, les colocataires choisissent parmi les partenaire
 
 Avant une invitation autonome, la colocataire consultée peut accepter, répondre « pas maintenant » pour terminer un repas, dormir, aller aux toilettes, se laver ou satisfaire un besoin corporel urgent, ou refuser pendant une commande utilisateur ou une visite. Cette vérification précède les réservations. Le demandeur cherche alors un autre partenaire ; si personne n'est disponible, il reprend ses choix de vie après l'échec normal de l'activité. « Pas maintenant » ne crée pas de rendez-vous en attente : une prochaine invitation sera réévaluée lorsque la personne sera disponible. Les commandes explicites de l'utilisateur gardent la main.
 
-## Suite prévue
+## Habitudes personnelles
 
-Les choix expliqués, les affinités étendues aux duos et les réponses aux invitations constituent les trois premières étapes. Les suivantes sont les habitudes personnelles de lieu et d'horaire, les enchaînements naturels (yoga puis douche, repas puis vaisselle…), les réactions courtes à la vie de l'appartement et la mémoire des activités partagées avec chaque partenaire.
+Chaque colocataire apprend, au cours de la session, les places et les périodes de journée qui lui ont réellement apporté du soulagement. Arriver devant un fauteuil ou attendre le chargement ne crée pas une préférence. La répétition d'expériences satisfaisantes donne progressivement plus de poids à ce lieu ou à ce moment dans ses choix. Une place utilisée récemment reste moins attractive, et une autre place libre peut remplacer sa favorite. Les urgences et la disponibilité passent avant ces habitudes ; aucun horaire personnel n'est imposé.
+
+Les logs de décision indiquent les préférences de lieu ou de moment prises en compte. Le détail JSON contient leur coefficient pour chaque candidat, et les souvenirs gardent les contributions par place et par période.
+
+## Enchaînements naturels
+
+Après une activité réellement achevée, les besoins restants peuvent donner priorité à une suite logique avant la routine générale :
+
+- Yoga → douche si le besoin d'hygiène le justifie.
+- Repas → vaisselle si son état atteint le seuil habituel de nettoyage.
+- Travail, lecture, marche, yoga ou ménage → repos assis si la fatigue le justifie.
+
+Une urgence ou un lavage de mains prioritaire passe d'abord. Une suite indisponible ne bloque pas les autres choix, et une action courte n'oblige pas à remplir une jauge avant de poursuivre. Les pauses et les réactions ne remplacent pas le souvenir de la dernière activité significative. Les logs expliquent la suite retenue.
+
+## Petites réactions
+
+Pendant une pause disponible, une colocataire peut saluer une connaissance qui arrive dans la même pièce (`waving`), remercier une personne qui vient de finir de nettoyer cette pièce (`thankful`), ou réagir à une activité devenue indisponible (`thoughtful-head-shake`). Le ménage des PNJ sans système de vie peut aussi déclencher un remerciement. Le chargement d'un clip ou une pièce encore sale ne le déclenche pas.
+
+Les réactions utilisent la durée du clip existant, attendent son chargement et ne se remplacent pas pendant leur lecture. Elles ne coupent ni une commande utilisateur ni un soin en cours, et sont écartées face à une urgence. Elles n'apportent pas de compagnie, de repos ou de souvenirs d'activité artificiels. Le personnage reprend ensuite ses choix habituels. Les réponses « pas maintenant » à une invitation restent expliquées dans les logs sans interrompre l'activité en cours.
+
+## Mémoire des moments partagés
+
+Les relations retiennent aussi le temps réellement passé ensemble par activité : discussion, affection ou repos assis. Pour choisir un partenaire, une colocataire tient donc compte des expériences partagées dans l'activité proposée, en plus de l'affinité générale, de la récence et de la disponibilité. Elle peut rechercher une personne pour discuter et une autre pour partager un moment d'affection.
+
+Une invitation, un salut, un chargement ou un combat n'alimente pas cette mémoire. Le détail de `life_partner` contient l'activité envisagée et l'historique du partenaire retenu.
+
+## État des étapes
+
+| Étape | État |
+| --- | --- |
+| 1. Choix plus lisibles | Logs de décision, lecture réelle et bilan. |
+| 2. Activités selon les affinités | Partenaires choisis selon les relations et les moments partagés. |
+| 3. Invitations avec réponse | Accepter, répondre « pas maintenant » ou refuser, sans bloquer de réservation en attente. |
+| 4. Petites habitudes personnelles | Préférences apprises de lieu et de période. |
+| 5. Enchaînements naturels | Suites conditionnelles aux besoins et à la saleté. |
+| 6. Réactions aux autres | Saluts, remerciements et réaction à une activité indisponible. |
+| 7. Mémoire des moments partagés | Historique par partenaire et par activité réellement jouée. |

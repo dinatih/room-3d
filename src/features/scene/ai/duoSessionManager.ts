@@ -11,7 +11,7 @@ import { findDuoAnchor } from './navigation/duoPlacement';
 import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
-import { isLifeCharacter, socialPartnerScore, lifeClock } from './laraLife';
+import { isLifeCharacter, isLifeSeat, lifeSocialActivity, socialPartnerScore, lifeClock } from './laraLife';
 import { characterLives } from './laraLifeStore';
 
 export type DuoRole = 'roleA' | 'roleB';
@@ -554,6 +554,7 @@ class DuoSessionManager {
       );
     };
 
+    const sharedActivity = lifeSocialActivity(objectId) ?? (slot && isLifeSeat(obj.category, slot) ? 'rest' : undefined);
     const getCandidates = (excludeId?: string, allowPlayer = true) => {
       const preferred = Object.entries(INITIAL_SMART_OBJECT_BY_CHAR)
         .filter(([id, objDest]) => objDest === objectId && id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
@@ -564,7 +565,7 @@ class DuoSessionManager {
         .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer))
         .sort((a, b) => {
           if (isLifeCharacter(excludeId) && !def.isCombat) {
-            const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds);
+            const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds, sharedActivity) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds, sharedActivity);
             if (affinity) return affinity;
           }
           const pa = cameraState.positions[a];
@@ -630,7 +631,7 @@ class DuoSessionManager {
         category: 'life', action: 'life_partner', actors: [targetA, targetB],
         object: { id: objectId, label: obj.name, slotId: actualSlotId },
         data: { clock: lifeClock(life.elapsedSeconds), partnerId: targetB, relationship: life.relationships[targetB] ? { ...life.relationships[targetB] } : null,
-          score: socialPartnerScore(life.relationships, targetB, life.elapsedSeconds) },
+          activity: sharedActivity, score: socialPartnerScore(life.relationships, targetB, life.elapsedSeconds, sharedActivity) },
       });
     }
 
