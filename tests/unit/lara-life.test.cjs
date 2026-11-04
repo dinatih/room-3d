@@ -65,7 +65,8 @@ it('sélectionne uniquement des places de repos adaptées et libres dans la conf
     { id: 'private', category: 'seating', position: [0, 0, 0], slots: [{ slotId: 'sit', entryAnimation: 'stand-to-sit', exitAnimation: 'sit-to-stand' }] },
     { id: 'garden-fresh-air', position: [100, 0, 200], slots: [{ slotId: 'breathe' }] },
   ];
-  const { getLaraLifeCandidates, buildLaraLifeInstructions, MEAL_PREPARATION } = load('src/features/scene/ai/autonomousActivities.ts', {
+  const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
     './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
     './smartObjectRegistry': { getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'USE_OBJECT', smartObjectId: id, slotId }] },

@@ -11,14 +11,15 @@ function fixture(characterId = 'rosanna') {
     { id: 'private', slots: [{ slotId: 'use' }] },
   ];
   const occupied = new Set();
-  return { occupied, ...load('src/features/scene/ai/autonomousActivities.ts', {
+  return { occupied, objects, ...load('src/features/scene/ai/autonomousActivities.ts', {
     './aiTypes': {}, './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'), './smartObjectRegistry': {
       getAllSmartObjects: () => objects,
       buildSmartObjectInstructionSequence: (id, slotId, actor) => {
         assert.equal(actor, characterId);
         assert(objects.find(obj => obj.id === id).slots.some(slot => slot.slotId === slotId), 'The selected slot must be passed explicitly');
+        const slot = objects.find(obj => obj.id === id).slots.find(slot => slot.slotId === slotId);
         return [{ type: 'MOVE_TO', smartObjectId: id, slotId },
-          { type: 'USE_OBJECT', smartObjectId: id, slotId, duration: id === 'desk-bollsidan-2' ? 24 : undefined }];
+          { type: 'USE_OBJECT', smartObjectId: id, ...slot, duration: slot.duration ?? (id === 'desk-bollsidan-2' ? 24 : undefined) }];
       },
     }, './occupancyManager': { OccupancyManager: {
       getReservations: () => [], canUseObject: id => id !== 'private',
@@ -28,6 +29,38 @@ function fixture(characterId = 'rosanna') {
 }
 
 describe('Tirage autonome par slot', () => {
+  it('varie les préparations de repas entre les appareils libres sans remplacer leurs smart actions', () => {
+    const { objects, occupied, getLaraLifeCandidates, buildLaraLifeInstructions } = fixture('native');
+    objects.push(
+      { id: 'cuisine-group', slots: [{ slotId: 'cook-stove', animation: 'cooking-stir-pan', duration: 9.3 }, { slotId: 'cook-oven', animation: 'entering-code' }, { slotId: 'wash-dishes' }] },
+      ...['fridge', 'freezer'].map(id => ({ id, slots: [{ slotId: 'open-pick', animation: id }] })),
+      { id: 'sofa', category: 'seating', position: [0, 0, 0], slots: [{ slotId: 'sit', entryAnimation: 'stand-to-sit', exitAnimation: 'sit-to-stand' }] },
+    );
+    for (const object of objects) object.position ??= [0, 0, 0];
+    const meal = getLaraLifeCandidates('native', false).find(candidate => candidate.activity === 'meal');
+    assert(meal);
+    const random = Math.random;
+    try {
+      for (const [index, animation] of ['cooking-stir-pan', 'entering-code', 'fridge', 'freezer'].entries()) {
+        Math.random = () => index / 4;
+        const [move, use, eat] = buildLaraLifeInstructions('native', meal);
+        assert.equal(use.animation, animation);
+        assert.equal(use.duration, index === 0 ? 9.3 : undefined);
+        assert.equal(move.lifePhase, 'prepare-meal');
+        assert.equal(use.lifePhase, 'prepare-meal');
+        assert.equal(eat.lifePhase, 'eat-meal');
+        assert.equal(eat.smartObjectId, 'sofa');
+      }
+      occupied.add('cuisine-group:cook-stove');
+      occupied.add('cuisine-group:cook-oven');
+      occupied.add('fridge:open-pick');
+      const excluded = new Set(['freezer:open-pick']);
+      assert(!getLaraLifeCandidates('native', false, {}, {}, 0, excluded).some(candidate => candidate.activity === 'meal'));
+      assert.throws(() => buildLaraLifeInstructions('native', meal, excluded), /Aucune préparation/);
+      assert.equal(buildLaraLifeInstructions('native', meal)[1].smartObjectId, 'freezer');
+      assert(!getLaraLifeCandidates('native', true).some(candidate => candidate.activity === 'meal'));
+    } finally { Math.random = random; }
+  });
   it('fait démarrer Xbot et Ivy par le même tirage aléatoire que Ybot', () => {
     const random = Math.random;
     try {

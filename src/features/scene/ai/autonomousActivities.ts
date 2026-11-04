@@ -4,7 +4,11 @@ import { OccupancyManager } from './occupancyManager';
 import { LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
-export const MEAL_PREPARATION = { id: 'cuisine-group', slotId: 'cook-stove' };
+function mealPreparations(characterId: string, excluded: ReadonlySet<string>) {
+  return getAvailableAutonomousActivities(characterId).filter(({ id, slotId }) =>
+    !excluded.has(`${id}:${slotId}`) && (id === 'cuisine-group' && ['cook-stove', 'cook-oven'].includes(slotId)
+      || ['fridge', 'freezer'].includes(id) && slotId === 'open-pick'));
+}
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)
 const randomSpawn = typeof window !== 'undefined' && new URLSearchParams(
@@ -65,11 +69,10 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0): LifeCandidate[] {
+export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0, excluded: ReadonlySet<string> = new Set()): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => OccupancyManager.canUseObject(object.id, characterId));
   const reservations = OccupancyManager.getReservations();
-  const canPrepare = objects.some(object => object.id === MEAL_PREPARATION.id && object.slots.some(slot => slot.slotId === MEAL_PREPARATION.slotId
-    && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId)));
+  const canPrepare = mealPreparations(characterId, excluded).length > 0;
   return objects.flatMap(object =>
     object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
@@ -102,13 +105,18 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
       }));
 }
 
-export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>): AgentInstruction[] {
-  if (candidate.activity === 'meal') return [
-    ...buildSmartObjectInstructionSequence(MEAL_PREPARATION.id, MEAL_PREPARATION.slotId, characterId)
-      .map(instruction => ({ ...instruction, lifePhase: 'prepare-meal' as const })),
-    { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
-      repeatCount: 1, repeatVariation: false, lifePhase: 'eat-meal' },
-  ];
+export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>, excluded: ReadonlySet<string> = new Set()): AgentInstruction[] {
+  if (candidate.activity === 'meal') {
+    const preparations = mealPreparations(characterId, excluded);
+    const preparation = preparations[Math.floor(Math.random() * preparations.length)];
+    if (!preparation) throw new Error(`Aucune préparation de repas disponible pour ${characterId}`);
+    return [
+      ...buildSmartObjectInstructionSequence(preparation.id, preparation.slotId, characterId)
+        .map(instruction => ({ ...instruction, lifePhase: 'prepare-meal' as const })),
+      { type: 'USE_OBJECT', smartObjectId: candidate.id, slotId: candidate.slotId, animation: 'fab-daily-life-eat-with-fork',
+        repeatCount: 1, repeatVariation: false, lifePhase: 'eat-meal' },
+    ];
+  }
   const sequence = buildSmartObjectInstructionSequence(candidate.id, candidate.slotId, characterId);
   const activityPhase = candidate.activity in LIFE_PHASE_LABELS ? candidate.activity as LifePhase : undefined;
   const sleepStep = sequence.findIndex(instruction => instruction.type === 'USE_OBJECT');

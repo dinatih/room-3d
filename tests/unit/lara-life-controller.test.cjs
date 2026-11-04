@@ -45,8 +45,9 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const duoDefinitions = {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
-    './autonomousActivities': { getAvailableAutonomousActivities: () => candidates, MEAL_PREPARATION,
-      getLaraLifeCandidates: (characterId, dirty) => candidates.filter(c => c.activity !== 'wash-hands' || dirty), buildLaraLifeInstructions: (characterId, candidate) => candidate.activity === 'toilet' ? [
+    './autonomousActivities': { getAvailableAutonomousActivities: () => candidates,
+      getLaraLifeCandidates: (characterId, dirty, places, relationships, elapsed, excluded = new Set()) => candidates.filter(c => (c.activity !== 'wash-hands' || dirty)
+        && (c.activity !== 'meal' || !excluded.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), buildLaraLifeInstructions: (characterId, candidate) => candidate.activity === 'toilet' ? [
         { ...sequence('toilet', 'use')[0], duration: 3, lifePhase: 'use-toilet' },
         { type: 'WAIT', animation: 'flush', duration: 1, lifePhase: 'flush' },
         { ...sequence('wash-hands', 'use')[0], lifePhase: 'wash-hands' },
