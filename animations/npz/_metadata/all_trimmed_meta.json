@@ -70,30 +70,6 @@
     "cut_end_s": 0.4
   },
   {
-    "id": "wiping-table-small-circles",
-    "label": "Essuyer la table (Petits cercles)",
-    "src": "/home/dinatih/3D Resources/animations/KIT/KIT/883/wipe_arm_smallcircle02_poses.npz",
-    "filename": "anim_wiping_table_small_circles.glb",
-    "tags": [
-      "wipe",
-      "table",
-      "circle",
-      "cleaning",
-      "chore",
-      "interaction"
-    ],
-    "aliases": [
-      "wipe-small-circles",
-      "wipe-table-var"
-    ],
-    "frames": 248,
-    "duration": 8.3,
-    "size_kb": 236,
-    "rel_path": "animations/npz/kit/anim_wiping_table_small_circles.glb",
-    "cut_start_s": 0.38,
-    "cut_end_s": 0.01
-  },
-  {
     "id": "taking-shower",
     "label": "Prendre sa douche",
     "src": "/home/dinatih/3D Resources/animations/KIT/KIT/674/shower_front01_poses.npz",
