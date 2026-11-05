@@ -1098,7 +1098,7 @@ export function Studio() {
                 {[['nestMusic', 'bi-play-fill', 'Jouer la musique'], ['nestMusicStop', 'bi-stop-fill', 'Arrêter la musique']].map(([key, icon, label]) => (
                   <button key={key} type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary flex-fill`} title={label} aria-label={label}
                     onClick={() => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }))}>
-                    <i className={`bi ${icon}`} aria-hidden="true" />
+                    <i className="bi bi-music-note-beamed me-1" aria-hidden="true" /><i className={`bi ${icon}`} aria-hidden="true" />
                   </button>
                 ))}
               </div>
