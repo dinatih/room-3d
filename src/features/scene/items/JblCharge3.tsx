@@ -5,6 +5,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { getObjectActionIds } from '../objectActions';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
 
@@ -47,7 +48,7 @@ export function JblCharge3({ onSize }: SceneModelProps) {
   }, [scene]);
 
   return (
-    <group userData={{ hoverAction: { label: 'Enceinte JBL Charge 3' } }}>
+    <group userData={{ hoverAction: { label: 'Enceinte JBL Charge 3', actions: getObjectActionIds('sony-srs-xb33') } }}>
       <primitive object={scene} />
     </group>
   );

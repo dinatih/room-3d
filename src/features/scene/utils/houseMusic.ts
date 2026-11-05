@@ -11,6 +11,13 @@ let cleanup: (() => void) | undefined;
 
 export function stopHouseMusic() { cleanup?.(); }
 
+/** Actions musique communes à toutes les enceintes (Nest Mini, JBL/Sony…). */
+document.addEventListener('furniture-toggle', e => {
+  const { key } = (e as CustomEvent<{ key: string }>).detail;
+  if (key === 'nestMusic') void playHouseMusic();
+  else if (key === 'nestMusicStop') stopHouseMusic();
+});
+
 /** The scene reacts to audible playback, never to requesting play. */
 export async function playHouseMusic() {
   stopHouseMusic();
