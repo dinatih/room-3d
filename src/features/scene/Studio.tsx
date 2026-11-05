@@ -1094,6 +1094,14 @@ export function Studio() {
             hideUI={hideUI}
           >
             <div className="d-flex flex-column gap-1 p-1">
+              <div className="d-flex gap-1">
+                {[['nestMusic', 'bi-play-fill', 'Jouer la musique'], ['nestMusicStop', 'bi-stop-fill', 'Arrêter la musique']].map(([key, icon, label]) => (
+                  <button key={key} type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary flex-fill`} title={label} aria-label={label}
+                    onClick={() => document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key } }))}>
+                    <i className={`bi ${icon}`} aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}
