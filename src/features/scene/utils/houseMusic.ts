@@ -1,5 +1,12 @@
 import { appLog } from '@features/ui/AppConsole';
 
+const TRACKS = [
+  'audio/house-music.mp3',
+  'audio/Bvlaxj-YNyk.mp3',
+  'audio/Xysgex3e6UE.mp3',
+  'audio/VQvRrQhA--o.mp3',
+];
+
 let cleanup: (() => void) | undefined;
 
 export function stopHouseMusic() { cleanup?.(); }
@@ -7,7 +14,8 @@ export function stopHouseMusic() { cleanup?.(); }
 /** The scene reacts to audible playback, never to requesting play. */
 export async function playHouseMusic() {
   stopHouseMusic();
-  const audio = new Audio('audio/house-music.mp3');
+  const track = TRACKS[Math.floor(Math.random() * TRACKS.length)];
+  const audio = new Audio(track);
   let running = false, audible = false, disposed = false;
   const notify = () => {
     const next = running && !audio.muted && audio.volume > 0;
