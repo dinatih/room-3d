@@ -112,19 +112,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         if (material?.userData.__ownedCharacterMaterial) material.dispose();
       });
 
-      // Optimisation : réutiliser les matériaux GLTF partagés pour les maillages invariants
-      const firstMatName = baseMaterials[0]?.name?.toLowerCase() || '';
-      const isInvariant = firstMatName.includes('gun') || firstMatName.includes('pistol') ||
-                          firstMatName.includes('mouth') || firstMatName.includes('teeth') ||
-                          firstMatName.includes('eye') || firstMatName.includes('lash') ||
-                          firstMatName.includes('buckle') || meshName.includes('gun') ||
-                          meshName.includes('pistol') || (isNative && !meshName.startsWith('bikini_'));
-
-      if (isInvariant) {
-        mesh.material = baseMaterials.length === 1 ? baseMaterials[0] : baseMaterials;
-        return;
-      }
-
       const matArray = baseMaterials;
       const clonedMats = matArray.map(m => m.clone() as THREE.MeshStandardMaterial);
       clonedMats.forEach(material => { material.userData.__ownedCharacterMaterial = true; });
