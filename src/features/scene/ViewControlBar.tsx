@@ -42,9 +42,10 @@ export interface ViewControlBarProps {
   children?: ReactNode;
 }
 
-function PopoverSelect<T extends string | number>({ title, color, items, value, onPick }: {
+function PopoverSelect<T extends string | number>({ title, color, iconOnly, items, value, onPick }: {
   title: string;
   color: 'green' | 'cyan';
+  iconOnly?: boolean;
   items: readonly { value: T; icon: string; label: string }[];
   value: string | number | null;
   onPick: (value: T) => void;
@@ -73,7 +74,7 @@ function PopoverSelect<T extends string | number>({ title, color, items, value, 
         }}
       >
         <i className={`bi ${current?.icon ?? 'bi-compass'}`} aria-hidden="true" />
-        <span>{current?.label ?? title}</span>
+        {!iconOnly && <span>{current?.label ?? title}</span>}
         <i className="bi bi-chevron-down" aria-hidden="true" />
       </button>
       {createPortal(
@@ -247,6 +248,7 @@ export function ViewControlBar({
     <PopoverSelect
       title="Direction de la vue"
       color="cyan"
+      iconOnly
       items={CARDINAL_VIEWS.map(v => ({ value: v.key, icon: v.icon, label: v.label }))}
       value={activeCameraPos}
       onPick={key => dispatchView(key, npcGridActive ? getCharacterGridCameraView().target : undefined)}
