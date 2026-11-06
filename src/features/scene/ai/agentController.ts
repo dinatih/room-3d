@@ -1746,7 +1746,9 @@ export function createAgentController(
       const cleaningTask = getHomeTask(currentInstruction.smartObjectId, currentInstruction.slotId);
       const cleaningDone = cleaningTask !== undefined && homeDirt[cleaningTask] === 0;
       if (timer <= 0 || cleaningDone) {
-        if (repeatIndex + 1 < targetRepeats && !cleaningDone) {
+        const continueSleeping = hasLife && loop && currentInstruction.lifePhase === 'sleep' && life.needs.rest > 0
+          && !(['meal', 'toilet', 'hygiene'] as const).some(need => life.needs[need] >= LIFE_SETTINGS.sleepPriority);
+        if ((repeatIndex + 1 < targetRepeats || continueSleeping) && !cleaningDone) {
           repeatIndex++;
           if (repeatVariation && currentInstruction.smartObjectId && currentInstruction.slotId) {
             const obj = SMART_OBJECTS[currentInstruction.smartObjectId];

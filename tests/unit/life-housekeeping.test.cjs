@@ -23,7 +23,10 @@ it('salit les pièces selon les usages et nettoie seulement la source réellemen
   assert.equal(dirt.toilet, 7);
   assert.equal(dirt.dishes, 10, 'Cleaning the toilet must not wash the dishes');
   update({ activity: 'clean', objectId: 'cuisine-group', slotId: 'wash-dishes', seconds: 1 });
-  assert.equal(dirt.dishes, 5);
+  assert.equal(dirt.dishes, 0);
+  dirt.dishes = 100;
+  update({ activity: 'clean', objectId: 'cuisine-group', slotId: 'wash-dishes', seconds: 1 });
+  assert.equal(dirt.dishes, 100 - 4 * HOME_RATES.cleaning, 'One second replaces four seconds of the previous dishwashing');
   for (const seconds of [-1, NaN, Infinity]) assert.throws(() => update({ seconds }));
   assert.throws(() => update({ activity: 'clean', seconds: 1, objectId: 'unknown' }));
 });

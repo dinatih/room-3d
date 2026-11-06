@@ -128,7 +128,7 @@ export function buildLaraLifeInstructions(characterId: LifeCharacterId, candidat
       : instruction.triggerEventKey === 'wc-flush' ? 'flush'
       : instruction.smartObjectId === 'vasque-sdb' && instruction.slotId === 'wash-hands' ? 'wash-hands'
       : activityPhase;
-    return lifePhase ? { ...instruction, lifePhase } : instruction;
+    return lifePhase ? { ...instruction, lifePhase, ...(lifePhase === 'sleep' ? { repeatVariation: true } : {}) } : instruction;
   });
   // A stroll has a real itinerary even when Lara is already at the far end.
   return candidate.activity === 'walk' ? [{ type: 'MOVE_TO', targetZoneId: 'garden' }, ...instructions] : instructions;

@@ -517,7 +517,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       { slotId: 'wash-dishes', name: 'Faire la vaisselle',
         // Évier centré sur le caisson de 40 cm, devant le plan de travail.
         offset: [KITCHEN_WEST_WALL + 40 / 2, 0, ROOM_D - HUMAN_BODY_RADIUS], rotY: 0,
-        animation: 'washing-dishes-sink', repeatCount: 4 }
+        animation: 'washing-dishes-sink', repeatCount: 1 }
     ]
   },
   'fridge': {

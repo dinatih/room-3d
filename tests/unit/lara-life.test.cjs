@@ -178,6 +178,7 @@ it('garde la montée et la descente du lit et applique le sommeil uniquement à 
   assert.deepEqual(steps[1].targetLocalPos, route[1].targetLocalPos);
   assert.equal(steps[2].animation, route[2].animation);
   assert.equal(steps[2].lifePhase, 'sleep');
+  assert.equal(steps[2].repeatVariation, true);
   assert.equal(steps[2].duration, route[2].duration);
   assert(steps.slice(3).every(step => step.lifePhase === 'wake-up'));
   occupied.add('bed-west:lie-down');

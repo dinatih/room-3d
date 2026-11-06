@@ -354,7 +354,7 @@ it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim arti
   assert.equal(w.reservations.size, 0);
 });
 
-it('récupère seulement au lit pendant le sommeil, puis se réveille et libère son lit au sol', () => {
+for (const wakeReason of ['rested', 'urgent']) it(`enchaîne le sommeil au lit puis descend et libère sa place : ${wakeReason}`, () => {
   const w = world('native', false, true);
   w.tick(); w.tick();
   w.lifeState.needs = { rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
@@ -369,6 +369,15 @@ it('récupère seulement au lit pendant le sommeil, puis se réveille et libère
   assert(w.lifeState.needs.rest > beforeSleep, 'Loading the clip must not satisfy fatigue');
   w.tick();
   assert(w.lifeState.needs.rest < beforeSleep);
+  for (let i = 0; i < 4; i++) {
+    w.tick();
+    assert.equal(w.controller.state.y, 45, 'Sleep poses must continue on the bed');
+    assert(!w.snapshot.activity.includes('Se réveiller'));
+    assert(w.reservations.size > 0, 'The bed stays reserved between poses');
+  }
+  if (wakeReason === 'rested') w.lifeState.needs.rest = 0;
+  else w.lifeState.needs.toilet = 90;
+  w.tick();
   assert(w.snapshot.activity.includes('Se réveiller'));
   const beforeWaking = w.lifeState.needs.rest;
   w.tick();
