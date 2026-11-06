@@ -216,6 +216,7 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-transparency', 'Portes et murs à 30 % d’opacité'), 'transparentWallsDoors')}
       {layerBtn(iconLabel('bi-cloud-sun', 'Ciel & Atmosphère'), 'environment')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
+      {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
       {layerBtn(iconLabel('bi-tree', 'Herbe & Terrain ext.'), 'bermudaGrass')}
       {layers.bermudaGrass && (
         <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">

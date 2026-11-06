@@ -14,6 +14,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   floorCoverings: true,
   environment: true,
   bnfMarker: true,
+  eiffelSparkle: true,
   doors: true,
   transparentWallsDoors: true,
   ceiling: false,

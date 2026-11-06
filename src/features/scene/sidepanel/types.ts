@@ -88,6 +88,7 @@ export interface LayerState {
   floorCoverings: boolean;
   environment: boolean;
   bnfMarker?: boolean;
+  eiffelSparkle?: boolean;
   equipment: boolean;
   furniture: boolean;
   furnishings: boolean;

@@ -7,6 +7,7 @@ import { getHdriById, getHdriUrl } from './hdriConfig';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
 import { BnfSkyMarker } from './BnfSkyMarker';
+import { EiffelTowerLights } from './EiffelTowerLights';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { cameraState } from './cameraState';
 
@@ -92,6 +93,7 @@ export function SkySphere({ envOnly = false, showSpaceBackdrop = true }: { envOn
         {showSpaceBackdrop && <SpaceBackdrop />}
         {texture && <CombinedSkyDome texture={texture} />}
         <BnfSkyMarker skyRadius={SKY_RADIUS} />
+        <EiffelTowerLights skyRadius={SKY_RADIUS} />
       </group>
     </CategoryLayerGroup>
   );
