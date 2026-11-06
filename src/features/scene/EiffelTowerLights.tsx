@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './DayNight';
 
-const AZ_CENTER = 263.46;
+const AZ_CENTER = 173.14;
 const STROBE_COUNT = 140;
 
 function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
@@ -32,11 +32,11 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   // 1. Silhouette dorée (armature de la tour)
   const glowGeo = useMemo(() => {
     const levels = [
-      { elev: -9.14, hw: 0.70 },
-      { elev: -3.80, hw: 0.45 },
-      { elev: 0.70, hw: 0.28 },
-      { elev: 7.03, hw: 0.10 },
-      { elev: 9.42, hw: 0.02 },
+      { elev: -9.14, hw: 0.55 },
+      { elev: -3.69, hw: 0.36 },
+      { elev: 0.70, hw: 0.22 },
+      { elev: 7.03, hw: 0.08 },
+      { elev: 9.49, hw: 0.02 },
     ];
     const pos: number[] = [];
     const idx: number[] = [];
@@ -62,8 +62,8 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     const speeds = new Float32Array(STROBE_COUNT);
     for (let i = 0; i < STROBE_COUNT; i++) {
       const t = Math.pow(Math.random(), 0.82);
-      const elev = -9.14 + t * (9.42 - (-9.14));
-      const hw = (1 - t) * 0.68;
+      const elev = -9.14 + t * (9.49 - (-9.14));
+      const hw = (1 - t) * 0.52;
       const az = AZ_CENTER + (Math.random() - 0.5) * 2 * hw;
       const [x, y, z] = toSpherical(az, elev, r);
       pos[i * 3] = x;
@@ -116,7 +116,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   }), []);
 
   // 3. Phare rotatif au sommet
-  const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_CENTER, 9.42, r)), [r]);
+  const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_CENTER, 9.49, r)), [r]);
   const summitRot = useMemo(() => {
     const up = summitPos.clone().normalize();
     return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
