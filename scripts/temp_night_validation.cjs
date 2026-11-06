@@ -121,6 +121,29 @@ const launch = require('./browser-test-options.cjs');
       if (useSceneStore.getState().layers.lightsHD || useSceneStore.getState().furniture.lampOn) throw Error('Sunrise lighting automation');
     });
     assert.deepEqual(errors, [], 'No browser or shader errors');
+    await page.evaluate(async () => {
+      const { useWeather } = await import('/src/features/scene/Weather.tsx');
+      const { weatherSurface } = await import('/src/features/scene/weatherSurface.ts');
+      useWeather.setState({ automatic: false, rain: 0.6, snow: 0, windSpeed: 7, rainVolume: 0.2 });
+      Object.assign(weatherSurface, { snow: 0.3, water: 0.6 });
+      window.dispatchEvent(new Event('pagehide'));
+      const url = new URL(location.href); url.searchParams.delete('weatherAuto');
+      history.replaceState(history.state, '', url);
+    });
+    await page.reload();
+    const restored = await page.evaluate(async () => {
+      const { useWeather } = await import('/src/features/scene/Weather.tsx');
+      const { weatherSurface } = await import('/src/features/scene/weatherSurface.ts');
+      const { WEATHER_SAVE_KEY, parseWeatherSave } = await import('/src/features/scene/weatherPersistence.ts');
+      const saved = parseWeatherSave(localStorage.getItem(WEATHER_SAVE_KEY));
+      const state = useWeather.getState();
+      return { rain: state.rain, windSpeed: state.windSpeed, volume: state.rainVolume, automatic: state.automatic, surface: { ...weatherSurface }, savedSurface: saved.surface, error: state.saveError };
+    });
+    assert.equal(restored.rain, 0.6); assert.equal(restored.windSpeed, 7); assert.equal(restored.volume, 0.2);
+    assert.equal(restored.automatic, false); assert.equal(restored.error, null);
+    assert.deepEqual(restored.surface, restored.savedSurface);
+    await page.goto('http://127.0.0.1:5179/?weatherAuto=1');
+    assert.equal(await page.evaluate(async () => (await import('/src/features/scene/Weather.tsx')).useWeather.getState().automatic), true, 'URL overrides saved manual mode');
     fs.writeFileSync('/tmp/room-night-validation.json', JSON.stringify(result, null, 2));
     console.log('PASS: browser-loaded day/night curves and lunar trajectory');
   } finally {

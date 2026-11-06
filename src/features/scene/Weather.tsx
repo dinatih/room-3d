@@ -1,5 +1,6 @@
+import { DEFAULT_WEATHER, WEATHER_SAVE_KEY, parseWeatherSave, type WeatherSave, type WeatherSettings } from './weatherPersistence';
 import { advanceWeatherSurface, weatherSurface } from './weatherSurface';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BackSide, Color, MathUtils, ShaderMaterial, Vector2 } from 'three';
 import { create } from 'zustand';
@@ -9,10 +10,40 @@ import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { simulationClock } from './ai/laraLifeStore';
 import { daylight, simulatedHour } from './DayNight';
 
-export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0, snow: 0, automatic: typeof window === 'undefined' || new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
+let saved: WeatherSave | undefined;
+let loadError: string | null = null;
+if (typeof window !== 'undefined') {
+  try {
+    const text = window.localStorage.getItem(WEATHER_SAVE_KEY);
+    if (text !== null) saved = parseWeatherSave(text);
+  } catch (error) {
+    console.error('Chargement météo impossible', error);
+    loadError = 'Sauvegarde météo illisible. Elle est conservée ; réinitialisez-la pour reprendre la sauvegarde.';
+  }
+}
+const weatherRuntime: Pick<WeatherSave, 'transition' | 'offset'> = { transition: saved?.transition ?? null, offset: saved?.offset ?? [0, 0] };
+if (saved) Object.assign(weatherSurface, saved.surface);
+const automaticParam = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('weatherAuto');
+export const useWeather = create(() => ({ ...DEFAULT_WEATHER, ...saved?.settings, ...(automaticParam === null ? {} : { automatic: automaticParam !== '0' }), saveError: loadError }));
+if (saved && saved.settings.automatic !== useWeather.getState().automatic) weatherRuntime.transition = null;
+
+function saveWeather() {
+  if (loadError) return;
+  try {
+    const state = useWeather.getState();
+    const settings = Object.fromEntries(Object.keys(DEFAULT_WEATHER).map(key => [key, state[key as keyof WeatherSettings]])) as WeatherSettings;
+    const text = JSON.stringify({ version: 1, settings, surface: weatherSurface, ...weatherRuntime } satisfies WeatherSave);
+    if (window.localStorage.getItem(WEATHER_SAVE_KEY) !== text) window.localStorage.setItem(WEATHER_SAVE_KEY, text);
+    if (state.saveError) useWeather.setState({ saveError: null });
+  } catch (error) {
+    if (!useWeather.getState().saveError) console.error('Sauvegarde météo impossible', error);
+    useWeather.setState({ saveError: 'La sauvegarde météo a échoué. Vérifiez le stockage du navigateur.' });
+  }
+}
 if (typeof window !== 'undefined') {
   useWeather.subscribe((state, previous) => {
     if (state.automatic === previous.automatic) return;
+    weatherRuntime.transition = null;
     const url = new URL(window.location.href);
     url.searchParams.set('weatherAuto', state.automatic ? '1' : '0');
     window.history.replaceState(window.history.state, '', url);
@@ -53,6 +84,10 @@ export function WeatherControls() {
       <label htmlFor="weather-auto" className="form-check-label">Météo automatique</label>
     </div>
     {weather.automatic && <p className="small text-muted mb-1">Changement toutes les 6 h simulées (6 min à ×1), transition sur 30 min simulées.</p>}
+    {weather.saveError && <div className="alert alert-warning small p-2" role="alert">
+      {weather.saveError}
+      <button className="btn btn-sm btn-outline-secondary mt-1" onClick={() => { window.localStorage.removeItem(WEATHER_SAVE_KEY); window.location.reload(); }}>Réinitialiser la météo</button>
+    </div>}
     {settings.map(({ key, label, max, step, unit }) => <div key={key}>
       <label className="small form-label mb-0" htmlFor={`weather-${key}`}>{label} : {key === 'coverage' ? `${Math.round(weather[key] * 100)} %` : `${Math.round(weather[key] * 100) / 100}${unit}`}</label>
       <input id={`weather-${key}`} className="form-range" type="range" min={0} max={max} step={step} value={weather[key]} onChange={event => useWeather.setState({ [key]: Number(event.target.value), ...(key === 'rainVolume' ? {} : { automatic: false }) })} />
@@ -61,23 +96,33 @@ export function WeatherControls() {
 }
 
 export function Weather() {
-  const start = useRef<{ at: number; weather: ReturnType<typeof useWeather.getState> } | null>(null);
+  useEffect(() => {
+    const timer = window.setInterval(saveWeather, 1000);
+    const visibility = () => { if (document.hidden) saveWeather(); };
+    window.addEventListener('pagehide', saveWeather);
+    document.addEventListener('visibilitychange', visibility);
+    return () => {
+      window.clearInterval(timer); saveWeather();
+      window.removeEventListener('pagehide', saveWeather);
+      document.removeEventListener('visibilitychange', visibility);
+    };
+  }, []);
   const previousMinutes = useRef(simulationClock.minutes);
   const material = useRef<ShaderMaterial>(null!);
-  const uniforms = useMemo(() => ({ offset: { value: new Vector2() }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
+  const uniforms = useMemo(() => ({ offset: { value: new Vector2(...weatherRuntime.offset) }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
   useFrame((_, delta) => {
     const state = useWeather.getState();
     const minutes = simulationClock.minutes;
     const elapsed = minutes - previousMinutes.current;
     previousMinutes.current = minutes;
     if (state.automatic) {
-      start.current ??= { at: minutes, weather: state };
-      const elapsed = Math.max(0, minutes - start.current.at);
+      weatherRuntime.transition ??= { at: minutes, weather: state };
+      const elapsed = Math.max(0, minutes - weatherRuntime.transition.at);
       const target = automaticWeather(minutes);
       const blend = MathUtils.smoothstep(elapsed, 0, TRANSITION);
-      const next = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, MathUtils.lerp(start.current!.weather[key as keyof typeof target], value, blend)]));
+      const next = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, MathUtils.lerp(weatherRuntime.transition!.weather[key as keyof typeof target], value, blend)]));
       if (Object.entries(next).some(([key, value]) => state[key as keyof typeof target] !== value)) useWeather.setState(next);
-    } else start.current = null;
+    } else weatherRuntime.transition = null;
     const weather = useWeather.getState();
     Object.assign(weatherSurface, advanceWeatherSurface(weatherSurface, weather.rain, weather.snow, elapsed));
     const { coverage, windSpeed, windDirection } = useWeather.getState();
@@ -86,6 +131,7 @@ export function Weather() {
     const active = material.current.uniforms;
     active.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
     active.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
+    weatherRuntime.offset = active.offset.value.toArray();
     active.coverage.value = coverage;
     active.tint.value.set('#182338').lerp(new Color('#edf1f5'), daylight(simulatedHour()));
   });
