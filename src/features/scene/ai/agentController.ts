@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
-import { LIFE_EVENT_LABELS, activeLifeDances, getLifeDancePartner, lifeHousehold, prepareLifeMeals, releaseLifeMeal, recordLifeDay, recordLifeEvent, socialPartnerScore, chooseLifeActivity, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { LIFE_EVENT_LABELS, activeLifeDances, getLifeDancePartner, lifeHousehold, prepareLifeMeals, releaseLifeMeal, recordLifeDay, recordLifeEvent, socialPartnerScore, chooseLifeActivity, chooseLifeLeisure, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -873,10 +873,13 @@ export function createAgentController(
           candidate = invited;
         }
       }
+      const spontaneous = !candidate;
+      candidate ??= chooseLifeLeisure(candidates.filter(entry => !isDuoSlot(entry.id, entry.slotId)), life.lastActivity);
       lifeActivity = candidate?.activity ?? 'pause';
-      const needReason = candidate?.activity === 'wash-hands' ? `${actorName} se lave les mains après les toilettes.` : candidate
+      const needReason = spontaneous && candidate ? `${actorName} profite de son temps libre : activité choisie au hasard.`
+        : candidate?.activity === 'wash-hands' ? `${actorName} se lave les mains après les toilettes.` : candidate
         ? `${candidate.activity === 'clean' ? HOME_TASKS[getHomeTask(candidate.id, candidate.slotId)!].label : LIFE_NEED_LABELS[lifeNeed(candidate.activity, life.needs)]} : ${Math.round(candidate.urgency ?? life.needs[lifeNeed(candidate.activity, life.needs)])} %.`
-        : `${actorName} fait une pause ; ses besoins sont faibles ou les activités adaptées sont indisponibles.`;
+        : `${actorName} fait une pause ; aucune activité adaptée n’est disponible.`;
       const routine = candidate && routineActivities(clock.hour).includes(candidate.activity);
       const experience = candidate && life.memory[candidate.activity];
       const followUp = candidate && lifeFollowUp(life.lastActivity, candidate, life.needs);

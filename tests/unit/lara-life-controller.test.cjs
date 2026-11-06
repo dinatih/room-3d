@@ -59,7 +59,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
         { type: 'MOVE_TO', targetPos: [50, 45, 10] },
         { ...sequence(candidate.id, candidate.slotId)[0], lifePhase: 'sleep' },
         { type: 'MOVE_TO', targetPos: [50, 0, 10], lifePhase: 'wake-up' },
-      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: ['social', 'affection', 'shower'].includes(candidate.activity) ? candidate.activity : undefined })) },
+      ] : sequence(candidate.id, candidate.slotId).map(step => ({ ...step, lifePhase: ['storage', 'social', 'affection', 'shower'].includes(candidate.activity) ? candidate.activity : undefined })) },
     './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt }, './laraLifeStore': { characterLives, publishLife: (characterId, state) => Object.assign(snapshot, state), useLaraLifeStore: { getState: () => ({ speed: 1, characters: { [id]: snapshot } }) } },
     './occupancyManager': { OccupancyManager: occupancy, LIMITED_ROOMS: ['living', 'bathroom'], isInRoom: (room, position) => room === 'bathroom' ? position.z >= 500 : position.z < 500 },
     './duoSessionManager': { duoSessionManager: duo },
@@ -119,6 +119,22 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
+
+for (const work of [0, 36]) it(`Rosanna utilise une Dröna libre plutôt que rester debout : stimulation ${work}`, () => {
+  const w = world('rosanna');
+  w.tick(); w.tick();
+  w.lifeState.needs = { rest: 11, work, walk: 17, meal: 29, hygiene: 20, toilet: 11, company: 12, environment: 31 };
+  w.objects['drona-ne-catchall'] = { id: 'drona-ne-catchall', position: [20, 0, 10], slots: [{ slotId: 'pick-item', animation: 'search', duration: 3 }] };
+  w.candidates.splice(0, w.candidates.length, { activity: 'storage', id: 'drona-ne-catchall', slotId: 'pick-item', x: 20, z: 10 });
+  w.tick(); w.tick();
+  assert.equal(w.controller.state.animation, 'search');
+  const decision = w.logs.filter(log => log.action === 'life_decision').at(-1);
+  assert.equal(decision.data.activity, 'storage');
+  assert.equal(decision.data.reason.includes('choisie au hasard'), work === 0);
+  const before = w.lifeState.needs.work;
+  w.tick(.5, false);
+  assert(w.lifeState.needs.work >= before, 'Loading a storage animation cannot relieve boredom');
+});
 
 it('journalise la vie au démarrage réel et à la fin de phase, sans spam pendant le chargement', () => {
   const w = world();
@@ -345,6 +361,7 @@ it('prépare puis mange sans satisfaire la faim pendant la préparation ou le ch
 
 it('abandonne un repas dont la cuisine est inaccessible sans boucle ni faim artificiellement satisfaite', () => {
   const w = world('native', true);
+  w.candidates.splice(2, 1); // No leisure available after the kitchen failure.
   w.tick(); w.tick();
   w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 };
   w.fail('cuisine-group');
@@ -744,6 +761,7 @@ it('salue une connaissance pendant une pause, sans interrompre une réaction ni 
   const originalDocument = global.document;
   global.document = new EventTarget();
   const w = world(), disconnect = w.controller.connect();
+  w.candidates.splice(2, 1); // Exercise a real pause with no leisure available.
   try {
     w.tick(); w.tick();
     w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
@@ -777,6 +795,7 @@ it('remercie le ménage réellement terminé par un autre PNJ, jamais son charge
   const originalDocument = global.document;
   global.document = new EventTarget();
   const w = world(), cleaner = world('safa');
+  w.candidates.splice(2, 1);
   const disconnect = w.controller.connect(), disconnectCleaner = cleaner.controller.connect();
   try {
     w.tick(); w.tick();
@@ -801,6 +820,7 @@ it('réagit une fois à une place occupée, puis choisit ailleurs sans faux bén
   const originalDocument = global.document;
   global.document = new EventTarget();
   const w = world(), disconnect = w.controller.connect();
+  w.candidates.splice(2, 1);
   try {
     w.occupancy.isSlotOccupied = id => id === 'desk-bollsidan-2';
     w.tick(1, false); w.tick(1, false);
@@ -1264,6 +1284,7 @@ it('rend une portion réservée lors d’une commande et compte les activités j
 it('une activité commencée par une coloc inspire une danse pendant une pause, sans interrompre les urgences', () => {
   const previous = global.document; global.document = new EventTarget();
   const w = world('rosanna'), disconnect = w.controller.connect();
+  w.candidates.splice(2, 1);
   try {
     w.tick(); w.tick();
     w.lifeState.needs = { rest: 0, work: 10, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
@@ -1387,6 +1408,7 @@ it('la musique inspire une danseuse disponible et respecte les urgences, la piè
   for (const outcome of ['dance', 'non-dancer', 'other-room', 'urgent', 'stopped']) {
     const previous = global.document; global.document = new EventTarget();
     const w = world(outcome === 'non-dancer' ? 'native' : 'rosanna'), disconnect = w.controller.connect();
+    w.candidates.splice(2, 1);
     try {
       w.tick(); w.tick();
       w.lifeState.needs = { rest: 0, work: 10, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };

@@ -1,4 +1,4 @@
-export type LifeActivity = 'tech' | 'receive-massage' | 'dance' | 'combat' | 'massage' | 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
+export type LifeActivity = 'storage' | 'tech' | 'receive-massage' | 'dance' | 'combat' | 'massage' | 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
 export const LIFE_SPEEDS = [1, 3, 10] as const;
 export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
@@ -18,7 +18,7 @@ export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number; affinity?: number; activities?: Partial<Record<LifeActivity, number>> }>;
 type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
 const lifePeriod = (hour: number): LifePeriod => hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
-const LEISURE_ACTIVITIES: LifeActivity[] = ['dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
+const LEISURE_ACTIVITIES: LifeActivity[] = ['storage', 'dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
 export const lifeSocialActivity = (objectId?: string, slotId?: string): 'social' | 'affection' | 'massage' | null => slotId?.split(':')[0] === 'massage' && ['interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'massage' : objectId === 'garden-conversation' ? 'social'
   : ['hugs-point', 'inyeong-cha-hugs-point', 'interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'affection' : null;
 export const LIFE_SPECIALTIES = {
@@ -33,6 +33,7 @@ export const lifeSpecialtyActivity = (objectId?: string, slotId?: string): 'danc
 export const LIFE_PERSONALITY: Partial<Record<LifeCharacterId, string>> = { helena: 'Timide et geek technologique' };
 
 export const LIFE_PHASE_LABELS = {
+  storage: 'Prendre un objet dans un rangement',
   tech: 'Consulter son téléphone', 'receive-massage': 'Recevoir un massage', dance: 'Danser', combat: 'S’entraîner au combat', massage: 'Donner un massage', reaction: 'Réagir',
   'prepare-meal': 'Préparer le repas', 'eat-meal': 'Manger', sleep: 'Dormir', 'wake-up': 'Se réveiller',
   'use-toilet': 'Aller aux toilettes', flush: 'Tirer la chasse', 'wash-hands': 'Se laver les mains', shower: 'Prendre une douche',
@@ -40,6 +41,7 @@ export const LIFE_PHASE_LABELS = {
 };
 export type LifePhase = keyof typeof LIFE_PHASE_LABELS;
 const LIFE_PHASE_EFFECTS: Record<LifePhase, LifeActivity | null> = {
+  storage: 'storage',
   tech: 'tech', 'receive-massage': 'receive-massage', dance: 'dance', combat: 'combat', massage: 'massage', reaction: null,
   'prepare-meal': null, 'eat-meal': 'meal', sleep: 'sleep', 'wake-up': null,
   'use-toilet': 'toilet', flush: null, 'wash-hands': 'wash-hands', shower: 'shower',
@@ -62,6 +64,7 @@ export interface LifeCandidate {
 export const LIFE_SETTINGS = { needGrowthScale: 0.25, activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
+  storage: 'Prendre un objet dans un rangement',
   tech: 'Consulter son téléphone', 'receive-massage': 'Recevoir un massage', dance: 'Danser', combat: 'S’entraîner au combat', massage: 'Donner un massage', yoga: 'Faire du yoga chez Églantine', clean: 'Entretenir la maison', bath: 'Se détendre dans le bain', rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
   toilet: 'Aller aux toilettes puis se laver les mains', shower: 'Prendre une douche', 'wash-hands': 'Se laver les mains',
   read: 'Lire sur sa tablette', 'watch-tv': 'Regarder la télé', social: 'Discuter avec un voisin', affection: 'Partager un moment d’affection',
@@ -88,7 +91,7 @@ const exerciseRates: LifeNeeds = { rest: 0.4, work: -1.2, walk: -0.8, meal: 0.2,
 const readingRates: LifeNeeds = { rest: 0.2, work: -1.2, walk: 0.4, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 };
 const rates: Record<LifeActivity, LifeNeeds> = {
   dance: { ...exerciseRates, rest: 0.8 }, combat: { ...exerciseRates, rest: 1 }, massage: { ...socialRates, rest: 0.5 }, 'receive-massage': { ...socialRates, rest: -0.35 },
-  tech: readingRates, read: readingRates,
+  storage: readingRates, tech: readingRates, read: readingRates,
   pause: { rest: 0.35, work: 0.5, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   yoga: exerciseRates,
   clean: { rest: 0.5, work: -0.3, walk: 0.3, meal: 0.2, hygiene: 0.18, toilet: 0.18, company: 0.2, environment: 0 },
@@ -284,6 +287,16 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
 export const preferLifePersonalSpace = (candidates: LifeCandidate[]) => candidates.filter(candidate => !candidate.avoidedNeighbors?.length
   || !candidates.some(other => other.activity === candidate.activity && !other.avoidedNeighbors?.length));
 
+/** Free time is spent on available leisure, never unnecessary meals, sleep or cleaning. */
+export function chooseLifeLeisure(candidates: LifeCandidate[], last: LifeActivity | null): LifeCandidate | null {
+  const leisure = preferLifePersonalSpace(candidates.filter(candidate => LEISURE_ACTIVITIES.includes(candidate.activity)));
+  const pool = leisure.some(candidate => candidate.activity !== last) ? leisure.filter(candidate => candidate.activity !== last) : leisure;
+  const activities = [...new Set(pool.map(candidate => candidate.activity))];
+  const activity = activities[Math.floor(Math.random() * activities.length)];
+  const places = pool.filter(candidate => candidate.activity === activity);
+  return places[Math.floor(Math.random() * places.length)] ?? null;
+}
+
 export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number, preferences: readonly LifeActivity[] = []): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
   const need = (candidate: LifeCandidate) => candidate.urgency ?? needs[lifeNeed(candidate.activity, needs)];
@@ -311,7 +324,7 @@ export const lifeNeed = (activity: LifeCandidate['activity'], needs?: LifeNeeds)
   ? needs && needs.walk > needs.work ? 'walk' : 'work'
   : activity === 'sleep' || activity === 'bath' || activity === 'receive-massage' ? 'rest'
   : activity === 'shower' || activity === 'wash-hands' ? 'hygiene'
-  : activity === 'clean' ? 'environment' : activity === 'social' || activity === 'affection' || activity === 'massage' ? 'company' : activity === 'read' || activity === 'tech' || activity === 'watch-tv' ? 'work' : activity;
+  : activity === 'clean' ? 'environment' : activity === 'social' || activity === 'affection' || activity === 'massage' ? 'company' : activity === 'storage' || activity === 'read' || activity === 'tech' || activity === 'watch-tv' ? 'work' : activity;
 
 /** An invitation must not cancel a personal command or interrupt essential care. */
 export function lifeInvitationResponse(needs: LifeNeeds, activity: LifeActivity | null, handsDirty: boolean, available: boolean, invitedActivity?: LifeActivity) {

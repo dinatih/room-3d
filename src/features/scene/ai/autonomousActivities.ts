@@ -79,6 +79,7 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
         const task = getHomeTask(object.id, slot.slotId);
         const seat = isLifeSeat(object.category, slot);
         const activity = lifeSpecialtyActivity(object.id, slot.slotId) ?? (task ? 'clean' : object.id === 'desk-bollsidan-2' ? 'work'
+          : object.category === 'storage' ? 'storage'
           : object.id === 'west-neighbor-flat' ? 'yoga'
           : ['building-b-corridor-end', 'building-b-corridor'].includes(object.id) && slot.slotId === 'visit' ? 'tech'
           : object.id === 'tv-view' ? 'watch-tv'

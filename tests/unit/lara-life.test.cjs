@@ -10,6 +10,39 @@ const candidates = [
   { activity: 'walk', id: 'garden', slotId: 'breathe', x: 100, z: 0 },
 ];
 
+it('occupe le temps libre avec un loisir disponible en variant les activités, sans imposer de soins', () => {
+  const { chooseLifeLeisure } = require('../../src/features/scene/ai/laraLife.ts');
+  const storage = { ...candidates[0], activity: 'storage', id: 'drona-ne-catchall' };
+  const care = ['meal', 'sleep', 'toilet', 'shower', 'clean'].map(activity => ({ ...storage, activity }));
+  assert.equal(chooseLifeLeisure(care, null), null);
+  assert.equal(chooseLifeLeisure([...care, storage, candidates[2]], 'walk'), storage);
+  assert.equal(chooseLifeLeisure([storage], 'storage'), storage, 'The last available activity remains usable');
+});
+
+it('réintègre les Dröna libres et conserve leurs séquences sans bénéfice pendant le trajet', () => {
+  const life = require('../../src/features/scene/ai/laraLife.ts');
+  const { getLaraLifeCandidates, buildLaraLifeInstructions } = load('src/features/scene/ai/autonomousActivities.ts', {
+    './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
+    './smartObjectRegistry': {
+      getAllSmartObjects: () => ['drona-ne-catchall', 'drona-kitchen-diy'].map(id => ({ id, category: 'storage', position: [0, 0, 0], slots: [{ slotId: 'pick-item' }] })),
+      buildSmartObjectInstructionSequence: (id, slotId) => [{ type: 'MOVE_TO', smartObjectId: id, slotId },
+        { type: 'USE_OBJECT', smartObjectId: id, slotId, waitForAnimation: true, repeatCount: 1 }],
+    },
+    './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: id => id === 'drona-kitchen-diy' } },
+  });
+  const [candidate] = getLaraLifeCandidates('rosanna', false);
+  assert.equal(getLaraLifeCandidates('rosanna', false).length, 1);
+  assert.equal(candidate.activity, 'storage');
+  const [approach, use] = buildLaraLifeInstructions('rosanna', candidate);
+  assert.equal(approach.lifePhase, undefined);
+  assert.equal(use.lifePhase, 'storage');
+  assert.equal(use.waitForAnimation, true);
+  assert.equal(life.lifeEffect('storage'), null);
+  assert.equal(life.lifeNeed('storage'), 'work');
+  const needs = createLife('rosanna').needs;
+  assert(evolveLife(needs, 1, life.lifeEffect('storage', use.lifePhase), false).work < needs.work);
+});
+
 describe('Besoins de Lara Native', () => {
   it('évolue selon le temps écoulé, indépendamment de la fréquence des images', () => {
     const initial = { rest: 50, work: 90, walk: 50, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
