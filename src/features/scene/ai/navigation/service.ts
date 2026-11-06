@@ -402,6 +402,8 @@ function passDoors(route: RouteState, agentId: string, profile: AgentProfile, st
 
 /** Actor detours are optional; doors, furniture and room admission remain barriers. */
 function advanceWithNavigation(route: RouteState, agentId: string, start: Point, target: Point, travel: number, steer?: (direction: Point, remaining: number) => Point, owner?: string, interaction = false, protectedDoor?: DoorKey): Point {
+  const escape = recoverDoorContact(route, agentId, start, travel);
+  if (escape) return escape;
   route.waitReason = undefined;
   owner = owner ? getInteractionOwner(owner) : undefined;
   const crowd = route.crowd;

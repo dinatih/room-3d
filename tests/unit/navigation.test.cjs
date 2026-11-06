@@ -65,8 +65,9 @@ function walk(start, target, keys, steer) {
 }
 const leaf = { length: 83, thickness: 4, closedDir: { x: 1, z: 0 }, openNormal: { x: 0, z: 1 }, maxAngle: Math.PI / 2, yMin: 0, yMax: 204, margin: 1.5 };
 describe('Navigation et portes — géométrie isolée', () => {
-    it('attend hors du débattement après dégagement au lieu de reboucler dans la porte de Sabira', () => {
+    for (const profile of [{ radius: 13.3, height: 170 }, { radius: 7.70504, height: 40 }]) it(`dégage le battant puis reprend le trajet sans reboucler (hauteur ${profile.height} cm)`, () => {
         setup({ bath: { ...leaf, pivot: { x: -41.5, z: 0 } } }, 83);
+        obstacles.setAgentProfile('walker', profile);
         doors.doorCollisionState.bath.angle = 0.21765831600078125;
         const route = nav.createRouteState(), target = { x: 0, z: -100 };
         let position = { x: 41.5, z: 27.83034 };
@@ -75,7 +76,7 @@ describe('Navigation et portes — géométrie isolée', () => {
         route.waitReason = "Battant bath sur le trajet, attente d'ouverture";
         try {
             do {
-                const next = nav.recoverDoorContact(route, 'walker', position, 3);
+                const next = nav.followRoute(route, 'walker', position, target, 3);
                 assert(next); position = next;
                 cameraState.positions.walker = { ...position, y: 0 };
             } while (route.doorEscape);
