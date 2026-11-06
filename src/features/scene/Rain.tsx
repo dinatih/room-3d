@@ -10,7 +10,8 @@ const SPEED = 900; // cm/s, terminal speed of large raindrops
 
 export function Rain({ snow = false }: { snow?: boolean }) {
   const lines = useRef<LineSegments | Points>(null!);
-  const drops = useMemo(() => Float32Array.from({ length: COUNT * 3 }, (_, i) => i % 3 === 1 ? Math.random() * HEIGHT : (Math.random() - 0.5) * SKY_RADIUS * 2), []);
+  const radius = snow ? HEIGHT / 2 : SKY_RADIUS;
+  const drops = useMemo(() => Float32Array.from({ length: COUNT * 3 }, (_, i) => i % 3 === 1 ? Math.random() * HEIGHT : (Math.random() - 0.5) * radius * 2), [radius]);
   const vertices = useMemo(() => new Float32Array(COUNT * (snow ? 3 : 6)), [snow]);
   const ray = useMemo(() => new Raycaster(new Vector3(), new Vector3(0, -1, 0)), []);
   const roofBounds = useMemo(() => new Box3(), []);
@@ -53,10 +54,12 @@ export function Rain({ snow = false }: { snow?: boolean }) {
     if (!rain) return;
     const angle = windDirection * Math.PI / 180;
     const dx = Math.cos(angle) * windSpeed * 100, dz = Math.sin(angle) * windSpeed * 100;
+    const centerX = snow ? camera.position.x - SKY_CENTER[0] : 0;
+    const centerZ = snow ? camera.position.z - SKY_CENTER[2] : 0;
     for (let i = 0; i < Math.floor(COUNT * rain); i++) {
       const k = i * 3, v = i * 6;
-      drops[k] = ((drops[k] + dx * delta + SKY_RADIUS) % (SKY_RADIUS * 2) + SKY_RADIUS * 2) % (SKY_RADIUS * 2) - SKY_RADIUS;
-      drops[k + 2] = ((drops[k + 2] + dz * delta + SKY_RADIUS) % (SKY_RADIUS * 2) + SKY_RADIUS * 2) % (SKY_RADIUS * 2) - SKY_RADIUS;
+      drops[k] = ((drops[k] - centerX + dx * delta + radius) % (radius * 2) + radius * 2) % (radius * 2) - radius + centerX;
+      drops[k + 2] = ((drops[k + 2] - centerZ + dz * delta + radius) % (radius * 2) + radius * 2) % (radius * 2) - radius + centerZ;
       drops[k + 1] = ((drops[k + 1] - speed * delta) % HEIGHT + HEIGHT) % HEIGHT;
       const x = drops[k] + SKY_CENTER[0], z = drops[k + 2] + SKY_CENTER[2], y = drops[k + 1];
       ray.ray.origin.set(x, HEIGHT, z);
@@ -71,7 +74,7 @@ export function Rain({ snow = false }: { snow?: boolean }) {
   });
   if (snow) return <points ref={lines as React.RefObject<Points>} frustumCulled={false}>
     <bufferGeometry><bufferAttribute attach="attributes-position" args={[vertices, 3]} /></bufferGeometry>
-    <pointsMaterial color="white" size={3} transparent depthWrite={false} onBeforeCompile={shader => {
+    <pointsMaterial color="white" size={3} sizeAttenuation={false} transparent depthWrite={false} onBeforeCompile={shader => {
       shader.fragmentShader = shader.fragmentShader.replace('#include <map_particle_fragment>', '#include <map_particle_fragment>\n diffuseColor.a *= 1.0 - smoothstep(0.3, 0.5, length(gl_PointCoord - vec2(0.5)));');
     }} />
   </points>;
