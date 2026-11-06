@@ -1997,7 +1997,7 @@ export function createAgentController(
         const cleaningTask = getHomeTask(instruction?.smartObjectId, instruction?.slotId);
         const cleaningRoom = cleaningTask && HOME_TASKS[cleaningTask].room;
         const wasDirty = cleaningRoom && roomDirt(homeDirt, cleaningRoom) > 0;
-        evolveHome(homeDirt, { activity: cleaningTask ? 'clean'
+        evolveHome(homeDirt, { activity: cleaningTask ? 'clean' : SMART_OBJECTS[instruction?.smartObjectId ?? '']?.category === 'storage' ? 'storage'
           : previousLifeActivity ?? (instruction?.smartObjectId === 'toilet' && instruction.slotId === 'use' ? 'toilet' : null),
           phase: instruction?.lifePhase ?? (instruction?.smartObjectId === 'cuisine-group' && instruction.slotId?.startsWith('cook-') ? 'prepare-meal' : undefined),
           seconds: interactionSeconds, distance: moving ? Math.hypot(state.x - x, state.z - z) : 0, room,

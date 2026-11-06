@@ -128,12 +128,17 @@ for (const work of [0, 36]) it(`Rosanna utilise une Dröna libre plutôt que res
   w.candidates.splice(0, w.candidates.length, { activity: 'storage', id: 'drona-ne-catchall', slotId: 'pick-item', x: 20, z: 10 });
   w.tick(); w.tick();
   assert.equal(w.controller.state.animation, 'search');
+  w.dirt.living = 31;
   const decision = w.logs.filter(log => log.action === 'life_decision').at(-1);
   assert.equal(decision.data.activity, 'storage');
   assert.equal(decision.data.reason.includes('choisie au hasard'), work === 0);
   const before = w.lifeState.needs.work;
   w.tick(.5, false);
   assert(w.lifeState.needs.work >= before, 'Loading a storage animation cannot relieve boredom');
+  assert.equal(w.dirt.living, 31, 'Loading cannot tidy the room');
+  w.tick(.5);
+  assert.equal(w.dirt.living, 30.5);
+  assert.equal(w.lifeState.needs.environment, 30.5, 'The environment need follows the shared room state');
 });
 
 it('journalise la vie au démarrage réel et à la fin de phase, sans spam pendant le chargement', () => {

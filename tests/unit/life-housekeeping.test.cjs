@@ -31,6 +31,20 @@ it('salit les pièces selon les usages et nettoie seulement la source réellemen
   assert.throws(() => update({ activity: 'clean', seconds: 1, objectId: 'unknown' }));
 });
 
+it('améliore un peu la pièce pendant le rangement, sans laver la vaisselle ni les toilettes', () => {
+  const dirt = { ...createHomeDirt(), living: 30, bathroom: 40, dishes: 60, toilet: 80 };
+  const update = seconds => evolveHome(dirt, { activity: 'storage', seconds, distance: 0, room: 'living' });
+  update(0);
+  assert.equal(dirt.living, 30);
+  update(5);
+  assert.equal(dirt.living, 25);
+  assert.equal(dirt.dishes, 60);
+  assert.equal(dirt.toilet, 80);
+  assert.equal(dirt.bathroom, 40);
+  update(60);
+  assert.equal(dirt.living, 0);
+});
+
 it('partage l’état de la maison entre les colocataires et choisit une tâche sale hors de la pièce actuelle', () => {
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
   const dirt = createHomeDirt();

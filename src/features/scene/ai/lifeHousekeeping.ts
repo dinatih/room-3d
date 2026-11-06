@@ -13,7 +13,7 @@ export const HOME_TASKS = {
 export type HomeTask = keyof typeof HOME_TASKS;
 export type HomeDirt = Record<HomeTask, number>;
 // Dirt follows use: one six-second toilet visit adds 12%, ten metres walked add 1%.
-export const HOME_RATES = { toilet: 2, dishes: 1, floorPerCm: 0.001, cleaning: 5, dishCleaning: 20 };
+export const HOME_RATES = { toilet: 2, dishes: 1, floorPerCm: 0.001, cleaning: 5, dishCleaning: 20, tidying: 1 };
 export const createHomeDirt = (): HomeDirt => ({ toilet: 0, dishes: 0, living: 0, bathroom: 0, corridor: 0, garden: 0 });
 export const homeDirt = createHomeDirt();
 
@@ -34,6 +34,7 @@ export function evolveHome(dirt: HomeDirt, context: { activity: LifeActivity | n
     dirt[key] = Math.max(0, Math.min(100, dirt[key] + amount));
   };
   change(room, distance * HOME_RATES.floorPerCm);
+  if (activity === 'storage') change(room, -seconds * HOME_RATES.tidying);
   if (activity === 'toilet') change('toilet', seconds * HOME_RATES.toilet);
   if (activity === 'meal' || phase === 'prepare-meal') change('dishes', seconds * HOME_RATES.dishes);
   if (activity === 'clean' && seconds > 0) {
