@@ -9,7 +9,16 @@ import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { useLaraLifeStore } from './ai/laraLifeStore';
 import { daylight, simulatedHour } from './DayNight';
 
-export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0, snow: 0, automatic: false }));
+export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0, snow: 0, automatic: typeof window === 'undefined' || new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
+if (typeof window !== 'undefined') {
+  useWeather.subscribe((state, previous) => {
+    if (state.automatic === previous.automatic) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('weatherAuto', state.automatic ? '1' : '0');
+    window.history.replaceState(window.history.state, '', url);
+  });
+  window.addEventListener('popstate', () => useWeather.setState({ automatic: new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
+}
 // Artistic cycle: six simulated hours per condition, thirty-minute transitions.
 const PERIOD = 6 * 60;
 const TRANSITION = 30;
@@ -43,6 +52,7 @@ export function WeatherControls() {
       <input id="weather-auto" type="checkbox" className="form-check-input" checked={weather.automatic} onChange={event => useWeather.setState({ automatic: event.target.checked })} />
       <label htmlFor="weather-auto" className="form-check-label">Météo automatique</label>
     </div>
+    {weather.automatic && <p className="small text-muted mb-1">Changement toutes les 6 h simulées (6 min à ×1), transition sur 30 min simulées.</p>}
     {settings.map(({ key, label, max, step, unit }) => <div key={key}>
       <label className="small form-label mb-0" htmlFor={`weather-${key}`}>{label} : {key === 'coverage' ? `${Math.round(weather[key] * 100)} %` : `${Math.round(weather[key] * 100) / 100}${unit}`}</label>
       <input id={`weather-${key}`} className="form-range" type="range" min={0} max={max} step={step} value={weather[key]} onChange={event => useWeather.setState({ [key]: Number(event.target.value), ...(key === 'rainVolume' ? {} : { automatic: false }) })} />
@@ -52,12 +62,14 @@ export function WeatherControls() {
 
 export function Weather() {
   const start = useRef<{ at: number; weather: ReturnType<typeof useWeather.getState> } | null>(null);
-  const previousMinutes = useRef<number | null>(null);
+  const weatherMinutes = useRef(useLaraLifeStore.getState().characters.native.elapsedSeconds);
   const material = useRef<ShaderMaterial>(null!);
   const uniforms = useMemo(() => ({ offset: { value: new Vector2() }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
   useFrame((_, delta) => {
     const state = useWeather.getState();
-    const minutes = useLaraLifeStore.getState().characters.native.elapsedSeconds;
+    const elapsed = document.hidden ? 0 : delta * useLaraLifeStore.getState().speed;
+    weatherMinutes.current += elapsed;
+    const minutes = weatherMinutes.current;
     if (state.automatic) {
       start.current ??= { at: minutes, weather: state };
       const elapsed = Math.max(0, minutes - start.current.at);
@@ -67,8 +79,7 @@ export function Weather() {
       if (Object.entries(next).some(([key, value]) => state[key as keyof typeof target] !== value)) useWeather.setState(next);
     } else start.current = null;
     const weather = useWeather.getState();
-    if (previousMinutes.current !== null && minutes >= previousMinutes.current) Object.assign(weatherSurface, advanceWeatherSurface(weatherSurface, weather.rain, weather.snow, minutes - previousMinutes.current));
-    previousMinutes.current = minutes;
+    Object.assign(weatherSurface, advanceWeatherSurface(weatherSurface, weather.rain, weather.snow, elapsed));
     const { coverage, windSpeed, windDirection } = useWeather.getState();
     const direction = windDirection * Math.PI / 180;
     // m/s to scene centimetres; drift stays continuous when wind settings change.
