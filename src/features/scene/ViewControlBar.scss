@@ -192,7 +192,6 @@
 $control-colors: (
   'cyan': (palette.$cyan, palette.$gray-900),
   'green': (palette.$green, palette.$white),
-  'purple': (palette.$purple, palette.$white),
   'blue': (palette.$blue, palette.$gray-900),
   'yellow': (palette.$yellow, palette.$gray-900),
   'indigo': (palette.$indigo, palette.$white),
@@ -262,11 +261,6 @@ $control-colors: (
 
 .view-control-bar-inline {
   width: 100%;
-}
-
-.view-control-bar-dock__view-label {
-  align-self: flex-end;
-  margin: 0 0.5rem 0.25rem 0;
 }
 
 @media (max-width: 767.98px) {
