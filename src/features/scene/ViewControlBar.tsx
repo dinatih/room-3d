@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
 import { CAMERA_SHORTCUT_VIEWS, CARDINAL_VIEWS, dispatchView, ELEVATION_VIEWS } from './sidepanel/types';
-import { getCharacterGridCameraView, frameCharacterGridCamera } from './character/characterGridUtils';
+import { getCharacterGridCameraView } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
@@ -62,9 +62,6 @@ export function ViewControlBar({
   directionalControls,
   children,
 }: ViewControlBarProps) {
-  const [hoveredView, setHoveredView] = useState<{
-    label: string; top?: number; bottom?: number;
-  } | null>(null);
   const animalCameraTarget = useSceneStore(selectAnimalCameraTarget);
   const animalCameraActive = Boolean(animalCameraTarget && animalCameraTarget !== 'drone');
   const isMobile = useIsMobile();
@@ -135,40 +132,6 @@ export function ViewControlBar({
     ? { bottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }
     : undefined;
 
-  const renderViewButton = (
-    view: { key: string; label: string; shortcut: string; icon: string },
-    color: 'cyan' | 'green' | 'purple',
-  ) => (
-    <button
-      key={view.key}
-      type="button"
-      className={`${TOOLBAR_BUTTON_CLASS} ${isActive(view.key) ? `view-control-bar__btn--${color}` : 'btn-outline-secondary'}`}
-      onClick={() => {
-        if (npcGridActive && view.key === 'front') {
-          frameCharacterGridCamera(undefined, cameraProjection);
-        } else {
-          dispatchView(view.key, npcGridActive ? getCharacterGridCameraView().target : undefined);
-        }
-      }}
-      title={`${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`}
-      onMouseEnter={event => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        setHoveredView({
-          label: `${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`,
-          ...(rect.top > window.innerHeight / 2
-            ? { bottom: window.innerHeight - rect.top }
-            : { top: rect.bottom }),
-        });
-      }}
-      onMouseLeave={() => setHoveredView(null)}
-      onBlur={() => setHoveredView(null)}
-      aria-label={`${view.label} — ${isOrtho ? 'Orthographique' : 'Perspective'} (${view.shortcut})`}
-      aria-pressed={isActive(view.key)}
-    >
-      <i className={`bi ${view.icon}`} aria-hidden="true" />
-    </button>
-  );
-
   const zoomButton = (direction: 'in' | 'out') => (
     <button
       key={direction}
@@ -213,23 +176,17 @@ export function ViewControlBar({
     </button>
   );
 
-  const hoverTooltip = hoveredView && createPortal(
-    <div
-      role="tooltip"
-      className="view-control-bar__view-tooltip position-fixed start-0 end-0 d-flex justify-content-center p-2 pe-none"
-      style={{ top: hoveredView.top, bottom: hoveredView.bottom }}
-    >
-      <div className="d-flex flex-column align-items-center gap-1 mw-100">
-        <span className="badge text-bg-danger">{hoveredView.label}</span>
-      </div>
-    </div>,
-    document.body,
-  );
-
   const cardinalGroup = (
-    <div className="btn-group btn-group-sm view-control-bar__group" role="group" aria-label="Directions cardinales">
-      {CARDINAL_VIEWS.map((v, i) => renderViewButton(v, i % 2 === 0 ? 'cyan' : 'purple'))}
-    </div>
+    <select
+      className="form-select form-select-sm py-0 ps-2 w-auto flex-shrink-0 bg-transparent text-body border-secondary small view-control-bar__ambiance"
+      value={CARDINAL_VIEWS.some(v => isActive(v.key)) ? activeCameraPos! : ''}
+      onChange={event => dispatchView(event.target.value, npcGridActive ? getCharacterGridCameraView().target : undefined)}
+      aria-label={`Direction de la vue — ${isOrtho ? 'Orthographique' : 'Perspective'}`}
+      title={`Direction de la vue — ${isOrtho ? 'Orthographique' : 'Perspective'}`}
+    >
+      <option value="" disabled hidden>Vue</option>
+      {CARDINAL_VIEWS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
+    </select>
   );
 
   const elevationGroup = (
@@ -294,7 +251,6 @@ export function ViewControlBar({
 
   const bar = (
     <>
-    {hoverTooltip}
     <div className={`${TOOLBAR_CLASS} ${showCharacterModes ? 'flex-column align-items-stretch view-control-bar--multi-rows' : ''} ${inline ? 'view-control-bar--inline overflow-x-auto' : ''}`} role="toolbar" aria-label="Contrôle des vues">
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {showCharacterModes && (
@@ -441,8 +397,7 @@ export function ViewControlBar({
 
     return (
       <div className={`view-control-bar-inline d-flex flex-column align-items-center ${children ? 'gap-2 px-1 py-0' : 'gap-0 px-2 py-2'}`}>
-        {hoverTooltip}
-        <div className={`${TOOLBAR_CLASS} ${inventoryLayout ? 'view-control-bar--inventory-single-row' : 'flex-column align-items-stretch view-control-bar--multi-rows'} view-control-bar--inline overflow-x-auto`} role="toolbar" aria-label="Contrôle des vues">
+            <div className={`${TOOLBAR_CLASS} ${inventoryLayout ? 'view-control-bar--inventory-single-row' : 'flex-column align-items-stretch view-control-bar--multi-rows'} view-control-bar--inline overflow-x-auto`} role="toolbar" aria-label="Contrôle des vues">
           {inventoryLayout ? inventoryRow : <>{inlineRow1}{inlineRow2}</>}
         </div>
         {children && <div className="w-100">{children}</div>}
