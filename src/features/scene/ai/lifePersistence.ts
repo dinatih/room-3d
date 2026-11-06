@@ -76,9 +76,10 @@ export function parseLifeSave(text: string): LifeSave {
         number(Number(day), 1, lifeClock(record(characters[id]).elapsedSeconds as number).day);
         if (!/^[1-9]\d*$/.test(day)) throw new Error('Jour du journal invalide');
         const summary = keys(value, ['activities', 'partners', 'unmet', 'events']);
-        numericRecord(summary.activities, activities, 24 * 60);
-        numericRecord(summary.partners, characterIds.filter(partner => partner !== id), 24 * 60);
-        numericRecord(summary.unmet, Object.keys(LIFE_NEED_LABELS), 24 * 60);
+        // Summed frame durations can exceed a day's length through floating-point rounding.
+        numericRecord(summary.activities, activities);
+        numericRecord(summary.partners, characterIds.filter(partner => partner !== id));
+        numericRecord(summary.unmet, Object.keys(LIFE_NEED_LABELS));
         numericRecord(summary.events, Object.keys(LIFE_EVENT_LABELS));
       }
     }

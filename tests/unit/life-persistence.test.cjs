@@ -197,6 +197,23 @@ it('conserve les portions partagées et réservées ainsi que les bilans journal
   }, text);
 });
 
+it('restaure les durées journalières malgré les arrondis cumulés de la simulation', () => {
+  const saved = freshSave();
+  saved.characters.native.elapsedSeconds = 2400;
+  saved.household = life.createLifeHousehold();
+  let duration = 0;
+  for (let frame = 0; frame < 7200; frame++) duration += 0.2;
+  assert(duration > 24 * 60);
+  saved.household.journal.native = { 2: { activities: { read: duration }, partners: { cha: duration }, unmet: { work: duration }, events: {} } };
+  withBrowser(w => {
+    const store = w.loadStore();
+    assert.equal(store.useLaraLifeStore.getState().saveError, null);
+    assert.deepEqual(life.lifeHousehold, saved.household);
+    store.saveLives();
+    assert.equal(w.loadStore().useLaraLifeStore.getState().saveError, null);
+  }, JSON.stringify(saved));
+});
+
 it('rejette les portions et bilans invalides avant restauration', () => {
   for (const corrupt of [
     h => { h.meals.portions = -1; }, h => { h.meals.portions = .5; }, h => { h.meals.held.unknown = true; },
