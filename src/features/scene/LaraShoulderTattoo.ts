@@ -11,7 +11,7 @@ export function getDelphinaShoulderTattooTexture(material: THREE.MeshStandardMat
     flowerCanvas = document.createElement('canvas');
     flowerCanvas.width = 1024;
     flowerCanvas.height = 512;
-    const ctx = flowerCanvas.getContext('2d');
+    const ctx = flowerCanvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Cannot draw Delphina shoulder flower');
     ctx.translate(225, 225);
     ctx.strokeStyle = '#251b29';
