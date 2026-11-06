@@ -1,3 +1,5 @@
+import { useFrame } from '@react-three/fiber';
+import { weatherSurface } from '../weatherSurface';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { EXTERIOR_GROUND } from '../environmentData';
@@ -83,6 +85,11 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
     roughnessMap: config.roughness,
   });
 
+  const surfaceUniforms = useMemo(() => ({ gardenSnow: { value: 0 }, gardenWater: { value: 0 } }), []);
+  useFrame(() => {
+    surfaceUniforms.gardenSnow.value = weatherSurface.snow;
+    surfaceUniforms.gardenWater.value = weatherSurface.water;
+  });
   const material = useMemo(() => {
     const repeatX = EXTERIOR_GROUND.width / config.tileSize;
     const repeatY = EXTERIOR_GROUND.depth / config.tileSize;
@@ -100,7 +107,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       textures.map.colorSpace = THREE.SRGBColorSpace;
     }
 
-    return new THREE.MeshStandardMaterial({
+    const ground = new THREE.MeshStandardMaterial({
       map: textures.map,
       normalMap: textures.normalMap,
       normalScale: new THREE.Vector2(1.0, 1.0),
@@ -113,7 +120,36 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
     });
-  }, [textures, config.tileSize]);
+    ground.onBeforeCompile = shader => {
+      Object.assign(shader.uniforms, surfaceUniforms);
+      shader.vertexShader = 'varying vec2 gardenPosition;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n gardenPosition = position.xy;');
+      shader.fragmentShader = `
+        varying vec2 gardenPosition; uniform float gardenSnow; uniform float gardenWater;
+        float gardenHash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+        float gardenNoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+          return mix(mix(gardenHash(i),gardenHash(i+vec2(1,0)),f.x),mix(gardenHash(i+vec2(0,1)),gardenHash(i+vec2(1,1)),f.x),f.y);
+        }
+      ` + shader.fragmentShader;
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+        #include <color_fragment>
+        float terrain = gardenNoise(gardenPosition / 100.0) * 0.7 + gardenNoise(gardenPosition / 35.0) * 0.3;
+        float snowCover = smoothstep(terrain - 0.08, terrain + 0.08, gardenSnow) * smoothstep(0.0, 0.08, gardenSnow);
+        float puddle = (1.0 - smoothstep(gardenWater * 0.65 - 0.06, gardenWater * 0.65 + 0.06, terrain)) * (1.0-snowCover) * smoothstep(0.0, 0.08, gardenWater);
+        diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 - gardenWater * 0.35), vec3(0.12,0.17,0.2), puddle * 0.7);
+        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88,0.93,1.0), snowCover);
+        diffuseColor.a = mix(diffuseColor.a, 1.0, max(snowCover, puddle));
+      `).replace('#include <roughnessmap_fragment>', `
+        #include <roughnessmap_fragment>
+        roughnessFactor = mix(roughnessFactor, 0.08, puddle);
+        roughnessFactor = mix(roughnessFactor, 0.95, snowCover);
+      `).replace('#include <normal_fragment_maps>', `
+        #include <normal_fragment_maps>
+        normal = normalize(mix(normal, nonPerturbedNormal, max(snowCover, puddle)));
+      `);
+    };
+    return ground;
+  }, [textures, config.tileSize, surfaceUniforms]);
 
   return (
     <mesh

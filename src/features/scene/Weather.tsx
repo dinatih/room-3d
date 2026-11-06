@@ -1,3 +1,4 @@
+import { advanceWeatherSurface, weatherSurface } from './weatherSurface';
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BackSide, Color, MathUtils, ShaderMaterial, Vector2 } from 'three';
@@ -51,6 +52,7 @@ export function WeatherControls() {
 
 export function Weather() {
   const start = useRef<{ at: number; weather: ReturnType<typeof useWeather.getState> } | null>(null);
+  const previousMinutes = useRef<number | null>(null);
   const material = useRef<ShaderMaterial>(null!);
   const uniforms = useMemo(() => ({ offset: { value: new Vector2() }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
   useFrame((_, delta) => {
@@ -64,6 +66,9 @@ export function Weather() {
       const next = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, MathUtils.lerp(start.current!.weather[key as keyof typeof target], value, blend)]));
       if (Object.entries(next).some(([key, value]) => state[key as keyof typeof target] !== value)) useWeather.setState(next);
     } else start.current = null;
+    const weather = useWeather.getState();
+    if (previousMinutes.current !== null && minutes >= previousMinutes.current) Object.assign(weatherSurface, advanceWeatherSurface(weatherSurface, weather.rain, weather.snow, minutes - previousMinutes.current));
+    previousMinutes.current = minutes;
     const { coverage, windSpeed, windDirection } = useWeather.getState();
     const direction = windDirection * Math.PI / 180;
     // m/s to scene centimetres; drift stays continuous when wind settings change.
