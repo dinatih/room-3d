@@ -24,6 +24,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   const groupRef = useRef<THREE.Group>(null);
   const beaconRef = useRef<THREE.Group>(null);
   const beaconMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const lanternMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const glowMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const strobeMatRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -115,22 +116,39 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     toneMapped: false,
   }), []);
 
-  // 3. Phare rotatif au sommet
+  // 3. Phare rotatif au sommet (axe vertical monde, inclinaison ascendante vers le ciel)
   const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_CENTER, 9.49, r)), [r]);
-  const summitRot = useMemo(() => {
-    const up = summitPos.clone().normalize();
-    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up);
-  }, [summitPos]);
 
   const beaconGeo = useMemo(() => {
-    const len = 1800;
-    const hw = 50;
-    const verts = new Float32Array([
-      0, 0, 0,  len, 20, hw,  len, 20, -hw,
-      0, 0, 0, -len, 20, -hw, -len, 20, hw,
-    ]);
+    const len = 1500;
+    const tipR = 38;
+    const tilt = 7.5 * (Math.PI / 180); // +7.5° d'élévation ascendante vers le ciel
+    const cosT = Math.cos(tilt);
+    const sinT = Math.sin(tilt);
+    const verts: number[] = [];
+    const colors: number[] = [];
+
+    const addBeam = (dirX: number) => {
+      const ex = dirX * len * cosT;
+      const ey = len * sinT;
+      const nx = -sinT * dirX * tipR;
+      const ny = cosT * tipR;
+      // Plan 1 (horizontal en Z)
+      verts.push(0, 0, 0, ex, ey, -tipR, ex, ey, tipR);
+      // Plan 2 (perpendiculaire à l'axe du faisceau)
+      verts.push(0, 0, 0, ex + nx, ey + ny, 0, ex - nx, ey - ny, 0);
+      // Dégradé : blanc bleuté au sommet -> atténuation vers l'obscurité
+      const cApex = [0.95, 0.98, 1.0];
+      const cTip = [0.02, 0.05, 0.10];
+      for (let i = 0; i < 2; i++) colors.push(...cApex, ...cTip, ...cTip);
+    };
+
+    addBeam(1);
+    addBeam(-1);
+
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     return geo;
   }, []);
 
@@ -146,8 +164,9 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       strobeMatRef.current.uniforms.uOpacity.value = nightFade;
     }
     if (glowMatRef.current) glowMatRef.current.opacity = 0.32 * nightFade;
-    if (beaconMatRef.current) beaconMatRef.current.opacity = 0.18 * nightFade;
-    if (beaconRef.current) beaconRef.current.rotation.y += delta * 0.4;
+    if (beaconMatRef.current) beaconMatRef.current.opacity = 0.22 * nightFade;
+    if (lanternMatRef.current) lanternMatRef.current.opacity = 0.9 * nightFade;
+    if (beaconRef.current) beaconRef.current.rotation.y += delta * 0.35;
   });
 
   if (currentHdri !== 'default' || !enabled) return null;
@@ -176,13 +195,27 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         renderOrder={-960}
       />
 
-      {/* Phare rotatif au sommet */}
-      <group position={summitPos} quaternion={summitRot}>
+      {/* Phare rotatif au sommet (rotation horizontale, incliné vers le ciel) */}
+      <group position={summitPos}>
+        {/* Ampoule éclatante de la lanterne */}
+        <mesh renderOrder={-945}>
+          <sphereGeometry args={[10, 16, 12]} />
+          <meshBasicMaterial
+            ref={lanternMatRef}
+            color="#ffffff"
+            transparent
+            opacity={0}
+            depthTest
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+        {/* Faisceaux volumétriques rotatifs */}
         <group ref={beaconRef}>
           <mesh geometry={beaconGeo} renderOrder={-950}>
             <meshBasicMaterial
               ref={beaconMatRef}
-              color="#eaf3ff"
+              vertexColors
               side={THREE.DoubleSide}
               transparent
               opacity={0}
