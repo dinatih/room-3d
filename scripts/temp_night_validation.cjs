@@ -15,6 +15,18 @@ const launch = require('./browser-test-options.cjs');
     page.on('console', message => { if (message.type() === 'error' && /shader|WebGLProgram/.test(message.text())) errors.push(message.text()); });
     const result = await page.evaluate(async () => {
       const { daylight } = await import('/src/features/scene/DayNight.tsx');
+      const { automaticWeather } = await import('/src/features/scene/Weather.tsx');
+      for (const [minute, condition] of [[30, 'clear'], [390, 'cloudy'], [750, 'rain'], [1110, 'snow']]) {
+        const weather = automaticWeather(minute);
+        if (condition === 'clear' && Math.abs(weather.coverage - 0.05) > 1e-9) throw Error('Clear phase');
+        if (condition === 'cloudy' && Math.abs(weather.coverage - 0.8) > 1e-9) throw Error('Cloudy phase');
+        if (condition === 'rain' && Math.abs(weather.rain - 0.8) > 1e-9) throw Error('Rain phase');
+        if (condition === 'snow' && Math.abs(weather.snow - 0.8) > 1e-9) throw Error('Snow phase');
+      }
+      for (const boundary of [360, 720, 1080, 1440]) {
+        const before = automaticWeather(boundary - 0.001), after = automaticWeather(boundary);
+        if (Math.abs(before.coverage - after.coverage) > 0.001) throw Error('Weather discontinuity');
+      }
       const hours = [0, 6, 7, 8, 12, 18, 20, 22, 24];
       return hours.map(hour => ({ hour, light: daylight(hour), moonY: Math.sin(((hour + 6) % 24) / 24 * Math.PI * 2) }));
     });
