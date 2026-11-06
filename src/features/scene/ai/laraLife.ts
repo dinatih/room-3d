@@ -58,8 +58,8 @@ export interface LifeCandidate {
   avoidedNeighbors?: string[];
 }
 
-// Gameplay seconds: needs become important in roughly two minutes.
-export const LIFE_SETTINGS = { activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
+// Positive needs grow four times more slowly; real interactions retain their relief rates.
+export const LIFE_SETTINGS = { needGrowthScale: 0.25, activitySeconds: 60, sleepPriority: 75, pauseSeconds: 20, socialRetrySeconds: 20, priority: 35 };
 const WALKING_MOVEMENT_RATE = -8; // A short walk satisfies roughly a minute of restlessness.
 export const LIFE_LABELS: Record<LifeActivity, string> = {
   tech: 'Consulter son téléphone', 'receive-massage': 'Recevoir un massage', dance: 'Danser', combat: 'S’entraîner au combat', massage: 'Donner un massage', yoga: 'Faire du yoga chez Églantine', clean: 'Entretenir la maison', bath: 'Se détendre dans le bain', rest: 'Se reposer', work: 'S’occuper au bureau', walk: 'Prendre l’air au jardin', meal: 'Préparer et prendre un repas', sleep: 'Aller dormir', pause: 'Faire une pause',
@@ -265,7 +265,7 @@ export function routineActivities(hour: number): LifeActivity[] {
   if (hour < 6 || hour >= 22) return ['sleep'];
   if (hour < 9) return ['shower', 'meal'];
   if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
-  return hour < 18 ? ['work', 'tech', 'yoga', 'dance', 'combat', 'walk'] : ['dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'social', 'affection', 'bath', 'yoga'];
+  return hour < 18 ? ['work', ...LEISURE_ACTIVITIES] : LEISURE_ACTIVITIES;
 }
 
 /** Need relief requires real interactions, walking or played physical exercise. */
@@ -276,7 +276,7 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
     const value = needs[key as keyof LifeNeeds];
     if (!Number.isFinite(value) || value < 0 || value > 100) throw new Error(`Invalid life need ${key}`);
     const delta = key === 'walk' && moving ? WALKING_MOVEMENT_RATE : key === 'company' && social ? rates.social.company : change;
-    return [key, Math.max(0, Math.min(100, value + delta * seconds))];
+    return [key, Math.max(0, Math.min(100, value + delta * seconds * (delta > 0 ? LIFE_SETTINGS.needGrowthScale : 1)))];
   })) as LifeNeeds;
 }
 

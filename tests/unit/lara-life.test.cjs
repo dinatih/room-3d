@@ -1,7 +1,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 require('../support/load-ts.cjs');
-const { createLife, evolveLife, chooseLifeActivity, LIFE_SETTINGS } = require('../../src/features/scene/ai/laraLife.ts');
+const { createLife, evolveLife, chooseLifeActivity, lifeClock, LIFE_SETTINGS } = require('../../src/features/scene/ai/laraLife.ts');
 const { load } = require('../support/load-ts.cjs');
 const position = { x: 0, z: 0 };
 const candidates = [
@@ -29,6 +29,16 @@ describe('Besoins de Lara Native', () => {
     assert(walking.rest > initial.rest && walking.walk < initial.walk);
     assert(resting.rest < initial.rest);
     assert.deepEqual(evolveLife(initial, 0, 'rest', true), initial);
+  });
+
+  it('laisse quatre minutes de loisirs sans urgence et conserve leur efficacité', () => {
+    const initial = Object.fromEntries(Object.keys(createLife('native').needs).map(key => [key, 0]));
+    for (const activity of ['dance', 'combat', 'yoga', 'social', 'read']) {
+      const needs = evolveLife(initial, 4 * 60, activity, false);
+      for (const key of ['rest', 'meal', 'hygiene', 'toilet']) assert(needs[key] < LIFE_SETTINGS.sleepPriority, `${activity}: ${key}`);
+    }
+    assert.equal(evolveLife(initial, 10 * 60, null, false).meal, 30);
+    assert.equal(evolveLife({ ...initial, work: 90, company: 90 }, 60, 'social', false).company, 0);
   });
 
   it('choisit selon l’urgence, puis la mémoire, la proximité et un ordre stable', () => {
@@ -134,8 +144,8 @@ it('finit par choisir le sommeil au cours d’une vie autonome, malgré les paus
   const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 0, z: 0 };
   let needs = createLife('native').needs, last = 'work', slept = false;
   needs = evolveLife(needs, LIFE_SETTINGS.activitySeconds, 'work', false);
-  for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 15 * 60;) {
-    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, 8, {}, 0);
+  for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 48 * 60;) {
+    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, lifeClock(seconds).hour, {}, seconds);
     if (selected?.activity === 'sleep') { slept = true; break; }
     const activity = selected?.activity ?? 'pause';
     if (activity === 'walk') needs = evolveLife(needs, 8, null, true);
@@ -257,7 +267,8 @@ it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urge
   assert(routineActivities(12).includes('meal'));
   const options = ['work', 'read', 'watch-tv', 'social', 'meal', 'sleep', 'rest'].map(activity => ({ ...candidates[0], activity, id: activity }));
   const needs = { rest: 50, work: 50, walk: 0, meal: 40, hygiene: 0, toilet: 0, company: 50, environment: 0 };
-  assert.equal(chooseLifeActivity(needs, options, position, null, 10, {}, 0).activity, 'work');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 10, {}, 0).activity, 'read');
+  assert.equal(chooseLifeActivity({ ...needs, company: 65 }, options, position, null, 10, {}, 0).activity, 'social');
   assert.equal(chooseLifeActivity(needs, options, position, null, 12, {}, 0).activity, 'meal');
   assert.equal(chooseLifeActivity({ ...needs, rest: 0 }, options, position, 'read', 21, {}, 0).activity, 'social');
   assert.equal(chooseLifeActivity(needs, options, position, null, 23, {}, 0).activity, 'sleep');
