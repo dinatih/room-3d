@@ -1,4 +1,4 @@
-import { CHARACTERS, isCharacterVisibleInMode, getEffectiveLaraCount, type LaraCountMode } from '../characterConfig';
+import { CHARACTERS, isCharacterVisibleInMode, ALL_LARA_COUNT, type LaraCountMode } from '../characterConfig';
 import { useCharacterGridStore } from './useCharacterGridStore';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
@@ -140,7 +140,7 @@ export function getActiveSceneCharactersCount(state?: {
   activeMainIds?: string[];
 }): number {
   const store = state ?? useSceneStore.getState();
-  const laraCount = getEffectiveLaraCount(store.layers.laraCount);
+  const laraCount = store.layers.laraCount ?? ALL_LARA_COUNT;
   const extraCharacters = store.layers.extraCharacters ?? false;
   const activeMainIds = (store as any).activeMainIds;
   return CHARACTERS.filter(char =>

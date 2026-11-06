@@ -3,18 +3,17 @@ import { useSceneStore } from '../../store/useSceneStore';
 import {
   NON_EXTRA_CHARACTERS,
   ALL_LARA_COUNT,
-  getEffectiveLaraCount,
   type LaraCountMode,
   findCharacter,
 } from '@features/scene/characterConfig';
 
 interface NonExtraCharactersSelectorProps {
-  isMobile: boolean;
+  isMobile?: boolean;
   compact?: boolean;
 }
 
 export function NonExtraCharactersSelector({
-  isMobile,
+  isMobile = false,
   compact = false,
 }: NonExtraCharactersSelectorProps) {
   const activeMainIds = useSceneStore(state => state.activeMainIds);
@@ -22,7 +21,7 @@ export function NonExtraCharactersSelector({
   const selectAllMainCharacters = useSceneStore(state => state.selectAllMainCharacters);
   const clearMainCharacters = useSceneStore(state => state.clearMainCharacters);
   const setLaraCount = useSceneStore(state => state.setLaraCount);
-  const currentLaraCount = getEffectiveLaraCount(useSceneStore(state => state.layers.laraCount), isMobile);
+  const currentLaraCount = useSceneStore(state => state.layers.laraCount ?? ALL_LARA_COUNT);
 
   const activeCount = activeMainIds.length;
   const totalCount = NON_EXTRA_CHARACTERS.length;

@@ -187,12 +187,6 @@ export const DEFAULT_LARA_COUNT: LaraCountMode = 9;
 /** Nombres de personnages proposés dans le sélecteur d'options. */
 export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 9, 10, ALL_LARA_COUNT];
 
-export function getEffectiveLaraCount(laraCount?: LaraCountMode, isMobile?: boolean): number {
-  if (laraCount !== undefined) return laraCount;
-  const mobile = isMobile ?? (typeof window !== 'undefined' && window.innerWidth <= 768);
-  return mobile ? 2 : ALL_LARA_COUNT;
-}
-
 /** Sélection du mode 10 : dix Laras. */
 export const TEN_PLAYERS_LARA_IDS = new Set([
   'vivida', 'native', 'rosanna', 'marissa', 'delphina',
