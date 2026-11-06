@@ -67,21 +67,7 @@ function createGrayscaleTexture(
 }
 
 export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
-  if (!style || style === 'native') {
-    model.traverse(node => {
-      const mesh = node as THREE.Mesh;
-      if (mesh.isMesh && mesh.userData?.__baseVariantMaterials) {
-        const currentMat = mesh.material as THREE.Material | THREE.Material[];
-        (Array.isArray(currentMat) ? currentMat : [currentMat]).forEach(m => {
-          if (m?.userData?.__ownedCharacterMaterial) m.dispose();
-        });
-        const base = mesh.userData.__baseVariantMaterials as THREE.Material[];
-        mesh.material = base.length === 1 ? base[0] : base;
-        delete mesh.userData.__baseVariantMaterials;
-      }
-    });
-    return;
-  }
+  if (!style) return;
   const isVivida = style === 'vivida';
   const isRosanna = style === 'rosanna';
   const isMarissa = style === 'marissa';
