@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box3, BufferAttribute, LineBasicMaterial, LineSegments, Raycaster, Vector3 } from 'three';
+import { Box3, BufferAttribute, LineBasicMaterial, LineSegments, Points, Raycaster, Vector3 } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { useWeather } from './Weather';
 
@@ -8,14 +8,15 @@ const COUNT = 4000;
 const HEIGHT = 1800;
 const SPEED = 900; // cm/s, terminal speed of large raindrops
 
-export function Rain() {
-  const lines = useRef<LineSegments>(null!);
+export function Rain({ snow = false }: { snow?: boolean }) {
+  const lines = useRef<LineSegments | Points>(null!);
   const drops = useMemo(() => Float32Array.from({ length: COUNT * 3 }, (_, i) => i % 3 === 1 ? Math.random() * HEIGHT : (Math.random() - 0.5) * SKY_RADIUS * 2), []);
-  const vertices = useMemo(() => new Float32Array(COUNT * 6), []);
+  const vertices = useMemo(() => new Float32Array(COUNT * (snow ? 3 : 6)), [snow]);
   const ray = useMemo(() => new Raycaster(new Vector3(), new Vector3(0, -1, 0)), []);
   const roofBounds = useMemo(() => new Box3(), []);
   const audio = useRef<{ context: AudioContext; gain: GainNode; source: AudioBufferSourceNode } | null>(null);
   useEffect(() => {
+    if (snow) return;
     const start = () => {
       if (!audio.current && useWeather.getState().rainVolume > 0) {
         const context = new AudioContext();
@@ -37,9 +38,11 @@ export function Rain() {
       document.removeEventListener('pointerup', start); document.removeEventListener('keyup', start);
       if (audio.current) { audio.current.source.stop(); void audio.current.context.close(); audio.current = null; }
     };
-  }, []);
+  }, [snow]);
   useFrame(({ scene, camera }, delta) => {
-    const { rain, rainVolume, windSpeed, windDirection } = useWeather.getState();
+    const { rain: rainfall, snow: snowfall, rainVolume, windSpeed, windDirection } = useWeather.getState();
+    const rain = snow ? snowfall : rainfall;
+    const speed = snow ? 100 : SPEED; // cm/s: slow flakes versus raindrops
     lines.current.visible = rain > 0;
     const roof = scene.getObjectByName('ceiling-group');
     if (roof) roofBounds.setFromObject(roof);
@@ -54,18 +57,25 @@ export function Rain() {
       const k = i * 3, v = i * 6;
       drops[k] = ((drops[k] + dx * delta + SKY_RADIUS) % (SKY_RADIUS * 2) + SKY_RADIUS * 2) % (SKY_RADIUS * 2) - SKY_RADIUS;
       drops[k + 2] = ((drops[k + 2] + dz * delta + SKY_RADIUS) % (SKY_RADIUS * 2) + SKY_RADIUS * 2) % (SKY_RADIUS * 2) - SKY_RADIUS;
-      drops[k + 1] = ((drops[k + 1] - SPEED * delta) % HEIGHT + HEIGHT) % HEIGHT;
+      drops[k + 1] = ((drops[k + 1] - speed * delta) % HEIGHT + HEIGHT) % HEIGHT;
       const x = drops[k] + SKY_CENTER[0], z = drops[k + 2] + SKY_CENTER[2], y = drops[k + 1];
       ray.ray.origin.set(x, HEIGHT, z);
       const hit = underRoof(x, z) ? ray.intersectObject(roof!, true)[0] : undefined;
       const floor = hit?.point.y ?? 0;
-      vertices.set([x, Math.max(floor, y), z, x, Math.max(floor, y + SPEED * 0.025), z], v);
+      if (snow) vertices.set([x, y < floor ? -HEIGHT : y, z], k);
+      else vertices.set([x, Math.max(floor, y), z, x, Math.max(floor, y + SPEED * 0.025), z], v);
     }
     (lines.current.geometry.attributes.position as BufferAttribute).needsUpdate = true;
-    lines.current.geometry.setDrawRange(0, Math.floor(COUNT * rain) * 2);
+    lines.current.geometry.setDrawRange(0, Math.floor(COUNT * rain) * (snow ? 1 : 2));
     (lines.current.material as LineBasicMaterial).opacity = 0.5;
   });
-  return <lineSegments ref={lines} frustumCulled={false}>
+  if (snow) return <points ref={lines as React.RefObject<Points>} frustumCulled={false}>
+    <bufferGeometry><bufferAttribute attach="attributes-position" args={[vertices, 3]} /></bufferGeometry>
+    <pointsMaterial color="white" size={3} transparent depthWrite={false} onBeforeCompile={shader => {
+      shader.fragmentShader = shader.fragmentShader.replace('#include <map_particle_fragment>', '#include <map_particle_fragment>\n diffuseColor.a *= 1.0 - smoothstep(0.3, 0.5, length(gl_PointCoord - vec2(0.5)));');
+    }} />
+  </points>;
+  return <lineSegments ref={lines as React.RefObject<LineSegments>} frustumCulled={false}>
     <bufferGeometry><bufferAttribute attach="attributes-position" args={[vertices, 3]} /></bufferGeometry>
     <lineBasicMaterial color="#bed5ed" transparent depthWrite={false} />
   </lineSegments>;

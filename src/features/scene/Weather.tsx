@@ -7,8 +7,9 @@ import { LAYER_ENVIRONMENT } from '@config';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { daylight, simulatedHour } from './DayNight';
 
-export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0 }));
+export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0, snow: 0 }));
 const settings = [
+  { key: 'snow', label: 'Neige', max: 1, step: 0.01, unit: '' },
   { key: 'rain', label: 'Pluie', max: 1, step: 0.01, unit: '' },
   { key: 'rainVolume', label: 'Volume pluie', max: 1, step: 0.01, unit: '' },
   { key: 'coverage', label: 'Couverture nuageuse', max: 1, step: 0.01, unit: '' },

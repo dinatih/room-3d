@@ -817,6 +817,7 @@ export function Studio() {
         <DayNight />
         <Weather />
         <Rain />
+        <Rain snow />
         <SceneAmbientLight />
         {layers.realSun ? (
           <>
