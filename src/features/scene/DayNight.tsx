@@ -23,7 +23,7 @@ export function DayNight() {
   const moonMaterial = useRef<MeshBasicMaterial>(null!);
   const stars = useRef<Points>(null!);
   const positions = useMemo(() => {
-    const count = 1500;
+    const count = 750;
     const points = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const y = (i + 0.5) / count;
