@@ -1,3 +1,4 @@
+import { Rain } from './Rain';
 import { Weather } from './Weather';
 import { DayNight } from './DayNight';
 /**
@@ -815,6 +816,7 @@ export function Studio() {
         <SkySphere />
         <DayNight />
         <Weather />
+        <Rain />
         <SceneAmbientLight />
         {layers.realSun ? (
           <>

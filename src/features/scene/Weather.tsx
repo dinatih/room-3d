@@ -7,8 +7,10 @@ import { LAYER_ENVIRONMENT } from '@config';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { daylight, simulatedHour } from './DayNight';
 
-export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90 }));
+export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0 }));
 const settings = [
+  { key: 'rain', label: 'Pluie', max: 1, step: 0.01, unit: '' },
+  { key: 'rainVolume', label: 'Volume pluie', max: 1, step: 0.01, unit: '' },
   { key: 'coverage', label: 'Couverture nuageuse', max: 1, step: 0.01, unit: '' },
   { key: 'windSpeed', label: 'Vent', max: 20, step: 0.5, unit: ' m/s' },
   { key: 'windDirection', label: 'Direction du vent', max: 360, step: 1, unit: '°' },
@@ -17,7 +19,7 @@ const settings = [
 export function WeatherControls() {
   const weather = useWeather();
   return <fieldset className="p-2 border-bottom" onKeyDown={event => event.stopPropagation()}>
-    <legend className="small fw-semibold mb-1">Nuages et vent</legend>
+    <legend className="small fw-semibold mb-1">Météo</legend>
     {settings.map(({ key, label, max, step, unit }) => <div key={key}>
       <label className="small form-label mb-0" htmlFor={`weather-${key}`}>{label} : {key === 'coverage' ? `${Math.round(weather[key] * 100)} %` : `${weather[key]}${unit}`}</label>
       <input id={`weather-${key}`} className="form-range" type="range" min={0} max={max} step={step} value={weather[key]} onChange={event => useWeather.setState({ [key]: Number(event.target.value) })} />
