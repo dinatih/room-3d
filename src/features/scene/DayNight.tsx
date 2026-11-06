@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { Color, MathUtils, Mesh, MeshBasicMaterial } from 'three';
-import { Stars } from '@react-three/drei';
+import { Points, PointsMaterial } from 'three';
+import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { useLaraLifeStore } from './ai/laraLifeStore';
 
 /** The household sky follows Lara, independently of the selected character. */
@@ -20,6 +21,18 @@ const dayColor = new Color('white');
 export function DayNight() {
   const moon = useRef<Mesh>(null!);
   const moonMaterial = useRef<MeshBasicMaterial>(null!);
+  const stars = useRef<Points>(null!);
+  const positions = useMemo(() => {
+    const count = 1500;
+    const points = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const y = (i + 0.5) / count;
+      const angle = i * Math.PI * (3 - Math.sqrt(5));
+      const radius = SKY_RADIUS * 0.9;
+      points.set([Math.cos(angle) * Math.sqrt(1 - y * y) * radius, y * radius, Math.sin(angle) * Math.sqrt(1 - y * y) * radius], i * 3);
+    }
+    return points;
+  }, []);
   useFrame(({ scene }) => {
     const hour = simulatedHour();
     const light = daylight(hour);
@@ -39,16 +52,19 @@ export function DayNight() {
     scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * (0.12 + 0.88 * light);
     scene.userData.lastNightEnvironment = scene.environmentIntensity;
     const angle = ((hour + 6) % 24) / 24 * Math.PI * 2;
-    moon.current.position.set(Math.cos(angle) * 3500, Math.sin(angle) * 3500, -2000);
+    moon.current.position.set(Math.cos(angle) * SKY_RADIUS * 0.8, Math.sin(angle) * SKY_RADIUS * 0.8, 0);
     moon.current.visible = light < 1 && moon.current.position.y > 0;
     moonMaterial.current.opacity = 1 - light;
+    (stars.current.material as PointsMaterial).opacity = 1 - light;
   });
-  const light = useLaraLifeStore(state => daylight((8 + state.characters.native.elapsedSeconds / 60) % 24));
-  return <>
+  return <group position={SKY_CENTER}>
     <mesh ref={moon}>
       <sphereGeometry args={[65, 24, 16]} />
       <meshBasicMaterial ref={moonMaterial} color="#dee7ff" transparent toneMapped={false} />
     </mesh>
-    <group visible={light < 0.5}><Stars radius={4500} depth={500} count={1500} factor={2} fade speed={0} /></group>
-  </>;
+    <points ref={stars}>
+      <bufferGeometry><bufferAttribute attach="attributes-position" args={[positions, 3]} /></bufferGeometry>
+      <pointsMaterial color="white" size={2} sizeAttenuation={false} transparent depthWrite={false} toneMapped={false} />
+    </points>
+  </group>;
 }
