@@ -1,3 +1,4 @@
+import { WindPlant } from '../WindPlant';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
@@ -78,12 +79,12 @@ export function GardenDecor() {
 
       {/* Yucca Elephantipes en pot (derrière la baignoire) */}
       <group position={[155, 0, -355]} rotation={[0, Math.PI, 0]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'yucca', kind: 'plant' }, itemName: 'Yucca Elephantipes' }}>
-        <NavigationObstacle id="yucca"><PottedYucca /></NavigationObstacle>
+        <NavigationObstacle id="yucca"><WindPlant rootHeight={35}><PottedYucca /></WindPlant></NavigationObstacle>
       </group>
 
       {/* Palmier en pot */}
       <group position={[100, 0, -145]} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'palm', kind: 'plant' }, itemName: 'Palmier en Pot' }}>
-        <NavigationObstacle id="palm" solidOnly><PottedPalm /></NavigationObstacle>
+        <NavigationObstacle id="palm" solidOnly><WindPlant rootHeight={35}><PottedPalm /></WindPlant></NavigationObstacle>
       </group>
 
       {/* Statues anatomiques (Chera - Squelette & Muscles) déplacées à gauche du trio */}

@@ -1,3 +1,4 @@
+import { WeatherAudio } from './WeatherAudio';
 import { DEFAULT_WEATHER, WEATHER_SAVE_KEY, parseWeatherSave, type WeatherSave, type WeatherSettings } from './weatherPersistence';
 import { advanceWeatherSurface, weatherSurface } from './weatherSurface';
 import { useEffect, useMemo, useRef } from 'react';
@@ -69,7 +70,7 @@ export function automaticWeather(minutes: number) {
 const settings = [
   { key: 'snow', label: 'Neige', max: 1, step: 0.01, unit: '' },
   { key: 'rain', label: 'Pluie', max: 1, step: 0.01, unit: '' },
-  { key: 'rainVolume', label: 'Volume pluie', max: 1, step: 0.01, unit: '' },
+  { key: 'rainVolume', label: 'Volume pluie et vent', max: 1, step: 0.01, unit: '' },
   { key: 'coverage', label: 'Couverture nuageuse', max: 1, step: 0.01, unit: '' },
   { key: 'windSpeed', label: 'Vent', max: 20, step: 0.5, unit: ' m/s' },
   { key: 'windDirection', label: 'Direction du vent', max: 360, step: 1, unit: '°' },
@@ -136,6 +137,7 @@ export function Weather() {
     active.tint.value.set('#182338').lerp(new Color('#edf1f5'), daylight(simulatedHour()));
   });
   return <CategoryLayerGroup layer={LAYER_ENVIRONMENT} register={false}>
+    <WeatherAudio />
     <mesh position={SKY_CENTER} renderOrder={10} userData={{ isSky: true }}>
       <sphereGeometry args={[SKY_RADIUS * 0.75, 48, 32]} />
       <shaderMaterial ref={material} uniforms={uniforms} side={BackSide} transparent depthWrite={false}
@@ -150,7 +152,7 @@ export function Weather() {
           void main() {
             vec3 ray = normalize(direction);
             if (ray.y <= 0.0) discard;
-            vec2 p = ray.xz / max(ray.y, 0.05) * 3.0 + offset / 3000.0;
+            vec2 p = ray.xz / max(ray.y, 0.05) * 3.0 - offset / 3000.0;
             float density = noise(p)*0.57 + noise(p*2.0)*0.28 + noise(p*4.0)*0.15;
             float alpha = smoothstep(1.0-coverage, 1.15-coverage, density) * smoothstep(0.0, 0.2, ray.y) * coverage;
             gl_FragColor = vec4(tint, alpha);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Box3, BufferAttribute, LineBasicMaterial, LineSegments, Points, Raycaster, Vector3 } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
@@ -14,44 +14,17 @@ export function Rain({ snow = false }: { snow?: boolean }) {
   const drops = useMemo(() => Float32Array.from({ length: COUNT * 3 }, (_, i) => i % 3 === 1 ? Math.random() * HEIGHT : (Math.random() - 0.5) * radius * 2), [radius]);
   const vertices = useMemo(() => new Float32Array(COUNT * (snow ? 3 : 6)), [snow]);
   const ray = useMemo(() => new Raycaster(new Vector3(), new Vector3(0, -1, 0)), []);
+  ray.layers.enableAll();
   const roofBounds = useMemo(() => new Box3(), []);
-  const audio = useRef<{ context: AudioContext; gain: GainNode; source: AudioBufferSourceNode } | null>(null);
-  useEffect(() => {
-    if (snow) return;
-    const start = () => {
-      if (!audio.current && useWeather.getState().rainVolume > 0) {
-        const context = new AudioContext();
-        const buffer = context.createBuffer(1, context.sampleRate * 4, context.sampleRate);
-        const samples = buffer.getChannelData(0);
-        for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
-        const source = context.createBufferSource();
-        source.buffer = buffer; source.loop = true;
-        const filter = context.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 1800;
-        const gain = context.createGain(); gain.gain.value = 0;
-        source.connect(filter).connect(gain).connect(context.destination); source.start();
-        audio.current = { context, gain, source };
-      }
-      if (audio.current) void audio.current.context.resume().catch(console.error);
-    };
-    document.addEventListener('pointerup', start);
-    document.addEventListener('keyup', start);
-    return () => {
-      document.removeEventListener('pointerup', start); document.removeEventListener('keyup', start);
-      if (audio.current) { audio.current.source.stop(); void audio.current.context.close(); audio.current = null; }
-    };
-  }, [snow]);
   useFrame(({ scene, camera }, delta) => {
-    const { rain: rainfall, snow: snowfall, rainVolume, windSpeed, windDirection } = useWeather.getState();
+    const { rain: rainfall, snow: snowfall, windSpeed, windDirection } = useWeather.getState();
     const rain = snow ? snowfall : rainfall;
     const speed = snow ? 100 : SPEED; // cm/s: slow flakes versus raindrops
     lines.current.visible = rain > 0;
+    if (!rain) return;
     const roof = scene.getObjectByName('ceiling-group');
     if (roof) roofBounds.setFromObject(roof);
     const underRoof = (x: number, z: number) => !!roof && x >= roofBounds.min.x && x <= roofBounds.max.x && z >= roofBounds.min.z && z <= roofBounds.max.z;
-    ray.ray.origin.set(camera.position.x, HEIGHT, camera.position.z);
-    const indoors = underRoof(camera.position.x, camera.position.z) && ray.intersectObject(roof!, true).some(hit => camera.position.y < hit.point.y);
-    if (audio.current) audio.current.gain.gain.setTargetAtTime(document.hidden ? 0 : rain * rainVolume * (indoors ? 0.08 : 0.3), audio.current.context.currentTime, 0.25);
-    if (!rain) return;
     const angle = windDirection * Math.PI / 180;
     const dx = Math.cos(angle) * windSpeed * 100, dz = Math.sin(angle) * windSpeed * 100;
     const centerX = snow ? camera.position.x - SKY_CENTER[0] : 0;
