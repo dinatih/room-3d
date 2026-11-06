@@ -147,9 +147,9 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_CENTER, 0.53, r)), [r]);
 
   const beaconGeo = useMemo(() => {
-    const len = 1500;
-    const tipR = 38;
-    const tilt = 7.5 * (Math.PI / 180); // +7.5° d'élévation ascendante vers le ciel
+    const len = 3900; // S'étend sur 39 m pour atteindre et traverser l'appartement (à ~34 m)
+    const tipR = 95;
+    const tilt = 2.2 * (Math.PI / 180); // +2.2° pour couper le mur Est pile à 1.63 m de haut
     const cosT = Math.cos(tilt);
     const sinT = Math.sin(tilt);
     const verts: number[] = [];
@@ -164,9 +164,9 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       verts.push(0, 0, 0, ex, ey, -tipR, ex, ey, tipR);
       // Plan 2 (perpendiculaire à l'axe du faisceau)
       verts.push(0, 0, 0, ex + nx, ey + ny, 0, ex - nx, ey - ny, 0);
-      // Dégradé : blanc bleuté au sommet -> atténuation vers l'obscurité
-      const cApex = [0.95, 0.98, 1.0];
-      const cTip = [0.02, 0.05, 0.10];
+      // Dégradé : blanc bleuté éclatant au sommet -> conserve une lueur visible jusqu'à l'appartement
+      const cApex = [1.0, 1.0, 1.0];
+      const cTip = [0.12, 0.20, 0.32];
       for (let i = 0; i < 2; i++) colors.push(...cApex, ...cTip, ...cTip);
     };
 
@@ -191,14 +191,14 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       strobeMatRef.current.uniforms.uOpacity.value = nightFade;
     }
     if (glowMatRef.current) glowMatRef.current.opacity = 0.32 * nightFade;
-    if (beaconMatRef.current) beaconMatRef.current.opacity = 0.22 * nightFade;
+    if (beaconMatRef.current) beaconMatRef.current.opacity = 0.35 * nightFade;
     if (lanternMatRef.current) lanternMatRef.current.opacity = 0.9 * nightFade;
     if (beaconRef.current) {
       beaconRef.current.rotation.y += delta * 0.35;
       // Balayage lumineux sur le mur Est : pic quand l'un des deux faisceaux traverse l'azimut de l'appartement
-      const sweep = Math.pow(Math.abs(Math.cos(beaconRef.current.rotation.y - (-3.052))), 48.0);
+      const sweep = Math.pow(Math.abs(Math.cos(beaconRef.current.rotation.y - 3.052)), 40.0);
       if (eastWallLightRef.current) {
-        eastWallLightRef.current.intensity = sweep * 1.8 * nightFade;
+        eastWallLightRef.current.intensity = sweep * 28.0 * nightFade;
       }
     }
   });
@@ -207,13 +207,13 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
 
   return (
     <group ref={groupRef} name="EiffelTowerLights">
-      {/* Balayage lumineux du phare sur le mur Est de l'appartement */}
+      {/* Balayage lumineux puissant du phare sur le mur Est de l'appartement */}
       <pointLight
         ref={eastWallLightRef}
-        position={[240, 140, 50]}
-        distance={380}
-        decay={1.6}
-        color="#dce9ff"
+        position={[320, 160, 50]}
+        distance={900}
+        decay={1.2}
+        color="#eaf3ff"
         intensity={0}
       />
 
