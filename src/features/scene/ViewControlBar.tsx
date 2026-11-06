@@ -3,7 +3,7 @@ import { TOOLBAR_CLASS, TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useSceneStore } from './store/useSceneStore';
-import { CAMERA_SHORTCUT_VIEWS, CARDINAL_VIEWS, dispatchView, ELEVATION_VIEWS } from './sidepanel/types';
+import { CARDINAL_VIEWS, dispatchView, ELEVATION_VIEWS } from './sidepanel/types';
 import { getCharacterGridCameraView } from './character/characterGridUtils';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { HDRI_LIST } from './hdriConfig';
@@ -415,12 +415,6 @@ export function ViewControlBar({
   return (
     <div className={`view-control-bar-dock ${children ? 'view-control-bar-dock--stacked gap-2' : ''}`} style={{ position: 'fixed', zIndex: 1000, ...positionStyle, ...mobilePositionStyle, ...mobileDockOffset }}>
       {directionalControls}
-      {activeCameraPos && (
-        <span className="badge text-bg-dark bg-opacity-75 view-control-bar-dock__view-label">
-          {CAMERA_SHORTCUT_VIEWS.find(view => view.key === activeCameraPos)?.label ?? activeCameraPos}
-          {' · '}{isOrtho ? 'Orthographique' : 'Perspective'}
-        </span>
-      )}
       {bar}
       {children && <div className="view-control-bar-dock__content mw-100">{children}</div>}
     </div>
