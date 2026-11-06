@@ -330,7 +330,7 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
 const initialActiveChar = parseUrlActiveCharacter();
 const initialActiveCharacterId = initialActiveChar ? initialActiveChar.id : (initialLayers.laraCount === 1 ? 'vivida' : 'native');
 
-const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount ?? DEFAULT_LARA_COUNT, initialActiveCharacterId);
+const initialCharacterIds = getDefaultSceneCharacterIds(initialLayers.laraCount, initialActiveCharacterId);
 const initialActiveMainIds = initialCharacterIds.filter(id => !isExtraCharacter(id));
 let initialActiveExtraIds = initialCharacterIds.filter(isExtraCharacter);
 initialLayers.extraCharacters = initialActiveExtraIds.length > 0;
@@ -624,7 +624,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
         if (!nextLayers.character) {
           updateUrlCharacterCount(0);
         } else {
-          updateUrlCharacterCount(state.layers.laraCount ?? DEFAULT_LARA_COUNT);
+          updateUrlCharacterCount(state.layers.laraCount);
         }
       }
       cameraState.invalidate?.();

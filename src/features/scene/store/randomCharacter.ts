@@ -6,7 +6,7 @@ export function chooseRandomCharacter() {
   const candidates = CHARACTERS.filter(character =>
     character.id !== state.activeCharacterId && isCharacterVisibleInMode(
       character.id,
-      state.layers.laraCount ?? 4,
+      state.layers.laraCount,
       state.activeCharacterId,
       state.layers.extraCharacters ?? false,
       state.activeExtraIds,

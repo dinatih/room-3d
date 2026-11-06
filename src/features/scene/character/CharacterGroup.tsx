@@ -25,7 +25,7 @@ function InternalCharacterGroup(props: CharacterGroupProps) {
   }, []);
   const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
-  const laraCount = useSceneStore(state => state.layers.laraCount ?? 4);
+  const laraCount = useSceneStore(state => state.layers.laraCount);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);

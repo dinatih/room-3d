@@ -19,7 +19,7 @@ export function CharacterSelect({ hideUI = false, value, onChange, characters = 
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const visibleCharacterIds = new Set(CHARACTERS.filter(c =>
     layers.character && layers.showAllLaraStyles && isCharacterVisibleInMode(
-      c.id, layers.laraCount ?? 4, activeCharacterId, layers.extraCharacters ?? false,
+      c.id, layers.laraCount, activeCharacterId, layers.extraCharacters ?? false,
       activeExtraIds, activeMainIds,
     )
   ).map(c => c.id));

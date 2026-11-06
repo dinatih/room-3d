@@ -667,7 +667,7 @@ export function HoverOverlay() {
                       let minDistance = Infinity;
 
                       const store = useSceneStore.getState();
-                      const laraCount = store.layers.laraCount ?? 4;
+                      const laraCount = store.layers.laraCount;
                       const extraChars = store.layers.extraCharacters ?? false;
                       const activeCharacterId = store.activeCharacterId;
                       const activeExtraIds = store.activeExtraIds;

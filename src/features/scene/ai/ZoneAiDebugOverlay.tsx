@@ -57,7 +57,7 @@ function ZoneAiDebugOverlayContent() {
 
   // Liste des PNJs disponibles dans la scène (humains uniquement)
   const availableNpcs = useMemo(() => {
-    const laraCount = layers.laraCount ?? 4;
+    const laraCount = layers.laraCount;
     const extraChars = layers.extraCharacters ?? false;
     return CHARACTERS.filter(
       (c) =>

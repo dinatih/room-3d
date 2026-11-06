@@ -1,4 +1,4 @@
-import { CHARACTERS, isCharacterVisibleInMode, ALL_LARA_COUNT, type LaraCountMode } from '../characterConfig';
+import { CHARACTERS, isCharacterVisibleInMode, type LaraCountMode } from '../characterConfig';
 import { useCharacterGridStore } from './useCharacterGridStore';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 
@@ -18,7 +18,7 @@ function getGridLayout(total: number) {
   const [offsetX, offsetY, offsetZ] = duo?.offsetB ?? [0, 0, 0];
   const store = useSceneStore.getState();
   const leaders = CHARACTERS.filter(char => isCharacterVisibleInMode(char.id,
-    store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false,
+    store.layers.laraCount, store.activeCharacterId, store.layers.extraCharacters ?? false,
     store.activeExtraIds, store.activeMainIds));
   const leaderHeight = Math.max(CHARACTER_GRID_CONFIG.characterHeight, ...leaders.map(char => char.height));
   const partnerHeight = duo ? CHARACTERS.find(char => char.id === partnerId)?.height ?? leaderHeight : 0;
@@ -140,7 +140,7 @@ export function getActiveSceneCharactersCount(state?: {
   activeMainIds?: string[];
 }): number {
   const store = state ?? useSceneStore.getState();
-  const laraCount = store.layers.laraCount ?? ALL_LARA_COUNT;
+  const laraCount = store.layers.laraCount;
   const extraCharacters = store.layers.extraCharacters ?? false;
   const activeMainIds = (store as any).activeMainIds;
   return CHARACTERS.filter(char =>

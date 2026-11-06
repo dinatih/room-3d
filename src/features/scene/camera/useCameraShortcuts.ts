@@ -8,7 +8,7 @@ import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
 import { useDroneControlStore } from '../droneControls';
 import { appLog } from '@features/ui/AppConsole';
-import { CHARACTERS, isCharacterVisibleInMode, ALL_LARA_COUNT } from '../characterConfig';
+import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
 import { dispatchView } from '../sidepanel/types';
 import { PERSP_POS, PERSP_TARGET } from './cameraConstants';
@@ -429,7 +429,7 @@ export function useCameraShortcuts({
 
       if (e.key === 'l' || e.key === 'L') {
         const store = useSceneStore.getState();
-        const laraCount = store.layers.laraCount ?? ALL_LARA_COUNT;
+        const laraCount = store.layers.laraCount;
         const visibleChars = CHARACTERS.filter(c => isCharacterVisibleInMode(c.id, laraCount, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds));
         const currentIndex = visibleChars.findIndex(c => c.id === store.activeCharacterId);
         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % visibleChars.length;

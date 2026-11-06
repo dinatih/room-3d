@@ -21,7 +21,7 @@ export function NonExtraCharactersSelector({
   const selectAllMainCharacters = useSceneStore(state => state.selectAllMainCharacters);
   const clearMainCharacters = useSceneStore(state => state.clearMainCharacters);
   const setLaraCount = useSceneStore(state => state.setLaraCount);
-  const currentLaraCount = useSceneStore(state => state.layers.laraCount ?? ALL_LARA_COUNT);
+  const currentLaraCount = useSceneStore(state => state.layers.laraCount);
 
   const activeCount = activeMainIds.length;
   const totalCount = NON_EXTRA_CHARACTERS.length;

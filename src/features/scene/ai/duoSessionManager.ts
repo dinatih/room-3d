@@ -387,7 +387,7 @@ class DuoSessionManager {
 
     for (const npcId of AUTONOMOUS_NPC_IDS) {
       if (!session.playlist.every(def => canCharacterPerformDuo(npcId, def))) continue;
-      if (!isCharacterVisibleInMode(npcId, store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds)) continue;
+      if (!isCharacterVisibleInMode(npcId, store.layers.laraCount, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds)) continue;
       if (npcId === callerId) continue;
       if (npcId === store.activeCharacterId) continue;
       if (session.participantA?.characterId === npcId) continue;
@@ -556,7 +556,7 @@ class DuoSessionManager {
       const storeState = useSceneStore.getState();
       if (!allowPlayer && id === storeState.activeCharacterId) return false;
       return (
-        isCharacterVisibleInMode(id, storeState.layers.laraCount ?? 4, storeState.activeCharacterId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds, storeState.activeMainIds) ||
+        isCharacterVisibleInMode(id, storeState.layers.laraCount, storeState.activeCharacterId, storeState.layers.extraCharacters ?? false, storeState.activeExtraIds, storeState.activeMainIds) ||
         id === storeState.activeCharacterId
       );
     };
@@ -710,7 +710,7 @@ class DuoSessionManager {
     if (!targetA || !targetB) {
       const store = useSceneStore.getState();
       const candidates = Array.from(AUTONOMOUS_NPC_IDS)
-        .filter(id => isCharacterVisibleInMode(id, store.layers.laraCount ?? 4, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds) && canCharacterPerformDuo(id, def) && id !== targetA && id !== targetB && !this.getSessionFor(id))
+        .filter(id => isCharacterVisibleInMode(id, store.layers.laraCount, store.activeCharacterId, store.layers.extraCharacters ?? false, store.activeExtraIds, store.activeMainIds) && canCharacterPerformDuo(id, def) && id !== targetA && id !== targetB && !this.getSessionFor(id))
         .sort((a, b) => {
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];

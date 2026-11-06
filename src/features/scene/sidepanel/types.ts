@@ -129,7 +129,7 @@ export interface LayerState {
   laraBottom: LaraClothing;
   laraShoes?:   boolean;
   laraRealisticTextures?: boolean;
-  laraCount?:   LaraCountMode;
+  laraCount:    LaraCountMode;
   showAllLaraStyles: boolean;
   extraCharacters?: boolean;
   wallhack: boolean;

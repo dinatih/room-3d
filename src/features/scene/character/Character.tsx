@@ -15,7 +15,7 @@ import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
-import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter, ALL_LARA_COUNT } from '../characterConfig';
+import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
 import { buildHairChain } from '../retargeting/index';
 import {
@@ -130,7 +130,7 @@ export function Character({
 
   const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
-  const laraCount = useSceneStore(state => state.layers.laraCount ?? ALL_LARA_COUNT);
+  const laraCount = useSceneStore(state => state.layers.laraCount);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeMainIds = useSceneStore(state => state.activeMainIds);
