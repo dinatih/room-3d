@@ -155,7 +155,7 @@ function drawMinimap(
   // ── Other characters (NPCs) icons (y compris à l'extérieur) ─────────────────
   const activeCharacterId = useSceneStore.getState().activeCharacterId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
-  const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
+  const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 16);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
   const showAnimals = useSceneStore.getState().layers.animals ?? true;
   const activeExtraIds = useSceneStore.getState().activeExtraIds;

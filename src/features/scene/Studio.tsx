@@ -591,7 +591,7 @@ export function Studio() {
           e.preventDefault();
           if (e.repeat) return;
           const store = useSceneStore.getState();
-          store.setLaraCount(store.layers.laraCount === 15 ? 4 : 15);
+          store.setLaraCount(store.layers.laraCount === 16 ? 4 : 16);
           return;
         }
         if (k === 'p') {

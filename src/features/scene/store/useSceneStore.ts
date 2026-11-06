@@ -711,7 +711,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   selectAllMainCharacters: () => {
     set((state) => ({
       activeMainIds: NON_EXTRA_CHARACTERS.map(c => c.id),
-      layers: { ...state.layers, laraCount: 15 }
+      layers: { ...state.layers, laraCount: 16 }
     }));
     cameraState.invalidate?.();
   },

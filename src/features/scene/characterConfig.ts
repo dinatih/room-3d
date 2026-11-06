@@ -169,7 +169,7 @@ export type LaraCountMode = number;
 export const DEFAULT_LARA_COUNT: LaraCountMode = 9;
 
 /** Nombres de personnages proposés dans le sélecteur d'options. */
-export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 9, 10, 15];
+export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 9, 10, 16];
 
 /** Sélection du mode 10 : dix Laras. */
 export const TEN_PLAYERS_LARA_IDS = new Set([
@@ -187,7 +187,7 @@ export function isExtraCharacter(c: CharacterConfig | string): boolean {
 /** Liste des personnages extras (hors Laras et robots) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
-/** Liste des personnages principaux / non-extras (15 Laras au total) */
+/** Liste des personnages principaux / non-extras (16 Laras au total) */
 export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c));
 
 /** Sélection numérique exacte, avec le personnage actif inclus dans le total. */
@@ -209,7 +209,7 @@ export function getDefaultSceneCharacterIds(count: number, activeCharacterId?: s
 }
 
 /** Sélection des personnages principaux pour les contrôles du panneau latéral. */
-export function getDefaultNonExtraIds(mode: LaraCountMode = 15, activeCharacterId?: string): string[] {
+export function getDefaultNonExtraIds(mode: LaraCountMode = 16, activeCharacterId?: string): string[] {
   return getDefaultSceneCharacterIds(mode, activeCharacterId).filter(id => !isExtraCharacter(id));
 }
 
@@ -225,7 +225,7 @@ export const ANATOMICAL_EXTRA_IDS = [
 
 export function isCharacterVisibleInMode(
   id: string,
-  mode: LaraCountMode = 15,
+  mode: LaraCountMode = 16,
   activeCharacterId?: string,
   extraCharacters: boolean = false,
   activeExtraIds?: string[] | Set<string>,

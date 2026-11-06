@@ -130,7 +130,7 @@ export function Character({
 
   const characterGrid = useSceneStore(state => state.layers.characterGrid);
   const showAllLaraStyles = useSceneStore(state => state.layers.showAllLaraStyles);
-  const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15));
+  const laraCount = useSceneStore(state => state.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 16));
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeMainIds = useSceneStore(state => state.activeMainIds);

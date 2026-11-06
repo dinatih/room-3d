@@ -140,7 +140,7 @@ export function getActiveSceneCharactersCount(state?: {
   activeMainIds?: string[];
 }): number {
   const store = state ?? useSceneStore.getState();
-  const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 15);
+  const laraCount = store.layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 16);
   const extraCharacters = store.layers.extraCharacters ?? false;
   const activeMainIds = (store as any).activeMainIds;
   return CHARACTERS.filter(char =>
