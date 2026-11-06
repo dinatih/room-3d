@@ -1,3 +1,4 @@
+import { useSceneStore } from './store/useSceneStore';
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { Color, MathUtils, Mesh, MeshBasicMaterial } from 'three';
@@ -19,6 +20,7 @@ const nightColor = new Color('#17243e');
 const dayColor = new Color('white');
 
 export function DayNight() {
+  const previousNight = useRef<boolean | null>(null);
   const moon = useRef<Mesh>(null!);
   const moonMaterial = useRef<MeshBasicMaterial>(null!);
   const stars = useRef<Points>(null!);
@@ -36,6 +38,13 @@ export function DayNight() {
   useFrame(({ scene }) => {
     const hour = simulatedHour();
     const light = daylight(hour);
+    const night = hour < 6 || hour >= 18;
+    if (previousNight.current !== night) {
+      previousNight.current = night;
+      const store = useSceneStore.getState();
+      if (store.layers.lightsHD !== night) store.toggleLayer('lightsHD');
+      store.triggerAction('lamp-toggle', night);
+    }
     scene.traverse(object => {
       if (object.name === 'SkySphere') object.traverse(child => {
         const material = (child as Mesh).material;

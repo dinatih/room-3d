@@ -163,10 +163,10 @@ export function KitchenFurnishings() {
       >
         <Kolvatten00594176 actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} />
         <pointLight
-          position={[0, 5, 0]}
-          intensity={isKitchenLampOn ? (lightsHD ? 80 : 2.5) * brightness : 0}
-          distance={lightsHD ? 0 : 200}
-          decay={lightsHD ? 1.0 : 2.0}
+          position={[0, 5, 8]}
+          intensity={isKitchenLampOn ? (lightsHD ? 20 : 2) * 100 ** 2 * brightness : 0}
+          distance={200}
+          decay={2}
           color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}

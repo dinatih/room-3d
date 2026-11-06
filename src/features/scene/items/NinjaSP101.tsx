@@ -1,3 +1,4 @@
+import { useSceneStore } from '../store/useSceneStore';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -13,6 +14,7 @@ const LIGHT_FADE_DURATION = 0.25;
 
 export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB, true);
+  const lightsHD = useSceneStore(state => !isPreview && state.layers.lightsHD);
   const wantRack = !!actionState['ninja-rack'];
   const wantDoor = !!actionState.ninja || wantRack;
   const lightOn = !!actionState['ninja-light'];
@@ -57,9 +59,9 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     const material = bulb.material as THREE.MeshStandardMaterial;
     material.emissive.set('#ffd391');
     material.emissiveIntensity = 0;
-    const light = new THREE.PointLight('#ffe0a6', 0, 0, 2);
+    const light = new THREE.PointLight('#ffe0a6', 0, 70, 2);
     light.name = 'NinjaInteriorLight';
-    light.castShadow = true;
+    light.castShadow = false;
     light.layers.enableAll();
     light.shadow.camera.layers.enableAll();
     light.shadow.camera.near = 0.1;
@@ -76,7 +78,7 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
         material.shadowSide = THREE.DoubleSide;
       }
     });
-    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, door, rack, light, material, intensity: anchor.userData.lumens / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
+    runtime.current = { size: box.getSize(new THREE.Vector3()), mixer, door, rack, light, material, intensity: 12 / (4 * Math.PI) * 100 ** 2, lightTime: 0 };
     invalidate();
     return () => {
       runtime.current = null;
@@ -96,6 +98,8 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r || paused) return;
+    r.light.castShadow = lightsHD;
+    r.light.intensity = r.intensity * (r.lightTime / LIGHT_FADE_DURATION) * (lightsHD ? 1 : 0.25);
     const advance = (time: number, end: number) => time < end ? Math.min(end, time + delta) : Math.max(end, time - delta);
     const doorEnd = wantDoor ? r.door.getClip().duration : 0;
     const rackEnd = wantRack ? r.rack.getClip().duration : 0;
@@ -108,8 +112,8 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     r.mixer.update(0);
     r.lightTime = advance(r.lightTime, lightEnd);
     const brightness = r.lightTime / LIGHT_FADE_DURATION;
-    r.light.intensity = r.intensity * brightness;
-    r.material.emissiveIntensity = 3 * brightness;
+    r.light.intensity = r.intensity * brightness * (lightsHD ? 1 : 0.25);
+    r.material.emissiveIntensity = brightness;
     if (r.door.time !== doorEnd || r.rack.time !== rackEnd || r.lightTime !== lightEnd) invalidate();
   });
 

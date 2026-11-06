@@ -1,3 +1,8 @@
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import type { PointLight } from 'three';
+import { OccupancyManager } from '../ai/occupancyManager';
+import { cameraState } from '../cameraState';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
 import { useLightAppearance } from '../../home-assistant/useLightAppearance';
@@ -33,6 +38,23 @@ const TOILET_FOOTPRINT = [
   { x: TOILET_W / 2 - TOILET_OBSTACLE_INSET, z: TOILET_D / 2 - TOILET_OBSTACLE_INSET },
   { x: -TOILET_W / 2 + TOILET_OBSTACLE_INSET, z: TOILET_D / 2 - TOILET_OBSTACLE_INSET },
 ];
+
+function SinkLight() {
+  const light = useRef<PointLight>(null!);
+  const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  useFrame(() => {
+    const inUse = OccupancyManager.getReservations().some(({ slot, characterId }) => {
+      if (!slot.startsWith('vasque-sdb:')) return false;
+      const action = SMART_OBJECTS['vasque-sdb'].slots.find(candidate => candidate.slotId === slot.split(':')[1]);
+      return !!action?.animation && action.animation === cameraState.positions[characterId]?.anim;
+    });
+    light.current.intensity = inUse ? (lightsHD ? 6 : 0.6) * 100 ** 2 : 0;
+  });
+  return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
+    <Vathult40467548 />
+    <pointLight ref={light} position={[0, -3, 8]} color="#fff2dc" intensity={0} distance={140} decay={2} castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} shadow-camera-far={180} />
+  </group>;
+}
 
 export function BathroomEquipment() {
   const { name, color, brightness } = useLightAppearance('lampBath', 0xfff5e6);
@@ -86,9 +108,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* VÅTHULT — bandeau LED 35 cm au-dessus du miroir vasque */}
-      <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
-        <Vathult40467548 />
-      </group>
+      <SinkLight />
 
       {/* Cabine de Douche */}
       <group

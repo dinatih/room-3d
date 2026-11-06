@@ -19,6 +19,7 @@ export const FRIDGE_CRISPER_DURATION = 1;
 
 export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene, animations } = useGLTFClone(GLB, true);
+  const lightsHD = useSceneStore(state => !isPreview && state.layers.lightsHD);
   const sceneOpen = useSceneStore(s => s.furniture.fridge);
   const sceneCrisper = useSceneStore(s => s.extraStates['fridge-crisper-toggle']);
   const wantCrisper = isPreview ? !!actionState['fridge-crisper-toggle'] : sceneCrisper;
@@ -31,7 +32,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     bulb: THREE.PointLight;
     intensity: number;
   } | null>(null);
-  const { camera, invalidate } = useThree();
+  const { invalidate } = useThree();
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
@@ -64,16 +65,16 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     };
     const anchor = scene.getObjectByName('LampAnchor');
     if (!anchor) throw new Error('LAGAN: missing interior light anchor');
-    // 5 W bulb, approximately 45 lm. Convert candela from metres to centimetres.
-    const intensity = anchor.userData.powerWatts * 9 / (4 * Math.PI) * 100 ** 2;
-    const bulb = new THREE.PointLight('#fff1d6', 0, 0, 2);
+    // Modest 20 lm interior LED, converted to centimetre scene units.
+    const intensity = 20 / (4 * Math.PI) * 100 ** 2;
+    const bulb = new THREE.PointLight('#fff1d6', 0, 100, 2);
     bulb.name = 'FridgeInteriorLight';
-    bulb.castShadow = true;
+    bulb.castShadow = false;
     bulb.layers.enableAll();
     bulb.shadow.camera.layers.enableAll();
     bulb.shadow.camera.near = 0.1;
-    // Keep walls occluding the unlimited point light throughout the visible scene.
-    bulb.shadow.camera.far = camera.far;
+    // Shadows stay local to the appliance.
+    bulb.shadow.camera.far = 150;
     bulb.shadow.mapSize.set(512, 512);
     bulb.shadow.normalBias = 0.05; // Half a millimetre in scene centimetres.
     bulb.shadow.bias = -0.1 / bulb.shadow.camera.far; // 1 mm depth offset prevents self-shadow acne.
@@ -93,7 +94,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
       anchor.remove(bulb);
       bulb.dispose();
     };
-  }, [scene, animations, camera, invalidate, isPreview]);
+  }, [scene, animations, invalidate, isPreview]);
 
   useLayoutEffect(() => {
     onSize?.(runtime.current!.size.clone());
@@ -104,6 +105,8 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r || (isPreview && actionState.previewPaused)) return;
+    r.bulb.castShadow = lightsHD;
+    r.bulb.intensity = wantDoor || r.door.time > 0 ? r.intensity * (lightsHD ? 1 : 0.25) : 0;
     const doorEnd = wantDoor ? FRIDGE_DOOR_DURATION : 0;
     const drawerEnd = wantCrisper ? r.crisper.getClip().duration : 0;
     if (r.door.time === doorEnd && r.crisper.time === drawerEnd) return;
@@ -115,7 +118,7 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     else if (r.crisper.time !== drawerEnd) move(r.crisper, drawerEnd);
     r.mixer.update(0);
     const lit = wantDoor || r.door.time > 0;
-    r.bulb.intensity = lit ? r.intensity : 0;
+    r.bulb.intensity = lit ? r.intensity * (lightsHD ? 1 : 0.25) : 0;
     if (r.door.time !== doorEnd || r.crisper.time !== drawerEnd) invalidate();
   });
 
