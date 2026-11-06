@@ -297,25 +297,17 @@ function ActiveCameraCapture({ onCapture }: { onCapture: (cam: PerspectiveCamera
 }
 
 function LoadingProgress({
-  skipIntro,
   sceneReady,
   onAssetsLoaded,
-  onCountdownStart,
-  onCountdownTick,
   onLaunch,
 }: {
-  skipIntro: boolean;
   sceneReady: boolean;
   onAssetsLoaded: () => void;
-  onCountdownStart: () => void;
-  onCountdownTick: (seconds: number) => void;
   onLaunch: () => void;
 }) {
   const { progress, active, item } = useProgress();
   const assetsDoneRef = useRef(false);
-  const countdownStartedRef = useRef(false);
   const hasLaunchedRef = useRef(false);
-  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // 1. Suivi du téléchargement des assets
   useEffect(() => {
@@ -338,60 +330,12 @@ function LoadingProgress({
     }
   }, [progress, active, item, sceneReady, onAssetsLoaded]);
 
-  // 2. Déclenchement du décompte de 5s UNIQUEMENT à la toute fin (une fois l'optimisation GPU terminée)
+  // 2. Lancement dès que les assets sont chargés et l'optimisation GPU terminée
   useEffect(() => {
-    if (!assetsDoneRef.current || !sceneReady || countdownStartedRef.current) return;
-    countdownStartedRef.current = true;
-    if (skipIntro) {
-      hasLaunchedRef.current = true;
-      onLaunch();
-      return;
-    }
-    onCountdownStart();
-
-    const itemEl = document.getElementById('loading-item');
-    const countdownContainer = document.getElementById('loading-countdown-container');
-    const timerEl = document.getElementById('loading-countdown-timer');
-    const textEl = document.getElementById('loading-countdown-text');
-    const btnStart = document.getElementById('btn-start-now');
-
-    // Masquer le libellé de chargement individuel pour laisser toute la place au compte à rebours de lancement
-    if (itemEl) itemEl.style.display = 'none';
-    if (countdownContainer) countdownContainer.style.display = 'flex';
-    if (timerEl) timerEl.textContent = '5';
-
-    let remainingSeconds = 5;
-
-    const launchApp = () => {
-      if (hasLaunchedRef.current) return;
-      hasLaunchedRef.current = true;
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-        countdownTimerRef.current = null;
-      }
-      if (btnStart) btnStart.setAttribute('disabled', 'true');
-      if (textEl) textEl.textContent = '🚀 Lancement de la scène 3D…';
-      onLaunch();
-    };
-
-    if (btnStart) btnStart.onclick = launchApp;
-
-    countdownTimerRef.current = setInterval(() => {
-      remainingSeconds--;
-      onCountdownTick(remainingSeconds);
-      if (timerEl) timerEl.textContent = remainingSeconds.toString();
-      if (remainingSeconds <= 0) {
-        launchApp();
-      }
-    }, 1000);
-
-    return () => {
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-        countdownTimerRef.current = null;
-      }
-    };
-  }, [sceneReady, skipIntro, onLaunch, onCountdownStart, onCountdownTick]);
+    if (!assetsDoneRef.current || !sceneReady || hasLaunchedRef.current) return;
+    hasLaunchedRef.current = true;
+    onLaunch();
+  }, [sceneReady, onLaunch]);
 
   return null;
 }
@@ -749,9 +693,6 @@ export function Studio() {
 
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
   const [showLoadingShiba, setShowLoadingShiba] = useState(true);
-  const [loadingCountdownStarted, setLoadingCountdownStarted] = useState(false);
-  const [loadingCountdown, setLoadingCountdown] = useState(5);
-  const handleCountdownStart = useCallback(() => setLoadingCountdownStarted(true), []);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
 
   const handleAssetsLoaded = useCallback(() => {
@@ -828,8 +769,8 @@ export function Studio() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       {showLoadingShiba && <>
-        <LoadingProgress skipIntro={parseUrlSkipIntro()} sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onCountdownStart={handleCountdownStart} onCountdownTick={setLoadingCountdown} onLaunch={handleLaunch} />
-        <LoadingShiba countdownStarted={loadingCountdownStarted} countdownSeconds={loadingCountdown} />
+        <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
+        <LoadingShiba />
       </>}
       <Canvas
         style={{ width: '100%', height: '100%' }}

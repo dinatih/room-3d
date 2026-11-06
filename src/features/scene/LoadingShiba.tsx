@@ -13,12 +13,12 @@ const DOG_HEIGHT = 40; // cm, comme le chien de l'appartement.
 const RUN_SPEED = 120; // cm/s.
 const ANIMATION_FADE = 0.2;
 
-type Movement = 'walk' | 'run' | 'jump' | 'circle' | 'sit' | 'idle';
+type Movement = 'walk' | 'run' | 'jump' | 'circle';
 const WALK_SPEED = 50;
 const BALL_RADIUS = 3.35; // Balle de tennis de 6,7 cm.
 const TEXT_HEIGHT = 24;
 
-function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted: boolean; countdownSeconds: number }) {
+function RunningShiba() {
   const gltf = useGLTF(SHIBA_PATH);
   const model = useMemo(() => {
     const instance = clone(gltf.scene);
@@ -50,7 +50,7 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
       if (!clip || clip.duration <= 0) throw new Error(`Animation du shiba invalide : ${name}`);
       return clip;
     };
-    return { walk: find('walk'), run: find('run'), jump: find('jump'), sit: find('sitdown'), idle: find('idle') };
+    return { walk: find('walk'), run: find('run'), jump: find('jump') };
   }, [gltf.animations]);
   const runner = useRef<Group>(null);
   const ball = useRef<Mesh>(null);
@@ -89,7 +89,7 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
   const circle = useRef({ x: 0, z: 0, angle: 0, remaining: 0, radius: 0, direction: 1 });
   const horizontalLimit = useRef(0);
   const { camera, size } = useThree();
-  const envelope = useMemo(() => ({ radius: 0, minY: 0, height: 0, sitTime: 0 }), []);
+  const envelope = useMemo(() => ({ radius: 0, minY: 0, height: 0 }), []);
   const mixer = useMemo(() => new AnimationMixer(model), [model]);
 
   useLayoutEffect(() => {
@@ -103,10 +103,6 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
     model.scale.setScalar(DOG_HEIGHT / rawSize.y);
     // Cadrage fixe couvrant les trois animations, y compris toute la hauteur du saut.
     const bounds = new Box3();
-    const pelvis = model.getObjectByName('Dogger_pelvis_j');
-    if (!pelvis) throw new Error('Le squelette du shiba ne contient pas de bassin.');
-    const pelvisPosition = new Vector3();
-    let seatedPelvis = Infinity;
     for (const clip of Object.values(clips)) {
       mixer.stopAllAction();
       mixer.clipAction(clip).reset().play();
@@ -120,12 +116,6 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
         });
         box.setFromObject(model, true);
         bounds.union(box);
-        // SitDown contient aussi le relevé : garder le bassin au plus près du sol.
-        pelvis.getWorldPosition(pelvisPosition);
-        if (clip === clips.sit && pelvisPosition.y < seatedPelvis) {
-          seatedPelvis = pelvisPosition.y;
-          envelope.sitTime = frame * clip.duration / samples;
-        }
       }
     }
     const center = bounds.getCenter(new Vector3());
@@ -149,27 +139,16 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
   }, [model, mixer, clips, envelope]);
 
   useLayoutEffect(() => {
-    const mode = countdownStarted ? (countdownSeconds <= 2 ? 'idle' : 'sit') : 'walk';
-    if (movement.current === mode && activeAction.current) return;
-    movement.current = mode;
-    elapsed.current = 0;
     // Tirage indépendant du téléchargement, avec des attentes parfois longues.
     nextTrick.current = clips.run.duration * -Math.log(1 - Math.random()) * 2;
-    if (!countdownStarted) {
-      direction.current = Math.random() < 0.5 ? -1 : 1;
-      runSpeed.current = WALK_SPEED;
-    }
-    const action = mixer.clipAction(clips[mode]);
-    action.reset().setLoop(mode === 'sit' ? LoopOnce : LoopRepeat, mode === 'sit' ? 1 : Infinity);
-    action.clampWhenFinished = mode === 'sit';
-    if (!countdownStarted) {
-      action.time = Math.random() * clips.walk.duration;
-      action.setEffectiveTimeScale(runSpeed.current / WALK_SPEED);
-    }
+    direction.current = Math.random() < 0.5 ? -1 : 1;
+    runSpeed.current = WALK_SPEED;
+    const action = mixer.clipAction(clips.walk);
+    action.reset().setLoop(LoopRepeat, Infinity);
+    action.time = Math.random() * clips.walk.duration;
     action.fadeIn(ANIMATION_FADE).play();
-    activeAction.current?.fadeOut(ANIMATION_FADE);
     activeAction.current = action;
-  }, [countdownStarted, countdownSeconds <= 2, clips, mixer]);
+  }, [clips, mixer]);
 
   useLayoutEffect(() => {
     const ortho = camera as OrthographicCamera;
@@ -227,19 +206,6 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
         action.setEffectiveTimeScale(runSpeed.current / RUN_SPEED);
       }
     };
-    if (movement.current === 'sit' || movement.current === 'idle') {
-      const action = activeAction.current;
-      if (movement.current === 'sit' && action && !action.paused && action.time >= envelope.sitTime) {
-        action.time = envelope.sitTime;
-        action.paused = true;
-        mixer.update(0);
-      }
-      // Face au visiteur pendant les poses assise et idle.
-      const target = 0;
-      const turn = Math.atan2(Math.sin(target - group.rotation.y), Math.cos(target - group.rotation.y));
-      group.rotation.y += turn * (1 - Math.exp(-delta / ANIMATION_FADE));
-      return;
-    }
     elapsed.current += delta;
     walkingTime.current += delta;
     if (movement.current === 'walk' && walkingTime.current >= clips.walk.duration * 3) play('run');
@@ -302,7 +268,7 @@ function RunningShiba({ countdownStarted, countdownSeconds }: { countdownStarted
   </>;
 }
 
-export function LoadingShiba({ countdownStarted = false, countdownSeconds = 5 }: { countdownStarted?: boolean; countdownSeconds?: number }) {
+export function LoadingShiba() {
   const container = document.getElementById('loading-shiba');
   if (!container) return null;
   return createPortal(
@@ -310,7 +276,7 @@ export function LoadingShiba({ countdownStarted = false, countdownSeconds = 5 }:
       dpr={[1, 2]} gl={{ alpha: true, antialias: true }}>
       <hemisphereLight args={['#ffffff', '#d8d5cf', 2]} />
       <directionalLight position={[100, 150, 200]} intensity={1} />
-      <Suspense fallback={null}><RunningShiba countdownStarted={countdownStarted} countdownSeconds={countdownSeconds} /></Suspense>
+      <Suspense fallback={null}><RunningShiba /></Suspense>
     </Canvas>,
     container,
   );
