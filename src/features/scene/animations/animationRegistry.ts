@@ -9232,7 +9232,6 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     label: `[YOGA] Yogic sleep pose (1754f / 58.5s, 785KB)`,
     tags: ['yoga', 'fitness', 'laying-front'],
     duration: 58.5,
-    defaultOffset: [0, 0, 70],
   },
 
   // ── ENTRETIEN & ACTIONS DU QUOTIDIEN (AMASS / CMU / KIT / ACCAD) ─────────────
