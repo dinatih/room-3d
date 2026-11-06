@@ -22,6 +22,10 @@ if (typeof window !== 'undefined') {
     loadError = 'Sauvegarde de vie illisible ou incompatible. Elle est conservée. « Nouvelle vie » permet de recommencer toute la colocation.';
   }
 }
+/** One world time, restored without rewinding any character's saved memories. */
+export const simulationClock = { minutes: Math.max(...Object.values(characterLives).map(life => life.elapsedSeconds)) };
+for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;
+
 export type LifeSnapshot = Pick<ReturnType<typeof createLife>, 'needs' | 'memory' | 'relationships' | 'elapsedSeconds'> & { activity: string; reason: string; room: HomeRoom };
 const initialSnapshot = (id: LifeCharacterId): LifeSnapshot => ({
   needs: { ...characterLives[id].needs }, memory: { ...characterLives[id].memory }, relationships: { ...characterLives[id].relationships }, elapsedSeconds: characterLives[id].elapsedSeconds,
@@ -85,4 +89,13 @@ if (typeof window !== 'undefined') {
 
 export function publishLife(id: LifeCharacterId, patch: Partial<LifeSnapshot>) {
   useLaraLifeStore.setState(state => ({ household: { ...lifeHousehold }, home: { ...homeDirt }, characters: { ...state.characters, [id]: { ...state.characters[id], ...patch } } }));
+}
+
+/** Called once per scene frame, before any character or environment simulation. */
+export function advanceSimulationClock(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid simulation duration');
+  if (!seconds) return;
+  simulationClock.minutes += seconds * useLaraLifeStore.getState().speed;
+  for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;
+  useLaraLifeStore.setState(state => ({ characters: Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, { ...state.characters[id], elapsedSeconds: simulationClock.minutes }])) as typeof state.characters }));
 }

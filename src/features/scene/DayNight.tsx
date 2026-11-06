@@ -3,11 +3,11 @@ import { useMemo, useRef } from 'react';
 import { Color, MathUtils, Mesh, MeshBasicMaterial } from 'three';
 import { Points, PointsMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
-import { useLaraLifeStore } from './ai/laraLifeStore';
+import { simulationClock } from './ai/laraLifeStore';
 
-/** The household sky follows Lara, independently of the selected character. */
+/** The sky follows the shared world clock. */
 export function simulatedHour() {
-  return (8 + useLaraLifeStore.getState().characters.native.elapsedSeconds / 60) % 24;
+  return (8 + simulationClock.minutes / 60) % 24;
 }
 
 export function daylight(hour: number) {

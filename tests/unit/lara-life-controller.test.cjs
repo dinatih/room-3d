@@ -110,6 +110,8 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   controller.configure({ scenario, loop: true, landingAnim: 'idle' });
   const tick = (seconds = 1, playback = true) => {
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
+    // The scene clock advances before the controller.
+    for (const character of Object.values(characterLives)) character.elapsedSeconds += seconds;
     return controller.update(seconds);
   };
   return { controller, scenario, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy, cameraState,
@@ -600,7 +602,7 @@ it('fait vivre Cha et Vivida indépendamment de Lara et conserve leurs besoins a
     const w = world(id), nativeBefore = structuredClone(w.characterLives.native);
     w.tick(); w.tick(); w.tick();
     assert.notDeepEqual(w.lifeState.needs, nativeBefore.needs);
-    assert.deepEqual(w.characterLives.native, nativeBefore);
+    assert.deepEqual(w.characterLives.native, { ...nativeBefore, elapsedSeconds: w.lifeState.elapsedSeconds });
     assert.equal(w.lifeState.characterId, id);
     if (id === 'vivida') assert(w.lifeState.memory.bath.satisfaction > 0);
     const needs = { ...w.lifeState.needs };

@@ -6,7 +6,7 @@ import { create } from 'zustand';
 import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
-import { useLaraLifeStore } from './ai/laraLifeStore';
+import { simulationClock } from './ai/laraLifeStore';
 import { daylight, simulatedHour } from './DayNight';
 
 export const useWeather = create(() => ({ coverage: 0.35, windSpeed: 3, windDirection: 90, rain: 0, rainVolume: 0, snow: 0, automatic: typeof window === 'undefined' || new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
@@ -62,14 +62,14 @@ export function WeatherControls() {
 
 export function Weather() {
   const start = useRef<{ at: number; weather: ReturnType<typeof useWeather.getState> } | null>(null);
-  const weatherMinutes = useRef(useLaraLifeStore.getState().characters.native.elapsedSeconds);
+  const previousMinutes = useRef(simulationClock.minutes);
   const material = useRef<ShaderMaterial>(null!);
   const uniforms = useMemo(() => ({ offset: { value: new Vector2() }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
   useFrame((_, delta) => {
     const state = useWeather.getState();
-    const elapsed = document.hidden ? 0 : delta * useLaraLifeStore.getState().speed;
-    weatherMinutes.current += elapsed;
-    const minutes = weatherMinutes.current;
+    const minutes = simulationClock.minutes;
+    const elapsed = minutes - previousMinutes.current;
+    previousMinutes.current = minutes;
     if (state.automatic) {
       start.current ??= { at: minutes, weather: state };
       const elapsed = Math.max(0, minutes - start.current.at);

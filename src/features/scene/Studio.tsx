@@ -1,3 +1,4 @@
+import { SimulationClock } from './SimulationClock';
 import { Rain } from './Rain';
 import { Weather } from './Weather';
 import { DayNight } from './DayNight';
@@ -813,6 +814,7 @@ export function Studio() {
         }}
       >
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
+        <SimulationClock />
         <SkySphere />
         <DayNight />
         <Weather />

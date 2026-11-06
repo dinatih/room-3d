@@ -71,7 +71,8 @@ it('sauvegarde toute la colocation une seule fois par seconde et restaure le mod
   withBrowser(w => {
     const store = w.loadStore();
     const native = store.characterLives.native;
-    native.needs.rest = 82; native.elapsedSeconds = 360; native.handsDirty = true;
+    store.advanceSimulationClock(360);
+    native.needs.rest = 82; native.handsDirty = true;
     native.memory.yoga = { satisfaction: 20, lastAt: 300, places: { 'west-neighbor-flat:yoga': { satisfaction: 20, lastAt: 300 } }, periods: { Matin: 20 } };
     native.places['west-neighbor-flat:yoga'] = 2; native.lastActivity = 'yoga';
     store.characterLives.sandra.needs.toilet = 93;

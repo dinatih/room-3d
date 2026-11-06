@@ -2006,7 +2006,6 @@ export function createAgentController(
         lastLifeRoom = room;
       }
       if (lifeRunning) {
-        life.elapsedSeconds += dt;
         if (eating) releaseLifeMeal(lifeId, true);
         if (partnerId) rememberLifeConversation(life, partnerId, interactionSeconds, previousLifeActivity ?? undefined);
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) life.handsDirty = true;
