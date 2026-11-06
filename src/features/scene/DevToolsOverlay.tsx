@@ -181,6 +181,8 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                 <StatRow label="Meshes"    value={devState.meshes.toLocaleString()} />
                 <StatRow label="Instanced" value={devState.instances} />
                 <StatRow label="Lights"    value={devState.lights} color="#111827" />
+                <StatRow label="Matériaux" value={devState.materials} color="#111827" />
+                <StatRow label="Shaders GPU" value={devState.programs} color="#111827" />
                 <StatRow label="Vertices"  value={devState.verts > 0 ? Math.round(devState.verts / 1000).toLocaleString() + 'k' : '—'} color="#111827" />
                 <StatRow label="Triangles" value={devState.tris  > 0 ? Math.round(devState.tris  / 1000).toLocaleString() + 'k' : '—'} color="#111827" />
                 {devState.meshes > 800 && (
@@ -199,6 +201,24 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
                         </span>
                         <span className="flex-shrink-0 ms-2 fw-semibold" style={{ color: heatColor(obj.tris, 50_000, 200_000), fontVariantNumeric: 'tabular-nums' }}>
                           {(obj.tris / 1000).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {devState.topMaterials.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 4, paddingTop: 4 }}>
+                    <div style={sectionHeaderStyle}>
+                      TOP MATÉRIAUX <span style={{ color: '#6b7280', fontWeight: 400 }}>· ressources</span>
+                    </div>
+                    {devState.topMaterials.slice(0, 8).map((mat) => (
+                      <div key={mat.source} className="d-flex align-items-center justify-content-between px-2 py-0 overflow-hidden" style={{ fontSize: 11, minWidth: 0 }}>
+                        <span className="text-truncate flex-grow-1 fw-medium" style={{ color: '#111827' }} title={mat.source}>
+                          {mat.source}
+                        </span>
+                        <span className="flex-shrink-0 ms-2 fw-semibold" style={{ color: mat.materials >= 25 ? '#dc2626' : '#2563eb', fontVariantNumeric: 'tabular-nums' }}>
+                          {mat.materials} mat
                         </span>
                       </div>
                     ))}

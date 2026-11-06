@@ -14,7 +14,7 @@ import {
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
   PerspectiveCamera, OrthographicCamera, type LightShadow,
-  Material, Object3D,
+  Object3D,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -162,7 +162,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
 
       const targets: { name: string; object: Object3D }[] = [];
-      const seen = new Set<Material>();
+      const seenShaderKeys = new Set<string>();
       scene.traverse(obj => {
         const renderable = obj as any;
         if (!renderable.isMesh && !renderable.isPoints && !renderable.isLine && !renderable.isSprite) return;
@@ -170,9 +170,13 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         if (!mat) return;
         const mats = Array.isArray(mat) ? mat : [mat];
         for (const m of mats) {
-          if (!seen.has(m)) {
-            seen.add(m);
-            const name = m.name?.trim() || renderable.name?.trim() || m.type || 'Shader';
+          // Déduplication par signature de shader pour éviter de recompiler les doublons de 15 PNJ
+          const isSkinned = Boolean(renderable.isSkinnedMesh);
+          const shaderKey = `${m.type}::${m.name || 'unnamed'}::${isSkinned ? 'skinned' : 'static'}`;
+          if (!seenShaderKeys.has(shaderKey)) {
+            seenShaderKeys.add(shaderKey);
+            const baseName = m.name?.trim() || renderable.name?.trim() || m.type || 'Shader';
+            const name = isSkinned ? `${baseName} (animé)` : baseName;
             targets.push({ name, object: renderable });
           }
         }

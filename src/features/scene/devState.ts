@@ -2,6 +2,12 @@
  * devState.ts — état partagé entre DevToolsCollector (Canvas) et DevToolsOverlay (HTML).
  */
 
+export interface TopMaterialStat {
+  source: string;
+  materials: number;
+  meshes: number;
+}
+
 export interface TopObjectStat {
   name: string;
   tris: number;
@@ -22,6 +28,9 @@ export interface DevState {
   tris: number;
   topMeshes: Array<[name: string, count: number]>;
   topObjects: TopObjectStat[];
+  materials: number;
+  programs: number;
+  topMaterials: TopMaterialStat[];
   fpsSamples: number[];
   onUpdate: (() => void) | null;
   /** Enregistré par DevToolsCollector ; appeler pour recalculer les stats scène. */
@@ -48,6 +57,9 @@ export const devState: DevState = {
   /** Top contributeurs au mesh count, groupés par ancêtre nommé. */
   topMeshes: [] as Array<[name: string, count: number]>,
   topObjects: [] as TopObjectStat[],
+  materials: 0,
+  programs: 0,
+  topMaterials: [] as TopMaterialStat[],
 
   // FPS — tableau glissant de samples (temps entre frames rendus)
   fpsSamples: [] as number[],

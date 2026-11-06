@@ -86,8 +86,22 @@ export function DevToolsCollector() {
     const refreshScene = () => {
       let meshes = 0, instances = 0, lights = 0, verts = 0, tris = 0;
       const objectStats = new Map<string, { meshes: number; instances: number; tris: number; verts: number }>();
+      const materialStats = new Map<string, { materials: Set<THREE.Material>; meshes: number }>();
+      const allUniqueMaterials = new Set<THREE.Material>();
 
       scene.traverse(obj => {
+        const renderable = obj as any;
+        if (renderable.material) {
+          const mats: THREE.Material[] = Array.isArray(renderable.material) ? renderable.material : [renderable.material];
+          const key = resolveEntityKey(obj, scene);
+          const matGroup = materialStats.get(key) ?? { materials: new Set(), meshes: 0 };
+          matGroup.meshes += 1;
+          for (const mat of mats) {
+            allUniqueMaterials.add(mat);
+            matGroup.materials.add(mat);
+          }
+          materialStats.set(key, matGroup);
+        }
         const m = obj as THREE.Mesh;
         if (!m.isMesh) {
           if ((obj as THREE.Light).isLight) lights++;
@@ -132,6 +146,11 @@ export function DevToolsCollector() {
       devState.lights    = lights;
       devState.verts     = Math.round(verts);
       devState.tris      = Math.round(tris);
+      devState.materials = allUniqueMaterials.size;
+      devState.programs  = (gl as any).info?.programs?.length ?? 0;
+      devState.topMaterials = Array.from(materialStats.entries())
+        .map(([source, s]) => ({ source, materials: s.materials.size, meshes: s.meshes }))
+        .sort((a, b) => b.materials - a.materials);
 
       const topObjectsList: TopObjectStat[] = Array.from(objectStats.entries()).map(([name, s]) => ({
         name,
@@ -162,11 +181,17 @@ export function DevToolsCollector() {
       const topSummary = topTris.map(t => `${t.name}: ${(t.tris / 1000).toFixed(1)}k`).join(', ');
 
       appLog('perf', `🔍 Perf : ${curFps} FPS | ${dc} DC | ${trisK}k tris [${topSummary}]`);
+      const topMatSummary = devState.topMaterials.slice(0, 3).map(m => `${m.source}: ${m.materials} mat`).join(', ');
+      appLog('perf', `🎨 Matériaux : ${devState.materials} (${devState.programs} shaders GPU) [${topMatSummary}]`);
 
       // Affichage détaillé dans la console développeur du navigateur
       console.group('%c[PERF DIAGNOSTIC] Analyse de la scène 3D', 'color: #ffaa00; font-weight: bold; font-size: 12px;');
       console.log(`FPS: ${curFps} | Draw calls: ${dc} | Triangles rendus: ${devState.triangles}`);
+      console.log(`Matériaux uniques : ${devState.materials} | Programmes shaders GPU : ${devState.programs}`);
       console.table(devState.topObjects);
+      console.group('%cTop ressources créatrices de matériaux', 'color: #38bdf8; font-weight: bold;');
+      console.table(devState.topMaterials);
+      console.groupEnd();
       console.groupEnd();
     };
 
