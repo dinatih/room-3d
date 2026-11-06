@@ -1,3 +1,4 @@
+import { WeatherControls } from '../../Weather';
 import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { ScreenVideoQuality } from '../../screenVideoConfig';
@@ -115,6 +116,7 @@ export function LayersSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
+      <WeatherControls />
       <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
         <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
           <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">

@@ -10,6 +10,9 @@ const launch = require('./browser-test-options.cjs');
     browser = await launch({ args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     const page = await browser.newPage();
     await page.goto('http://127.0.0.1:5179');
+    const errors = [];
+    page.on('pageerror', error => errors.push(String(error)));
+    page.on('console', message => { if (message.type() === 'error' && /shader|WebGLProgram/.test(message.text())) errors.push(message.text()); });
     const result = await page.evaluate(async () => {
       const { daylight } = await import('/src/features/scene/DayNight.tsx');
       const hours = [0, 6, 7, 8, 12, 18, 20, 22, 24];
@@ -22,6 +25,19 @@ const launch = require('./browser-test-options.cjs');
       if (hour === 0) assert.ok(moonY > 0);
       if (hour === 12) assert.ok(moonY < 0);
     }
+    await page.evaluate(async () => {
+      const { default: React } = await import('/node_modules/.vite/deps/react.js');
+      const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
+      const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+      const { Weather, useWeather } = await import('/src/features/scene/Weather.tsx');
+      document.body.innerHTML = '<div id="weather-test" style="width:800px;height:600px"></div>';
+      useWeather.setState({ coverage: 0.8, windSpeed: 5 });
+      createRoot(document.getElementById('weather-test')).render(React.createElement(Canvas, { camera: { position: [150, 100, 150], far: 10000 }, onCreated: ({ camera, scene }) => { camera.layers.enableAll(); camera.lookAt(0, 2000, -2000); window.weatherScene = scene; } }, React.createElement(Weather)));
+    });
+    await page.waitForFunction(() => window.weatherScene?.children.some(child => child.children.length), { timeout: 30000 });
+    await page.evaluate(() => new Promise(resolve => { let frames = 0; function tick() { if (++frames === 30) resolve(); else requestAnimationFrame(tick); } requestAnimationFrame(tick); }));
+    await page.screenshot({ path: '/tmp/room-weather-preview.png' });
+    assert.deepEqual(errors, [], 'No browser or shader errors');
     fs.writeFileSync('/tmp/room-night-validation.json', JSON.stringify(result, null, 2));
     console.log('PASS: browser-loaded day/night curves and lunar trajectory');
   } finally {
