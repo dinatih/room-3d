@@ -8,18 +8,21 @@ const launch = require('./browser-test-options.cjs');
     await page.screenshot({ path: '/tmp/room-raytracing-debug-loading.png' });
     browser.disconnect(); return;
   }
-  const browser = await launch({ protocolTimeout: 0, args: ['--enable-gpu', '--disable-dev-shm-usage'] });
+  const browser = await launch({ protocolTimeout: 0, userDataDir: require('node:path').resolve('renders/browser-debug-profile'), args: ['--enable-gpu'] });
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width: 1440, height: 1000 });
+    const mobile = process.argv.includes('--mobile');
+    await page.setViewport(mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 });
     page.on('console', message => { if (message.text().includes('[Raytracing')) console.log(message.text()); });
     page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
     await page.goto('http://localhost:5173/?raytracing=debug&target=studio&projection=persp&cameraMovement=fix&skipIntro=1&characters=0&character=0&animals=0&robots=0&environment=0&bnfMarker=0&bermudaGrass=0&laraLife=0');
-    await page.waitForFunction(() => [...document.querySelectorAll('img')].some(image => image.src.startsWith('data:image/png')), { timeout: 240000 });
-    await page.screenshot({ path: '/tmp/room-raytracing-debug-studio.png' });
-    const image = await page.$('img[src^="data:image/png"]');
-    if (image) await image.screenshot({ path: '/tmp/room-raytracing-debug-raster.png' });
-    console.log('Studio réel capturé : /tmp/room-raytracing-debug-studio.png');
+    await page.waitForFunction(() => document.querySelector('.raytracing-photo [role="status"]')?.textContent.includes('Prêt'), { timeout: 240000 });
+    const screenshot = `renders/room-raytracing-debug-studio${mobile ? '-mobile' : ''}.png`;
+    await page.screenshot({ path: screenshot });
+    const image = await page.$('.raytracing-photo canvas');
+    if (!image) throw new Error('Canvas de prévisualisation absent');
+    await image.screenshot({ path: `renders/room-raytracing-debug-preview${mobile ? '-mobile' : ''}.png` });
+    console.log('Studio réel capturé :', screenshot);
     if (process.argv.includes('--archive') || process.argv.includes('--submit')) {
       await page.evaluate(real => {
         window.submitRealJob = real;

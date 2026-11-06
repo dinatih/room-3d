@@ -60,13 +60,16 @@ async function handleJobs(req, res) {
       if (req.headers['content-type'] !== 'application/octet-stream') throw new Error('Archive binaire de rendu attendue. Rechargez la page.');
       const job = { id: randomUUID(), state: 'queued', samples: 0 };
       await pipeline(req, createWriteStream(`renders/${job.id}.bin`));
+      job.createdAt = (await stat(`renders/${job.id}.bin`)).birthtimeMs;
       jobs.set(job.id, job); await writeFile(`renders/${job.id}.json`, JSON.stringify({ id: job.id, state: 'interrupted', samples: 0 })); res.end(JSON.stringify({ id: job.id })); void pump();
-    } else { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify([...jobs.values()].map(({ page, browser, ...job }) => job))); }
+    } else { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify([...jobs.values()].map(({ page, browser, ...job }) => job).sort((a, b) => b.createdAt - a.createdAt))); }
   } catch (error) { res.statusCode = 400; res.end(String(error)); }
 }
 for (const file of await readdir('renders')) {
   if (!file.endsWith('.json')) continue;
-  const job = JSON.parse(await readFile(`renders/${file}`, 'utf8')); jobs.set(job.id, job);
+  const job = JSON.parse(await readFile(`renders/${file}`, 'utf8'));
+  job.createdAt = (await stat(`renders/${job.id}.bin`)).birthtimeMs;
+  jobs.set(job.id, job);
 }
 await server.listen();
 console.log(`Service raytracing : ${serviceUrl}/render-jobs.html — résultats dans renders/`);

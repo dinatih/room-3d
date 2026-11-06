@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer');
   const browser = await launchBrowser({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader'] });
   try {
     const page = await browser.newPage();
+    await page.setCacheEnabled(false);
     await page.setViewport({ width: 1280, height: 900 });
     const errors = [];
     page.on('pageerror', error => { errors.push(error.message); console.log('Page error:', error.message); });
@@ -29,7 +30,11 @@ const puppeteer = require('puppeteer');
       const canvasParent = document.createElement('div');
       document.body.append(container, canvasParent);
       const gl = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
-      gl.setSize(320, 200);
+      gl.setPixelRatio(1.5);
+      gl.setSize(640, 800);
+      canvasParent.style.cssText = 'width:640px;height:800px';
+      gl.domElement.style.width = '100%';
+      gl.domElement.style.height = '100%';
       canvasParent.append(gl.domElement);
       const scene = new THREE.Scene();
       const materials = ['red', 'white', 'black'].map(color => new THREE.MeshStandardMaterial({ color }));
@@ -43,7 +48,7 @@ const puppeteer = require('puppeteer');
       const character = new THREE.Mesh(new THREE.BoxGeometry(), materials[0]);
       character.name = 'walker-fixture';
       scene.add(character, new THREE.DirectionalLight(0xffffff, 3));
-      const camera = new THREE.PerspectiveCamera(45, 1.6, .1, 100);
+      const camera = new THREE.PerspectiveCamera(45, 0.8, .1, 100);
       camera.position.set(2, 2, 4);
       camera.lookAt(0, 0, 0);
       const root = createRoot(container);
@@ -57,15 +62,28 @@ const puppeteer = require('puppeteer');
         return promise;
       };
       scene.onBeforeRender = (renderer, _scene, camera) => {
-        if (renderer !== gl) window.fixture.rasterCamera = camera.position.toArray();
+        if (camera !== window.fixture.camera) window.fixture.photoCamera = camera.position.toArray();
       };
+      window.readRendererState = () => {
+        const rect = gl.domElement.getBoundingClientRect();
+        return {
+          size: gl.getSize(new THREE.Vector2()).toArray(), dpr: gl.getPixelRatio(),
+          viewport: gl.getViewport(new THREE.Vector4()).toArray(), scissor: gl.getScissor(new THREE.Vector4()).toArray(),
+          scissorTest: gl.getScissorTest(), autoClear: gl.autoClear, toneMapping: gl.toneMapping,
+          styles: ['width', 'height', 'maxHeight', 'maxWidth', 'position', 'display', 'cursor', 'pointerEvents', 'objectFit', 'top', 'left'].map(key => gl.domElement.style[key]),
+          rect: [rect.width, rect.height], pose: [...camera.position.toArray(), ...camera.quaternion.toArray()],
+        };
+      };
+      window.fixture.rendererBaseline = window.readRendererState();
       window.mountPhoto = () => root.render(React.createElement(RaytracingPhotoModal, { scene, camera, gl, onClose: () => root.render(null) }));
       window.mountPhoto();
     });
     for (let i = 0; i < 2; i++) {
       if (i) await page.evaluate(() => window.mountPhoto());
       await page.waitForFunction(() => document.body.innerText.includes('Prêt — choisissez où calculer'), { timeout: 120000 });
-      assert.deepEqual(await page.evaluate(() => window.fixture.rasterCamera), [288, 178.5, 50]);
+      assert.deepEqual(await page.evaluate(() => window.fixture.photoCamera), [288, 178.5, 50]);
+      assert.equal(await page.evaluate(() => document.querySelectorAll('.raytracing-photo canvas').length), 1);
+      assert.equal(await page.evaluate(() => document.body.innerText.includes('Comparer')), false);
       if (i === 0) {
         await page.evaluate(() => [...document.querySelectorAll('button')].find(button => button.textContent === 'Calculer ici').click());
         await page.waitForFunction(() => document.body.innerText.includes('Calcul en cours'), { timeout: 120000 });
@@ -101,9 +119,11 @@ const puppeteer = require('puppeteer');
         return baseline.filter(([object, visible, geometry, material]) => object.visible !== visible || object.geometry !== geometry || (Array.isArray(material) && Array.isArray(object.material) ? material.some((entry, index) => entry !== object.material[index]) : object.material !== material)).map(([object]) => object.name || object.type);
       });
       assert.deepEqual(changed, []);
+      assert.deepEqual(await page.evaluate(() => window.readRendererState()), await page.evaluate(() => window.fixture.rendererBaseline));
     }
     assert.equal(await page.evaluate(() => window.fixture.submitted), true);
     await page.evaluate(() => Promise.all(window.fixture.compilations));
+    assert.deepEqual(await page.evaluate(() => window.readRendererState()), await page.evaluate(() => window.fixture.rendererBaseline));
     assert.deepEqual(errors, []);
     console.log('Browser fixture: two photo sessions, scalar materials, debug camera, explicit local rendering, background submission and scene restoration verified.');
   } finally { await browser.close(); }

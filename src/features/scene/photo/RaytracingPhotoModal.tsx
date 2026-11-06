@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-pathtracer';
+import './RaytracingPhotoModal.css';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { getUrlParams } from '../camera/cameraUrlParams';
@@ -47,15 +48,13 @@ interface ResolutionOption {
 }
 
 const RESOLUTION_OPTIONS: ResolutionOption[] = [
-  { id: '720p', label: 'HD 720p (1280×720) - Rapide ⚡', width: 1280, height: 720 },
-  { id: 'fit', label: 'Taille Écran', width: 0, height: 0 },
-  { id: '1080p', label: 'Full HD (1920×1080)', width: 1920, height: 1080 },
-  { id: '2k', label: '2K QHD (2560×1440)', width: 2560, height: 1440 },
-  { id: 'square', label: 'Carré 1:1 (1080×1080)', width: 1080, height: 1080 },
-  { id: 'portrait', label: 'Portrait 9:16 (720×1280)', width: 720, height: 1280 },
+  { id: '720p', label: 'HD · 1280 × 720', width: 1280, height: 720 },
+  { id: 'fit', label: 'Adapter à l’aperçu', width: 0, height: 0 },
+  { id: '1080p', label: 'Full HD · 1920 × 1080', width: 1920, height: 1080 },
+  { id: '2k', label: 'QHD · 2560 × 1440', width: 2560, height: 1440 },
+  { id: 'square', label: 'Carré · 1080 × 1080', width: 1080, height: 1080 },
+  { id: 'portrait', label: 'Portrait · 720 × 1280', width: 720, height: 1280 },
 ];
-
-export type ComparisonMode = 'split' | 'raytracing' | 'raster';
 
 /**
  * Réduit la résolution d'une texture HDR (ex: 8K -> 1K) pour l'échantillonnage CDF de three-gpu-pathtracer.
@@ -124,11 +123,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const downsampledEnvRef = useRef<THREE.Texture | null>(null);
   const tempLightsRef = useRef<THREE.Object3D[]>([]);
 
-  // Mode de comparaison 3D Standard vs Raytracing
   const [renderLocally, setRenderLocally] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('split');
-  const [rasterSnapshot, setRasterSnapshot] = useState<string | null>(null);
 
   // Paramètres de rendu
   const [resolution, setResolution] = useState<ResolutionPreset>('720p');
@@ -150,35 +146,23 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const [isBuildingScene, setIsBuildingScene] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const [fps, setFps] = useState<number>(0);
+  const [samplesPerSecond, setSamplesPerSecond] = useState<number>(0);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
   // Anneau visuel autofocus
   const [focusRing, setFocusRing] = useState<{ x: number; y: number; visible: boolean }>({ x: 0, y: 0, visible: false });
 
-  // Fermeture par touche Échap/F10 et raccourci Espace pour basculer la comparaison
+  // Fermeture du mode photo.
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === 'F10') {
         e.preventDefault();
         onClose();
-      } else if (e.key === ' ' || e.code === 'Space') {
-        if ((e.target as HTMLElement).tagName !== 'INPUT' && (e.target as HTMLElement).tagName !== 'BUTTON') {
-          e.preventDefault();
-          setComparisonMode((prev) => (prev === 'split' ? 'raster' : prev === 'raster' ? 'raytracing' : 'split'));
-        }
       }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
-
-  // Synchronisation de la hauteur max du canvas selon le mode de comparaison
-  useEffect(() => {
-    const canvas = gl?.domElement;
-    if (!canvas) return;
-    canvas.style.maxHeight = comparisonMode === 'split' ? 'calc(50vh - 100px)' : 'calc(100vh - 180px)';
-  }, [comparisonMode, gl]);
 
   // Initialisation de la distance de focus initiale au point d'impact central de la caméra
   useEffect(() => {
@@ -602,16 +586,25 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     gl.getSize(originalSize);
     const originalPixelRatio = gl.getPixelRatio();
     const originalExposure = gl.toneMappingExposure;
+    const originalToneMapping = gl.toneMapping;
+    const originalViewport = gl.getViewport(new THREE.Vector4());
+    const originalScissor = gl.getScissor(new THREE.Vector4());
+    const originalScissorTest = gl.getScissorTest();
+    const originalTarget = gl.getRenderTarget();
+    const originalAutoClear = gl.autoClear;
 
     // Déplacer temporairement le canvas unique dans le wrapper du mode photo
     if (canvasWrapperRef.current && originalParent) {
       canvasWrapperRef.current.insertBefore(canvas, canvasWrapperRef.current.firstChild);
       canvas.style.display = 'block';
+      canvas.style.width = 'auto';
+      canvas.style.height = 'auto';
       canvas.style.position = 'relative';
       canvas.style.maxWidth = '100%';
-      canvas.style.maxHeight = 'calc(100vh - 180px)';
+      canvas.style.maxHeight = '100%';
       canvas.style.objectFit = 'contain';
-      canvas.style.cursor = dofEnabled ? 'crosshair' : 'default';
+      canvas.style.cursor = 'inherit';
+      canvas.style.pointerEvents = 'none';
     }
 
     const { width, height } = getRenderDimensions();
@@ -691,50 +684,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     renderCamera.layers.enable(LAYER_ENVIRONMENT);
     renderCameraRef.current = renderCamera;
 
-    // Masquer les personnages avant le snapshot 3D Standard si désactivés
-    if (!showCharacters) {
-      scene.traverse((obj) => {
-        const isChar =
-          (obj.layers.mask & (1 << LAYER_WALKER)) !== 0 ||
-          (obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0 ||
-          (obj.userData?.itemName && (obj.userData.itemName.startsWith('Personnage') || obj.userData.itemName.startsWith('PNJ'))) ||
-          (obj.name || '').toLowerCase().includes('personnage') ||
-          (obj.name || '').toLowerCase().includes('pnj') ||
-          (obj.name || '').toLowerCase().includes('walker');
-        if (isChar && obj.visible) {
-          obj.visible = false;
-          hiddenHelpersRef.current.push(obj);
-        }
-      });
-    }
-
-    // 1. Capture instantanée du rendu 3D Standard dans un canvas indépendant.
-    // Le renderer partagé sera ensuite redimensionné et utilisé par le path tracer.
-    scene.updateMatrixWorld(true);
-    try {
-      const snapshotCanvas = document.createElement('canvas');
-      const snapshotRenderer = new THREE.WebGLRenderer({
-        canvas: snapshotCanvas,
-        antialias: true,
-        alpha: true,
-        preserveDrawingBuffer: true,
-      });
-      snapshotRenderer.setPixelRatio(1);
-      snapshotRenderer.setSize(width, height, false);
-      snapshotRenderer.outputColorSpace = gl.outputColorSpace;
-      snapshotRenderer.toneMapping = gl.toneMapping;
-      snapshotRenderer.toneMappingExposure = gl.toneMappingExposure;
-      snapshotRenderer.shadowMap.enabled = gl.shadowMap.enabled;
-      snapshotRenderer.shadowMap.type = gl.shadowMap.type;
-      snapshotRenderer.render(scene, renderCamera);
-      setRasterSnapshot(snapshotCanvas.toDataURL('image/png'));
-      snapshotRenderer.dispose();
-    } catch (err) {
-      console.warn('[Raytracing] Impossible de capturer le snapshot 3D standard:', err);
-      setRasterSnapshot(null);
-    }
-
-    // 2. Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
+    // Préparation de la scène pour le path-tracer (conversion miroir PBR, conversion matériaux, assainissement)
     setIsBuildingScene(true);
     setBvhProgress(null);
     setErrorMessage(null);
@@ -794,7 +744,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const GPU_COOLDOWN_MS = 25; // 25ms de repos absolu pour le GPU entre deux tuiles
 
     let lastTime = performance.now();
-    let frameCount = 0;
+    let lastSampleCount = 0;
     let sampleStartTime = performance.now();
     let lastSampleUpdate = 0;
 
@@ -893,7 +843,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           } else {
             lastFinishTime = performance.now();
           }
-          frameCount++;
         } catch (err: any) {
           console.error('[Raytracing] Erreur renderSample:', err);
           setErrorMessage(err?.message || 'Erreur pendant le calcul du raytracing.');
@@ -913,8 +862,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         }
 
         if (now - lastTime >= 1000) {
-          setFps(Math.round((frameCount * 1000) / (now - lastTime)));
-          frameCount = 0;
+          setSamplesPerSecond(Number(((pathTracerRef.current.samples - lastSampleCount) * 1000 / (now - lastTime)).toFixed(2)));
+          lastSampleCount = pathTracerRef.current.samples;
           lastTime = now;
           setElapsedSeconds(Math.round((now - sampleStartTime) / 1000));
         }
@@ -944,7 +893,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         }
 
         setCurrentSamples(currentTarget);
-        setFps(0);
+        setSamplesPerSecond(0);
         isRunning = false;
       }
     };
@@ -963,6 +912,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       if (isDisposed) return;
       try {
         prepareScene();
+        gl.setRenderTarget(null);
+        gl.setViewport(0, 0, width, height);
+        gl.setScissorTest(false);
+        gl.render(scene, renderCamera);
         setBvhProgress(0);
         if (!renderLocally) {
           setIsBuildingScene(false);
@@ -1046,8 +999,14 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         canvas.style.cursor = originalStyle.cursor;
         canvas.style.pointerEvents = originalStyle.pointerEvents;
       }
+      gl.setRenderTarget(originalTarget);
       gl.setPixelRatio(originalPixelRatio);
-      gl.setSize(originalSize.x, originalSize.y);
+      gl.setSize(originalSize.x, originalSize.y, false);
+      gl.setViewport(originalViewport);
+      gl.setScissor(originalScissor);
+      gl.setScissorTest(originalScissorTest);
+      gl.autoClear = originalAutoClear;
+      gl.toneMapping = originalToneMapping;
       gl.toneMappingExposure = originalExposure;
     };
   }, [
@@ -1143,8 +1102,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   // Autofocus au clic sur le canvas
   const handleCanvasClick = (e: React.MouseEvent<HTMLElement>) => {
     const canvas = gl.domElement;
-    if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
     const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
 
@@ -1162,14 +1121,15 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       setDofEnabled(true);
 
       // Afficher l'anneau autofocus
-      setFocusRing({ x: e.clientX - rect.left, y: e.clientY - rect.top, visible: true });
+      const wrapper = e.currentTarget.getBoundingClientRect();
+      setFocusRing({ x: e.clientX - wrapper.left, y: e.clientY - wrapper.top, visible: true });
       setTimeout(() => {
         setFocusRing((prev) => ({ ...prev, visible: false }));
       }, 700);
     }
   };
 
-  // Génération du blob selon le mode de comparaison actif
+  // Export du rendu raytracé.
   const getExportBlob = (callback: (blob: Blob | null) => void) => {
     const canvas = gl.domElement;
     if (!canvas) return;
@@ -1179,42 +1139,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       denoiseMatRef.current.uniforms.map.value = pathTracerRef.current.target.texture;
       rendererRef.current.setRenderTarget(null);
       denoiseQuadRef.current.render(rendererRef.current);
-    }
-
-    if (comparisonMode === 'raster' && rasterSnapshot) {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width = canvas.width;
-        c.height = canvas.height;
-        const ctx = c.getContext('2d');
-        if (ctx) ctx.drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(callback, 'image/png');
-      };
-      img.src = rasterSnapshot;
-      return;
-    }
-
-    if (comparisonMode === 'split' && rasterSnapshot) {
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        c.width = canvas.width;
-        c.height = canvas.height * 2;
-        const ctx = c.getContext('2d');
-        if (ctx) {
-          // Vue 1 : 3D Standard en haut
-          ctx.drawImage(img, 0, 0, c.width, canvas.height);
-          // Ligne blanche de séparation
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, canvas.height - 2, c.width, 4);
-          // Vue 2 : Raytracing en bas
-          ctx.drawImage(canvas, 0, canvas.height, c.width, canvas.height);
-        }
-        c.toBlob(callback, 'image/png');
-      };
-      img.src = rasterSnapshot;
-      return;
     }
 
     canvas.toBlob(callback, 'image/png');
@@ -1227,8 +1151,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       const url = URL.createObjectURL(blob);
       const now = new Date();
       const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const prefix = comparisonMode === 'raster' ? 'photo-3d-standard' : comparisonMode === 'split' ? 'photo-comparatif' : 'photo-raytracing';
-      const filename = `${prefix}-${timestamp}.png`;
+      const filename = `photo-raytracing-${timestamp}.png`;
 
       const a = document.createElement('a');
       a.href = url;
@@ -1263,21 +1186,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     wakeRenderLoopRef.current?.();
   };
 
-  // Basculer le débruiteur et rafraîchir immédiatement le canvas
-  const handleToggleDenoise = (active: boolean) => {
-    setEnableDenoise(active);
-    if (!pathTracerRef.current || !rendererRef.current || pathTracerRef.current.samples === 0) return;
-    const pt = pathTracerRef.current;
-    const rend = rendererRef.current;
-    if (active && denoiseMatRef.current && denoiseQuadRef.current) {
-      denoiseMatRef.current.uniforms.map.value = pt.target.texture;
-      rend.setRenderTarget(null);
-      denoiseQuadRef.current.render(rend);
-    } else {
-      (pt as any)._quad?.render(rend);
-    }
-  };
-
   const sendBackgroundRender = async () => {
     setIsSubmitting(true);
     try {
@@ -1305,470 +1213,83 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const progressPercent = Math.min(100, Math.round((currentSamples / targetSamples) * 100));
   const isFinished = currentSamples >= targetSamples;
 
+  const isOrthographic = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
+  const status = isSubmitting ? 'Envoi au service local…' : isBuildingScene
+    ? bvhProgress === null ? 'Préparation de la scène…' : `Construction du BVH : ${Math.round(bvhProgress * 100)} %`
+    : !renderLocally ? 'Prêt — choisissez où calculer' : isFinished ? 'Rendu terminé' : isPaused ? 'Rendu en pause' : 'Calcul en cours…';
+
   return (
-    <div
-      className="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column text-white"
-      style={{
-        zIndex: 10000,
-        backgroundColor: 'rgba(5, 7, 15, 0.88)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-      }}
-    >
-      <div className="d-flex align-items-center gap-2 p-2 border-bottom">
-        <button className="btn btn-sm btn-outline-light" disabled={isSubmitting || (isBuildingScene && !renderLocally)} onClick={() => setRenderLocally(value => !value)}>{renderLocally ? 'Arrêter le calcul ici' : 'Calculer ici'}</button>
-        <button className="btn btn-sm btn-primary" disabled={bvhProgress === null || renderLocally || isSubmitting} onClick={() => void sendBackgroundRender()}>{isSubmitting ? 'Envoi en cours…' : 'Lancer en arrière-plan'}</button>
-        <span className="small text-white-50">{renderLocally ? 'Arrêtez le calcul ici pour choisir le service local.' : 'Choisissez où calculer. Le service local démarre un nouveau rendu.'}</span>
-      </div>
-      {/* ── Barre d'en-tête supérieure ─────────────────────────── */}
-      <div
-        className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
-        style={{ borderColor: 'rgba(255, 255, 255, 0.12)', background: 'rgba(0, 0, 0, 0.4)' }}
-      >
-        <div className="d-flex align-items-center gap-2">
-          <span className="fs-5">📸</span>
-          <div>
-            <h6 className="mb-0 fw-bold text-uppercase d-flex align-items-center gap-2" style={{ letterSpacing: '0.08em' }}>
-              Mode Photo Raytracing Ultra-Réaliste
-              <span className="badge bg-warning text-dark font-monospace fw-bold" style={{ fontSize: '10px' }}>
-                GPU Path Tracing
-              </span>
-            </h6>
-            <small className="text-white-50" style={{ fontSize: '11px' }}>
-              Illumination globale physique • Rebonds de lumière • Profondeur de champ Bokeh
-            </small>
-          </div>
-        </div>
-
-        {/* Sélecteur de comparaison Rendu 3D vs Raytracing */}
-        <div className="btn-group btn-group-sm shadow-sm" role="group">
-          <button
-            type="button"
-            onClick={() => setComparisonMode('raster')}
-            className={`btn ${comparisonMode === 'raster' ? 'btn-primary fw-bold' : 'btn-outline-light text-white-50'}`}
-            style={{ fontSize: '11px' }}
-            title="Afficher le rendu 3D standard temps réel (Touche Espace pour basculer)"
-          >
-            🎮 3D Standard
-          </button>
-          <button
-            type="button"
-            onClick={() => setComparisonMode('split')}
-            className={`btn ${comparisonMode === 'split' ? 'btn-warning text-dark fw-bold' : 'btn-outline-light text-white-50'}`}
-            style={{ fontSize: '11px' }}
-            title="Comparer les 2 rendus l'un au-dessus de l'autre (Touche Espace)"
-          >
-            ⬍ Comparer (2 Vues)
-          </button>
-          <button
-            type="button"
-            onClick={() => setComparisonMode('raytracing')}
-            className={`btn ${comparisonMode === 'raytracing' ? 'btn-info text-dark fw-bold' : 'btn-outline-light text-white-50'}`}
-            style={{ fontSize: '11px' }}
-            title="Afficher uniquement le rendu Raytracing physique (Touche Espace)"
-          >
-            📸 Raytracing
-          </button>
-        </div>
-
-        <div className="d-flex align-items-center gap-2">
-          <button
-            onClick={handleRestart}
-            className="btn btn-sm btn-outline-light d-flex align-items-center gap-1.5"
-            title="Réinitialiser l'accumulation des rayons"
-          >
-            🔄 <span>Relancer</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="btn btn-sm btn-danger px-3 fw-bold d-flex align-items-center gap-1"
-            title="Fermer (Échap)"
-          >
-            ✕ <span>Quitter</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── Zone Centrale : Prévisualisation Canvas & Commandes ── */}
-      <div className="d-flex flex-grow-1 overflow-hidden">
-        {/* Zone Canvas avec centrage et cadrage */}
-        <div
-          ref={containerRef}
-          className={`flex-grow-1 d-flex flex-column align-items-center ${
-            comparisonMode === 'split'
-              ? 'justify-content-start overflow-y-auto p-3 gap-3'
-              : 'justify-content-center p-3 overflow-hidden'
-          } position-relative`}
-          style={{ background: 'radial-gradient(circle at center, #111528 0%, #05070f 100%)' }}
-        >
-          {/* Vue 1 : Rendu 3D Standard (affiché en haut en mode Comparer, ou plein écran en mode 3D Standard) */}
-          {rasterSnapshot && comparisonMode !== 'raytracing' && (
-            <div
-              className="position-relative shadow-lg border border-primary border-opacity-50 rounded overflow-hidden bg-black flex-shrink-0"
-              style={{
-                userSelect: 'none',
-                maxWidth: '100%',
-              }}
-            >
-              <div
-                className="position-absolute top-0 start-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-primary border-opacity-50 text-white pointer-events-none"
-                style={{ fontSize: '11px', zIndex: 6 }}
-              >
-                🎮 {comparisonMode === 'split' ? '1. Rendu 3D Standard' : 'Rendu 3D Standard'}
-              </div>
-              <img
-                src={rasterSnapshot}
-                alt="Rendu 3D Standard"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: comparisonMode === 'split' ? 'calc(50vh - 100px)' : 'calc(100vh - 180px)',
-                  objectFit: 'contain',
-                  display: 'block',
-                }}
-              />
-            </div>
-          )}
-
-          {/* Vue 2 : Rendu Raytracing (affiché en bas en mode Comparer, ou plein écran en mode Raytracing) */}
-          <div
-            ref={canvasWrapperRef}
-            className={`position-relative shadow-lg border border-warning border-opacity-50 rounded overflow-hidden bg-black flex-shrink-0 ${
-              comparisonMode === 'raster' ? 'd-none' : ''
-            }`}
-            style={{
-              userSelect: 'none',
-              cursor: dofEnabled ? 'crosshair' : 'default',
-              maxWidth: '100%',
-            }}
-            onClick={handleCanvasClick}
-            title={dofEnabled ? "Cliquez sur n'importe quel point pour ajuster l'autofocus 🎯" : undefined}
-          >
-            {/* Badge Raytracing en mode comparaison */}
-            {comparisonMode === 'split' && (
-              <div
-                className="position-absolute top-0 start-0 m-2 px-2 py-1 badge bg-dark bg-opacity-75 border border-warning border-opacity-50 text-warning pointer-events-none"
-                style={{ fontSize: '11px', zIndex: 6 }}
-              >
-                📸 2. Rendu Raytracing
-              </div>
-            )}
-
-            {/* Spinner overlay pendant la génération initiale du BVH */}
-            {isBuildingScene && (
-              <div
-                className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center p-4 text-center"
-                style={{ background: 'rgba(5, 7, 15, 0.94)', zIndex: 10 }}
-              >
-                <div className="spinner-border text-warning mb-3" role="status" style={{ width: '3rem', height: '3rem' }} />
-                <h5 className="fw-bold">{bvhProgress === null ? 'Préparation de la scène…' : `Construction du BVH : ${Math.round(bvhProgress * 100)} %`}</h5>
-                <p className="text-white-50 small mb-0">Préparation des géométries et des textures physiques</p>
-              </div>
-            )}
-
-            {/* Erreur éventuelle */}
-            {errorMessage && (
-              <div
-                className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center p-4 text-center"
-                style={{ background: 'rgba(25, 5, 5, 0.95)', zIndex: 11 }}
-              >
-                <div className="fs-1 mb-2">⚠️</div>
-                <h5 className="fw-bold text-danger">Erreur Raytracing</h5>
-                <p className="text-white-50 small mb-3">{errorMessage}</p>
-                <button onClick={handleRestart} className="btn btn-warning btn-sm">Réessayer</button>
-              </div>
-            )}
-
-            {/* Réticule autofocus animé au clic */}
-            {focusRing.visible && (
-              <div
-                className="position-absolute border border-warning rounded-circle"
-                style={{
-                  left: focusRing.x - 20,
-                  top: focusRing.y - 20,
-                  width: 40,
-                  height: 40,
-                  pointerEvents: 'none',
-                  animation: 'pulse 0.6s ease-out',
-                  boxShadow: '0 0 10px rgba(255, 193, 7, 0.8)',
-                  zIndex: 10,
-                }}
-              />
-            )}
-
-            {/* Overlay statut de convergence */}
-            {!isBuildingScene && !errorMessage && (
-              <div
-                className="position-absolute bottom-0 start-0 w-100 p-2 d-flex align-items-center justify-content-between text-white"
-                style={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
-                  fontSize: '12px',
-                  pointerEvents: 'none',
-                  zIndex: 10,
-                }}
-              >
-                <div className="d-flex align-items-center gap-2">
-                  <span className={`badge ${isFinished ? 'bg-success' : 'bg-primary'}`}>
-                    {!renderLocally ? 'Prêt — choisissez où calculer' : isFinished ? '✓ Rendu terminé' : '⚡ Calcul en cours…'}
-                  </span>
-                  <span>
-                    Échantillon : <strong>{currentSamples}</strong> / {targetSamples} ({progressPercent}%)
-                  </span>
-                </div>
-                <div className="d-flex align-items-center gap-3 text-white-50">
-                  <span>Temps : {elapsedSeconds}s</span>
-                  <span>Cadence : {fps} éch/s</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Panneau de réglages latéral ────────────────────────── */}
-        <div
-          className="border-start p-3 d-flex flex-column gap-3 overflow-auto"
-          style={{
-            width: '320px',
-            borderColor: 'rgba(255, 255, 255, 0.12)',
-            background: 'rgba(10, 14, 25, 0.75)',
-          }}
-        >
-          {/* Section 1 : Qualité & Échantillons */}
-          <div className="card bg-black bg-opacity-25 border border-white border-opacity-10 p-2.5 rounded">
-            <h6 className="fw-bold mb-2 text-warning d-flex align-items-center gap-1.5" style={{ fontSize: '12px' }}>
-              <span>⚙️</span> Qualité du Raytracing
-            </h6>
-
-            <div className="mb-2">
-              <label className="form-label d-flex justify-content-between mb-1" style={{ fontSize: '11px' }}>
-                <span>Échantillons cibles (Samples)</span>
-                <span className="fw-bold text-info">{targetSamples}</span>
-              </label>
-              <div className="btn-group btn-group-sm w-100 mb-2">
-                {[40, 100, 250, 500].map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      setTargetSamples(s);
-                      if (currentSamples >= s) handleRestart();
-                    }}
-                    className={`btn ${targetSamples === s ? 'btn-primary' : 'btn-outline-secondary text-white'}`}
-                    style={{ fontSize: '10px' }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-2">
-              <label className="form-label d-flex justify-content-between mb-1" style={{ fontSize: '11px' }}>
-                <span>Rebonds de lumière (Bounces)</span>
-                <span className="fw-bold text-info">{bounces}</span>
-              </label>
-              <input
-                type="range"
-                className="form-range form-range-sm"
-                min="1"
-                max="12"
-                step="1"
-                value={bounces}
-                onChange={(e) => setBounces(parseInt(e.target.value, 10))}
-              />
-            </div>
-
-            <div className="mb-1">
-              <label className="form-label d-flex justify-content-between mb-1" style={{ fontSize: '11px' }}>
-                <span>Exposition lumineuse</span>
-                <span className="fw-bold text-info">{exposure.toFixed(2)}</span>
-              </label>
-              <input
-                type="range"
-                className="form-range form-range-sm"
-                min="0.4"
-                max="2.2"
-                step="0.05"
-                value={exposure}
-                onChange={(e) => setExposure(parseFloat(e.target.value))}
-              />
-            </div>
-
-            {/* Débruiteur Intelligent */}
-            <div className="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-white border-opacity-10">
-              <label className="form-check-label d-flex align-items-center gap-1.5 mb-0" style={{ fontSize: '11px' }}>
-                <span>✨</span>
-                <span>Débruiteur Intelligent</span>
-              </label>
-              <div className="form-check form-switch mb-0">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  checked={enableDenoise}
-                  onChange={(e) => handleToggleDenoise(e.target.checked)}
-                />
-              </div>
-            </div>
-
-            {/* Calque Personnages */}
-            <div className="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-white border-opacity-10">
-              <label className="form-check-label d-flex align-items-center gap-1.5 mb-0" style={{ fontSize: '11px' }}>
-                <span>👤</span>
-                <span>Calque Personnages</span>
-              </label>
-              <div className="form-check form-switch mb-0">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  checked={showCharacters}
-                  onChange={(e) => setShowCharacters(e.target.checked)}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2 : Profondeur de champ (Bokeh & Autofocus) */}
-          <div className="card bg-black bg-opacity-25 border border-white border-opacity-10 p-2.5 rounded">
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <h6 className="fw-bold mb-0 text-warning d-flex align-items-center gap-1.5" style={{ fontSize: '12px' }}>
-                <span>🎯</span> Flou Bokeh / Profondeur
-              </h6>
-              <div className="form-check form-switch mb-0">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  checked={dofEnabled && !(camera as any).isOrthographicCamera}
-                  disabled={(camera as any).isOrthographicCamera}
-                  onChange={(e) => setDofEnabled(e.target.checked)}
-                />
-              </div>
-            </div>
-
-            {(camera as any).isOrthographicCamera ? (
-              <small className="text-white-50" style={{ fontSize: '10px' }}>
-                Indisponible en vue isométrique / orthographique (l'effet Bokeh optique nécessite une projection perspective).
-              </small>
-            ) : dofEnabled ? (
-              <>
-                <p className="text-white-50 mb-2" style={{ fontSize: '10px' }}>
-                  💡 <em>Cliquez sur le modèle ou un objet dans l'image pour régler l'autofocus instantanément !</em>
-                </p>
-
-                <div className="mb-2">
-                  <label className="form-label d-flex justify-content-between mb-1" style={{ fontSize: '11px' }}>
-                    <span>Distance de mise au point</span>
-                    <span className="fw-bold text-info">{focusDistance} cm</span>
-                  </label>
-                  <input
-                    type="range"
-                    className="form-range form-range-sm"
-                    min="50"
-                    max="1500"
-                    step="5"
-                    value={focusDistance}
-                    onChange={(e) => setFocusDistance(parseInt(e.target.value, 10))}
-                  />
-                </div>
-
-                <div className="mb-1">
-                  <label className="form-label d-flex justify-content-between mb-1" style={{ fontSize: '11px' }}>
-                    <span>Ouverture optique (f-stop)</span>
-                    <span className="fw-bold text-info">f/{fStop}</span>
-                  </label>
-                  <div className="btn-group btn-group-sm w-100">
-                    {[1.4, 2.0, 2.8, 5.6].map((stop) => (
-                      <button
-                        key={stop}
-                        type="button"
-                        onClick={() => setFStop(stop)}
-                        className={`btn ${fStop === stop ? 'btn-warning text-dark fw-bold' : 'btn-outline-secondary text-white'}`}
-                        style={{ fontSize: '10px' }}
-                      >
-                        f/{stop}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <small className="text-white-50" style={{ fontSize: '10px' }}>
-                Activez l'effet pour créer un arrière-plan flou d'appareil photo professionnel reflex.
-              </small>
-            )}
-          </div>
-
-          {/* Section 3 : Format & Résolution */}
-          <div className="card bg-black bg-opacity-25 border border-white border-opacity-10 p-2.5 rounded">
-            <h6 className="fw-bold mb-2 text-warning d-flex align-items-center gap-1.5" style={{ fontSize: '12px' }}>
-              <span>📐</span> Format & Résolution
-            </h6>
-            <select
-              className="form-select form-select-sm bg-dark text-white border-secondary"
-              style={{ fontSize: '11px' }}
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value as ResolutionPreset)}
-            >
-              {RESOLUTION_OPTIONS.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Section 4 : Export & Téléchargement */}
-          <div className="mt-auto d-flex flex-column gap-2 pt-2 border-top border-secondary border-opacity-25">
-            <button
-              onClick={handleDownload}
-              className="btn btn-success fw-bold py-2 shadow d-flex align-items-center justify-content-center gap-2"
-              title="Télécharger l'image PNG"
-            >
-              <span>💾</span>
-              <span>Télécharger la photo PNG</span>
-            </button>
-
-            <button
-              onClick={handleCopyClipboard}
-              className={`btn btn-sm ${copySuccess ? 'btn-info text-dark' : 'btn-outline-light'} py-1.5 d-flex align-items-center justify-content-center gap-2`}
-              title="Copier l'image dans le presse-papier"
-            >
-              <span>{copySuccess ? '✓' : '📋'}</span>
-              <span>{copySuccess ? 'Copié dans le presse-papier !' : 'Copier l\'image'}</span>
-            </button>
-
-            <button
-              onClick={() => setIsPaused((p) => !p)}
-              className="btn btn-sm btn-outline-secondary text-white py-1"
-            >
-              {isPaused ? '▶ Reprendre le rendu' : '⏸ Suspendre le rendu'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Barre d'information inférieure ─────────────────────── */}
-      <div
-        className="px-3 py-1.5 border-top d-flex align-items-center justify-content-between"
-        style={{ borderColor: 'rgba(255, 255, 255, 0.12)', background: 'rgba(0, 0, 0, 0.5)', fontSize: '11px' }}
-      >
+    <div className="raytracing-photo position-fixed top-0 start-0 w-100 h-100 d-flex flex-column" role="dialog" aria-modal="true" aria-labelledby="raytracing-title">
+      <header className="glass-card d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 border-bottom">
         <div className="d-flex align-items-center gap-3">
-          <span>
-            <kbd className="bg-secondary text-white px-1 rounded">Espace</kbd> Alterner 3D / Comparer (2 vues) / Raytracing
-          </span>
-          <span className="text-white-50">•</span>
-          <span>
-            <kbd className="bg-secondary text-white px-1 rounded">F10</kbd> Basculer mode photo
-          </span>
-          <span className="text-white-50">•</span>
-          <span className="text-white-50">
-            Fermer avec <kbd className="bg-secondary text-white px-1 rounded">Échap</kbd>
-          </span>
+          <i className="bi bi-camera fs-3 text-primary" aria-hidden="true" />
+          <div><h1 id="raytracing-title" className="fs-5 fw-semibold mb-1">Photo · Raytracing</h1><p className="small text-body-secondary mb-0">Cadrage, lumière et rendu physique du studio</p></div>
         </div>
-        <div className="text-white-50">
-          Moteur : <strong>three-gpu-pathtracer</strong> (GGX / PBR / MIS / BVH)
+        <div className="d-flex gap-2">
+          <a className="btn btn-sm btn-outline-primary" href="http://127.0.0.1:5174/render-jobs.html" target="_blank" rel="noopener noreferrer"><i className="bi bi-images me-2" aria-hidden="true" />Mes rendus</a>
+          <button className="btn btn-sm btn-outline-dark" onClick={onClose} title="Fermer (Échap)"><i className="bi bi-x-lg me-2" aria-hidden="true" />Retour au studio</button>
         </div>
+      </header>
+      <div className="raytracing-photo__workspace">
+        <main className="raytracing-photo__preview d-flex flex-column">
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 py-2 border-bottom small">
+            <span className="d-flex align-items-center gap-2"><span className="badge rounded-pill text-bg-primary">{currentSamples > 0 ? 'Raytracing' : 'Cadrage'}</span><span role="status">{status}</span></span>
+            <span className="text-body-secondary">{RESOLUTION_OPTIONS.find(option => option.id === resolution)?.label}</span>
+          </div>
+          <div ref={containerRef} className="raytracing-photo__stage p-3 p-lg-4">
+            <div ref={canvasWrapperRef} className={`raytracing-photo__canvas shadow-sm ${dofEnabled && !isOrthographic ? 'raytracing-photo__canvas--focus' : ''}`} onClick={dofEnabled && !isOrthographic && !isBuildingScene && !isSubmitting ? handleCanvasClick : undefined} title={dofEnabled ? 'Cliquez dans l’image pour choisir la mise au point' : undefined}>
+              {(isBuildingScene || isSubmitting) && <div className="raytracing-photo__overlay position-absolute d-flex flex-column align-items-center justify-content-center gap-3 p-4 text-center"><span className="spinner-border text-primary" aria-hidden="true" /><span>{status}</span></div>}
+              {focusRing.visible && <div className="raytracing-photo__focus position-absolute rounded-circle" style={{ left: focusRing.x, top: focusRing.y }} />}
+            </div>
+          </div>
+          {errorMessage && <div className="alert alert-danger mx-3 mb-3" role="alert"><strong className="d-block mb-1">Le rendu n’a pas pu aboutir</strong><span className="small text-break">{errorMessage}</span><button className="btn btn-sm btn-outline-danger d-block mt-2" onClick={() => { setRenderLocally(false); setErrorMessage(null); }}>Revenir aux réglages</button></div>}
+          <footer className="border-top p-3">
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 small mb-2">
+              <span><strong>{currentSamples.toFixed(0)}</strong> / {targetSamples} échantillons <span className="text-body-secondary ms-2">{elapsedSeconds}s · {samplesPerSecond} éch./s</span></span>
+              <div className="d-flex gap-2">
+                <button className="btn btn-sm btn-outline-dark" disabled={!renderLocally || isBuildingScene || isSubmitting || isFinished} onClick={() => setIsPaused(value => !value)}>{isPaused ? 'Reprendre' : 'Pause'}</button>
+                <button className="btn btn-sm btn-outline-dark" disabled={!renderLocally || isBuildingScene || isSubmitting} onClick={handleRestart}>Relancer</button>
+              </div>
+            </div>
+            <div className="progress" role="progressbar" aria-label="Progression du rendu" aria-valuenow={progressPercent} aria-valuemin={0} aria-valuemax={100}><div className="progress-bar bg-primary" style={{ width: `${progressPercent}%` }} /></div>
+          </footer>
+        </main>
+        <aside className="raytracing-photo__sidebar glass-card p-3 d-flex flex-column gap-4" aria-label="Réglages du raytracing">
+          <section>
+            <h2 className="fs-6 fw-semibold mb-2">Lancer le rendu</h2>
+            <p className="small text-body-secondary mb-3">Le service local continue de calculer si vous fermez cet onglet.</p>
+            <div className="d-grid gap-2">
+              <button className={`btn btn-sm ${renderLocally ? 'btn-outline-dark' : 'btn-primary'}`} disabled={isSubmitting || (isBuildingScene && !renderLocally)} onClick={() => setRenderLocally(value => !value)}>{renderLocally ? 'Arrêter le calcul ici' : 'Calculer ici'}</button>
+              <button className="btn btn-sm btn-outline-primary" disabled={bvhProgress === null || renderLocally || isSubmitting} onClick={() => void sendBackgroundRender()}>{isSubmitting ? 'Envoi en cours…' : 'Lancer en arrière-plan'}</button>
+            </div>
+            {renderLocally && <p className="small text-body-secondary mt-2 mb-0">Arrêtez le calcul ici pour passer au service local.</p>}
+          </section>
+          <section className="border-top pt-3">
+            <h2 className="fs-6 fw-semibold mb-3">Qualité de l’image</h2>
+            <label className="form-label small" htmlFor="ray-resolution">Format et résolution</label>
+            <select id="ray-resolution" className="form-select form-select-sm mb-3" value={resolution} disabled={isSubmitting} onChange={event => setResolution(event.target.value as ResolutionPreset)}>{RESOLUTION_OPTIONS.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}</select>
+            <div className="small mb-2">Échantillons</div>
+            <div className="btn-group btn-group-sm w-100 mb-3" role="group" aria-label="Échantillons">{[40, 100, 250, 500].map(samples => <button key={samples} className={`btn ${targetSamples === samples ? 'btn-primary' : 'btn-outline-dark'}`} aria-pressed={targetSamples === samples} onClick={() => { setTargetSamples(samples); if (currentSamples >= samples) handleRestart(); }}>{samples}</button>)}</div>
+            {[
+              { id: 'bounces', label: 'Rebonds de lumière', value: bounces, min: 1, max: 12, step: 1, change: setBounces },
+              { id: 'exposure', label: 'Exposition', value: exposure, min: 0.4, max: 2.2, step: 0.05, change: setExposure },
+            ].map(control => <div key={control.id} className="mb-3"><label htmlFor={`ray-${control.id}`} className="form-label small d-flex justify-content-between mb-1">{control.label}<output>{control.value}</output></label><input id={`ray-${control.id}`} className="form-range" type="range" min={control.min} max={control.max} step={control.step} value={control.value} onChange={event => control.change(Number(event.target.value))} /></div>)}
+            {[
+              { id: 'denoise', label: 'Réduire le bruit', checked: enableDenoise, change: setEnableDenoise },
+              { id: 'characters', label: 'Inclure les personnages', checked: showCharacters, change: setShowCharacters },
+            ].map(control => <div key={control.id} className="form-check form-switch mb-2"><input id={`ray-${control.id}`} className="form-check-input" type="checkbox" role="switch" checked={control.checked} onChange={event => control.change(event.target.checked)} /><label className="form-check-label small" htmlFor={`ray-${control.id}`}>{control.label}</label></div>)}
+          </section>
+          <section className="border-top pt-3">
+            <h2 className="fs-6 fw-semibold mb-3">Mise au point</h2>
+            <div className="form-check form-switch"><input id="ray-dof" className="form-check-input" type="checkbox" role="switch" checked={dofEnabled && !isOrthographic} disabled={isOrthographic} onChange={event => setDofEnabled(event.target.checked)} /><label htmlFor="ray-dof" className="form-check-label small">Profondeur de champ</label></div>
+            <p className="small text-body-secondary mt-2 mb-0">{isOrthographic ? 'Disponible avec une caméra perspective.' : dofEnabled ? 'Cliquez dans l’aperçu pour choisir le point net.' : 'Activez-la pour flouter l’arrière-plan.'}</p>
+            {dofEnabled && !isOrthographic && <div className="mt-3"><label htmlFor="ray-focus" className="form-label small d-flex justify-content-between">Distance<output>{focusDistance} cm</output></label><input id="ray-focus" className="form-range mb-2" type="range" min="50" max="1500" step="5" value={focusDistance} onChange={event => setFocusDistance(Number(event.target.value))} /><div className="small mb-2">Ouverture</div><div className="btn-group btn-group-sm w-100" role="group" aria-label="Ouverture">{[1.4, 2, 2.8, 5.6].map(stop => <button key={stop} className={`btn ${fStop === stop ? 'btn-primary' : 'btn-outline-dark'}`} aria-pressed={fStop === stop} onClick={() => setFStop(stop)}>f/{stop}</button>)}</div></div>}
+          </section>
+          <section className="border-top pt-3 mt-auto">
+            <h2 className="fs-6 fw-semibold mb-3">Votre image</h2>
+            <div className="d-grid gap-2"><button className="btn btn-sm btn-primary" onClick={handleDownload} disabled={currentSamples === 0 || isBuildingScene || isSubmitting}><i className="bi bi-download me-2" aria-hidden="true" />Enregistrer le PNG</button><button className="btn btn-sm btn-outline-dark" onClick={() => void handleCopyClipboard()} disabled={currentSamples === 0 || isBuildingScene || isSubmitting}>{copySuccess ? 'Image copiée' : 'Copier l’image'}</button></div>
+          </section>
+        </aside>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ const launch = require('./browser-test-options.cjs');
     const browser = await launch({ args: ['--enable-gpu'] });
     try {
       const page = await browser.newPage();
+      await page.setCacheEnabled(false);
       console.log(await page.evaluate(() => {
         const gl = document.createElement('canvas').getContext('webgl2');
         const debug = gl.getExtension('WEBGL_debug_renderer_info');
@@ -48,13 +49,28 @@ const launch = require('./browser-test-options.cjs');
   const browser = await launch();
   try {
     const page = await browser.newPage();
+    await page.setCacheEnabled(false);
     const errors = [];
     page.on('pageerror', e => errors.push(String(e)));
     const response = await page.goto('http://127.0.0.1:5174/render-jobs');
     assert.equal(response.status(), 200);
     await page.waitForFunction(() => document.querySelector('main')?.textContent.trim().length > 0, { timeout: 10000 });
     assert.equal(await page.title(), 'Rendus locaux');
+    const jobs = await page.evaluate(async () => (await fetch('/api/render-jobs')).json());
+    assert(jobs.every((job, index) => Number.isFinite(job.createdAt) && (!index || jobs[index - 1].createdAt >= job.createdAt)));
+    assert.deepEqual(await page.$$eval('article', cards => cards.map(card => card.dataset.jobId)), jobs.map(job => job.id));
+    const link = await page.$('article a');
+    if (link) {
+      assert.equal(await link.evaluate(element => element.hasAttribute('download')), false);
+      const opened = browser.waitForTarget(target => target.url().includes('/api/render-jobs/') && target.url().endsWith('/image'));
+      await link.click();
+      const image = await (await opened).page();
+      await image.waitForFunction(() => document.querySelector('img')?.naturalWidth > 0);
+      await image.close();
+    }
+    await page.screenshot({ path: '/tmp/room-render-jobs-redesign.png' });
+
     assert.deepEqual(errors, []);
-    console.log('PASS: redirect, dashboard JavaScript and API polling in Chromium.');
+    console.log('PASS: dashboard, newest-first ordering and direct image opening without download verified.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

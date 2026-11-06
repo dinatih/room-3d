@@ -1,23 +1,53 @@
-<!doctype html><html lang="fr"><meta charset="utf-8"><title>Rendus locaux</title><body><h1>Rendus locaux</h1><p>Le service doit rester ouvert pendant le calcul. Les images sont enregistrées dans renders/.</p><main></main><script type="module">
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Rendus locaux</title>
+<body class="bg-body-tertiary text-body">
+<div class="container py-4">
+  <header class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"><div><h1 class="fs-3 fw-semibold mb-1">Mes rendus</h1><p class="text-body-secondary mb-0">Les plus récents en premier · Images conservées dans le dossier renders/</p></div><a href="http://localhost:5173/?raytracing=debug" class="btn btn-sm btn-outline-primary">Retour au studio</a></header>
+  <main class="d-flex flex-column gap-3" aria-live="polite"></main>
+</div>
+<script type="module">
+import '/scss/app.scss';
+import '/src/index.css';
+let previous = '';
 async function refresh() {
   const response = await fetch('/api/render-jobs');
   if (!response.ok) throw new Error(await response.text());
   const jobs = await response.json();
-  const main = document.querySelector('main'); main.replaceChildren();
+  const snapshot = JSON.stringify(jobs);
+  if (snapshot === previous) return;
+  previous = snapshot;
+  const main = document.querySelector('main');
+  const expanded = new Set([...main.querySelectorAll('details[open]')].map(element => element.dataset.jobId));
+  main.replaceChildren();
   if (!jobs.length) main.textContent = 'Aucun rendu envoyé pour le moment.';
+  const labels = { queued: 'En attente', rendering: 'Calcul en cours', paused: 'En pause', completed: 'Terminé', failed: 'Échec', cancelled: 'Annulé', interrupted: 'Interrompu' };
   for (const job of jobs) {
-    const row = document.createElement('p');
-    row.textContent = `${job.id} — ${job.state} — ${Number(job.samples).toFixed(1)} échantillons ${job.error || ''} `;
+    const card = document.createElement('article'); card.className = 'card border-0 shadow-sm'; card.dataset.jobId = job.id;
+    const row = document.createElement('div'); row.className = 'card-body d-flex flex-wrap align-items-center justify-content-between gap-3';
+    const info = document.createElement('div');
+    const heading = document.createElement('h2'); heading.className = 'fs-6 fw-semibold mb-1'; heading.textContent = new Date(job.createdAt).toLocaleString('fr-FR');
+    const status = document.createElement('p'); status.className = 'small mb-1'; status.textContent = `${labels[job.state]} · ${Number(job.samples).toFixed(1)} échantillons`;
+    const filename = document.createElement('p'); filename.className = 'small text-body-secondary text-break mb-0'; filename.textContent = `${job.id}.png`;
+    info.append(heading, status, filename);
+    const actions = document.createElement('div'); actions.className = 'd-flex flex-wrap gap-2';
     if (job.state === 'completed') {
-      const link = document.createElement('a'); link.href = `/api/render-jobs/${job.id}/image`; link.download = `${job.id}.png`; link.textContent = 'Télécharger'; row.append(link);
+      const link = document.createElement('a'); link.className = 'btn btn-sm btn-primary'; link.href = `/api/render-jobs/${job.id}/image`; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Ouvrir l’image'; actions.append(link);
     }
     for (const [action, label] of job.state === 'rendering' ? [['pause', 'Pause'], ['cancel', 'Annuler']] : job.state === 'paused' ? [['resume', 'Reprendre'], ['cancel', 'Annuler']] : job.state === 'queued' ? [['cancel', 'Annuler']] : []) {
-      const button = document.createElement('button'); button.textContent = label;
-      button.onclick = async () => { await fetch(`/api/render-jobs/${job.id}/${action}`, { method: 'POST' }); await refresh(); }; row.append(button);
+      const button = document.createElement('button'); button.className = `btn btn-sm ${action === 'cancel' ? 'btn-outline-danger' : 'btn-outline-dark'}`; button.textContent = label;
+      button.onclick = async () => { const response = await fetch(`/api/render-jobs/${job.id}/${action}`, { method: 'POST' }); if (!response.ok) throw new Error(await response.text()); await refresh(); }; actions.append(button);
     }
-    main.append(row);
+    row.append(info, actions); card.append(row);
+    if (job.error) {
+      const details = document.createElement('details'); details.className = 'border-top px-3 py-2'; details.dataset.jobId = job.id; details.open = expanded.has(job.id);
+      const summary = document.createElement('summary'); summary.className = 'small text-danger'; summary.textContent = 'Voir l’erreur';
+      const error = document.createElement('pre'); error.className = 'small text-danger text-wrap text-break mt-2 mb-0'; error.textContent = job.error; details.append(summary, error); card.append(details);
+    }
+    main.append(card);
   }
 }
-async function poll() { try { await refresh(); } catch (error) { document.querySelector('main').textContent = String(error); } setTimeout(poll, 1000); }
+async function poll() { try { await refresh(); } catch (error) { previous = ''; document.querySelector('main').textContent = String(error); } setTimeout(poll, 1000); }
 void poll();
-</script></body></html>
+</script>
+</body></html>
