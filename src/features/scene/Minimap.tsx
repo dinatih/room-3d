@@ -15,7 +15,7 @@ import {
   PLAN_X_MIN, PLAN_X_MAX, PLAN_Z_MIN, PLAN_Z_MAX,
 } from './floorDraw';
 import { LANDING_STRIPS } from './LandingStrips';
-import { CHARACTERS, isCharacterVisibleInMode } from './characterConfig';
+import { CHARACTERS, isCharacterVisibleInMode, getEffectiveLaraCount } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { isAppIdle } from './idleState';
 import { Group } from './sidepanel/Group';
@@ -155,7 +155,7 @@ function drawMinimap(
   // ── Other characters (NPCs) icons (y compris à l'extérieur) ─────────────────
   const activeCharacterId = useSceneStore.getState().activeCharacterId;
   const showAllLaraStyles = useSceneStore.getState().layers.showAllLaraStyles;
-  const laraCount = useSceneStore.getState().layers.laraCount ?? (typeof window !== 'undefined' && window.innerWidth <= 768 ? 2 : 16);
+  const laraCount = getEffectiveLaraCount(useSceneStore.getState().layers.laraCount);
   const extraCharacters = useSceneStore.getState().layers.extraCharacters ?? false;
   const showAnimals = useSceneStore.getState().layers.animals ?? true;
   const activeExtraIds = useSceneStore.getState().activeExtraIds;

@@ -163,20 +163,6 @@ export const ACCESSORIES_MESH_NAMES = new Set([
   'grenades', 'accessories', 'handgun_part'
 ]);
 
-export type LaraCountMode = number;
-
-/** Nombre de personnages par défaut */
-export const DEFAULT_LARA_COUNT: LaraCountMode = 9;
-
-/** Nombres de personnages proposés dans le sélecteur d'options. */
-export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 9, 10, 16];
-
-/** Sélection du mode 10 : dix Laras. */
-export const TEN_PLAYERS_LARA_IDS = new Set([
-  'vivida', 'native', 'rosanna', 'marissa', 'delphina',
-  'sara', 'sabira', 'cha', 'helena', 'safa',
-]);
-
 /** Personnages supplémentaires : hors Laras et robots. */
 export function isExtraCharacter(c: CharacterConfig | string): boolean {
   const char = typeof c === 'string' ? findCharacter(c) : c;
@@ -187,8 +173,31 @@ export function isExtraCharacter(c: CharacterConfig | string): boolean {
 /** Liste des personnages extras (hors Laras et robots) */
 export const EXTRA_CHARACTERS = CHARACTERS.filter(isExtraCharacter);
 
-/** Liste des personnages principaux / non-extras (16 Laras au total) */
+/** Liste des personnages principaux / non-extras */
 export const NON_EXTRA_CHARACTERS = CHARACTERS.filter(c => !isExtraCharacter(c));
+
+/** Nombre total de Laras / personnages principaux */
+export const ALL_LARA_COUNT = NON_EXTRA_CHARACTERS.length;
+
+export type LaraCountMode = number;
+
+/** Nombre de personnages par défaut */
+export const DEFAULT_LARA_COUNT: LaraCountMode = 9;
+
+/** Nombres de personnages proposés dans le sélecteur d'options. */
+export const LARA_COUNT_MODES: LaraCountMode[] = [1, 2, 4, 9, 10, ALL_LARA_COUNT];
+
+export function getEffectiveLaraCount(laraCount?: LaraCountMode, isMobile?: boolean): number {
+  if (laraCount !== undefined) return laraCount;
+  const mobile = isMobile ?? (typeof window !== 'undefined' && window.innerWidth <= 768);
+  return mobile ? 2 : ALL_LARA_COUNT;
+}
+
+/** Sélection du mode 10 : dix Laras. */
+export const TEN_PLAYERS_LARA_IDS = new Set([
+  'vivida', 'native', 'rosanna', 'marissa', 'delphina',
+  'sara', 'sabira', 'cha', 'helena', 'safa',
+]);
 
 /** Sélection numérique exacte, avec le personnage actif inclus dans le total. */
 export function getDefaultSceneCharacterIds(count: number, activeCharacterId?: string): string[] {
@@ -209,7 +218,7 @@ export function getDefaultSceneCharacterIds(count: number, activeCharacterId?: s
 }
 
 /** Sélection des personnages principaux pour les contrôles du panneau latéral. */
-export function getDefaultNonExtraIds(mode: LaraCountMode = 16, activeCharacterId?: string): string[] {
+export function getDefaultNonExtraIds(mode: LaraCountMode = ALL_LARA_COUNT, activeCharacterId?: string): string[] {
   return getDefaultSceneCharacterIds(mode, activeCharacterId).filter(id => !isExtraCharacter(id));
 }
 
@@ -225,7 +234,7 @@ export const ANATOMICAL_EXTRA_IDS = [
 
 export function isCharacterVisibleInMode(
   id: string,
-  mode: LaraCountMode = 16,
+  mode: LaraCountMode = ALL_LARA_COUNT,
   activeCharacterId?: string,
   extraCharacters: boolean = false,
   activeExtraIds?: string[] | Set<string>,

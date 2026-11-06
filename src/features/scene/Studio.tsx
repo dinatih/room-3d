@@ -67,7 +67,7 @@ import { GlobalSkeletonHelpers } from './utils/GlobalSkeletonHelpers';
 import { InventoryObjectsGrid }  from '@features/scene/InventoryObjectsGrid';
 import { frameCharacterGridCamera } from './character/characterGridUtils';
 import { useCharacterGridStore } from './character/useCharacterGridStore';
-import { isExtraCharacter } from './characterConfig';
+import { isExtraCharacter, ALL_LARA_COUNT } from './characterConfig';
 import { ViewControlBar }        from './ViewControlBar';
 import { AnimFrameController }   from '@features/inventory/AnimFrameController';
 import { useAnimPreviewStore }   from '@features/inventory/useAnimPreviewStore';
@@ -591,7 +591,7 @@ export function Studio() {
           e.preventDefault();
           if (e.repeat) return;
           const store = useSceneStore.getState();
-          store.setLaraCount(store.layers.laraCount === 16 ? 4 : 16);
+          store.setLaraCount(store.layers.laraCount === ALL_LARA_COUNT ? 4 : ALL_LARA_COUNT);
           return;
         }
         if (k === 'p') {

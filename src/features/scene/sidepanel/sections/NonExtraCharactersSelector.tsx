@@ -2,6 +2,8 @@ import { CharacterSelectionList } from './CharacterSelectionList';
 import { useSceneStore } from '../../store/useSceneStore';
 import {
   NON_EXTRA_CHARACTERS,
+  ALL_LARA_COUNT,
+  getEffectiveLaraCount,
   type LaraCountMode,
   findCharacter,
 } from '@features/scene/characterConfig';
@@ -20,7 +22,7 @@ export function NonExtraCharactersSelector({
   const selectAllMainCharacters = useSceneStore(state => state.selectAllMainCharacters);
   const clearMainCharacters = useSceneStore(state => state.clearMainCharacters);
   const setLaraCount = useSceneStore(state => state.setLaraCount);
-  const currentLaraCount = useSceneStore(state => state.layers.laraCount ?? (isMobile ? 2 : 16));
+  const currentLaraCount = getEffectiveLaraCount(useSceneStore(state => state.layers.laraCount), isMobile);
 
   const activeCount = activeMainIds.length;
   const totalCount = NON_EXTRA_CHARACTERS.length;
@@ -39,13 +41,13 @@ export function NonExtraCharactersSelector({
 
       {/* Panneau de sélection multiple */}
       <div className="p-2 rounded bg-light-subtle border border-secondary-subtle d-flex flex-column gap-2">
-        {/* Presets par défaut (1, 2, 4, 10, 16) */}
+        {/* Presets par défaut (1, 2, 4, 10, Toutes) */}
         {!compact && <div>
           <div className="text-muted mb-1" style={{ fontSize: '9px' }}>
             PRÉRÉGLAGES RAPIDES :
           </div>
           <div className="btn-group btn-group-sm w-100" role="group">
-            {([1, 2, 4, 10, 16] as LaraCountMode[]).map(count => (
+            {([1, 2, 4, 10, ALL_LARA_COUNT] as LaraCountMode[]).map(count => (
               <button
                 key={count}
                 type="button"
@@ -54,7 +56,7 @@ export function NonExtraCharactersSelector({
                 onClick={() => setLaraCount(count)}
                 title={`Charger le preset par défaut de ${count} personnage(s)`}
               >
-                {count === 1 ? '1 (Vivida)' : count === 2 ? '2 (Duo)' : count === 16 ? '16 (Toutes)' : count}
+                {count === 1 ? '1 (Vivida)' : count === 2 ? '2 (Duo)' : count === ALL_LARA_COUNT ? `${count} (Toutes)` : count}
               </button>
             ))}
           </div>

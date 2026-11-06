@@ -41,6 +41,7 @@ import {
   isExtraCharacter,
   EXTRA_CHARACTERS,
   NON_EXTRA_CHARACTERS,
+  ALL_LARA_COUNT,
   getDefaultSceneCharacterIds,
   CHARACTERS,
   DEFAULT_LARA_COUNT,
@@ -711,7 +712,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   selectAllMainCharacters: () => {
     set((state) => ({
       activeMainIds: NON_EXTRA_CHARACTERS.map(c => c.id),
-      layers: { ...state.layers, laraCount: 16 }
+      layers: { ...state.layers, laraCount: ALL_LARA_COUNT }
     }));
     cameraState.invalidate?.();
   },

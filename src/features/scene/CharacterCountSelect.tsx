@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import { CHARACTERS, LARA_COUNT_MODES } from './characterConfig';
+import { CHARACTERS, LARA_COUNT_MODES, ALL_LARA_COUNT } from './characterConfig';
 import { useSceneStore } from './store/useSceneStore';
 import { getActiveSceneCharactersCount } from './character/characterGridUtils';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
@@ -7,12 +7,14 @@ import { NonExtraCharactersSelector } from './sidepanel/sections/NonExtraCharact
 import { ExtraCharactersSelector } from './sidepanel/sections/ExtraCharactersSelector';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
+const PRESET_DESCRIPTIONS: Record<number, string> = { 1: 'Vivida seule', 2: 'Duo', 4: '4 Laras', 9: '9 Laras', 10: 'Éco' };
+
 const PRESETS = [
   { count: 0, label: '0', description: 'Masquer les personnages' },
   ...LARA_COUNT_MODES.map(count => ({
     count,
     label: String(count),
-    description: count === 1 ? 'Vivida seule' : count === 2 ? 'Duo' : count === 4 ? '4 Laras' : count === 9 ? '9 Laras' : count === 10 ? 'Éco' : '16 Toutes les Laras',
+    description: PRESET_DESCRIPTIONS[count] ?? (count === ALL_LARA_COUNT ? `${count} Toutes les Laras` : `${count} Laras`),
   })),
   { count: CHARACTERS.length, label: 'All', description: 'Tous les personnages, extras compris' },
 ];
