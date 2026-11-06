@@ -1,3 +1,4 @@
+import { simulatedHour } from './DayNight';
 /**
  * SunLight.tsx — directional light calée sur la position réelle du soleil.
  *
@@ -68,7 +69,7 @@ export function SunLight() {
   useEffect(() => {
     function update() {
       if (!lightRef.current) return;
-      const { azimuth, elevation } = solarPosition(LAT, LNG, new Date());
+      const { azimuth, elevation } = solarPosition(LAT, LNG, (() => { const date = new Date('2026-03-20T00:00:00Z'); date.setUTCHours(0, simulatedHour() * 60 - LNG * 4); return date; })());
 
       // Direction ENU vers le soleil
       const azR   = MathUtils.degToRad(azimuth);
@@ -95,7 +96,7 @@ export function SunLight() {
     }
 
     update();
-    const id = setInterval(update, 60_000);
+    const id = setInterval(update, 250);
     return () => clearInterval(id);
   }, [invalidate]);
 
@@ -145,7 +146,7 @@ export function SunSphere() {
   useEffect(() => {
     function update() {
       if (!meshRef.current || !matRef.current) return;
-      const { azimuth, elevation } = solarPosition(LAT, LNG, new Date());
+      const { azimuth, elevation } = solarPosition(LAT, LNG, (() => { const date = new Date('2026-03-20T00:00:00Z'); date.setUTCHours(0, simulatedHour() * 60 - LNG * 4); return date; })());
       meshRef.current.visible = elevation > 0;
       if (elevation > 0) {
         const { x, y, z } = sunDir(azimuth, elevation);
@@ -156,7 +157,7 @@ export function SunSphere() {
       invalidate();
     }
     update();
-    const id = setInterval(update, 60_000);
+    const id = setInterval(update, 250);
     return () => clearInterval(id);
   }, [invalidate]);
 

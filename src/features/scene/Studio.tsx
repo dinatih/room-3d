@@ -1,3 +1,4 @@
+import { DayNight } from './DayNight';
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
@@ -870,6 +871,7 @@ export function Studio() {
       >
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
         <SkySphere />
+        <DayNight />
         <SceneAmbientLight />
         {layers.realSun ? (
           <>
