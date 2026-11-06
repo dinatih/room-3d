@@ -32,13 +32,14 @@ export function Weather() {
     const { coverage, windSpeed, windDirection } = useWeather.getState();
     const direction = windDirection * Math.PI / 180;
     // m/s to scene centimetres; drift stays continuous when wind settings change.
-    uniforms.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
-    uniforms.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
-    uniforms.coverage.value = coverage;
-    uniforms.tint.value.set('#182338').lerp(new Color('#edf1f5'), daylight(simulatedHour()));
+    const active = material.current.uniforms;
+    active.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
+    active.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
+    active.coverage.value = coverage;
+    active.tint.value.set('#182338').lerp(new Color('#edf1f5'), daylight(simulatedHour()));
   });
   return <CategoryLayerGroup layer={LAYER_ENVIRONMENT} register={false}>
-    <mesh position={SKY_CENTER} renderOrder={-800} userData={{ isSky: true }}>
+    <mesh position={SKY_CENTER} renderOrder={10} userData={{ isSky: true }}>
       <sphereGeometry args={[SKY_RADIUS * 0.75, 48, 32]} />
       <shaderMaterial ref={material} uniforms={uniforms} side={BackSide} transparent depthWrite={false}
         vertexShader={`varying vec3 direction; void main() { direction = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`}
