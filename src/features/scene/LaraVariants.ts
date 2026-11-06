@@ -67,9 +67,22 @@ function createGrayscaleTexture(
 }
 
 export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
-  if (!style) return;
+  if (!style || style === 'native') {
+    model.traverse(node => {
+      const mesh = node as THREE.Mesh;
+      if (mesh.isMesh && mesh.userData?.__baseVariantMaterials) {
+        const currentMat = mesh.material as THREE.Material | THREE.Material[];
+        (Array.isArray(currentMat) ? currentMat : [currentMat]).forEach(m => {
+          if (m?.userData?.__ownedCharacterMaterial) m.dispose();
+        });
+        const base = mesh.userData.__baseVariantMaterials as THREE.Material[];
+        mesh.material = base.length === 1 ? base[0] : base;
+        delete mesh.userData.__baseVariantMaterials;
+      }
+    });
+    return;
+  }
   const isVivida = style === 'vivida';
-  const isNative = style === 'native';
   const isRosanna = style === 'rosanna';
   const isMarissa = style === 'marissa';
   const isDelphina = style === 'delphina';
@@ -188,17 +201,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            mat.visible = false;
         }
 
-        // UNIVERSAL FIX: Force OPAQUE by default
-        mat.transparent = false;
-        mat.depthWrite = true;
-        mat.alphaTest = 0;
-
-        if (isHair || isLash || matName.includes('trans')) {
-          mat.transparent = false; // Force opaque cutout to avoid glass sorting issues
-          mat.alphaTest = 0.5;
-          mat.side = THREE.DoubleSide;
-        }
-
         // HAIR COLORING
         if (isHair) {
           if (isDelphina) {
@@ -257,15 +259,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
            }
         }
 
-        // Both 'eyes' and 'eye2' might be transparent decals over a base eyeball.
         const isEyeMat = matName.includes('eye') && !matName.includes('lash');
         if (isEyeMat) {
            mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
            mat.roughness = 0.3;
-           mat.transparent = false; // Force opaque to prevent depth sorting bugs
-           mat.alphaTest = 0.5;
            if ('transmission' in mat) (mat as any).transmission = 0;
 
            if (isDelphina || isRomana) {
@@ -313,8 +312,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // CLOTHING COLOR-IFICATION
-        if (!isNative) {
-          const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
+        const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
           const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
 
           const isBuckle = matName.toLowerCase().includes('buckle');
@@ -544,7 +542,6 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
               }
             }
           }
-        }
 
         // Independent anatomical sides: Marissa left, Delphina right.
         if (meshName === 'arms' || meshName === 'body_legs' || meshName.startsWith('body_legs_barefoot')) {
