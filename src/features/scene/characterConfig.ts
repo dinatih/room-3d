@@ -27,7 +27,8 @@ export const CHARACTERS: CharacterConfig[] = [
   { id: 'delphina', name: 'Delphina', emoji: '🐕️', color: '#00ff88',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'delphina', height: 173.4 },
   { id: 'sara',     name: 'Sara',     emoji: '🧗‍♀️', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sara',     height: 173.4 },
   { id: 'cha',      name: 'Cha',      emoji: '🦸', color: '#00ccff',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'cha',      height: 173.4 },
-  { id: 'vivida',   name: 'ViviDa',   emoji: '🫀', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'vivida',   height: 173.4 },
+  { id: 'vivida',      name: 'ViviDa',       emoji: '🫀', color: '#ff4444',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'vivida',        height: 173.4 },
+  { id: 'vivida_bisa', name: 'ViviDa-Bisa',  emoji: '💃', color: '#ff2222',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'vivida_bisa',   height: 173.4 },
   { id: 'sabira',   name: 'Sabira',   emoji: '🌸', color: '#ffff44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'sabira',   height: 173.4 },
   { id: 'safa',     name: 'Safa',     emoji: '⚽️', color: '#88ff44',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'safa',     height: 173.4 },
   { id: 'romana',   name: 'Romana',   emoji: '👶', color: '#ffaacc',  path: 'characters/lara/lara_native.glb', pos: [0, 0, 0], rot: 0, variant: 'romana',   height: 173.4 },
@@ -251,6 +252,6 @@ export function isCharacterVisibleInMode(
 
 /** PNJ en mode exploration autonome (scénarios et vie quotidienne) */
 export const AUTONOMOUS_NPC_IDS = new Set([
-  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'safa', 'romana', 'angelina', 'lgbta', 'helena', 'sandra', 'rajaa', 'valby',
+  'ybot', 'xbot', 'native', 'rosanna', 'marissa', 'delphina', 'sara', 'sabira', 'cha', 'vivida', 'vivida_bisa', 'safa', 'romana', 'angelina', 'lgbta', 'helena', 'sandra', 'rajaa', 'valby',
   'alex', 'david', 'mannequin', 'skeleton', 'curious_skeleton', 'james', 'ivy', 'lewis'
 ]);

@@ -6,7 +6,7 @@ import { getLaraLimbTattooTexture } from './LaraLimbTattoos';
 import { getDelphinaShoulderTattooTexture } from './LaraShoulderTattoo';
 import { applyChaBackTattoo } from './ChaBackTattoo';
 
-export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta' | 'helena';
+export type LaraVariant = 'native' | 'rosanna' | 'marissa' | 'delphina' | 'sara' | 'cha' | 'vivida' | 'vivida_bisa' | 'sabira' | 'safa' | 'sandra' | 'rajaa' | 'angelina' | 'romana' | 'lgbta' | 'helena';
 
 const textureCache: Record<string, THREE.Texture> = {};
 const grayscaleTextureCache = new Map<string, THREE.Texture>();
@@ -68,6 +68,7 @@ function createGrayscaleTexture(
 
 export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
   if (!style) return;
+  const isNative = style === 'native';
   const isVivida = style === 'vivida';
   const isRosanna = style === 'rosanna';
   const isMarissa = style === 'marissa';
@@ -298,6 +299,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
         }
 
         // CLOTHING COLOR-IFICATION
+        if (isNative) return;
         const isTop = matName.toLowerCase().includes('top') || matName.toLowerCase().includes('shirt') || matName.toLowerCase().includes('tank') || meshName.toLowerCase().includes('shirt');
           const isBackpack = matName.toLowerCase().includes('backpack') || matName.toLowerCase().includes('bag') || matName.toLowerCase().includes('pack');
 
