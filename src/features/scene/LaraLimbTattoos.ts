@@ -23,7 +23,7 @@ export function getLaraLimbTattooTexture(
   const overlay = document.createElement('canvas');
   overlay.width = ATLAS_WIDTH;
   overlay.height = ATLAS_HEIGHT;
-  const ink = overlay.getContext('2d');
+  const ink = overlay.getContext('2d', { willReadFrequently: true });
   if (!ink) throw new Error('Cannot create Lara tattoo overlay');
   const tiles = style === 'sara' ? [0, SIDE_WIDTH] : [style === 'marissa' ? 0 : SIDE_WIDTH];
   for (const tileX of tiles) {
@@ -80,7 +80,7 @@ export function getProjectedLaraTattooTexture(
     const mappingCanvas = document.createElement('canvas');
     mappingCanvas.width = image.width;
     mappingCanvas.height = image.height;
-    const mappingCtx = mappingCanvas.getContext('2d');
+    const mappingCtx = mappingCanvas.getContext('2d', { willReadFrequently: true });
     if (!mappingCtx) throw new Error('Cannot read Lara tattoo projection');
     mappingCtx.drawImage(lookup, 0, 0);
     const mapping = mappingCtx.getImageData(0, 0, image.width, image.height).data;
