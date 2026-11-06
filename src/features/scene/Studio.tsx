@@ -14,6 +14,7 @@ import {
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
   PerspectiveCamera, OrthographicCamera, type LightShadow,
+  Material, Object3D,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -146,7 +147,7 @@ const WARMUP_ANIM_PATHS = [
   ...NPC_WALK_ANIMATIONS.map(animKey => resolveAnimationPath(animKey)),
 ].filter(Boolean);
 
-/** Pré-compilation GPU, pré-téléchargement des animations essentielles et exécution de frames de warm-up pendant la page de préchargement. */
+/** Pré-compilation GPU shader par shader, pré-téléchargement des animations et warm-up de la scène. */
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   const readyRef = useRef(false);
@@ -158,11 +159,44 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
     let frame: number | undefined;
 
     const prepare = async () => {
-      // Télécharger les animations et compiler les shaders en parallèle.
-      await Promise.all([
-        gl.compileAsync(scene, camera),
-        ...WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)),
-      ]);
+      const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
+
+      const targets: { name: string; object: Object3D }[] = [];
+      const seen = new Set<Material>();
+      scene.traverse(obj => {
+        const renderable = obj as any;
+        if (!renderable.isMesh && !renderable.isPoints && !renderable.isLine && !renderable.isSprite) return;
+        const mat = renderable.material;
+        if (!mat) return;
+        const mats = Array.isArray(mat) ? mat : [mat];
+        for (const m of mats) {
+          if (!seen.has(m)) {
+            seen.add(m);
+            const name = m.name?.trim() || renderable.name?.trim() || m.type || 'Shader';
+            targets.push({ name, object: renderable });
+          }
+        }
+      });
+
+      const bar = document.getElementById('loading-bar');
+      const itemEl = document.getElementById('loading-item');
+      const total = targets.length;
+
+      for (let i = 0; i < total; i++) {
+        if (cancelled) return;
+        const { name, object } = targets[i];
+        const pct = Math.round(((i + 1) / total) * 100);
+        if (bar) bar.style.width = `${pct}%`;
+        if (itemEl) {
+          const text = `⚡ Shader ${i + 1}/${total} (${pct}%) : ${name}`;
+          itemEl.textContent = text;
+          itemEl.title = text;
+        }
+        gl.compile(object, camera, scene);
+        await new Promise(r => setTimeout(r, 0));
+      }
+
+      await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
 
       let frames = 0;
@@ -307,30 +341,34 @@ function LoadingProgress({
   onAssetsLoaded: () => void;
   onLaunch: () => void;
 }) {
-  const { progress, active, item } = useProgress();
+  const { active, loaded, total, item } = useProgress();
   const assetsDoneRef = useRef(false);
   const hasLaunchedRef = useRef(false);
 
-  // 1. Suivi du téléchargement des assets
+  // 1. Suivi du téléchargement des assets (ratio absolu loaded/total pour éviter les allers-retours de Drei)
   useEffect(() => {
+    if (assetsDoneRef.current) return;
     const bar = document.getElementById('loading-bar');
     const itemEl = document.getElementById('loading-item');
 
-    if (bar) bar.style.width = `${progress}%`;
-    if (itemEl && item && !assetsDoneRef.current) {
-      itemEl.textContent = item;
+    const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+    if (bar) bar.style.width = `${pct}%`;
+    if (itemEl && item) {
+      const fileName = item.split('/').pop()?.split('?')[0] || item;
+      itemEl.textContent = `📦 Téléchargement : ${fileName} (${loaded}/${total})`;
       itemEl.title = item;
     }
 
-    if (!active && progress >= 100 && !assetsDoneRef.current) {
-      assetsDoneRef.current = true;
-      onAssetsLoaded();
-      if (itemEl && !sceneReady) {
-        itemEl.textContent = '⚡ Optimisation GPU & compilation des shaders…';
-        itemEl.title = itemEl.textContent;
-      }
+    if (!active && loaded > 0 && loaded >= total) {
+      const timer = setTimeout(() => {
+        if (!assetsDoneRef.current) {
+          assetsDoneRef.current = true;
+          onAssetsLoaded();
+        }
+      }, 60);
+      return () => clearTimeout(timer);
     }
-  }, [progress, active, item, sceneReady, onAssetsLoaded]);
+  }, [active, loaded, total, item, onAssetsLoaded]);
 
   // 2. Lancement dès que les assets sont chargés et l'optimisation GPU terminée
   useEffect(() => {
