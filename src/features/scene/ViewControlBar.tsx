@@ -324,7 +324,6 @@ export function ViewControlBar({
           </div>
         )}
       </div>
-      {showCharacterModes && (
         <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
           {perspButton}
           {rotButton}
@@ -336,15 +335,6 @@ export function ViewControlBar({
             </button>
           )}
         </div>
-      )}
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {!showCharacterModes && perspButton}
-      </div>
-      <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {!showCharacterModes && rotButton}
-        {!showCharacterModes && elevationGroup}
-        {!showCharacterModes && cardinalGroup}
-      </div>
     </div>
     </>
   );
