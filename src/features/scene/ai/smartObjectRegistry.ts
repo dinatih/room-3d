@@ -868,7 +868,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'pnz',
         name: 'PNZ',
         offset: [400, 0, 300],
-        animationsRandom: ['reggaeton', 'musical-theater', 'zumba', 'oriental', 'rnb'],
+        animationsRandom: ['reggaeton', 'musical-theater', 'zumba', 'oriental'],
         repeatCount: 6,
         repeatVariation: true,
       },
