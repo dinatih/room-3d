@@ -3,7 +3,6 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { EventEmitter, once } = require('node:events');
 const { load } = require('../support/load-ts.cjs');
 
 it('conserve une session par document à travers HMR et sérialise erreurs, causes et références partagées', () => {
@@ -42,19 +41,18 @@ it('conserve une session par document à travers HMR et sérialise erreurs, caus
 });
 
 it('écrit un fichier par chargement, conserve les événements tardifs et pointe latest vers la nouvelle page', async () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-test-')), streams = [], httpServer = new EventEmitter(), errors = [];
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-test-')), errors = [];
   const { devLogPlugin } = load('scripts/dev-log-plugin.ts', {
-    'node:fs': { ...fs, createWriteStream: (...args) => { const stream = fs.createWriteStream(...args); streams.push(stream); return stream; } },
+    'node:fs': fs,
     'node:path': path, 'node:child_process': { execFileSync: (_, args) => args[0] === 'rev-parse' ? 'test-commit' : '' },
   });
   let receive;
-  devLogPlugin(directory).configureServer({ httpServer, config: { root: process.cwd(), logger: { info() {}, error: error => errors.push(error) } }, ws: { on: (name, handler) => { assert.equal(name, 'room:app-log'); receive = handler; } } });
+  devLogPlugin(directory).configureServer({ config: { root: process.cwd(), logger: { info() {}, error: error => errors.push(error) } }, ws: { on: (name, handler) => { assert.equal(name, 'room:app-log'); receive = handler; } } });
   try {
     const send = (session, action, pageStartedAt = '2026-10-25T01:00:00.000Z') => receive({ session, pageStartedAt, entry: { tag: 'test', action } });
     send('first', 'page_load'); send('first', 'hmr_event'); send('second', 'page_load'); send('first', 'late_event');
     send('older-tab', 'page_heartbeat', '2026-10-24T01:00:00.000Z');
     receive({ session: '../invalid', entry: {} });
-    const finished = streams.map(stream => once(stream, 'finish')); httpServer.emit('close'); await Promise.all(finished);
     const files = fs.readdirSync(directory).filter(file => file !== 'latest.jsonl');
     assert.equal(files.length, 3);
     const first = fs.readFileSync(path.join(directory, files.find(file => file.includes('_first'))), 'utf8').trim().split('\n').map(JSON.parse);
@@ -63,5 +61,32 @@ it('écrit un fichier par chargement, conserve les événements tardifs et point
     assert.equal(errors.length, 1); assert.match(errors[0], /Invalid log session/);
     const { analyze } = require('../../scripts/analyze-navigation-logs.cjs');
     assert.equal((await analyze(path.join(directory, 'latest.jsonl'))).session, 'second');
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+it('limite le total au démarrage et pendant une session longue sans laisser de fichiers ouverts', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-budget-')), errors = [], budget = 2048;
+  const { devLogPlugin } = load('scripts/dev-log-plugin.ts', {
+    'node:fs': fs, 'node:path': path, 'node:child_process': { execFileSync: () => 'test' },
+  });
+  const old = path.join(directory, '2026-01-01_old.jsonl');
+  fs.writeFileSync(old, 'x'.repeat(budget + 1));
+  let receive;
+  try {
+    devLogPlugin(directory, budget).configureServer({ config: { root: process.cwd(), logger: { info() {}, error: e => errors.push(e) } },
+      ws: { on: (_, handler) => { receive = handler; } } });
+    assert.equal(fs.existsSync(old), false);
+    for (let i = 0; i < 40; i++) {
+      receive({ session: i < 10 ? 'first' : 'second', pageStartedAt: i < 10 ? '2026-01-02' : '2026-01-03', entry: { action: 'frame', data: 'é'.repeat(100), i } });
+      const files = fs.readdirSync(directory).filter(name => name !== 'latest.jsonl');
+      assert(files.reduce((sum, name) => sum + fs.statSync(path.join(directory, name)).size, 0) <= budget);
+      const rows = fs.readFileSync(path.join(directory, 'latest.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+      assert.equal(rows[0].entry.action, 'server_session');
+      assert.equal(rows.at(-1).entry.i, i);
+    }
+    assert.equal(errors.length, 0);
+    receive({ session: 'oversized', pageStartedAt: '2026-01-04', entry: { data: 'x'.repeat(budget) } });
+    assert.match(errors[0], /exceeds disk budget/);
+    assert(fs.existsSync(path.join(directory, 'latest.jsonl')));
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });

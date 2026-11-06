@@ -13,6 +13,8 @@ npx tsc --noEmit     # Vérifier la validité des types TypeScript
 
 En développement, chaque chargement de page crée un journal JSONL distinct dans `/tmp/room-3d-logs/`, nommé avec la date et l'identifiant de session. Le lien `/tmp/room-3d-logs/latest.jsonl` désigne le dernier chargement. Lecture en direct : `tail -F /tmp/room-3d-logs/latest.jsonl`. Analyse : `node scripts/analyze-navigation-logs.cjs` (ou ajouter le chemin d'une session). La session reste identique pendant HMR ; un rechargement crée une nouvelle session. Les logs incluent les événements `appLog`, les exceptions navigateur avec leurs causes, les calculs de navigation et un état détaillé des PNJ chaque seconde. Les filtres et la fermeture de la console UI n'affectent pas cet enregistrement. Recharger les onglets déjà ouverts après installation ; les événements antérieurs ne sont pas récupérés. Les journaux restent présents après redémarrage de Vite, jusqu'au nettoyage de `/tmp`.
 
+Les journaux sont limités à **500 Mio au total**. Le collecteur supprime les plus anciens au démarrage et avant chaque écriture qui dépasserait ce budget. Une session longue peut donc repartir sur un journal neuf ; `latest.jsonl` pointe vers le chargement le plus récent encore conservé. Un événement dépassant à lui seul le budget est rejeté avec une erreur explicite.
+
 ## Repères et Échelle 3D
 
 - **Échelle** : 1 unité = 1 cm.
