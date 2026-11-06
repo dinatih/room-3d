@@ -42,6 +42,76 @@ export interface ViewControlBarProps {
   children?: ReactNode;
 }
 
+function PopoverSelect<T extends string | number>({ title, color, items, value, onPick }: {
+  title: string;
+  color: 'green' | 'cyan';
+  items: readonly { value: T; icon: string; label: string }[];
+  value: string | number | null;
+  onPick: (value: T) => void;
+}) {
+  const popoverId = useId();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const current = items.find(item => item.value === value);
+  return (
+    <>
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--${color}`}
+        popoverTarget={popoverId}
+        aria-haspopup="dialog"
+        aria-label={`${title} : ${current?.label ?? '—'}`}
+        title={title}
+        onClick={event => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const popover = popoverRef.current!;
+          const width = parseFloat(getComputedStyle(popover).width);
+          const above = rect.top > window.innerHeight / 2;
+          popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
+          popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
+          popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - width - 8)}px`;
+          popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
+        }}
+      >
+        <i className={`bi ${current?.icon ?? 'bi-compass'}`} aria-hidden="true" />
+        <span>{current?.label ?? title}</span>
+        <i className="bi bi-chevron-down" aria-hidden="true" />
+      </button>
+      {createPortal(
+        <div
+          ref={popoverRef}
+          id={popoverId}
+          {...{ popover: 'auto' }}
+          role="dialog"
+          aria-label={title}
+          className="popover view-control-bar__npc-popover view-control-bar__npc-popover--compact glass-card shadow-lg"
+          onKeyDown={event => event.stopPropagation()}
+        >
+          <h2 className="popover-header bg-transparent small fw-semibold">{title}</h2>
+          <div className="popover-body p-2 d-flex flex-column gap-1">
+            {items.map(item => (
+              <button
+                key={item.value}
+                type="button"
+                className={`btn btn-sm d-flex align-items-center gap-2 text-start ${value === item.value ? 'btn-success' : 'btn-outline-secondary'}`}
+                aria-pressed={value === item.value}
+                onClick={() => {
+                  onPick(item.value);
+                  popoverRef.current!.hidePopover();
+                }}
+              >
+                <i className={`bi ${item.icon}`} aria-hidden="true" />
+                <span className="fw-semibold">{item.label}</span>
+                {value === item.value && <i className="bi bi-check-lg ms-auto" aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 export function ViewControlBar({
   position = 'bottom-right',
   inline = false,
@@ -75,8 +145,6 @@ export function ViewControlBar({
   const currentHdri = useSceneStore(s => s.currentHdri);
   const setHdri = useSceneStore(s => s.setHdri);
   const currentElevation = useSceneStore(s => s.cameraElevation ?? 45);
-  const elevationPopoverId = useId();
-  const elevationPopoverRef = useRef<HTMLDivElement>(null);
 
   const [isVRActive, setIsVRActive] = useState(false);
   const [isVRSupported, setIsVRSupported] = useState(false);
@@ -114,7 +182,6 @@ export function ViewControlBar({
   const mouseTitle = isTranslate
     ? 'Translation (clic gauche : déplacer, clic droit : tourner) — Passer en Rotation (R / T)'
     : 'Rotation (clic gauche : tourner, clic droit : déplacer) — Passer en Translation (R / T)';
-  const isActive = (key: string) => activeCameraPos === key;
   const dispatchCameraMode = (mode: 'toggle-follow' | 'fpv' | 'orbit' | 'reset-orbit' | 'toggle-npc-grid') => {
     document.dispatchEvent(new CustomEvent('camera-mode', { detail: mode }));
   };
@@ -177,76 +244,23 @@ export function ViewControlBar({
   );
 
   const cardinalGroup = (
-    <select
-      className="form-select form-select-sm py-0 ps-2 w-auto flex-shrink-0 bg-transparent text-body border-secondary small view-control-bar__ambiance"
-      value={CARDINAL_VIEWS.some(v => isActive(v.key)) ? activeCameraPos! : ''}
-      onChange={event => dispatchView(event.target.value, npcGridActive ? getCharacterGridCameraView().target : undefined)}
-      aria-label={`Direction de la vue — ${isOrtho ? 'Orthographique' : 'Perspective'}`}
-      title={`Direction de la vue — ${isOrtho ? 'Orthographique' : 'Perspective'}`}
-    >
-      <option value="" disabled hidden>Vue</option>
-      {CARDINAL_VIEWS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
-    </select>
+    <PopoverSelect
+      title="Direction de la vue"
+      color="cyan"
+      items={CARDINAL_VIEWS.map(v => ({ value: v.key, icon: v.icon, label: v.label }))}
+      value={activeCameraPos}
+      onPick={key => dispatchView(key, npcGridActive ? getCharacterGridCameraView().target : undefined)}
+    />
   );
 
   const elevationGroup = (
-    <>
-      <button
-        type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--green`}
-        popoverTarget={elevationPopoverId}
-        aria-haspopup="dialog"
-        aria-label={`Angle d’élévation de la caméra : ${currentElevation}°`}
-        title="Choisir l’angle d’élévation"
-        onClick={event => {
-          const rect = event.currentTarget.getBoundingClientRect();
-          const popover = elevationPopoverRef.current!;
-          const width = parseFloat(getComputedStyle(popover).width);
-          const above = rect.top > window.innerHeight / 2;
-          popover.style.top = above ? 'auto' : `${rect.bottom + 8}px`;
-          popover.style.bottom = above ? `${window.innerHeight - rect.top + 8}px` : 'auto';
-          popover.style.right = `${Math.min(Math.max(8, window.innerWidth - rect.right), window.innerWidth - width - 8)}px`;
-          popover.style.maxHeight = `${(above ? rect.top : window.innerHeight - rect.bottom) - 16}px`;
-        }}
-      >
-        <i className={`bi ${ELEVATION_VIEWS.find(elev => elev.angle === currentElevation)?.icon ?? 'bi-camera'}`} aria-hidden="true" />
-        <span>{currentElevation}°</span>
-        <i className="bi bi-chevron-down" aria-hidden="true" />
-      </button>
-      {createPortal(
-        <div
-          ref={elevationPopoverRef}
-          id={elevationPopoverId}
-          {...{ popover: 'auto' }}
-          role="dialog"
-          aria-label="Angle d’élévation de la caméra"
-          className="popover view-control-bar__npc-popover view-control-bar__npc-popover--compact glass-card shadow-lg"
-          onKeyDown={event => event.stopPropagation()}
-        >
-          <h2 className="popover-header bg-transparent small fw-semibold">Élévation caméra</h2>
-          <div className="popover-body p-2 d-flex flex-column gap-1">
-            {ELEVATION_VIEWS.map(elev => (
-              <button
-                key={elev.angle}
-                type="button"
-                className={`btn btn-sm d-flex align-items-center gap-2 text-start ${currentElevation === elev.angle ? 'btn-success' : 'btn-outline-secondary'}`}
-                aria-pressed={currentElevation === elev.angle}
-                title={elev.label}
-                onClick={() => {
-                  dispatchView(activeCameraPos ?? 'north', npcGridActive ? getCharacterGridCameraView().target : undefined, false, elev.angle);
-                  elevationPopoverRef.current!.hidePopover();
-                }}
-              >
-                <i className={`bi ${elev.icon}`} aria-hidden="true" />
-                <span className="fw-semibold">{elev.angle}°</span>
-                {currentElevation === elev.angle && <i className="bi bi-check-lg" aria-hidden="true" />}
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body,
-      )}
-    </>
+    <PopoverSelect
+      title="Élévation caméra"
+      color="green"
+      items={ELEVATION_VIEWS.map(e => ({ value: e.angle, icon: e.icon, label: `${e.angle}°` }))}
+      value={currentElevation}
+      onPick={angle => dispatchView(activeCameraPos ?? 'north', npcGridActive ? getCharacterGridCameraView().target : undefined, false, angle)}
+    />
   );
 
   const bar = (
@@ -315,6 +329,7 @@ export function ViewControlBar({
           {perspButton}
           {rotButton}
           {elevationGroup}
+          {cardinalGroup}
           {animalCameraActive && (
             <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la vue embarquée" aria-label="Quitter la vue embarquée">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
@@ -323,12 +338,12 @@ export function ViewControlBar({
         </div>
       )}
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
-        {cardinalGroup}
         {!showCharacterModes && perspButton}
       </div>
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {!showCharacterModes && rotButton}
         {!showCharacterModes && elevationGroup}
+        {!showCharacterModes && cardinalGroup}
       </div>
     </div>
     </>
@@ -340,7 +355,6 @@ export function ViewControlBar({
       <div className="d-flex flex-nowrap align-items-center gap-1 view-control-bar__row">
         {toolbarPrefix}
         {zoomButton('in')}
-        {cardinalGroup}
         {perspButton}
         {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
@@ -352,6 +366,7 @@ export function ViewControlBar({
         {zoomButton('out')}
         {rotButton}
         {elevationGroup}
+        {cardinalGroup}
         {toolbarActions}
         <select
           className="form-select form-select-sm py-0 ps-2 mw-100 flex-shrink-0 bg-transparent text-body border-secondary small text-truncate view-control-bar__ambiance"
@@ -373,9 +388,9 @@ export function ViewControlBar({
         {toolbarPrefix}
         {zoomButton('out')}
         {zoomButton('in')}
-        {cardinalGroup}
         {rotButton}
         {elevationGroup}
+        {cardinalGroup}
         {perspButton}
         {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
