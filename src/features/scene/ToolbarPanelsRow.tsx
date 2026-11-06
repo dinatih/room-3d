@@ -8,10 +8,8 @@ import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
  * Composant HTML pur rendu hors du Canvas R3F.
  */
 import { useState, useEffect, useRef } from 'react';
-import { solarPosition } from '@features/scene/SunLight';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useSceneStore } from './store/useSceneStore';
-import { HDRI_LIST } from './hdriConfig';
 import { WIGS_ITEMS } from '../inventory/inventoryData';
 
 import {
@@ -19,14 +17,10 @@ import {
   type ToolbarPanelsProps,
 } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
-import { LayersSection } from './sidepanel/sections/LayersSection';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
 import { CharacterSection } from './sidepanel/sections/CharacterSection';
 
 export type { ToolbarPanelsProps };
-
-const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
-const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 export interface ToolbarPanelsRowProps extends ToolbarPanelsProps {
   asVerticalList?: boolean;
@@ -35,10 +29,10 @@ export interface ToolbarPanelsRowProps extends ToolbarPanelsProps {
 export function ToolbarPanelsRow({
   layers,
   onToggleLayer,
-  lidarMode,
-  onCycleLidar,
-  lidarOpacity,
-  onToggleLidarOpacity,
+  lidarMode: _lidarMode,
+  onCycleLidar: _onCycleLidar,
+  lidarOpacity: _lidarOpacity,
+  onToggleLidarOpacity: _onToggleLidarOpacity,
   planeModel = 'origami',
   onSetPlaneModel,
   autopilotVisible = false,
@@ -51,25 +45,7 @@ export function ToolbarPanelsRow({
   asVerticalList = false,
 }: ToolbarPanelsRowProps) {
   const isMobile = useIsMobile();
-  const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
-  const currentHdri = useSceneStore(state => state.currentHdri);
-  const setHdri = useSceneStore(state => state.setHdri);
   const npcGridActive = useSceneStore(state => state.layers.characterGrid);
-
-  useEffect(() => {
-    if (!layers.realSun) { setSunInfo(null); return; }
-    const update = () => {
-      const now = new Date();
-      const { elevation } = solarPosition(SUN_LAT, SUN_LNG, now);
-      setSunInfo({
-        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-        el: Math.round(elevation),
-      });
-    };
-    update();
-    const id = setInterval(update, 30_000);
-    return () => clearInterval(id);
-  }, [layers.realSun]);
 
   const [globalHaircut, setGlobalHaircut] = useState<string>('original');
   const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
@@ -94,14 +70,6 @@ export function ToolbarPanelsRow({
   const handleRandomHaircutAndColor = () => {
     handleRandomHaircut();
     handleRandomHairColor();
-  };
-
-  const handleRandomHdri = () => {
-    const otherHdris = HDRI_LIST.filter(h => h.id !== currentHdri);
-    const next = otherHdris[Math.floor(Math.random() * otherHdris.length)];
-    if (next) {
-      setHdri(next.id);
-    }
   };
 
   useEffect(() => {
@@ -134,32 +102,6 @@ export function ToolbarPanelsRow({
     return () => document.removeEventListener('toggle-lara-haircut', handleToggleHaircut as any);
   }, []);
 
-  // En-têtes boutons
-  const activeHdriItem = HDRI_LIST.find(h => h.id === currentHdri);
-  const activeHdriName = activeHdriItem?.name ?? currentHdri;
-
-  const layersHeaderButtons = (
-    <div className="d-flex align-items-center gap-1 overflow-hidden" style={{ minWidth: 0 }} onClick={e => e.stopPropagation()}>
-      <span
-        className="text-dark fw-medium text-end text-truncate flex-grow-1 small"
-        title={activeHdriName}
-      >
-        {activeHdriName}
-      </span>
-      <button
-        type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold flex-shrink-0 small rounded"
-        title="Changer aléatoirement d'ambiance HDRI (Touche 5)"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleRandomHdri();
-        }}
-      >
-        <i className="bi bi-shuffle" aria-hidden="true" />
-      </button>
-    </div>
-  );
-
   const personnageHeaderButtons = (
     <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
       <button
@@ -174,20 +116,6 @@ export function ToolbarPanelsRow({
         <i className="bi bi-shuffle" aria-hidden="true" />
       </button>
     </div>
-  );
-
-  const layersSectionContent = (
-    <LayersSection
-      layers={layers}
-      onToggleLayer={onToggleLayer}
-      isMobile={isMobile}
-      lidarMode={lidarMode}
-      onCycleLidar={onCycleLidar}
-      lidarOpacity={lidarOpacity}
-      onToggleLidarOpacity={onToggleLidarOpacity}
-      sunInfo={sunInfo}
-      handleRandomHdri={handleRandomHdri}
-    />
   );
 
   const interactiveSectionContent = (
@@ -219,18 +147,7 @@ export function ToolbarPanelsRow({
 
   return (
     <div className={asVerticalList ? 'd-flex flex-column gap-1 w-100' : 'btn-group btn-group-sm view-control-bar__group'} role="group" aria-label="Panneaux de configuration et grilles">
-      {/* 1. Calques */}
-      <PanelPopover
-        icon="bi-layers-fill"
-        label="Calques"
-        title="Calques & Affichage"
-        headerExtra={layersHeaderButtons}
-        hideUI={hideUI}
-      >
-        {layersSectionContent}
-      </PanelPopover>
-
-      {/* 2. Interactif */}
+      {/* 1. Interactif */}
       <PanelPopover
         icon="bi-controller"
         label="Interactions"
@@ -240,7 +157,7 @@ export function ToolbarPanelsRow({
         {interactiveSectionContent}
       </PanelPopover>
 
-      {/* 3. Config User / Personnages */}
+      {/* 2. Config User / Personnages */}
       <PanelPopover
         icon={
           <span className="d-inline-flex align-items-center gap-1">

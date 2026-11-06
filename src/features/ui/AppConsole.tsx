@@ -201,11 +201,13 @@ export function AppConsole({
   hidden = false,
   hideUI = false,
   onToggleHideUI,
+  layersMenu,
   actionsMenu,
 }: {
   hidden?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
+  layersMenu?: ReactNode;
   actionsMenu?: ReactNode;
 }) {
   const isMobile = useIsMobile();
@@ -713,7 +715,8 @@ export function AppConsole({
           <PresetButton hideUI={hideUI} />
         </div>
 
-        {/* 5. + Chevrons (à la suite du btn Preset) */}
+        {/* 5. Calques & + Chevrons (à la suite du btn Preset) */}
+        {layersMenu}
         {actionsMenu}
 
         {/* 6. Hide UI */}

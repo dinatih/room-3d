@@ -179,6 +179,7 @@ export function LayersSection({
             </div>
           ) : null}
       </div>
+      {layerBtn(iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
       <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
         <div className="form-check form-switch small mb-0">
           <input
@@ -270,14 +271,10 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('Voisins',       'neighbors')}
 
-      {layerBtn(iconLabel('bi-box-seam', 'Grille des objets d’inventaire (Alt+I)'), 'inventoryGrid')}
-      {layerBtn(iconLabel('bi-grid-3x3-gap', 'Grille (Alt+B)'), 'grid')}
-      {layers.grid && layerBtn('Grille Depth', 'gridDepth')}
       {layerBtn(iconLabel('bi-rulers', 'Mesures réelles (Alt+M)'), 'measuredDimensions')}
       {layerBtn('Aff. arêtes murs (Alt+A)', 'wallEdges')}
       {layerBtn(iconLabel('bi-grid-3x3', 'Wireframe coloré (W)'), 'wireframe')}
       {layerBtn(iconLabel('bi-lightbulb', 'Lumières'), 'lights')}
-      {layerBtn(iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
       {layerBtn(iconLabel('bi-broadcast', 'LiDAR scan'), 'lidar')}
       {layers.lidar && b0(['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0(`Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
