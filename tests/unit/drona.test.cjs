@@ -35,7 +35,7 @@ it('les boîtes placées utilisent une géométrie légère distincte de l’inv
   assert.notEqual(cell.props.geometry, mesh.props.geometry);
   assert.equal(cell.props.geometry, test.DroneCell().props.geometry);
   assert(cell.props.geometry.attributes.position.count / 3 < 200);
-  assert.deepEqual(cell.props.geometry.boundingBox.getSize(new THREE.Vector3()).toArray().map(v => Math.round(v)), [33, 33, 39]);
+  assert.deepEqual(cell.props.geometry.boundingBox.getSize(new THREE.Vector3()).toArray().map(v => Math.round(v)), [33, 33, 38]);
   assert.equal(mesh.props.dispose, null);
   assert.equal(mesh.props.userData.skipMerge, true);
 });

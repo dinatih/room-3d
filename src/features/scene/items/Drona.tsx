@@ -28,10 +28,9 @@ panel(DF, PANEL, DRONA_DEPTH, 0, -DF / 2 + PANEL / 2, 0);
 for (const side of [-1, 1]) {
   panel(PANEL, DF - PANEL, DRONA_DEPTH, side * (DF - PANEL) / 2, PANEL / 2, 0);
   panel(DF - 2 * PANEL, DF - PANEL, PANEL, 0, PANEL / 2, side * (DRONA_DEPTH - PANEL) / 2);
-  // Folded rim and a fabric loop handle on each end.
+  // Folded rim and wide fabric pull tab, matching the GLB's upper band.
   panel(DF, 0.6, 0.4, 0, (DF - 0.6) / 2, side * (DRONA_DEPTH - 0.4) / 2);
-  panel(8, 1.2, 0.4, 0, 7, side * (DRONA_DEPTH / 2 + 0.4));
-  for (const x of [-3.8, 3.8]) panel(0.4, 0.4, 0.8, x, 7, side * DRONA_DEPTH / 2);
+  panel(DF - 2 * PANEL, 6, PANEL, 0, DF / 2 - 0.6 - 3, side * (DRONA_DEPTH + PANEL) / 2);
 }
 const cellGeometry = mergeGeometries(parts, false)!;
 parts.forEach(part => part.dispose());
