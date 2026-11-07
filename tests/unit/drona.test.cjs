@@ -8,6 +8,7 @@ function boxes() {
   const source = new THREE.BoxGeometry(.38, .33, .33);
   const module = load('src/features/scene/items/Drona.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { Suspense: () => null, useLayoutEffect: fn => fn() },
+    'three/addons/utils/BufferGeometryUtils.js': { mergeGeometries: geometries => { const result = new THREE.BufferGeometry(); result.setAttribute('position', new THREE.Float32BufferAttribute(geometries.flatMap(g => [...g.toNonIndexed().attributes.position.array]), 3)); return result; } },
     '@react-three/drei': { useGLTF: path => {
       assert.equal(path, 'items/dröna/DRÖNA_high.glb');
       return { nodes: { box: new THREE.Mesh(source) } };
@@ -25,13 +26,16 @@ it('la géométrie DRONA officielle est centrée et partagée sans modifier sa s
   assert.deepEqual([...test.source.attributes.position.array], vertices);
 });
 
-it('l’inventaire et les boîtes placées partagent le même rendu et la même géométrie', () => {
+it('les boîtes placées utilisent une géométrie légère distincte de l’inventaire', () => {
   const test = boxes(), sizes = [];
   const inventory = test.Drona({ onSize: size => sizes.push(size) }).props.children;
   const mesh = inventory.type(inventory.props);
   assert(sizes[0].equals(mesh.props.geometry.boundingBox.getSize(new THREE.Vector3())));
-  const cell = test.DroneCell().props.children;
-  assert.equal(cell.type(cell.props).props.geometry, mesh.props.geometry);
+  const cell = test.DroneCell();
+  assert.notEqual(cell.props.geometry, mesh.props.geometry);
+  assert.equal(cell.props.geometry, test.DroneCell().props.geometry);
+  assert(cell.props.geometry.attributes.position.count / 3 < 200);
+  assert.deepEqual(cell.props.geometry.boundingBox.getSize(new THREE.Vector3()).toArray().map(v => Math.round(v)), [33, 33, 39]);
   assert.equal(mesh.props.dispose, null);
   assert.equal(mesh.props.userData.skipMerge, true);
 });
@@ -45,7 +49,7 @@ it('une DRONA coulissante peut inverser sa course et garder sa preview indépend
     'react/jsx-runtime': jsx,
     react: { useEffect: fn => fn(), useRef: value => refs[cursor++] ??= { current: value === null ? group : value } },
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
-    './Drona': { DroneCell() {}, useDronaGeo: () => geometry },
+    './Drona': { DroneCell() {}, DRONA_DEPTH: 38 },
     './useDoorOpen': { useDoorOpen: (key, preview, actions) => preview ? !!actions[key] : !!state.extraStates[key] },
     '../objectActions': { getObjectActionIds: () => actions }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { box: { name: 'Boîte', slots: [{ slotId: 'pick-item' }] } } },
   });

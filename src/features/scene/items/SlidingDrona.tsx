@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import type * as THREE from 'three';
-import { DroneCell, useDronaGeo } from './Drona';
+import { DroneCell, DRONA_DEPTH } from './Drona';
 import { useDoorOpen } from './useDoorOpen';
 import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
@@ -14,15 +14,14 @@ export function SlidingDrona({ objectId, duration, isPreview = false, actionStat
 }) {
   const ref = useRef<THREE.Group>(null!);
   const progress = useRef(0);
-  const geometry = useDronaGeo();
   const actions = getObjectActionIds(objectId);
   const [actionId] = actions;
   if (!actionId) throw new Error('DRONA: missing opening action for ' + objectId);
   const storage = SMART_OBJECTS[objectId];
   const open = useDoorOpen(actionId, isPreview, actionState);
   const { invalidate } = useThree();
-  const travel = (geometry.boundingBox!.max.z - geometry.boundingBox!.min.z) * 2 / 3;
-  useEffect(() => { invalidate(); }, [open, geometry, invalidate]);
+  const travel = DRONA_DEPTH * 2 / 3;
+  useEffect(() => { invalidate(); }, [open, invalidate]);
   useFrame((_, delta) => {
     const target = open ? 1 : 0;
     progress.current = (open ? Math.min(target, progress.current + delta / duration) : Math.max(target, progress.current - delta / duration));

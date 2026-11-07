@@ -12,11 +12,44 @@
 import { Suspense, useLayoutEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 import type { SceneModelProps } from '@shared/types';
 
 /** Dimension standard d'une boîte DRONA (largeur / hauteur) en cm */
 export const DF = 33;
+export const DRONA_DEPTH = 38;
+const PANEL = 0.2;
+const parts: THREE.BufferGeometry[] = [];
+function panel(w: number, h: number, d: number, x: number, y: number, z: number) {
+  parts.push(new THREE.BoxGeometry(w, h, d).translate(x, y, z));
+}
+panel(DF, PANEL, DRONA_DEPTH, 0, -DF / 2 + PANEL / 2, 0);
+for (const side of [-1, 1]) {
+  panel(PANEL, DF - PANEL, DRONA_DEPTH, side * (DF - PANEL) / 2, PANEL / 2, 0);
+  panel(DF - 2 * PANEL, DF - PANEL, PANEL, 0, PANEL / 2, side * (DRONA_DEPTH - PANEL) / 2);
+  // Folded rim and a fabric loop handle on each end.
+  panel(DF, 0.6, 0.4, 0, (DF - 0.6) / 2, side * (DRONA_DEPTH - 0.4) / 2);
+  panel(8, 1.2, 0.4, 0, 7, side * (DRONA_DEPTH / 2 + 0.4));
+  for (const x of [-3.8, 3.8]) panel(0.4, 0.4, 0.8, x, 7, side * DRONA_DEPTH / 2);
+}
+const cellGeometry = mergeGeometries(parts, false)!;
+parts.forEach(part => part.dispose());
+cellGeometry.computeBoundingBox();
+// A small repeating weave, shared by every box and filtered at a distance.
+const weaveSize = 32;
+const weave = new Uint8Array(weaveSize * weaveSize);
+for (let y = 0; y < weaveSize; y++) for (let x = 0; x < weaveSize; x++) {
+  weave[y * weaveSize + x] = (x + y) % 2 ? 122 : 134;
+}
+const weaveMap = new THREE.DataTexture(weave, weaveSize, weaveSize, THREE.RedFormat);
+weaveMap.wrapS = weaveMap.wrapT = THREE.RepeatWrapping;
+weaveMap.repeat.set(8, 8);
+weaveMap.magFilter = THREE.LinearFilter;
+weaveMap.minFilter = THREE.LinearMipmapLinearFilter;
+weaveMap.generateMipmaps = true;
+weaveMap.needsUpdate = true;
+const cellMaterial = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.95, bumpMap: weaveMap, bumpScale: 0.015 });
 
 const GLB_DRONA = 'items/dröna/DRÖNA_high.glb';
 const preparedGeometries = new WeakMap<THREE.BufferGeometry, THREE.BufferGeometry>();
@@ -65,5 +98,5 @@ function DronaContent({ onSize }: SceneModelProps) {
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
-  return <Suspense fallback={null}><DronaContent /></Suspense>;
+  return <mesh geometry={cellGeometry} material={cellMaterial} dispose={null} castShadow receiveShadow />;
 }
