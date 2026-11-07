@@ -6,6 +6,11 @@ import { daylight, simulatedHour } from './DayNight';
 
 const AZ_CENTER = 174.31;
 const STROBE_COUNT = 140;
+const PILLARS: [number, number, number, number][] = [
+  [-0.60, -0.28, -0.36, -0.12], // Pilier avant-gauche
+  [-0.04, 0.20, -0.02, 0.12],  // Pilier arrière (perspective 3/4)
+  [0.30, 0.62, 0.12, 0.36],   // Pilier avant-droit
+];
 
 function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
   const phi = (azimuthDeg * Math.PI) / 180;
@@ -50,24 +55,17 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
       }
     }
-    // Pilier gauche (-9.32 à -6.86)
-    const baseOffset = pos.length / 3;
-    pos.push(
-      ...toSpherical(AZ_CENTER - 0.60, -9.32, r * 0.999),
-      ...toSpherical(AZ_CENTER - 0.28, -9.32, r * 0.999),
-      ...toSpherical(AZ_CENTER - 0.36, -6.86, r * 0.999),
-      ...toSpherical(AZ_CENTER - 0.10, -6.86, r * 0.999)
-    );
-    idx.push(baseOffset, baseOffset + 1, baseOffset + 2, baseOffset + 1, baseOffset + 3, baseOffset + 2);
-    // Pilier droit (-9.32 à -6.86)
-    const rOffset = pos.length / 3;
-    pos.push(
-      ...toSpherical(AZ_CENTER + 0.28, -9.32, r * 0.999),
-      ...toSpherical(AZ_CENTER + 0.60, -9.32, r * 0.999),
-      ...toSpherical(AZ_CENTER + 0.10, -6.86, r * 0.999),
-      ...toSpherical(AZ_CENTER + 0.36, -6.86, r * 0.999)
-    );
-    idx.push(rOffset, rOffset + 1, rOffset + 2, rOffset + 1, rOffset + 3, rOffset + 2);
+    // 3 piliers visibles sous le 1er étage (-9.32 à -6.86)
+    for (const [b0, b1, t0, t1] of PILLARS) {
+      const v = pos.length / 3;
+      pos.push(
+        ...toSpherical(AZ_CENTER + b0, -9.32, r * 0.999),
+        ...toSpherical(AZ_CENTER + b1, -9.32, r * 0.999),
+        ...toSpherical(AZ_CENTER + t0, -6.86, r * 0.999),
+        ...toSpherical(AZ_CENTER + t1, -6.86, r * 0.999),
+      );
+      idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
+    }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geo.setIndex(idx);
@@ -84,10 +82,10 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       const elev = -9.32 + t * (0.53 - (-9.32));
       let az: number;
       if (elev < -6.86) {
-        const sign = Math.random() > 0.5 ? 1 : -1;
-        const normBase = (elev - (-9.32)) / (-6.86 - (-9.32));
-        const pillarMid = 0.44 - normBase * 0.21;
-        az = AZ_CENTER + sign * (pillarMid + (Math.random() - 0.5) * 0.16);
+        const [b0, b1, t0, t1] = PILLARS[Math.floor(Math.random() * 3)];
+        const norm = (elev - (-9.32)) / (-6.86 - (-9.32));
+        const mid = ((b0 + b1) / 2) * (1 - norm) + ((t0 + t1) / 2) * norm;
+        az = AZ_CENTER + mid + (Math.random() - 0.5) * 0.12;
       } else {
         const normUpper = (elev - (-6.86)) / (0.53 - (-6.86));
         const hw = (1 - normUpper) * 0.36;
