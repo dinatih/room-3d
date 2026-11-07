@@ -2,13 +2,14 @@ import { appLog } from '@features/ui/AppConsole';
 
 const TRACKS = [
   'audio/house-music.mp3',
-  'audio/Bvlaxj-YNyk.mp3',
   'audio/Xysgex3e6UE.mp3',
   'audio/VQvRrQhA--o.mp3',
 ];
 
 let cleanup: (() => void) | undefined;
+let isPlaying = false;
 
+export function isHouseMusicPlaying() { return isPlaying; }
 export function stopHouseMusic() { cleanup?.(); }
 
 /** Actions musique communes à toutes les enceintes (Nest Mini, JBL/Sony…). */
@@ -28,6 +29,7 @@ export async function playHouseMusic() {
     const next = running && !audio.muted && audio.volume > 0;
     if (next === audible) return;
     audible = next;
+    isPlaying = audible;
     document.dispatchEvent(new CustomEvent('npc-life-music', { detail: { playing: audible, room: 'living' } }));
   };
   const playing = () => { if (!disposed) { running = true; notify(); } };
@@ -35,6 +37,7 @@ export async function playHouseMusic() {
   const dispose = () => {
     if (disposed) return;
     disposed = true;
+    isPlaying = false;
     paused(); audio.pause(); audio.removeAttribute('src'); audio.load();
     if (cleanup === dispose) cleanup = undefined;
   };

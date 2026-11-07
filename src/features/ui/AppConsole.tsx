@@ -17,6 +17,7 @@ import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
 import { PresetButton } from '@features/scene/PresetButton';
+import { isHouseMusicPlaying, playHouseMusic, stopHouseMusic } from '@features/scene/utils/houseMusic';
 import { devLog } from '@/devLog';
 
 // ── Palette de couleurs par tag ────────────────────────────────────────────
@@ -230,6 +231,13 @@ export function AppConsole({
   const [showMinimap, setShowMinimap] = useUrlPanelToggle('minimap');
   const [showLife, setShowLife] = useUrlPanelToggle('laraLife');
   const [showPerf, setShowPerf] = useUrlPanelToggle('perfGraph');
+  const [isPlayingMusic, setIsPlayingMusic] = useState(isHouseMusicPlaying);
+
+  useEffect(() => {
+    const onMusic = (e: Event) => setIsPlayingMusic(Boolean((e as CustomEvent<{ playing?: boolean }>).detail?.playing));
+    document.addEventListener('npc-life-music', onMusic);
+    return () => document.removeEventListener('npc-life-music', onMusic);
+  }, []);
 
   useEffect(() => {
     const onToggleMinimap = () => setShowMinimap(v => !v);
@@ -666,6 +674,18 @@ export function AppConsole({
       >
         {/* 1. Mon CV (en premier) */}
         <ProfileButton hideUI={hideUI} />
+
+        {/* Musique d'ambiance */}
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${isPlayingMusic ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          onClick={() => (isPlayingMusic ? stopHouseMusic() : void playHouseMusic())}
+          title={isPlayingMusic ? 'Arrêter la musique' : 'Jouer la musique'}
+          aria-label={isPlayingMusic ? 'Arrêter la musique' : 'Jouer la musique'}
+        >
+          <i className="bi bi-music-note-beamed me-1" aria-hidden="true" />
+          <i className={`bi bi-${isPlayingMusic ? 'pause' : 'play'}-fill`} aria-hidden="true" />
+        </button>
 
         {/* 2. Minimap */}
         <button
