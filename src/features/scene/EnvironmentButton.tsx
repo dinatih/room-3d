@@ -96,6 +96,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   return (
     <PanelPopover
       icon="bi-cloud-sun-fill"
+      label={clock.time}
       title="Environnement & Météo"
       hideUI={hideUI}
     >
