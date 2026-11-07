@@ -1265,7 +1265,7 @@ export function InventoryPreview({
               {cameraProjection === 'ortho' ? (
                 <>
                   <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-              {showGrid && previewView !== 'free' && (previewView === 'north' || previewView === 'south' || previewView === 'east' || previewView === 'west' || previewView === 'top') &&
+              {(previewView === 'north' || previewView === 'south' || previewView === 'east' || previewView === 'west' || previewView === 'top') &&
                 <GroundDatumLines mode={previewView} />}
                 </>
               ) : (
