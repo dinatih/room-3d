@@ -3,6 +3,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
+import { openInventoryTarget } from '@features/ui/AppConsole';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
@@ -31,6 +32,10 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
+      {!characterId && <button type="button" className="btn btn-sm btn-outline-secondary py-0" title="Ouvrir ce PNJ dans l’inventaire" aria-label={`Ouvrir ${characterName(selectedCharacterId)} dans l’inventaire`}
+        onClick={() => openInventoryTarget({ type: 'object', object: { id: selectedCharacterId } })}>
+        <i className="bi bi-box-seam" aria-hidden="true" />
+      </button>}
       {!characterId && <button type="button" className="btn btn-sm btn-light text-dark border-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
         title="Accélérer la vie de la colocation : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
