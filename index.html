@@ -23,9 +23,14 @@
       }
       #loading-backdrop {
         position: absolute; inset: 0;
-        background: #111827 url('/environment/ciel_paris_bg_aligned.webp') center center / cover no-repeat;
+        background: #111827 url('/environment/ciel_paris_bg_aligned.webp') repeat-x 0% 50% / auto 100%;
+        animation: loading-bg-scroll 60s linear infinite;
         transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 1.35s cubic-bezier(0.2, 0, 0.2, 1);
         pointer-events: none;
+      }
+      @keyframes loading-bg-scroll {
+        from { background-position-x: 0%; }
+        to { background-position-x: -100%; }
       }
       #loading-backdrop::before {
         content: '';
