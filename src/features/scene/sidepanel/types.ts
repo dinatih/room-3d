@@ -116,6 +116,7 @@ export interface LayerState {
   lidar:        boolean;
   lights:       boolean;
   lightsHD:     boolean;
+  olaSpotlight?: boolean;
   shadows:      boolean;
   pillarsOnly:    boolean;
   realSun:      boolean;

@@ -412,11 +412,30 @@ function LampOla_() {
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
+  const spotlight = useSceneStore(state => state.layers.olaSpotlight);
+  const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const [targetObj, setTargetObj] = useState<THREE.Object3D | null>(null);
 
   return (
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
       userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
       <LampOla actionState={{ on: lampOn, lightColor: color, brightness }} />
+      <object3D ref={setTargetObj} position={[0, 250, 15]} />
+      {spotlight && targetObj && <spotLight
+        target={targetObj}
+        position={[0, 100, 0]}
+        angle={Math.PI / 3.2}
+        penumbra={0.7}
+        intensity={lampOn && fullLight ? 350 * 100 ** 2 * brightness : 0}
+        distance={0}
+        decay={2}
+        color={color}
+        castShadow={lightsHD}
+        shadow-mapSize={[1024, 1024]}
+        shadow-bias={-0.001}
+        shadow-camera-near={5}
+        shadow-camera-far={800}
+      />}
       <pointLight
         position={[0, 96, 0]}
         intensity={lampOn ? (fullLight ? 35 : 3.5) * 100 ** 2 * brightness : 0}
