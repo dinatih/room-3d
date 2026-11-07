@@ -206,6 +206,15 @@ function Dimensions({ dims, worldSize, grounded = false }: { dims: { w: number, 
   );
 }
 
+function WalkDebugGround() {
+  const ref = useRef<THREE.Group>(null!);
+  useFrame(() => {
+    const state = useAnimPreviewStore.getState();
+    ref.current.position.z = -state.currentTime * (state.walkCycleSpeed ?? 0);
+  });
+  return <group ref={ref}><Grid infiniteGrid followCamera={false} fadeDistance={800} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[0, -0.01, 0]} /></group>;
+}
+
 function PreviewEnvironment({ showGrid, neutralLighting }: { showGrid: boolean; neutralLighting: boolean }) {
   const neutralBackground = useMemo(() => new THREE.Color('#d2d2d2'), []);
   const { scene } = useThree();
@@ -901,6 +910,7 @@ export function InventoryPreview({
   afterToolbarActions?: ReactNode;
 }) {
   const isMobile = useIsMobile();
+  const walkDebug = useAnimPreviewStore(state => state.walkDebug);
   const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
@@ -1271,7 +1281,7 @@ export function InventoryPreview({
                 </>
               )}
               <PreviewCameraKeyboardController onResetView={handleResetPreviewView} onUserInteraction={() => setAutoRotate(false)} />
-              {showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />}
+              {walkDebug ? <WalkDebugGround /> : showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />}
               <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={handleTargetChange} onBoundsChange={handleBoundsChange} onStats={onGlbStats} /></Suspense>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}

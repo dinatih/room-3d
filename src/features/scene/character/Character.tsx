@@ -1039,6 +1039,11 @@ export function Character({
     } else if (isControlledByStore) {
       actions[activeActionName.current]?.setEffectiveTimeScale(1);
       const store = useAnimPreviewStore.getState();
+      if (isPreview && store.walkDebug) {
+        const action = actions[activeActionName.current];
+        const speed = action ? getWalkCycleSpeed(action.getClip(), scene) : null;
+        if (store.walkCycleSpeed !== speed) useAnimPreviewStore.setState({ walkCycleSpeed: speed });
+      }
       const animDelta = delta * (store.speed || 1);
       pendantDelta = store.isPlaying && !store.isScrubbing && !isTPose ? delta * store.speed : 0;
       resetPendant ||= store.isScrubbing;
@@ -1137,7 +1142,7 @@ export function Character({
       }
 
       // Verrouillage optionnel des hanches sur place (Hips-Lock X/Z) pour tester/comparer
-      if (store.lockHipsXZ && parts.bones.hips) {
+      if ((store.lockHipsXZ || store.walkDebug) && parts.bones.hips) {
         parts.bones.hips.position.x = 0;
         parts.bones.hips.position.z = 0;
       }

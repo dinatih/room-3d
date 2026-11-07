@@ -71,7 +71,7 @@ export function getRandomNpcWalkAnimation(characterId?: string): string {
 export function getLifeWalkAnimation(characterId: string, needs: LifeNeeds, activity: LifeActivity | null): string {
   if (!isLifeCharacter(characterId)) throw new Error(`No life personality for ${characterId}`);
   if (activity === 'toilet' && needs.toilet >= LIFE_SETTINGS.priority) return 'walking';
-  if (needs.rest >= LIFE_SETTINGS.priority || activity === 'sleep' || activity === 'rest') return 'miley-armature-walk-relaxed-loop';
+  if (needs.rest >= LIFE_SETTINGS.sleepPriority) return 'miley-armature-walk-f';
   if (activity === 'combat') return 'swagger-walk';
   if ((activity === 'social' || activity === 'affection' || activity === 'dance') && !getLifeMood(needs).uncomfortable) return 'happy-walk';
   const preferences: readonly LifeActivity[] = LIFE_INITIAL_PREFERENCES[characterId];

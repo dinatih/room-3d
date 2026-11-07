@@ -14,6 +14,8 @@ const setSession = (key: string, val: string) => {
 };
 
 export interface AnimPreviewState {
+  walkDebug: boolean;
+  walkCycleSpeed: number | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -54,6 +56,8 @@ export interface AnimPreviewState {
 }
 
 export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
+  walkDebug: false,
+  walkCycleSpeed: null,
   isPlaying: true,
   currentTime: 0,
   duration: 0,
