@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const launch = require('./browser-test-options.cjs');
+const SHADER_BASELINE_REF = '84faa47c00358288998ea5be67043511a0414a32';
 const WEATHER_BASELINE_REF = 'cd5899f19cb401d4661fec7102d9f7bc1a517faf';
 if (process.argv.includes('--inspect-plants')) {
   for (const path of ['public/items/plant-monstera/potted_palm.glb', 'public/items/yucca10329308/Yucca10329308.glb']) {
@@ -11,13 +12,14 @@ if (process.argv.includes('--inspect-plants')) {
 }
 (async () => {
   const { createServer } = await import('vite');
-  const baseline = process.argv.includes('--weather-perf=before');
-  const baselineFiles = ['Rain.tsx', 'DayNight.tsx', 'Weather.tsx', 'WeatherAudio.tsx', 'ai/laraLifeStore.ts', 'building/Floor.tsx'];
+  const shaderPerf = process.argv.find(argument => argument.startsWith('--shader-perf='));
+  const baseline = process.argv.includes('--weather-perf=before') || process.argv.includes('--shader-perf=before');
+  const baselineFiles = shaderPerf ? ['WindPlant.tsx', 'building/BermudaGround.tsx'] : ['Rain.tsx', 'DayNight.tsx', 'Weather.tsx', 'WeatherAudio.tsx', 'ai/laraLifeStore.ts', 'building/Floor.tsx'];
   const server = await createServer({ server: { host: '127.0.0.1', port: 5179, strictPort: true, hmr: false }, plugins: [{
     name: 'isolated-weather-test', enforce: 'pre', transform(source, id) {
       const file = baseline && baselineFiles.find(file => id.split('?')[0].endsWith('/src/features/scene/' + file));
       if (file) {
-        return { code: require('node:child_process').execFileSync('git', ['show', WEATHER_BASELINE_REF + ':src/features/scene/' + file], { encoding: 'utf8' }), map: null };
+        return { code: require('node:child_process').execFileSync('git', ['show', (shaderPerf ? SHADER_BASELINE_REF : WEATHER_BASELINE_REF) + ':src/features/scene/' + file], { encoding: 'utf8' }), map: null };
       }
     }, configureServer(vite) {
       vite.middlewares.use('/__weather_test', (_request, response) => {
@@ -91,7 +93,7 @@ if (process.argv.includes('--inspect-plants')) {
       if (hour === 0) assert.ok(moonY > 0);
       if (hour === 12) assert.ok(moonY < 0);
     }
-    await page.evaluate(async () => {
+    await page.evaluate(async shaderPerf => {
       const { default: React } = await import('/node_modules/.vite/deps/react.js');
       const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
       const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
@@ -108,14 +110,62 @@ if (process.argv.includes('--inspect-plants')) {
       document.head.querySelectorAll('style, link[rel=stylesheet]').forEach(element => element.remove());
       document.body.innerHTML = '<div id="weather-test" style="width:800px;height:600px"></div>';
       useWeather.setState({ coverage: 0.8, windSpeed: 5, snow: 1, automatic: false });
-      createRoot(document.getElementById('weather-test')).render(React.createElement(Canvas, { camera: { position: [150, 100, 150], far: 10000 }, onCreated: ({ camera, scene }) => { camera.layers.enableAll(); camera.lookAt(150, 0, 0); window.weatherScene = scene; window.weatherCamera = camera; } }, React.createElement(React.Fragment, null, React.createElement(SimulationClock), React.createElement('ambientLight', { intensity: 2 }), React.createElement('directionalLight', { position: [150, 500, 300], intensity: 2 }), React.createElement(Weather), React.createElement(WindPlant, { rootHeight: 35 }, React.createElement('mesh', { name: 'wind-test-plant', position: [0, 70, 0] }, React.createElement('boxGeometry', { args: [20, 140, 20] }), React.createElement('meshStandardMaterial', { color: 'green' }))), React.createElement(DayNight), React.createElement(Rain, { snow: true }), React.createElement(Rain), React.createElement(React.Suspense, { fallback: null }, React.createElement(BermudaGround, { active: true })))));
-    });
+      createRoot(document.getElementById('weather-test')).render(React.createElement(Canvas, { camera: { position: [150, 100, 150], far: 10000 }, onCreated: ({ camera, scene, gl }) => { window.weatherRenderer = gl; camera.layers.enableAll(); camera.lookAt(150, 0, 0); window.weatherScene = scene; window.weatherCamera = camera; } }, React.createElement(React.Fragment, null, React.createElement(SimulationClock), React.createElement('ambientLight', { intensity: 2 }), React.createElement('directionalLight', { position: [150, 500, 300], intensity: 2 }), React.createElement(Weather), React.createElement(WindPlant, { rootHeight: 35 }, React.createElement('mesh', { name: 'wind-test-plant', position: [0, 70, 0] }, shaderPerf ? React.createElement('planeGeometry', { args: [140, 140, 280, 280] }) : React.createElement('boxGeometry', { args: [20, 140, 20] }), React.createElement('meshStandardMaterial', { color: 'green' }))), React.createElement(DayNight), React.createElement(Rain, { snow: true }), React.createElement(Rain), React.createElement(React.Suspense, { fallback: null }, React.createElement(BermudaGround, { active: true })))));
+    }, Boolean(shaderPerf));
     await page.waitForFunction(() => window.weatherScene?.children.some(child => child.children.length), { timeout: 30000 });
     await page.evaluate(() => new Promise(resolve => { let frames = 0; function tick() { if (++frames === 30) resolve(); else requestAnimationFrame(tick); } requestAnimationFrame(tick); }));
     await page.waitForFunction(() => { let found = false; window.weatherScene.traverse(object => { if (object.userData.birdSupport?.id === 'garden-ground') found = true; }); return found; });
     const shader = await page.evaluate(() => { const mesh = window.weatherScene.children.find(child => child.type === 'Group').children[0]; return { coverage: mesh.material.uniforms.coverage.value, offset: mesh.material.uniforms.offset.value.toArray() }; });
     assert.equal(shader.coverage, 0.8, 'Coverage reaches the rendered material');
     assert.ok(Math.hypot(...shader.offset) > 0, 'Wind updates the rendered material');
+    if (shaderPerf) {
+      const measurements = await page.evaluate(async () => {
+        const THREE = await import('/node_modules/.vite/deps/three.js');
+        const { useWeather } = await import('/src/features/scene/Weather.tsx');
+        useWeather.setState({ automatic: false, rain: 0, snow: 0, coverage: 0 });
+        const scene = window.weatherScene, renderer = window.weatherRenderer, camera = window.weatherCamera;
+        const plant = scene.getObjectByName('wind-test-plant');
+        let ground;
+        scene.traverse(object => { if (object.userData.birdSupport?.id === 'garden-ground') ground = object; });
+        const root = object => { while (object.parent !== scene) object = object.parent; return object; };
+        for (const child of scene.children) child.visible = child.isLight || child === root(plant) || child === root(ground);
+        plant.castShadow = true;
+        camera.position.set(150,180,400); camera.lookAt(100,70,0); camera.updateMatrixWorld(true);
+        const point = new THREE.PointLight('white', 100000, 600, 2);
+        point.position.set(100,180,50); point.castShadow = true; point.shadow.mapSize.set(512,512); point.shadow.camera.near = 1; point.shadow.camera.far = 600; point.shadow.camera.layers.enableAll(); scene.add(point);
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        const context = renderer.getContext(), info = context.getExtension('WEBGL_debug_renderer_info');
+        const device = context.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER);
+        const pixel = new Uint8Array(4);
+        const finish = () => { context.readPixels(400,300,1,1,context.RGBA,context.UNSIGNED_BYTE,pixel); if (context.getError() !== context.NO_ERROR) throw Error('Invalid WebGL benchmark render'); };
+        const groundShader = { uniforms: {}, vertexShader: '', fragmentShader: '' }; ground.material.onBeforeCompile(groundShader);
+        const offLights = Array.from({ length: 3 }, (_, index) => {
+          const light = new THREE.PointLight('white',0,600,2); light.position.set(index*100,180,150); light.castShadow=true;
+          light.visible=true; scene.add(light); return light;
+        });
+        // Match the app: allocate valid depth samplers once before freezing inactive shadow maps.
+        renderer.shadowMap.enabled=true; renderer.render(scene,camera); finish();
+        for (const light of offLights) { light.visible=false; light.shadow.autoUpdate=false; light.shadow.needsUpdate=false; }
+        const run = (shadows, snow, water, inactiveVisible = false) => {
+          groundShader.uniforms.gardenSnow.value=snow; groundShader.uniforms.gardenWater.value=water;
+          for (const light of offLights) light.visible=inactiveVisible;
+          renderer.shadowMap.enabled = shadows;
+          for (const mesh of [plant,ground]) mesh.material.needsUpdate = true;
+          for (let i=0;i<3;i++) { renderer.render(scene,camera); finish(); }
+          const programsBefore = renderer.info.programs.length, times = [];
+          renderer.info.autoReset = false; renderer.info.reset();
+          for (let i=0;i<20;i++) { const start = performance.now(); renderer.render(scene,camera); finish(); times.push(performance.now()-start); }
+          const result = { meanRenderMs: times.reduce((a,b)=>a+b,0)/times.length, callsPerFrame: renderer.info.render.calls/times.length, programsBefore, programsAfter: renderer.info.programs.length, pixel: Array.from(pixel) };
+          renderer.info.autoReset = true; return result;
+        };
+        return { device, vertices: plant.geometry.attributes.position.count, dry: run(false,0,0), standard: run(false,0.5,0.8), shadowsHD: run(true,0.5,0.8), shadowsWithInactiveLights: run(true,0.5,0.8,true) };
+      });
+      assert.deepEqual(errors, [], 'Shader benchmark errors');
+      for (const mode of [measurements.dry, measurements.standard, measurements.shadowsHD, measurements.shadowsWithInactiveLights]) assert.equal(mode.programsBefore, mode.programsAfter, 'Program count stays stable after warm-up');
+      assert.deepEqual(measurements.shadowsHD.pixel, measurements.shadowsWithInactiveLights.pixel, 'Removing zero-intensity lights preserves the rendered pixel');
+      fs.writeFileSync(`/tmp/room-shader-perf-${shaderPerf.split('=')[1]}.json`, JSON.stringify(measurements,null,2));
+      console.log('Shader benchmark', measurements); return;
+    }
     const perfArgument = process.argv.find(argument => argument.startsWith('--weather-perf='));
     if (perfArgument) {
       const session = await page.createCDPSession();

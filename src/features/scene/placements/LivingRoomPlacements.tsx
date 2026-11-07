@@ -419,6 +419,7 @@ function LampOla_() {
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (
         <spotLight
+          visible={lampOn && lightsHD && brightness > 0}
           target={targetObj}
           position={[0, 100, 0]}
           angle={Math.PI / 3.2}
@@ -436,6 +437,7 @@ function LampOla_() {
         />
       )}
       <pointLight
+        visible={lampOn && brightness > 0}
         position={[0, 96, 0]}
         intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 * brightness : 0}
         distance={lightsHD ? 0 : 350}

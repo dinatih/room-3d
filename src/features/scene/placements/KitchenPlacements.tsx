@@ -163,6 +163,7 @@ export function KitchenFurnishings() {
       >
         <Kolvatten00594176 actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} />
         <pointLight
+          visible={isKitchenLampOn && brightness > 0}
           position={[0, 5, 8]}
           intensity={isKitchenLampOn ? (lightsHD ? 20 : 2) * 100 ** 2 * brightness : 0}
           distance={200}

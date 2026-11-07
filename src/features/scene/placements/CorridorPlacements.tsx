@@ -133,6 +133,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
     >
       <TradfriBulb actionState={{ on: isOn }} />
       <pointLight
+        visible={isOn && brightness > 0}
         ref={lightRef}
         position={[0, 20, 0]}
         intensity={isOn ? (lightsHD ? 120 : 2.5) * brightness : 0}

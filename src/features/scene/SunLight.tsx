@@ -92,6 +92,7 @@ export function SunLight() {
       const { color, intensity } = sunParams(elevation);
       lightRef.current.color.copy(color);
       lightRef.current.intensity = intensity;
+      lightRef.current.visible = intensity > 0;
       invalidate();
     }
 
@@ -103,6 +104,8 @@ export function SunLight() {
   return (
     <directionalLight
       ref={lightRef}
+      intensity={0}
+      visible={false}
       castShadow
       shadow-mapSize={[2048, 2048]}
       shadow-camera-near={1}

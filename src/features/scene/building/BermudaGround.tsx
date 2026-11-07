@@ -133,12 +133,15 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       ` + shader.fragmentShader;
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
-        float terrain = gardenNoise(gardenPosition / 100.0) * 0.7 + gardenNoise(gardenPosition / 35.0) * 0.3;
-        float snowCover = smoothstep(terrain - 0.08, terrain + 0.08, gardenSnow) * smoothstep(0.0, 0.08, gardenSnow);
-        float puddle = (1.0 - smoothstep(gardenWater * 0.65 - 0.06, gardenWater * 0.65 + 0.06, terrain)) * (1.0-snowCover) * smoothstep(0.0, 0.08, gardenWater);
-        diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 - gardenWater * 0.35), vec3(0.12,0.17,0.2), puddle * 0.7);
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88,0.93,1.0), snowCover);
-        diffuseColor.a = mix(diffuseColor.a, 1.0, max(snowCover, puddle));
+        float snowCover = 0.0, puddle = 0.0;
+        if (gardenSnow > 0.0 || gardenWater > 0.0) {
+          float terrain = gardenNoise(gardenPosition / 100.0) * 0.7 + gardenNoise(gardenPosition / 35.0) * 0.3;
+          snowCover = smoothstep(terrain - 0.08, terrain + 0.08, gardenSnow) * smoothstep(0.0, 0.08, gardenSnow);
+          puddle = (1.0 - smoothstep(gardenWater * 0.65 - 0.06, gardenWater * 0.65 + 0.06, terrain)) * (1.0-snowCover) * smoothstep(0.0, 0.08, gardenWater);
+          diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 - gardenWater * 0.35), vec3(0.12,0.17,0.2), puddle * 0.7);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88,0.93,1.0), snowCover);
+          diffuseColor.a = mix(diffuseColor.a, 1.0, max(snowCover, puddle));
+        }
       `).replace('#include <roughnessmap_fragment>', `
         #include <roughnessmap_fragment>
         roughnessFactor = mix(roughnessFactor, 0.08, puddle);

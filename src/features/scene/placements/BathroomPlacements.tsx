@@ -48,6 +48,7 @@ function SinkLight() {
       const action = SMART_OBJECTS['vasque-sdb'].slots.find(candidate => candidate.slotId === slot.split(':')[1]);
       return !!action?.animation && action.animation === cameraState.positions[characterId]?.anim;
     });
+    light.current.visible = inUse;
     light.current.intensity = inUse ? (lightsHD ? 6 : 0.6) * 100 ** 2 : 0;
   });
   return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
@@ -94,6 +95,7 @@ export function BathroomEquipment() {
       >
         <TradfriBulb actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} />
         <pointLight
+          visible={!!as['lamp-bath-toggle'] && brightness > 0}
           position={[0, 20, 0]}
           intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) * brightness : 0}
           distance={lightsHD ? 0 : 280}
