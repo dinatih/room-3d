@@ -26,6 +26,7 @@ const gardenSegments: Segment[] = [
 function LightStrip({ name, segments, rainbow = false }: { name: string; segments: Segment[]; rainbow?: boolean }) {
   const on = useSceneStore(state => !!state.furniture.lampGardenStrips);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   const material = useMemo(() => new MeshBasicMaterial({ toneMapped: false }), []);
   const lights = useRef<(PointLight | null)[]>([]);
   useEffect(() => () => material.dispose(), [material]);
@@ -39,8 +40,8 @@ function LightStrip({ name, segments, rainbow = false }: { name: string; segment
     {segments.map(({ position, size }, index) => <group key={index} position={position}>
       <mesh material={material}><boxGeometry args={size} /></mesh>
       <pointLight ref={light => { lights.current[index] = light; }} position={[0, 0, rainbow ? 2 : -2]} color={material.color}
-        intensity={on ? (lightsHD ? 120 : 2.5) : 0}
-        distance={lightsHD ? 0 : 250} decay={lightsHD ? 1 : 2}
+        intensity={on ? (fullLight ? 120 : 2.5) : 0}
+        distance={fullLight ? 0 : 250} decay={fullLight ? 1 : 2}
         castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} />
     </group>)}
   </group>;

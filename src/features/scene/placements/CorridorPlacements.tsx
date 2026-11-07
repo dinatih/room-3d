@@ -67,6 +67,7 @@ const TOTAL_CYCLE_DURATION = CORRIDOR_LIGHT_COLORS.length * DURATION_PER_COLOR; 
 const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   const { remote, name, color, brightness } = useLightAppearance('lampCorridor', 0xfff2d6);
   const lightRef = useRef<THREE.PointLight>(null);
   const bulbGroupRef = useRef<THREE.Group>(null);
@@ -135,9 +136,9 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       <pointLight
         ref={lightRef}
         position={[0, 20, 0]}
-        intensity={isOn ? (lightsHD ? 120 : 2.5) * brightness : 0}
-        distance={lightsHD ? 0 : 280}
-        decay={lightsHD ? 1.0 : 2.0}
+        intensity={isOn ? (fullLight ? 120 : 2.5) * brightness : 0}
+        distance={fullLight ? 0 : 280}
+        decay={fullLight ? 1.0 : 2.0}
         color={0xff2222}
         castShadow={lightsHD}
         shadow-mapSize={[1024, 1024]}

@@ -86,6 +86,7 @@ export function KitchenTrashBin() {
 export function KitchenFurnishings() {
   const as = useFurnitureToggles(['lamp-kitchen-toggle', ...getObjectActionIds('syck-rc003a')]);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   const { name, color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
   const isKitchenLampOn = Boolean(as['lamp-kitchen-toggle']);
 
@@ -164,7 +165,7 @@ export function KitchenFurnishings() {
         <Kolvatten00594176 actionState={{ on: isKitchenLampOn, lightColor: color, brightness }} />
         <pointLight
           position={[0, 5, 8]}
-          intensity={isKitchenLampOn ? (lightsHD ? 20 : 2) * 100 ** 2 * brightness : 0}
+          intensity={isKitchenLampOn ? (fullLight ? 20 : 2) * 100 ** 2 * brightness : 0}
           distance={200}
           decay={2}
           color={color}

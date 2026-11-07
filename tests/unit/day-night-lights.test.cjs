@@ -3,10 +3,11 @@ const assert = require('node:assert/strict');
 const THREE = require('three');
 const { load } = require('../support/load-ts.cjs');
 
-it('active les lumières HD la nuit et les désactive le jour, une fois par transition', () => {
+it('allume les lampes la nuit sans modifier la qualité HD', () => {
   for (const lightsHD of [false, true]) {
     const scene = new THREE.Scene(), clock = { minutes: 0 }, actions = [];
     const layers = { lightsHD }, qualities = [];
+    const nightState = { nightLighting: false };
     scene.add(new THREE.AmbientLight('white', 2));
     const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial())];
     let frame;
@@ -15,32 +16,34 @@ it('active les lumières HD la nuit et les désactive le jour, une fois par tran
       react: { useLayoutEffect() {}, useMemo: fn => fn(), useRef: value => ({ current: refs.shift() ?? value }) },
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },
       './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 }, './ai/laraLifeStore': { simulationClock: clock },
-      './store/useSceneStore': { useSceneStore: { getState: () => ({ layers,
+      './store/useSceneStore': { useSceneStore: { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
         toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
         triggerAction: (...action) => actions.push(action) }) } },
     });
     DayNight(); frame({ scene });
-    assert.equal(layers.lightsHD, false);
+    assert.equal(layers.lightsHD, lightsHD);
     assert.equal(scene.children[0].intensity, 2);
     for (const hour of [18, 20, 21]) {
       clock.minutes = (hour - 8) * 60; frame({ scene });
-      assert.equal(layers.lightsHD, false);
+      assert.equal(layers.lightsHD, lightsHD);
       assert.equal(daylight(hour), 1);
     }
     clock.minutes = 14 * 60; frame({ scene }); frame({ scene });
-    assert.equal(layers.lightsHD, true);
+    assert.equal(layers.lightsHD, lightsHD);
     assert(scene.children[0].intensity < 2);
+    assert.equal(nightState.nightLighting, true);
     clock.minutes = 21 * 60; frame({ scene });
-    assert.equal(layers.lightsHD, true);
+    assert.equal(layers.lightsHD, lightsHD);
     assert.equal(daylight(5), 0);
     clock.minutes = 22 * 60; frame({ scene });
-    assert.equal(layers.lightsHD, false);
+    assert.equal(layers.lightsHD, lightsHD);
     assert.equal(daylight(6), 0);
+    assert.equal(nightState.nightLighting, false);
     clock.minutes = 24 * 60; frame({ scene });
-    assert.equal(layers.lightsHD, false);
+    assert.equal(layers.lightsHD, lightsHD);
     assert.equal(scene.children[0].intensity, 2);
     assert.deepEqual(actions, [['lamp-toggle', false], ['lamp-toggle', true], ['lamp-toggle', false]]);
-    assert.deepEqual(qualities, lightsHD ? [false, true, false] : [true, false]);
+    assert.deepEqual(qualities, []);
   }
 });
 
@@ -65,4 +68,27 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
   clock.minutes = 0; frame({ clock: { elapsedTime: 2 } }, 1 / 60);
   assert.equal(refs[0].current.visible, false); assert.equal(light.props.ref.current.intensity, 0);
   assert.equal(light.props.ref.current.visible, true);
+});
+
+it('garde les bandes aussi lumineuses la nuit sans HD, avec les ombres réservées au HD', () => {
+  for (const nightLighting of [false, true]) for (const lightsHD of [false, true]) for (const on of [false, true]) {
+    const state = { nightLighting, layers: { lightsHD }, furniture: { lampGardenStrips: on } };
+    const { GardenLightStrips } = load('src/features/scene/placements/GardenLightStrips.tsx', {
+      three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
+      react: { useMemo: fn => fn(), useEffect() {}, useRef: value => ({ current: value }) },
+      '@react-three/fiber': { useFrame() {} },
+      '../store/useSceneStore': { useSceneStore: select => select(state) },
+      '../wallData': { pEast: () => 95, pWest: () => 260, ROOM_NORTH_WALL: 0 },
+    });
+    for (const placement of GardenLightStrips().props.children) {
+      const strip = placement.props.children;
+      const group = strip.type(strip.props);
+      for (const segment of group.props.children) {
+        const light = segment.props.children[1].props;
+        assert.equal(light.intensity, on ? (nightLighting || lightsHD ? 120 : 2.5) : 0);
+        assert.equal(light.castShadow, lightsHD);
+        assert.equal(light.decay, nightLighting || lightsHD ? 1 : 2);
+      }
+    }
+  }
 });

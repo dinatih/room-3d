@@ -106,6 +106,7 @@ export function getRandomGrassType(): GroundType {
 }
 
 interface SceneStore {
+  nightLighting: boolean;
   wigGridHairColor: string;
   furniture: FurnitureState;
   layers: LayerState;
@@ -341,7 +342,6 @@ if (initialActiveChar && isExtraCharacter(initialActiveChar.id) && initialActive
 
 const layerOverrides = parseUrlLayerOverrides();
 Object.assign(initialLayers, layerOverrides);
-initialFurniture.lampOn = initialLayers.lightsHD;
 
 const urlGround = parseUrlGroundType();
 if (urlGround.groundType) {
@@ -377,6 +377,7 @@ if (!initialLayers.character) {
 }
 
 export const useSceneStore = create<SceneStore>((set) => ({
+  nightLighting: false,
   wigGridHairColor: '',
   furniture: initialFurniture,
   layers: initialLayers,
@@ -631,7 +632,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
       cameraState.invalidate?.();
       return {
         layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
-        furniture: key === 'lightsHD' && isActivating && !isHomeAssistantLinked(useHomeAssistant.getState()) ? { ...state.furniture, lampOn: true } : state.furniture,
       };
     });
   },
@@ -810,7 +810,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         cameraState.invalidate?.();
         return {
           layers: nextLayers,
-          furniture: lKey === 'lightsHD' && nextVal && !isHomeAssistantLinked(useHomeAssistant.getState()) ? { ...state.furniture, lampOn: true } : state.furniture,
         };
       });
     } else if (resolved.type === 'extra') {

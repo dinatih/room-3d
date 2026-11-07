@@ -42,13 +42,14 @@ const TOILET_FOOTPRINT = [
 function SinkLight() {
   const light = useRef<PointLight>(null!);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   useFrame(() => {
     const inUse = OccupancyManager.getReservations().some(({ slot, characterId }) => {
       if (!slot.startsWith('vasque-sdb:')) return false;
       const action = SMART_OBJECTS['vasque-sdb'].slots.find(candidate => candidate.slotId === slot.split(':')[1]);
       return !!action?.animation && action.animation === cameraState.positions[characterId]?.anim;
     });
-    light.current.intensity = inUse ? (lightsHD ? 6 : 0.6) * 100 ** 2 : 0;
+    light.current.intensity = inUse ? (fullLight ? 6 : 0.6) * 100 ** 2 : 0;
   });
   return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
     <Vathult40467548 />
@@ -68,6 +69,7 @@ export function BathroomEquipment() {
   ]);
 
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
 
   return (
     <MergedStaticGroup name="merged-bathroom-equipment">
@@ -95,9 +97,9 @@ export function BathroomEquipment() {
         <TradfriBulb actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} />
         <pointLight
           position={[0, 20, 0]}
-          intensity={as['lamp-bath-toggle'] ? (lightsHD ? 120 : 2.5) * brightness : 0}
-          distance={lightsHD ? 0 : 280}
-          decay={lightsHD ? 1.0 : 2.0}
+          intensity={as['lamp-bath-toggle'] ? (fullLight ? 120 : 2.5) * brightness : 0}
+          distance={fullLight ? 0 : 280}
+          decay={fullLight ? 1.0 : 2.0}
           color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}

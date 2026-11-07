@@ -412,6 +412,7 @@ function LampOla_() {
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const lightsHD = useSceneStore((state) => state.layers.lightsHD);
+  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   const [targetObj, setTargetObj] = useState<THREE.Object3D | null>(null);
 
   return (
@@ -426,7 +427,7 @@ function LampOla_() {
           angle={Math.PI / 3.2}
           penumbra={0.7}
           // Inverse-square attenuation uses scene centimeters: cd × (100 cm/m)².
-          intensity={lampOn && lightsHD ? 350 * 100 ** 2 * brightness : 0}
+          intensity={lampOn && fullLight ? 350 * 100 ** 2 * brightness : 0}
           distance={0}
           decay={2}
           color={color}
@@ -439,8 +440,8 @@ function LampOla_() {
       )}
       <pointLight
         position={[0, 96, 0]}
-        intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 * brightness : 0}
-        distance={lightsHD ? 0 : 350}
+        intensity={lampOn ? (fullLight ? 35 : 3.5) * 100 ** 2 * brightness : 0}
+        distance={fullLight ? 0 : 350}
         decay={2}
         color={color}
       />
