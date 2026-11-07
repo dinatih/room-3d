@@ -10,7 +10,7 @@ it('active les lumières HD la nuit et les désactive le jour, une fois par tran
     scene.add(new THREE.AmbientLight('white', 2));
     const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial())];
     let frame;
-    const { DayNight } = load('src/features/scene/DayNight.tsx', {
+    const { DayNight, daylight } = load('src/features/scene/DayNight.tsx', {
       three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
       react: { useLayoutEffect() {}, useMemo: fn => fn(), useRef: value => ({ current: refs.shift() ?? value }) },
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },
@@ -22,9 +22,20 @@ it('active les lumières HD la nuit et les désactive le jour, une fois par tran
     DayNight(); frame({ scene });
     assert.equal(layers.lightsHD, false);
     assert.equal(scene.children[0].intensity, 2);
-    clock.minutes = 12 * 60; frame({ scene }); frame({ scene });
+    for (const hour of [18, 20, 21]) {
+      clock.minutes = (hour - 8) * 60; frame({ scene });
+      assert.equal(layers.lightsHD, false);
+      assert.equal(daylight(hour), 1);
+    }
+    clock.minutes = 14 * 60; frame({ scene }); frame({ scene });
     assert.equal(layers.lightsHD, true);
     assert(scene.children[0].intensity < 2);
+    clock.minutes = 21 * 60; frame({ scene });
+    assert.equal(layers.lightsHD, true);
+    assert.equal(daylight(5), 0);
+    clock.minutes = 22 * 60; frame({ scene });
+    assert.equal(layers.lightsHD, false);
+    assert.equal(daylight(6), 0);
     clock.minutes = 24 * 60; frame({ scene });
     assert.equal(layers.lightsHD, false);
     assert.equal(scene.children[0].intensity, 2);

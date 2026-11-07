@@ -182,6 +182,7 @@ const initialFurniture: FurnitureState = {
   lampBath: false,
   lampCorridor: false,
   lampKitchen: false,
+  lampGardenStrips: false,
   freezerOpen: false,
   fridge: false,
   tvOn: false,

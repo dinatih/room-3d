@@ -17,6 +17,7 @@ import { GardenFurniture, GardenDecor, GardenAnimals } from './placements/Garden
 import { RobotPlacements } from './placements/RobotPlacements';
 import { BuildingPipes } from './items/BuildingPipes';
 import { useSceneStore } from './store/useSceneStore';
+import { GardenLightStrips } from './placements/GardenLightStrips';
 
 // Layer 1 — Équipements sanitaires, cuisine et technique
 export function Equipment() {
@@ -52,6 +53,7 @@ export function Furnishings() {
       <KitchenFurnishings />
       <CorridorFurnishings />
       <LivingRoomFurnishings />
+      <GardenLightStrips />
     </>
   );
 }

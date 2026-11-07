@@ -13,7 +13,7 @@ export function simulatedHour() {
 
 export function daylight(hour: number) {
   if (!Number.isFinite(hour)) throw new Error('Invalid environment hour');
-  return MathUtils.smoothstep(hour, 6, 8) * (1 - MathUtils.smoothstep(hour, 18, 22));
+  return MathUtils.smoothstep(hour, 6, 8) * (1 - MathUtils.smoothstep(hour, 21, 22));
 }
 
 const nightColor = new Color('#17243e');
@@ -56,7 +56,7 @@ export function DayNight() {
   useFrame(({ scene }) => {
     const hour = simulatedHour();
     const light = daylight(hour);
-    const night = hour < 6 || hour >= 18;
+    const night = hour < 6 || hour >= 22;
     if (previousNight.current !== night) {
       previousNight.current = night;
       const store = useSceneStore.getState();

@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { cameraState } from './cameraState';
 import { useSceneStore } from './store/useSceneStore';
 import { isHomeAssistantLinked, isHomeAssistantLight, useHomeAssistant } from '../home-assistant/connection';
-import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen } from './ai/SpatialZone';
+import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen, SpatialZoneManager } from './ai/SpatialZone';
 
 const SHUTOFF_DELAY_MS = 4000;
 
@@ -11,6 +11,7 @@ const LIGHT_ZONES = [
   { key: 'lampBath', check: isAgentInBathroom },
   { key: 'lampCorridor', check: isAgentInCorridor },
   { key: 'lampKitchen', check: isAgentInKitchen },
+  { key: 'lampGardenStrips', check: (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos) },
 ] as const;
 
 function getActivePositions() {
@@ -27,7 +28,7 @@ function getActivePositions() {
 }
 
 /**
- * PresenceLightController — Contrôle automatique des lampes (SDB, couloir, coin cuisine KÖLVATTEN)
+ * PresenceLightController — Contrôle automatique des lampes et bandes du jardin
  * par capteurs de présence.
  */
 export function PresenceLightController() {
