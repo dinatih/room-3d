@@ -15,6 +15,12 @@ const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Sti
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
 const minutes = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
+function InventoryShortcut({ label, target }: { label: string; target?: OpenInventoryTargetDetail }) {
+  return target && <button type="button" className="btn btn-sm btn-outline-dark py-0 px-1 ms-1 lh-1" title={`Ouvrir dans l’inventaire : ${label}`} aria-label={`Ouvrir dans l’inventaire : ${label}`} onClick={() => openInventoryTarget(target)}>
+    <i className={`bi ${target.type === 'animation' ? 'bi-film' : 'bi-box-arrow-up-right'}`} aria-hidden="true" />
+  </button>;
+}
+
 export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId } = {}) {
   const { characters, speed, home, household, savedAt, saveError } = useLaraLifeStore();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
@@ -30,9 +36,8 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
   const duoClip = getDuoAnimationForClip(current?.animation);
   const inventoryObject = object && (INVENTORY.find(item => item.id === object.id || getInventorySmartObjects(item.id).some(smartObject => smartObject.id === object.id))
     ?? STORAGE_SPACES.find(item => item.id === object.id));
-  const links: { label: string; target: OpenInventoryTargetDetail }[] = [];
-  if (inventoryObject) links.push({ label: 'Objet', target: { type: 'object', object: { id: object.id, inventoryId: inventoryObject.id, slotId: current?.slotId, actorId: selectedCharacterId, animationId: current?.animation } } });
-  if (duoClip || animation) links.push({ label: 'Animation', target: { type: 'animation', animation: { id: (duoClip ?? animation)!.id, mode: duoClip ? 'duo' : 'solo', actorId: selectedCharacterId, partnerId: partner } } });
+  const objectTarget: OpenInventoryTargetDetail | undefined = inventoryObject ? { type: 'object', object: { id: object.id, inventoryId: inventoryObject.id, slotId: current?.slotId, actorId: selectedCharacterId, animationId: current?.animation } } : undefined;
+  const animationTarget: OpenInventoryTargetDetail | undefined = duoClip || animation ? { type: 'animation', animation: { id: (duoClip ?? animation)!.id, mode: duoClip ? 'duo' : 'solo', actorId: selectedCharacterId, partnerId: partner } } : undefined;
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
     .filter(key => HOME_TASKS[key].room === room).map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
@@ -50,11 +55,11 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
       <span className="text-nowrap" title={`Jour ${clock.day} · ${clock.period}`}>{clock.time}</span>
       <span className="text-primary" title={tastes} aria-label={tastes}><i className="bi bi-heart-fill" aria-hidden="true" /></span>
       <span className="text-primary" title={company} aria-label={company}><i className="bi bi-people-fill" aria-hidden="true" /></span>
-      {!characterId && <button type="button" className="btn btn-sm btn-outline-secondary py-0" title="Ouvrir ce PNJ dans l’inventaire" aria-label={`Ouvrir ${characterName(selectedCharacterId)} dans l’inventaire`}
+      {!characterId && <button type="button" className="btn btn-sm btn-outline-dark py-0" title="Ouvrir ce PNJ dans l’inventaire" aria-label={`Ouvrir ${characterName(selectedCharacterId)} dans l’inventaire`}
         onClick={() => openInventoryTarget({ type: 'object', object: { id: selectedCharacterId } })}>
         <i className="bi bi-box-seam" aria-hidden="true" />
       </button>}
-      {!characterId && <button type="button" className="btn btn-sm btn-light text-dark border-secondary py-0 text-nowrap" aria-label="Vitesse de la colocation"
+      {!characterId && <button type="button" className="btn btn-sm btn-outline-dark py-0 text-nowrap" aria-label="Vitesse de la colocation"
         title="Accélérer la vie de la colocation : ×1, ×3, ×10"
         onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
         <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
@@ -72,17 +77,12 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
       </div>
       <div className={characterId ? 'mt-1 text-break' : 'visually-hidden'}>{reason}</div>
       <div className="mt-1 text-break" aria-label="Action et animation actuelles">
-        <div><strong>Smart Object :</strong> {object ? `${object.name} (${object.id})` : current?.smartObjectId ?? 'Aucun'}</div>
-        <div><strong>Action :</strong> {slot ? `${slot.name} (${current?.slotId})` : current?.slotId ?? 'Aucune'}{current && ` · ${current.status}`}</div>
-        <div><strong>Duo :</strong> {partner ? characterName(partner) : duo ? 'En attente du partenaire' : 'Aucun'}{duoAnimation && ` · ${duoAnimation.id}`}</div>
-        <div><strong>Animation :</strong> {animation?.id ?? current?.animation ?? 'Aucune'}{animation?.duration !== undefined && ` · ${minutes.format(animation.duration)} s`}</div>
-        {links.length > 0 && <div className="d-flex gap-1 mt-1">{links.map(({ label, target }) => <button key={label} type="button" className="btn btn-sm btn-outline-secondary py-0 px-1"
-          title={`Ouvrir dans l’inventaire : ${label}`} aria-label={`Ouvrir dans l’inventaire : ${label}`} onClick={() => openInventoryTarget(target)}>
-          <i className="bi bi-box-arrow-up-right me-1" aria-hidden="true" />{label}
-        </button>)}</div>}
+        {current?.smartObjectId && <div title={current.smartObjectId}><strong>Smart Object :</strong> {object?.name ?? current.smartObjectId}<InventoryShortcut label="Objet" target={objectTarget} /></div>}
+        {current?.slotId && <div title={`${current.slotId} · ${current.status}`}><strong>Action :</strong> {slot?.name ?? current.slotId}</div>}
+        {duo && <div><strong>Duo :</strong> {partner ? characterName(partner) : 'En attente du partenaire'}{duoAnimation && ` · ${duoAnimation.id}`}</div>}
+        {current?.animation && <div title={`État : ${current.status}${current.animationRequest ? ` · Animation demandée : ${current.animationRequest}` : ''}`}><strong>Animation :</strong> {animation?.id ?? current.animation}{animation?.duration !== undefined && <span className="text-nowrap"> · {minutes.format(animation.duration)} s</span>}<InventoryShortcut label="Animation" target={animationTarget} /></div>}
         {slot?.animationsRandom && <div><strong>Tags / groupe :</strong> {Array.isArray(slot.animationsRandom) ? slot.animationsRandom.join(', ') : slot.animationsRandom}</div>}
         {slot?.duoPool && <div><strong>Groupe duo :</strong> {slot.slotId} · {slot.duoPool.length} animations</div>}
-        {current?.animationRequest && current.animationRequest !== (animation?.id ?? current.animation) && <div><strong>Animation demandée :</strong> {current.animationRequest}</div>}
       </div>
       {!characterId && <details className="mt-1 text-break">
         <summary className="fw-semibold">Sauvegarde de la colocation</summary>
