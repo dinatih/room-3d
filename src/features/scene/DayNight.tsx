@@ -1,6 +1,6 @@
 import { useSceneStore } from './store/useSceneStore';
-import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, MathUtils, Mesh, MeshBasicMaterial } from 'three';
 import { Points, PointsMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
@@ -20,6 +20,24 @@ const nightColor = new Color('#17243e');
 const dayColor = new Color('white');
 
 export function DayNight() {
+  const scene = useThree(state => state.scene);
+  useLayoutEffect(() => () => {
+    scene.getObjectByName('SkySphere')?.traverse(child => {
+      const material = (child as Mesh).material;
+      if (material instanceof MeshBasicMaterial && material.map) material.color.copy(dayColor);
+    });
+    for (const object of scene.children) {
+      const source = object as import('three').Light;
+      if (source.userData.dayIntensity !== undefined) {
+        source.intensity = source.userData.dayIntensity;
+        delete source.userData.dayIntensity;
+        delete source.userData.lastNightIntensity;
+      }
+    }
+    if (scene.userData.dayEnvironmentIntensity !== undefined) scene.environmentIntensity = scene.userData.dayEnvironmentIntensity;
+    delete scene.userData.dayEnvironmentIntensity;
+    delete scene.userData.lastNightEnvironment;
+  }, [scene]);
   const previousNight = useRef<boolean | null>(null);
   const moon = useRef<Mesh>(null!);
   const moonMaterial = useRef<MeshBasicMaterial>(null!);

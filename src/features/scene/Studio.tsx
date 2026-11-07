@@ -1,7 +1,6 @@
 import { SimulationClock } from './SimulationClock';
-import { Rain } from './Rain';
-import { Weather } from './Weather';
-import { DayNight } from './DayNight';
+import { useWeather } from './Weather';
+import { WeatherSystem } from './WeatherSystem';
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
@@ -420,6 +419,7 @@ function SceneDirectionalLight() {
 }
 
 export function Studio() {
+  const weatherEnabled = useWeather(state => state.enabled);
   const isMobile = useIsMobile();
   const layers = useSceneStore(state => state.layers);
   const measurementActive = useSceneStore(state => state.measurementActive);
@@ -859,12 +859,9 @@ export function Studio() {
         <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
         <SimulationClock />
         <SkySphere />
-        <DayNight />
-        <Weather />
-        <Rain />
-        <Rain snow />
+        <WeatherSystem />
         <SceneAmbientLight />
-        {layers.realSun ? (
+        {weatherEnabled && layers.realSun ? (
           <>
             <SunLight />
             <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>

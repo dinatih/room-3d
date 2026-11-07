@@ -27,7 +27,7 @@ if (typeof window !== 'undefined') {
 const weatherRuntime: Pick<WeatherSave, 'transition' | 'offset'> = { transition: saved?.transition ?? null, offset: saved?.offset ?? [0, 0] };
 if (saved) Object.assign(weatherSurface, saved.surface);
 const automaticParam = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('weatherAuto');
-export const useWeather = create(() => ({ ...DEFAULT_WEATHER, ...saved?.settings, ...(automaticParam === null ? {} : { automatic: automaticParam !== '0' }), saveError: loadError }));
+export const useWeather = create(() => ({ ...DEFAULT_WEATHER, ...saved?.settings, enabled: typeof window === 'undefined' || new URLSearchParams(window.location.search).get('weather') !== '0', ...(automaticParam === null ? {} : { automatic: automaticParam !== '0' }), saveError: loadError }));
 if (saved && saved.settings.automatic !== useWeather.getState().automatic) weatherRuntime.transition = null;
 
 function saveWeather() {
@@ -45,13 +45,18 @@ function saveWeather() {
 }
 if (typeof window !== 'undefined') {
   useWeather.subscribe((state, previous) => {
+    if (state.enabled !== previous.enabled) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('weather', state.enabled ? '1' : '0');
+      window.history.replaceState(window.history.state, '', url);
+    }
     if (state.automatic === previous.automatic) return;
     weatherRuntime.transition = null;
     const url = new URL(window.location.href);
     url.searchParams.set('weatherAuto', state.automatic ? '1' : '0');
     window.history.replaceState(window.history.state, '', url);
   });
-  window.addEventListener('popstate', () => useWeather.setState({ automatic: new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
+  window.addEventListener('popstate', () => useWeather.setState({ enabled: new URLSearchParams(window.location.search).get('weather') !== '0', automatic: new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
 }
 // Artistic cycle: six simulated hours per condition, thirty-minute transitions.
 const PERIOD = 6 * 60;
@@ -84,18 +89,25 @@ export function WeatherControls() {
   return <fieldset className="p-2 border-bottom" onKeyDown={event => event.stopPropagation()}>
     <legend className="small fw-semibold mb-1">Météo</legend>
     <div className="form-check form-switch small">
-      <input id="weather-auto" type="checkbox" className="form-check-input" checked={weather.automatic} onChange={event => useWeather.setState({ automatic: event.target.checked })} />
-      <label htmlFor="weather-auto" className="form-check-label">Météo automatique</label>
+      <input id="weather-enabled" type="checkbox" className="form-check-input" checked={weather.enabled} onChange={event => useWeather.setState({ enabled: event.target.checked })} />
+      <label htmlFor="weather-enabled" className="form-check-label">Activer la météo et le cycle jour/nuit</label>
     </div>
-    {weather.automatic && <p className="small text-muted mb-1">Changement toutes les 6 h simulées (6 min à ×1), transition sur 30 min simulées.</p>}
-    {weather.saveError && <div className="alert alert-warning small p-2" role="alert">
-      {weather.saveError}
-      <button className="btn btn-sm btn-outline-secondary mt-1" onClick={() => { window.localStorage.removeItem(WEATHER_SAVE_KEY); window.location.reload(); }}>Réinitialiser la météo</button>
-    </div>}
-    {settings.map(({ key, label, max, step, unit }) => <div key={key}>
-      <label className="small form-label mb-0" htmlFor={`weather-${key}`}>{label} : {key === 'coverage' ? `${Math.round(weather[key] * 100)} %` : `${Math.round(weather[key] * 100) / 100}${unit}`}</label>
-      <input id={`weather-${key}`} className="form-range" type="range" min={0} max={max} step={step} value={weather[key]} onChange={event => useWeather.setState({ [key]: Number(event.target.value), ...(key === 'rainVolume' ? {} : { automatic: false }) })} />
-    </div>)}
+    {!weather.enabled && <p className="small text-muted mb-1">Éclairage fixe, effets et audio météo désactivés. L’horloge de Lara continue.</p>}
+    <fieldset disabled={!weather.enabled}>
+      <div className="form-check form-switch small">
+        <input id="weather-auto" type="checkbox" className="form-check-input" checked={weather.automatic} onChange={event => useWeather.setState({ automatic: event.target.checked })} />
+        <label htmlFor="weather-auto" className="form-check-label">Météo automatique</label>
+      </div>
+      {weather.automatic && <p className="small text-muted mb-1">Changement toutes les 6 h simulées (6 min à ×1), transition sur 30 min simulées.</p>}
+      {weather.saveError && <div className="alert alert-warning small p-2" role="alert">
+        {weather.saveError}
+        <button className="btn btn-sm btn-outline-secondary mt-1" onClick={() => { window.localStorage.removeItem(WEATHER_SAVE_KEY); window.location.reload(); }}>Réinitialiser la météo</button>
+      </div>}
+      {settings.map(({ key, label, max, step, unit }) => <div key={key}>
+        <label className="small form-label mb-0" htmlFor={`weather-${key}`}>{label} : {key === 'coverage' ? `${Math.round(weather[key] * 100)} %` : `${Math.round(weather[key] * 100) / 100}${unit}`}</label>
+        <input id={`weather-${key}`} className="form-range" type="range" min={0} max={max} step={step} value={weather[key]} onChange={event => useWeather.setState({ [key]: Number(event.target.value), ...(key === 'rainVolume' ? {} : { automatic: false }) })} />
+      </div>)}
+    </fieldset>
   </fieldset>;
 }
 

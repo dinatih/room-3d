@@ -97,25 +97,24 @@ if (process.argv.includes('--inspect-plants')) {
       const { default: React } = await import('/node_modules/.vite/deps/react.js');
       const { default: { createRoot } } = await import('/node_modules/.vite/deps/react-dom_client.js');
       const { Canvas } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
-      const { Weather, useWeather } = await import('/src/features/scene/Weather.tsx');
+      const { useWeather } = await import('/src/features/scene/Weather.tsx');
+      const { WeatherSystem } = await import('/src/features/scene/WeatherSystem.tsx');
       const { WindPlant } = await import('/src/features/scene/WindPlant.tsx');
-      const { DayNight } = await import('/src/features/scene/DayNight.tsx');
       const { SimulationClock } = await import('/src/features/scene/SimulationClock.tsx');
       const { cameraState } = await import('/src/features/scene/cameraState.ts');
       cameraState.isSceneLaunched = true;
-      const { Rain } = await import('/src/features/scene/Rain.tsx');
       const { BermudaGround } = await import('/src/features/scene/building/BermudaGround.tsx');
       const { weatherSurface } = await import('/src/features/scene/weatherSurface.ts');
       Object.assign(weatherSurface, { snow: 0.5, water: 0.8 });
       document.head.querySelectorAll('style, link[rel=stylesheet]').forEach(element => element.remove());
       document.body.innerHTML = '<div id="weather-test" style="width:800px;height:600px"></div>';
       useWeather.setState({ coverage: 0.8, windSpeed: 5, snow: 1, automatic: false });
-      createRoot(document.getElementById('weather-test')).render(React.createElement(Canvas, { camera: { position: [150, 100, 150], far: 10000 }, onCreated: ({ camera, scene, gl }) => { window.weatherRenderer = gl; camera.layers.enableAll(); camera.lookAt(150, 0, 0); window.weatherScene = scene; window.weatherCamera = camera; } }, React.createElement(React.Fragment, null, React.createElement(SimulationClock), React.createElement('ambientLight', { intensity: 2 }), React.createElement('directionalLight', { position: [150, 500, 300], intensity: 2 }), React.createElement(Weather), React.createElement(WindPlant, { rootHeight: 35 }, React.createElement('mesh', { name: 'wind-test-plant', position: [0, 70, 0] }, shaderPerf ? React.createElement('planeGeometry', { args: [140, 140, 280, 280] }) : React.createElement('boxGeometry', { args: [20, 140, 20] }), React.createElement('meshStandardMaterial', { color: 'green' }))), React.createElement(DayNight), React.createElement(Rain, { snow: true }), React.createElement(Rain), React.createElement(React.Suspense, { fallback: null }, React.createElement(BermudaGround, { active: true })))));
+      createRoot(document.getElementById('weather-test')).render(React.createElement(Canvas, { camera: { position: [150, 100, 150], far: 10000 }, onCreated: ({ camera, scene, gl }) => { window.weatherRenderer = gl; camera.layers.enableAll(); camera.lookAt(150, 0, 0); window.weatherScene = scene; window.weatherCamera = camera; } }, React.createElement(React.Fragment, null, React.createElement(SimulationClock), React.createElement('ambientLight', { intensity: 2 }), React.createElement('directionalLight', { position: [150, 500, 300], intensity: 2 }), React.createElement(WeatherSystem), React.createElement(WindPlant, { rootHeight: 35 }, React.createElement('mesh', { name: 'wind-test-plant', position: [0, 70, 0] }, shaderPerf ? React.createElement('planeGeometry', { args: [140, 140, 280, 280] }) : React.createElement('boxGeometry', { args: [20, 140, 20] }), React.createElement('meshStandardMaterial', { color: 'green' }))), React.createElement(React.Suspense, { fallback: null }, React.createElement(BermudaGround, { active: true })))));
     }, Boolean(shaderPerf));
     await page.waitForFunction(() => window.weatherScene?.children.some(child => child.children.length), { timeout: 30000 });
     await page.evaluate(() => new Promise(resolve => { let frames = 0; function tick() { if (++frames === 30) resolve(); else requestAnimationFrame(tick); } requestAnimationFrame(tick); }));
     await page.waitForFunction(() => { let found = false; window.weatherScene.traverse(object => { if (object.userData.birdSupport?.id === 'garden-ground') found = true; }); return found; });
-    const shader = await page.evaluate(() => { const mesh = window.weatherScene.children.find(child => child.type === 'Group').children[0]; return { coverage: mesh.material.uniforms.coverage.value, offset: mesh.material.uniforms.offset.value.toArray() }; });
+    const shader = await page.evaluate(() => { let mesh; window.weatherScene.traverse(object => { if (object.material?.uniforms?.coverage) mesh = object; }); return { coverage: mesh.material.uniforms.coverage.value, offset: mesh.material.uniforms.offset.value.toArray() }; });
     assert.equal(shader.coverage, 0.8, 'Coverage reaches the rendered material');
     assert.ok(Math.hypot(...shader.offset) > 0, 'Wind updates the rendered material');
     if (shaderPerf) {
@@ -278,6 +277,36 @@ if (process.argv.includes('--inspect-plants')) {
       await wait();
       if (useSceneStore.getState().layers.lightsHD || useSceneStore.getState().furniture.lampOn) throw Error('Sunrise lighting automation');
     });
+    const disabled = await page.evaluate(async () => {
+      const { useWeather } = await import('/src/features/scene/Weather.tsx');
+      const { simulationClock, advanceSimulationClock, characterLives } = await import('/src/features/scene/ai/laraLifeStore.ts');
+      const { weatherSurface } = await import('/src/features/scene/weatherSurface.ts');
+      const wait = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      advanceSimulationClock(1200); await wait();
+      useWeather.setState({ enabled: false }); await wait();
+      const surface = JSON.stringify(weatherSurface), before = simulationClock.minutes;
+      advanceSimulationClock(60); await wait();
+      const scene = window.weatherScene;
+      if (scene.children.some(object => object.type === 'Points' || object.type === 'LineSegments')) throw Error('Precipitation remains mounted');
+      scene.traverse(object => {
+        if (object.material?.uniforms?.coverage || object.type === 'Points') throw Error('Sky effects remain mounted');
+        if (object.userData.birdSupport?.id === 'garden-ground') {
+          const shader = { uniforms: {}, vertexShader: '', fragmentShader: '' };
+          object.material.onBeforeCompile(shader);
+          if ('gardenSnow' in shader.uniforms) throw Error('Ground weather shader remains installed');
+        }
+      });
+      if (scene.getObjectByName('wind-test-plant').customDepthMaterial) throw Error('Plant wind remains installed');
+      if (JSON.stringify(weatherSurface) !== surface) throw Error('Disabled surfaces continue evolving');
+      if (simulationClock.minutes <= before || Object.values(characterLives).some(life => life.elapsedSeconds !== simulationClock.minutes)) throw Error('Disabling weather stopped or desynchronized Lara');
+      if (scene.children.filter(object => object.isLight).some(light => light.intensity !== 2)) throw Error('Daylight intensity not restored');
+      if (window.windAudioGains.some(node => node.context.state !== 'closed')) throw Error('Weather audio remains active');
+      if (new URL(location.href).searchParams.get('weather') !== '0') throw Error('Disabled URL state');
+      useWeather.setState({ enabled: true }); await wait();
+      if (!scene.children.some(object => object.type === 'Points')) throw Error('Weather did not restart');
+      return true;
+    });
+    assert.ok(disabled, 'Master toggle removes effects and preserves the shared character clock');
     assert.deepEqual(errors, [], 'No browser or shader errors');
     await page.evaluate(async () => {
       const { useWeather } = await import('/src/features/scene/Weather.tsx');

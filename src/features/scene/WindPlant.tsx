@@ -10,6 +10,11 @@ export function windGust(minutes: number) {
 }
 
 export function WindPlant({ children, rootHeight }: { children: ReactNode; rootHeight: number }) {
+  const enabled = useWeather(state => state.enabled);
+  return enabled ? <ActiveWindPlant rootHeight={rootHeight}>{children}</ActiveWindPlant> : <>{children}</>;
+}
+
+function ActiveWindPlant({ children, rootHeight }: { children: ReactNode; rootHeight: number }) {
   const group = useRef<Group>(null!);
   const uniforms = useMemo(() => ({ plantWind: { value: new Vector2() }, plantRoot: { value: 0 }, plantCrown: { value: 1 } }), []);
   useLayoutEffect(() => {

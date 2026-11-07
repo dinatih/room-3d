@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { weatherSurface } from '../weatherSurface';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useWeather } from '../Weather';
 import * as THREE from 'three';
 import { EXTERIOR_GROUND } from '../environmentData';
 import { useTexture } from '@react-three/drei';
@@ -78,7 +79,16 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = 0 }: Berm
   );
 }
 
+function WeatherSurfaceUniforms({ uniforms }: { uniforms: { gardenSnow: { value: number }; gardenWater: { value: number } } }) {
+  useFrame(() => {
+    uniforms.gardenSnow.value = weatherSurface.snow;
+    uniforms.gardenWater.value = weatherSurface.water;
+  });
+  return null;
+}
+
 function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: number }) {
+  const enabled = useWeather(state => state.enabled);
   const textures = useTexture({
     map: config.diffuse,
     normalMap: config.normal,
@@ -86,10 +96,6 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
   });
 
   const surfaceUniforms = useMemo(() => ({ gardenSnow: { value: 0 }, gardenWater: { value: 0 } }), []);
-  useFrame(() => {
-    surfaceUniforms.gardenSnow.value = weatherSurface.snow;
-    surfaceUniforms.gardenWater.value = weatherSurface.water;
-  });
   const material = useMemo(() => {
     const repeatX = EXTERIOR_GROUND.width / config.tileSize;
     const repeatY = EXTERIOR_GROUND.depth / config.tileSize;
@@ -120,7 +126,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       polygonOffsetFactor: 1,
       polygonOffsetUnits: 1,
     });
-    ground.onBeforeCompile = shader => {
+    if (enabled) ground.onBeforeCompile = shader => {
       Object.assign(shader.uniforms, surfaceUniforms);
       shader.vertexShader = 'varying vec2 gardenPosition;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n gardenPosition = position.xy;');
       shader.fragmentShader = `
@@ -152,7 +158,8 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       `);
     };
     return ground;
-  }, [textures, config.tileSize, surfaceUniforms]);
+  }, [textures, config.tileSize, surfaceUniforms, enabled]);
+  useEffect(() => () => material.dispose(), [material]);
 
   return (
     <mesh
@@ -168,6 +175,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
         itemName: `Terrain Extérieur (${config.label})`,
       }}
     >
+      {enabled && <WeatherSurfaceUniforms uniforms={surfaceUniforms} />}
       <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
     </mesh>
   );
