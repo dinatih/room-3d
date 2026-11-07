@@ -16,6 +16,7 @@ import { LaraLifePanel } from '@features/scene/sidepanel/sections/LaraLifePanel'
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
+import { EnvironmentButton } from '@features/scene/EnvironmentButton';
 import { PresetButton } from '@features/scene/PresetButton';
 import { isHouseMusicPlaying, playHouseMusic, stopHouseMusic } from '@features/scene/utils/houseMusic';
 import { devLog } from '@/devLog';
@@ -697,6 +698,9 @@ export function AppConsole({
         >
           <i className="bi bi-map-fill" aria-hidden="true" />
         </button>
+
+        {/* 2b. Environnement & Météo */}
+        <EnvironmentButton hideUI={hideUI} />
 
         <button
           type="button"

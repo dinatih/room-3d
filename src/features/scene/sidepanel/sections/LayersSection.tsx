@@ -1,8 +1,6 @@
-import { WeatherControls } from '../../Weather';
-import { useSceneStore, getRandomGrassType } from '../../store/useSceneStore';
-import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
+import { useSceneStore } from '../../store/useSceneStore';
 import type { ScreenVideoQuality } from '../../screenVideoConfig';
-import { dispatchKey, type LayerState, type LidarMode, type GroundType } from '../types';
+import { dispatchKey, type LayerState, type LidarMode } from '../types';
 import { NAVIGATION_COMFORT_CM, NAVIGATION_COMFORT_COLOR } from '../../ai/navigation/comfort';
 
 export interface LayersSectionProps {
@@ -13,16 +11,7 @@ export interface LayersSectionProps {
   onCycleLidar: () => void;
   lidarOpacity: number;
   onToggleLidarOpacity: () => void;
-  sunInfo: { time: string; el: number } | null;
-  handleRandomHdri: () => void;
 }
-
-const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
-  { id: 'bermuda',    label: 'Gazon Bermuda' },
-  { id: 'medium_01',  label: 'Gazon Moyen 1' },
-  { id: 'medium_02',  label: 'Gazon Moyen 2' },
-  { id: 'celandine',  label: 'Prairie Fleurie' },
-];
 
 export function LayersSection({
   layers,
@@ -32,22 +21,12 @@ export function LayersSection({
   onCycleLidar,
   lidarOpacity,
   onToggleLidarOpacity,
-  sunInfo,
-  handleRandomHdri,
 }: LayersSectionProps) {
   const currentHdri = useSceneStore(state => state.currentHdri);
-  const setHdri = useSceneStore(state => state.setHdri);
-  const hdriResolution = useSceneStore(state => state.hdriResolution);
-  const setHdriResolution = useSceneStore(state => state.setHdriResolution);
   const screenVideosEnabled = useSceneStore(state => state.screenVideosEnabled);
   const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
   const setScreenVideosEnabled = useSceneStore(state => state.setScreenVideosEnabled);
   const setScreenVideoQuality = useSceneStore(state => state.setScreenVideoQuality);
-  const setGroundType = useSceneStore(state => state.setGroundType);
-  const currentGroundType = layers.groundType ?? 'bermuda';
-  const activeHdri = HDRI_LIST.find(h => h.id === currentHdri);
-  const displayName = activeHdri?.name || '';
-  const fileName = activeHdri ? activeHdri.url.split('/').pop() : '';
 
   const iconLabel = (icon: string, label: string) => (
     <span className="d-inline-flex align-items-center gap-1"><i className={`bi ${icon}`} aria-hidden="true" />{label}</span>
@@ -116,69 +95,6 @@ export function LayersSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
-      <WeatherControls />
-      <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
-        <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
-          <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">
-            <i className="bi bi-cloud-sun me-1" aria-hidden="true" />Ambiance HDRI / Ciel
-          </div>
-          <div className="d-flex align-items-center gap-1 text-end overflow-hidden" style={{ minWidth: 0 }}>
-            {displayName ? (
-                <span
-                  className="text-dark fw-medium text-truncate flex-grow-1 small"
-                  title={displayName}
-                >
-                  {displayName}
-                </span>
-              ) : null}
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary p-0 px-1 border-0 flex-shrink-0"
-              onClick={handleRandomHdri}
-              title="HDRI aléatoire (Touche 5)"
-            >
-              <i className="bi bi-shuffle" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-        <select
-          className="form-select form-select-sm bg-transparent text-dark border-secondary"
-          onKeyDown={(e) => e.stopPropagation()}
-          value={currentHdri}
-          onChange={(e) => setHdri(e.target.value)}
-        >
-          {HDRI_LIST.map((h) => (
-            <option key={h.id} value={h.id} className="bg-light text-dark">
-              {h.name}
-            </option>
-          ))}
-        </select>
-        <div className="d-flex align-items-center gap-2 mt-1">
-          <label htmlFor="hdri-resolution" className="text-muted small text-nowrap">
-            Résolution HDRI
-          </label>
-          <select
-            id="hdri-resolution"
-            className="form-select form-select-sm bg-transparent text-dark border-secondary"
-            value={hdriResolution}
-            onKeyDown={(e) => e.stopPropagation()}
-            onChange={(e) => setHdriResolution(e.target.value as HdriResolution)}
-          >
-            <option value="2k">2K — Léger</option>
-            <option value="4k">4K — Équilibré</option>
-            <option value="8k">8K — Détaillé</option>
-          </select>
-        </div>
-        {fileName ? (
-            <div
-              className="text-muted mt-1 small font-monospace"
-              style={{ userSelect: 'all', wordBreak: 'break-all', whiteSpace: 'normal', fontSize: '0.75rem' }}
-              title={fileName}
-            >
-              {fileName}
-            </div>
-          ) : null}
-      </div>
       {layerBtn(iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
       <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
         <div className="form-check form-switch small mb-0">
@@ -218,34 +134,6 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-cloud-sun', 'Ciel & Atmosphère'), 'environment')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
-      {layerBtn(iconLabel('bi-tree', 'Herbe & Terrain ext.'), 'bermudaGrass')}
-      {layers.bermudaGrass && (
-        <div className="px-3 py-1 border-bottom bg-transparent d-flex align-items-center justify-content-between gap-2">
-          <span className="text-muted small">Type :</span>
-          <div className="d-flex align-items-center gap-1">
-            <select
-              className="form-select form-select-sm bg-transparent text-dark border-secondary"
-              style={{ maxWidth: '175px' }}
-              value={currentGroundType}
-              onChange={(e) => setGroundType(e.target.value as GroundType)}
-            >
-              {GROUND_OPTIONS.map(opt => (
-                <option key={opt.id} value={opt.id} className="bg-light text-dark">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary p-0 px-1 border-0"
-              onClick={() => setGroundType(getRandomGrassType())}
-              title="Herbe aléatoire"
-            >
-              <i className="bi bi-shuffle" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
       {layerBtn('Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}
       {layerBtn('Équipements (Alt+U)',             'equipment')}
       {layerBtn('Mobilier (Furniture) (Alt+F)',    'furniture')}
@@ -278,13 +166,6 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-broadcast', 'LiDAR scan'), 'lidar')}
       {layers.lidar && b0(['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
       {layers.lidar && b0(`Opacité ${Math.round(lidarOpacity * 100)}%`, onToggleLidarOpacity)}
-      {layerBtn(iconLabel('bi-sun', 'Soleil réel'), 'realSun')}
-
-      {sunInfo && (
-        <div className="p-2 border-bottom text-muted small bg-transparent">
-          <i className="bi bi-sun me-1" aria-hidden="true" />{sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
-        </div>
-      )}
       <button 
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 text-dark d-flex align-items-center justify-content-between small"
         onClick={() => { if (!layers.plan) dispatchKey('t'); onToggleLayer('plan'); }}
