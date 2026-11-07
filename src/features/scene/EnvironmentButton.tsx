@@ -157,7 +157,15 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
         {/* 2. Contrôles de météo */}
         <WeatherControls />
 
-        {/* 3. Ambiance HDRI / Ciel */}
+        {/* 3. Ciel & Atmosphère */}
+        {toggleRow(
+          <span className="d-inline-flex align-items-center gap-1">
+            <i className="bi bi-cloud-sun" aria-hidden="true" />Ciel & Atmosphère
+          </span>,
+          'environment'
+        )}
+
+        {/* 4. Ambiance HDRI / Ciel */}
         <div className="p-2 border-bottom d-flex flex-column gap-1">
           <div className="d-flex justify-content-between align-items-center mb-1 gap-2">
             <div className="text-muted fw-semibold text-dark text-nowrap small text-uppercase">
@@ -218,7 +226,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
           ) : null}
         </div>
 
-        {/* 4. Herbe et terrain ext. + Type */}
+        {/* 5. Herbe et terrain ext. + Type */}
         {toggleRow(
           <span className="d-inline-flex align-items-center gap-1">
             <i className="bi bi-tree" aria-hidden="true" />Herbe & Terrain ext.
@@ -253,7 +261,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
           </div>
         )}
 
-        {/* 5. Soleil réel */}
+        {/* 6. Soleil réel */}
         {toggleRow(
           <span className="d-inline-flex align-items-center gap-1">
             <i className="bi bi-sun" aria-hidden="true" />Soleil réel

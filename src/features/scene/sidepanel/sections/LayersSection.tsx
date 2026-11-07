@@ -131,7 +131,6 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
       {layerBtn(iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}
       {layerBtn(iconLabel('bi-transparency', 'Portes et murs à 30 % d’opacité'), 'transparentWallsDoors')}
-      {layerBtn(iconLabel('bi-cloud-sun', 'Ciel & Atmosphère'), 'environment')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
       {layerBtn('Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}
