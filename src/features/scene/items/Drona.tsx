@@ -103,5 +103,5 @@ function DronaContent({ onSize }: SceneModelProps) {
 
 /** Boîte Drona unique — à placer dans un <group position rotation>. */
 export function DroneCell() {
-  return <mesh geometry={cellGeometry} material={cellMaterial} dispose={null} castShadow receiveShadow />;
+  return <mesh geometry={cellGeometry} material={cellMaterial} dispose={null} castShadow receiveShadow userData={{ skipMerge: true }} />;
 }
