@@ -98,6 +98,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
       icon="bi-cloud-sun-fill"
       label={clock.time}
       title="Environnement & Météo"
+      triggerStyle={{ width: '5rem', fontVariantNumeric: 'tabular-nums' }}
       hideUI={hideUI}
     >
       <div className="d-flex flex-column bg-transparent">

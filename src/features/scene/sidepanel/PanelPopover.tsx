@@ -16,6 +16,7 @@ export interface PanelPopoverProps {
   noHeader?: boolean;
   className?: string;
   triggerClassName?: string;
+  triggerStyle?: React.CSSProperties;
   toggleEvent?: string;
   onOpen?: (popover: HTMLDivElement) => void;
   children: React.ReactNode;
@@ -35,6 +36,7 @@ export function PanelPopover({
   noHeader = false,
   className,
   triggerClassName,
+  triggerStyle,
   toggleEvent,
   onOpen,
   children,
@@ -181,6 +183,7 @@ export function PanelPopover({
         ref={triggerRef}
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${isOpen ? 'btn-danger text-white' : active ? 'view-control-bar__btn--cyan' : 'btn-outline-secondary'} view-control-bar__npc-trigger ${triggerClassName ?? ''}`}
+        style={triggerStyle}
         popoverTarget={id}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
