@@ -119,7 +119,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             </button>
           </div>
 
-          <input type="range" className="form-range my-1" min={0} max={24 * 60} step={1}
+          <input type="range" className="form-range day-time-range my-1" min={0} max={24 * 60} step={1}
             aria-label="Avancer l’heure de la journée" title="Avancer à cette heure ; une heure antérieure passe au lendemain"
             value={selectedMinute ?? Math.floor(hourFloat * 60)} onChange={event => setSelectedMinute(Number(event.target.value))}
             onPointerUp={event => commitTime(Number(event.currentTarget.value))} onPointerCancel={() => setSelectedMinute(null)}
