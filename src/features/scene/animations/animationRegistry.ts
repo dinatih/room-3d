@@ -1873,7 +1873,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     aliases: ['sleep-side'],
     tags: ['laying', 'laying-front', 'bed', 'sleep'],
     duration: 17.6,
-    defaultRotYOffset: Math.PI / 2,
+    defaultRotYOffset: -Math.PI / 2,
   },
 
   // ── DANSES PRINCIPALES & SPÉCIALES ───────────────────────────────────────
@@ -9230,7 +9230,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/npz/moyo/anim_yoga_yogic_sleep_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] Yogic sleep pose (1754f / 58.5s, 785KB)`,
-    tags: ['yoga', 'fitness', 'laying-front'],
+    tags: ['yoga', 'fitness'],
     duration: 58.5,
   },
 
