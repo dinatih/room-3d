@@ -36,7 +36,7 @@ for (const side of [-1, 1]) {
   // Folded rim and wide fabric pull tab, matching the GLB's upper band.
   panel(DF, 0.6, 0.4, 0, (DF - 0.6) / 2, side * (DRONA_DEPTH - 0.4) / 2);
   panel(DF - 2 * PANEL, 6, PANEL, 0, DF / 2 - 0.6 - 3, side * (DRONA_DEPTH + PANEL) / 2);
-  panel(DF - 2 * PANEL, 0.3, PANEL, 0, DF / 2 - 0.6 - 6 + 0.15, side * (DRONA_DEPTH / 2 + PANEL * 1.5), 0x800000);
+  panel(DF - 2 * PANEL, 0.3, PANEL, 0, DF / 2 - 0.6 - 6 + 0.15, side * (DRONA_DEPTH / 2 + PANEL * 1.5), 0xb00000);
 }
 const cellGeometry = mergeGeometries(parts, false)!;
 parts.forEach(part => part.dispose());
