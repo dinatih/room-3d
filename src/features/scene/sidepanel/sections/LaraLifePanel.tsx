@@ -3,10 +3,13 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
-import { openInventoryTarget } from '@features/ui/AppConsole';
+import { openInventoryTarget, type OpenInventoryTargetDetail } from '@features/ui/AppConsole';
+import { INVENTORY, STORAGE_SPACES } from '@features/inventory/inventoryData';
+import { getInventorySmartObjects } from '@features/inventory/InventorySmartActions';
 import { getSmartObject } from '../../ai/smartObjectRegistry';
 import { duoSessionManager } from '../../ai/duoSessionManager';
 import { getAnimationDef } from '../../animations/animationResolver';
+import { getDuoAnimationForClip } from '../../animations/duoAnimations';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
@@ -24,6 +27,12 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
   const partner = [duo?.participantA?.characterId, duo?.participantB?.characterId].find(id => id && id !== selectedCharacterId);
   const duoAnimation = duo?.playlist[duo.currentAnimIndex];
   const animation = current?.animation ? getAnimationDef(current.animation) : undefined;
+  const duoClip = getDuoAnimationForClip(current?.animation);
+  const inventoryObject = object && (INVENTORY.find(item => item.id === object.id || getInventorySmartObjects(item.id).some(smartObject => smartObject.id === object.id))
+    ?? STORAGE_SPACES.find(item => item.id === object.id));
+  const links: { label: string; target: OpenInventoryTargetDetail }[] = [];
+  if (inventoryObject) links.push({ label: 'Objet', target: { type: 'object', object: { id: object.id, inventoryId: inventoryObject.id, slotId: current?.slotId, actorId: selectedCharacterId, animationId: current?.animation } } });
+  if (duoClip || animation) links.push({ label: 'Animation', target: { type: 'animation', animation: { id: (duoClip ?? animation)!.id, mode: duoClip ? 'duo' : 'solo', actorId: selectedCharacterId, partnerId: partner } } });
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
     .filter(key => HOME_TASKS[key].room === room).map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
@@ -67,6 +76,10 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
         <div><strong>Action :</strong> {slot ? `${slot.name} (${current?.slotId})` : current?.slotId ?? 'Aucune'}{current && ` · ${current.status}`}</div>
         <div><strong>Duo :</strong> {partner ? characterName(partner) : duo ? 'En attente du partenaire' : 'Aucun'}{duoAnimation && ` · ${duoAnimation.id}`}</div>
         <div><strong>Animation :</strong> {animation?.id ?? current?.animation ?? 'Aucune'}{animation?.duration !== undefined && ` · ${minutes.format(animation.duration)} s`}</div>
+        {links.length > 0 && <div className="d-flex gap-1 mt-1">{links.map(({ label, target }) => <button key={label} type="button" className="btn btn-sm btn-outline-secondary py-0 px-1"
+          title={`Ouvrir dans l’inventaire : ${label}`} aria-label={`Ouvrir dans l’inventaire : ${label}`} onClick={() => openInventoryTarget(target)}>
+          <i className="bi bi-box-arrow-up-right me-1" aria-hidden="true" />{label}
+        </button>)}</div>}
         {slot?.animationsRandom && <div><strong>Tags / groupe :</strong> {Array.isArray(slot.animationsRandom) ? slot.animationsRandom.join(', ') : slot.animationsRandom}</div>}
         {slot?.duoPool && <div><strong>Groupe duo :</strong> {slot.slotId} · {slot.duoPool.length} animations</div>}
         {current?.animationRequest && current.animationRequest !== (animation?.id ?? current.animation) && <div><strong>Animation demandée :</strong> {current.animationRequest}</div>}
