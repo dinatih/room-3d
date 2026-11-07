@@ -18,7 +18,7 @@ import { resolveAnimationId, getAnimationDef, resolveSlotAnimation } from '../an
 
 import { AgentState, AgentStatus } from './agent/agentTypes';
 import { cameraState } from '../cameraState';
-import { NPC_WALK_ANIMATIONS, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
+import { NPC_WALK_ANIMATIONS, getLifeWalkAnimation, getRandomNpcWalkAnimation, getWalkSpeedForAnimation } from './agent/agentWalkAnimations';
 import { resolveInstructionCoords } from './agent/agentInstructionCoords';
 import { computeSteeringVector, computeRotYStep, setAgentVelocity, beginActorBlockCheck, endActorBlockCheck, actorBlocksUnchanged, type ActorBlockers } from './agent/agentAvoidance';
 import { handleDuoInteraction } from './agent/agentDuoHandler';
@@ -255,7 +255,7 @@ export function createAgentController(
   let blockedCoords: { instruction: AgentInstruction; graph: ReturnType<typeof getNavigationGraph>; x: number; z: number; owner?: string; status: AgentStatus; actorBlockers: ActorBlockers } | null = null;
 
   // Animation de marche courante pour les trajets
-  let currentWalkAnim: string = getRandomNpcWalkAnimation(_characterId);
+  let currentWalkAnim: string = hasLife ? getLifeWalkAnimation(_characterId, life.needs, lifeActivity) : getRandomNpcWalkAnimation(_characterId);
 
   // Ref pour éviter les logs dupliqués à chaque frame
   let lastLog: string = '';
@@ -1374,6 +1374,7 @@ export function createAgentController(
           if (object && slot?.offset) prepareInteractionNavigation(_characterId, slot.navigationOwner ?? object.id, { x: slot.offset[0], z: slot.offset[2] });
         }
 
+        if (hasLife) currentWalkAnim = getLifeWalkAnimation(_characterId, life.needs, lifeActivity);
         agentStatus = 'MOVING';
         state.animation = currentWalkAnim;
         const logKey = `move-${stepIndex}-${dynamicNavIndex}-${target.label}`;
@@ -1656,7 +1657,7 @@ export function createAgentController(
           }
         } else {
           agentStatus = 'IDLE';
-          currentWalkAnim = getRandomNpcWalkAnimation(_characterId);
+          if (!hasLife) currentWalkAnim = getRandomNpcWalkAnimation(_characterId);
           advanceToNextStep(hasNavStep);
         }
       } else {
@@ -1707,7 +1708,7 @@ export function createAgentController(
 
         if (isEnded) {
           agentStatus = 'IDLE';
-          currentWalkAnim = getRandomNpcWalkAnimation(_characterId);
+          if (!hasLife) currentWalkAnim = getRandomNpcWalkAnimation(_characterId);
           return state;
         }
         return state;

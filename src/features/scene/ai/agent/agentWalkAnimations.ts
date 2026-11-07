@@ -1,4 +1,5 @@
 import { FAB_ANIMATION_DEFINITIONS } from '../../animations/fabManifest';
+import { isLifeCharacter, LIFE_INITIAL_PREFERENCES, LIFE_SETTINGS, getLifeMood, type LifeActivity, type LifeNeeds } from '../laraLife';
 
 const fabWalks = FAB_ANIMATION_DEFINITIONS.filter(def => def.tags.includes('npc-walk'));
 
@@ -64,4 +65,17 @@ export function getRandomNpcWalkAnimation(characterId?: string): string {
     return 'walking';
   }
   return NPC_WALK_ANIMATIONS[Math.floor(Math.random() * NPC_WALK_ANIMATIONS.length)];
+}
+
+/** Choose once at departure; preferences supply a stable personality signature. */
+export function getLifeWalkAnimation(characterId: string, needs: LifeNeeds, activity: LifeActivity | null): string {
+  if (!isLifeCharacter(characterId)) throw new Error(`No life personality for ${characterId}`);
+  if (activity === 'toilet' && needs.toilet >= LIFE_SETTINGS.priority) return 'walking';
+  if (needs.rest >= LIFE_SETTINGS.priority || activity === 'sleep' || activity === 'rest') return 'miley-armature-walk-relaxed-loop';
+  if (activity === 'combat') return 'swagger-walk';
+  if ((activity === 'social' || activity === 'affection' || activity === 'dance') && !getLifeMood(needs).uncomfortable) return 'happy-walk';
+  const preferences: readonly LifeActivity[] = LIFE_INITIAL_PREFERENCES[characterId];
+  if (preferences.includes('combat')) return 'swagger-walk';
+  if (preferences.includes('dance')) return 'miley-armature-elegant-walk-2l';
+  return 'miley-armature-walk-f';
 }
