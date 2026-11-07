@@ -250,7 +250,7 @@ button, input, select, textarea {
 
 /* ── COMPACT FORM RANGE (.form-range-sm) ── */
 .day-time-range {
-  --day-time-track: linear-gradient(to right, #234b80 0% 25%, #e0a96d 29.167%, #f4d78b 33.333% 87.5%, #e0a96d 89.583%, #234b80 91.667% 100%);
+  --day-time-track: linear-gradient(to right, #234b80 0% 25%, #e0a96d 29.167%, #f4d78b 33.333% 95.833%, #e0a96d 97.917%, #234b80 100%);
 }
 .day-time-range::-webkit-slider-runnable-track { background: var(--day-time-track); }
 .day-time-range::-moz-range-track { background: var(--day-time-track); }

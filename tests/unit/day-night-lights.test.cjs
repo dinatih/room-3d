@@ -23,15 +23,20 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     DayNight(); frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert.equal(scene.children[0].intensity, 2);
-    for (const hour of [18, 20, 21]) {
+    for (const hour of [18, 20, 21, 22, 23]) {
       clock.minutes = (hour - 8) * 60; frame({ scene });
       assert.equal(layers.lightsHD, lightsHD);
       assert.equal(daylight(hour), 1);
+      assert.equal(nightState.nightLighting, false);
     }
-    clock.minutes = 14 * 60; frame({ scene }); frame({ scene });
+    clock.minutes = 15.5 * 60; frame({ scene });
+    assert(daylight(23.5) > 0 && daylight(23.5) < 1);
+    assert.equal(nightState.nightLighting, false);
+    clock.minutes = 16 * 60; frame({ scene }); frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert(scene.children[0].intensity < 2);
     assert.equal(nightState.nightLighting, true);
+    assert.equal(daylight(0), 0);
     clock.minutes = 21 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert.equal(daylight(5), 0);
