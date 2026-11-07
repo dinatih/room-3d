@@ -1,5 +1,6 @@
 export type LifeActivity = 'storage' | 'tech' | 'receive-massage' | 'dance' | 'combat' | 'massage' | 'affection' | 'yoga' | 'clean' | 'bath' | 'rest' | 'work' | 'read' | 'watch-tv' | 'social' | 'walk' | 'meal' | 'sleep' | 'toilet' | 'shower' | 'wash-hands' | 'pause';
 export const LIFE_SPEEDS = [1, 3, 10] as const;
+export const LIFE_MINUTES_PER_SECOND = 2;
 export const LIFE_CHARACTER_IDS = ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra'] as const;
 export type LifeCharacterId = typeof LIFE_CHARACTER_IDS[number];
 export const LIFE_CHARACTER_LABELS = { native: 'Lara', cha: 'Cha', vivida: 'Vivida', delphina: 'Delphina', marissa: 'Marissa', rosanna: 'Rosanna', sabira: 'Sabira', sara: 'Sara', rajaa: 'Rajaa', sandra: 'Sandra', helena: 'Helena' };
@@ -17,7 +18,7 @@ export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
 }>>;
 export type LifeRelationships = Record<string, { seconds: number; lastAt: number; affinity?: number; activities?: Partial<Record<LifeActivity, number>> }>;
 type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
-const lifePeriod = (hour: number): LifePeriod => hour < 6 || hour >= 22 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
+const lifePeriod = (hour: number): LifePeriod => hour < 6 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
 const LEISURE_ACTIVITIES: LifeActivity[] = ['storage', 'dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
 export const lifeSocialActivity = (objectId?: string, slotId?: string): 'social' | 'affection' | 'massage' | null => slotId?.split(':')[0] === 'massage' && ['interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'massage' : objectId === 'garden-conversation' ? 'social'
   : ['hugs-point', 'inyeong-cha-hugs-point', 'interx-affection-point', 'interx-affection-garden-point'].includes(objectId ?? '') ? 'affection' : null;
@@ -255,7 +256,7 @@ export function lifePreferenceScore(activity: LifeActivity, memory: LifeMemory, 
   return since / (since + LIFE_SETTINGS.activitySeconds) * (1 + initial) + (total > 0 ? experience.satisfaction / total : 0);
 }
 
-// One simulation second represents one clock minute; a day lasts 24 minutes at ×1.
+// The clock stores simulated minutes; a day lasts 12 real minutes at ×1.
 export function lifeClock(elapsedSeconds: number) {
   const minutes = Math.floor(8 * 60 + elapsedSeconds);
   const hour = Math.floor(minutes / 60) % 24;
@@ -265,7 +266,7 @@ export function lifeClock(elapsedSeconds: number) {
 }
 
 export function routineActivities(hour: number): LifeActivity[] {
-  if (hour < 6 || hour >= 22) return ['sleep'];
+  if (hour < 6) return ['sleep'];
   if (hour < 9) return ['shower', 'meal'];
   if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
   return hour < 18 ? ['work', ...LEISURE_ACTIVITIES] : LEISURE_ACTIVITIES;

@@ -89,7 +89,7 @@ it('sauvegarde toute la colocation une seule fois par seconde et restaure le mod
     assert.deepEqual(restored.characterLives, data.characters);
     const snapshot = restored.useLaraLifeStore.getState();
     assert.equal(snapshot.speed, 10);
-    assert.equal(snapshot.characters.native.needs.rest, 82); assert.equal(snapshot.characters.native.elapsedSeconds, 360);
+    assert.equal(snapshot.characters.native.needs.rest, 82); assert.equal(snapshot.characters.native.elapsedSeconds, 720);
     assert.deepEqual(snapshot.characters.native.memory, native.memory);
     assert.deepEqual(snapshot.characters.native.relationships, native.relationships);
     assert.equal(restored.characterLives.sandra.needs.toilet, 93);
@@ -242,5 +242,22 @@ it('publie l’horloge à la précision affichée sans perdre le temps exact des
       assert.equal(store.characterLives[id].elapsedSeconds, store.simulationClock.minutes);
       assert.equal(Math.floor(store.useLaraLifeStore.getState().characters[id].elapsedSeconds), Math.floor(store.simulationClock.minutes));
     }
+  });
+});
+
+it('fait durer une journée douze minutes à ×1 et la nuit de minuit à six heures trois minutes', () => {
+  withBrowser(w => {
+    const store = w.loadStore();
+    store.advanceSimulationClock(8 * 60);
+    assert.deepEqual(life.lifeClock(store.simulationClock.minutes), { day: 2, hour: 0, time: '00:00', period: 'Nuit' });
+    store.advanceSimulationClock(3 * 60);
+    assert.equal(life.lifeClock(store.simulationClock.minutes).time, '06:00');
+    assert.equal(life.lifeClock(store.simulationClock.minutes).period, 'Matin');
+    store.advanceSimulationClock(60);
+    assert.equal(life.lifeClock(store.simulationClock.minutes).time, '08:00');
+    store.useLaraLifeStore.setState({ speed: 10 });
+    store.advanceSimulationClock(72);
+    assert.equal(life.lifeClock(store.simulationClock.minutes).day, 3);
+    assert.equal(life.lifeClock(store.simulationClock.minutes).time, '08:00');
   });
 });

@@ -27,6 +27,7 @@ import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo'
 import { NavigationScope, NavigationPending, type NavigationJob } from './navigation/navigationScope';
 import { devLog, DEV_LOG_ENABLED } from '@/devLog';
 import { isAppIdle } from '../idleState';
+import { LIFE_MINUTES_PER_SECOND } from './laraLife';
 
 type LifeActivityInvitation = { targetId: string; fromId: string; objectId: string; slotId: string; activity?: 'dance' | 'combat' | 'meal'; accepted?: boolean; deferred?: boolean };
 
@@ -2013,7 +2014,7 @@ export function createAgentController(
       }
       if (lifeRunning) {
         if (eating) releaseLifeMeal(lifeId, true);
-        if (partnerId) rememberLifeConversation(life, partnerId, interactionSeconds, previousLifeActivity ?? undefined);
+        if (partnerId) rememberLifeConversation(life, partnerId, interactionSeconds * LIFE_MINUTES_PER_SECOND, previousLifeActivity ?? undefined);
         if (previousLifeActivity === 'toilet' && interactionSeconds > 0) life.handsDirty = true;
         // Stationary route waits never satisfy the desire to move.
         const before = life.needs;
@@ -2034,18 +2035,21 @@ export function createAgentController(
           }
           lifeInteraction.seconds += interactionSeconds;
         }
-        recordLifeDay(lifeId, life.elapsedSeconds - dt, interactionSeconds, instruction?.lifePhase === 'prepare-meal' ? 'meal' : previousLifeActivity, before, partnerId);
-        recordLifeDay(lifeId, life.elapsedSeconds - dt + interactionSeconds, dt - interactionSeconds, moving ? 'walk' : null, before);
+        recordLifeDay(lifeId, life.elapsedSeconds - dt * LIFE_MINUTES_PER_SECOND, interactionSeconds * LIFE_MINUTES_PER_SECOND, instruction?.lifePhase === 'prepare-meal' ? 'meal' : previousLifeActivity, before, partnerId);
+        recordLifeDay(lifeId, life.elapsedSeconds - (dt - interactionSeconds) * LIFE_MINUTES_PER_SECOND, (dt - interactionSeconds) * LIFE_MINUTES_PER_SECOND, moving ? 'walk' : null, before);
         life.needs = evolveLife(life.needs, interactionSeconds, previousLifeActivity, false, Boolean(partnerId));
         life.needs = evolveLife(life.needs, dt - interactionSeconds, null, moving);
         life.needs.environment = roomDirt(homeDirt, room);
         rememberLifeActivity(life, moving && lifeActivity === 'walk' ? 'walk' : interactionSeconds > 0 ? previousLifeActivity : null, before, life.needs,
           interactionSeconds > 0 && instruction?.smartObjectId && instruction.slotId ? `${instruction.smartObjectId}:${instruction.slotId.split(':')[0]}` : undefined);
+      }
+      if (hasLife) {
         lifeSnapshotSeconds += dt;
         if (lifeSnapshotSeconds >= 1) {
           lifeSnapshotSeconds %= 1;
-          const phase = (dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex])?.lifePhase;
-          publish({ room, needs: { ...life.needs }, memory: { ...life.memory }, relationships: { ...life.relationships }, elapsedSeconds: life.elapsedSeconds, activity: lifeActivity
+          const current = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex], phase = current?.lifePhase;
+          publish({ current: { status: agentStatus, animation: state.animation, smartObjectId: current?.smartObjectId, slotId: current?.slotId, animationRequest: current?.animation },
+            room, needs: { ...life.needs }, memory: { ...life.memory }, relationships: { ...life.relationships }, elapsedSeconds: life.elapsedSeconds, activity: !lifeRunning ? useLaraLifeStore.getState().characters[lifeId].activity : lifeActivity
             ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
             : 'Commande utilisateur' });
         }

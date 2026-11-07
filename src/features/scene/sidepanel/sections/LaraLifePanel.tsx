@@ -4,6 +4,9 @@ import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from '../../ai/lifeHousekeeping';
 import { openInventoryTarget } from '@features/ui/AppConsole';
+import { getSmartObject } from '../../ai/smartObjectRegistry';
+import { duoSessionManager } from '../../ai/duoSessionManager';
+import { getAnimationDef } from '../../animations/animationResolver';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
@@ -14,7 +17,13 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectedCharacterId = characterId ?? activeCharacterId;
   if (!isLifeCharacter(selectedCharacterId)) return <section className="p-2 small">Ce personnage ne participe pas au système de vie.</section>;
-  const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room } = characters[selectedCharacterId];
+  const { needs: actorNeeds, memory, relationships, elapsedSeconds, activity, reason, room, current } = characters[selectedCharacterId];
+  const object = current?.smartObjectId ? getSmartObject(current.smartObjectId) : undefined;
+  const slot = object?.slots.find(slot => slot.slotId === current?.slotId?.split(':')[0]);
+  const duo = duoSessionManager.getSessionFor(selectedCharacterId);
+  const partner = [duo?.participantA?.characterId, duo?.participantB?.characterId].find(id => id && id !== selectedCharacterId);
+  const duoAnimation = duo?.playlist[duo.currentAnimIndex];
+  const animation = current?.animation ? getAnimationDef(current.animation) : undefined;
   const needs = { ...actorNeeds, environment: roomDirt(home, room) };
   const cleanliness = `${HOME_ROOMS[room]} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
     .filter(key => HOME_TASKS[key].room === room).map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
@@ -53,6 +62,15 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
         <span className="fw-semibold text-truncate" title={`${activity} — ${reason}`} data-lara-life-activity>{activity}</span>
       </div>
       <div className={characterId ? 'mt-1 text-break' : 'visually-hidden'}>{reason}</div>
+      <div className="mt-1 text-break" aria-label="Action et animation actuelles">
+        <div><strong>Smart Object :</strong> {object ? `${object.name} (${object.id})` : current?.smartObjectId ?? 'Aucun'}</div>
+        <div><strong>Action :</strong> {slot ? `${slot.name} (${current?.slotId})` : current?.slotId ?? 'Aucune'}{current && ` · ${current.status}`}</div>
+        <div><strong>Duo :</strong> {partner ? characterName(partner) : duo ? 'En attente du partenaire' : 'Aucun'}{duoAnimation && ` · ${duoAnimation.id}`}</div>
+        <div><strong>Animation :</strong> {animation?.id ?? current?.animation ?? 'Aucune'}{animation?.duration !== undefined && ` · ${minutes.format(animation.duration)} s`}</div>
+        {slot?.animationsRandom && <div><strong>Tags / groupe :</strong> {Array.isArray(slot.animationsRandom) ? slot.animationsRandom.join(', ') : slot.animationsRandom}</div>}
+        {slot?.duoPool && <div><strong>Groupe duo :</strong> {slot.slotId} · {slot.duoPool.length} animations</div>}
+        {current?.animationRequest && current.animationRequest !== (animation?.id ?? current.animation) && <div><strong>Animation demandée :</strong> {current.animationRequest}</div>}
+      </div>
       {!characterId && <details className="mt-1 text-break">
         <summary className="fw-semibold">Sauvegarde de la colocation</summary>
         <div>{savedAt ? `Sauvegardée à ${new Date(savedAt).toLocaleTimeString('fr-FR')}.` : 'Sauvegarde automatique pendant la simulation.'}</div>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createLife, createLifeHousehold, lifeHousehold, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_SPEEDS, type LifeCharacterId } from './laraLife';
+import { createLife, createLifeHousehold, lifeHousehold, LIFE_CHARACTER_IDS, LIFE_CHARACTER_LABELS, LIFE_SPEEDS, LIFE_MINUTES_PER_SECOND, type LifeCharacterId } from './laraLife';
 import { homeDirt, type HomeDirt, type HomeRoom } from './lifeHousekeeping';
 import { LIFE_SAVE_KEY, parseLifeSave, type LifeSave } from './lifePersistence';
 
@@ -26,7 +26,8 @@ if (typeof window !== 'undefined') {
 export const simulationClock = { minutes: Math.max(...Object.values(characterLives).map(life => life.elapsedSeconds)) };
 for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;
 
-export type LifeSnapshot = Pick<ReturnType<typeof createLife>, 'needs' | 'memory' | 'relationships' | 'elapsedSeconds'> & { activity: string; reason: string; room: HomeRoom };
+export type LifeSnapshot = Pick<ReturnType<typeof createLife>, 'needs' | 'memory' | 'relationships' | 'elapsedSeconds'> & { activity: string; reason: string; room: HomeRoom;
+  current?: { status: string; animation: string; smartObjectId?: string; slotId?: string; animationRequest?: string } };
 const initialSnapshot = (id: LifeCharacterId): LifeSnapshot => ({
   needs: { ...characterLives[id].needs }, memory: { ...characterLives[id].memory }, relationships: { ...characterLives[id].relationships }, elapsedSeconds: characterLives[id].elapsedSeconds,
   room: 'living', activity: saved ? 'À reprendre' : 'En attente', reason: saved ? `${LIFE_CHARACTER_LABELS[id]} reprend sa vie sauvegardée.` : `${LIFE_CHARACTER_LABELS[id]} commence sa journée.`,
@@ -96,7 +97,7 @@ export function advanceSimulationClock(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid simulation duration');
   if (!seconds) return;
   const previousMinute = Math.floor(simulationClock.minutes);
-  simulationClock.minutes += seconds * useLaraLifeStore.getState().speed;
+  simulationClock.minutes += seconds * useLaraLifeStore.getState().speed * LIFE_MINUTES_PER_SECOND;
   for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;
   // The UI displays whole simulated minutes; live controllers keep the exact shared time.
   if (Math.floor(simulationClock.minutes) === previousMinute) return;

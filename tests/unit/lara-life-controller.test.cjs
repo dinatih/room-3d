@@ -85,7 +85,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     '@features/ui/AppConsole': { appLog: (actor, message, meta) => logs.push({ actor, message, ...meta }) },
     '../animOptions': { getEstimatedClipDuration: () => 1 },
     '../animations/animationResolver': { resolveAnimationId: value => value, getAnimationDef: () => ({ duration: 1 }), resolveSlotAnimation: slot => slot },
-    '../cameraState': { cameraState }, './agent/agentWalkAnimations': { getRandomNpcWalkAnimation: () => 'walk', getWalkSpeedForAnimation: () => 100 },
+    '../cameraState': { cameraState }, './agent/agentWalkAnimations': { getLifeWalkAnimation: () => 'walk', getRandomNpcWalkAnimation: () => 'walk', getWalkSpeedForAnimation: () => 100 },
     './agent/agentInstructionCoords': { resolveInstructionCoords: instruction => {
       if (navigationPending) throw new NavigationPending({ description: 'Construction du réseau de navigation' });
       if (instruction.targetZoneId === 'living') return { tx: 90, ty: 0, tz: 10, label: 'living' };
@@ -114,7 +114,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const tick = (seconds = 1, playback = true) => {
     if (playback) controller.reportAnimationPlayback(controller.state.animation, 0.5, false);
     // The scene clock advances before the controller.
-    for (const character of Object.values(characterLives)) character.elapsedSeconds += seconds;
+    for (const character of Object.values(characterLives)) character.elapsedSeconds += seconds * life.LIFE_MINUTES_PER_SECOND;
     return controller.update(seconds);
   };
   return { controller, scenario, dirt, scene, lifeState, logs, journal, tick, snapshot, attempts, reservations, candidates, objects, duo, duoTicks, duoDefinitions, characterLives, occupancy, cameraState,
@@ -722,8 +722,8 @@ it('récupère repos et compagnie pour les deux rôles d’un duo assis, seuleme
         w.tick();
         assert(w.lifeState.needs.rest < before.rest);
         assert(w.lifeState.needs.company < before.company);
-        assert.equal(w.lifeState.relationships[partner].seconds, 1);
-        assert.equal(w.lifeState.relationships[partner].activities.rest, 1);
+        assert.equal(w.lifeState.relationships[partner].seconds, 2);
+        assert.equal(w.lifeState.relationships[partner].activities.rest, 2);
         animation.def.isCombat = true;
         const beforeCombat = { ...w.lifeState.needs };
         w.tick();
@@ -1297,9 +1297,15 @@ it('rend une portion réservée lors d’une commande et compte les activités j
   const autonomous = world();
   Object.assign(life.lifeHousehold, life.createLifeHousehold());
   autonomous.tick(1, false); autonomous.tick(1, false);
+  assert.equal(autonomous.snapshot.current.smartObjectId, 'desk-bollsidan-2');
+  assert.equal(autonomous.snapshot.current.slotId, 'use');
+  assert.equal(autonomous.snapshot.current.animation, autonomous.controller.state.animation);
+  assert.equal(autonomous.snapshot.current.animationRequest, 'work');
   assert(!life.lifeHousehold.journal.native[1].activities.work);
-  autonomous.tick(.25); autonomous.tick(.25);
-  assert(life.lifeHousehold.journal.native[1].activities.work > 0);
+  autonomous.lifeState.elapsedSeconds = 959.75;
+  autonomous.tick(.25);
+  assert.equal(life.lifeHousehold.journal.native[1].activities.work, .25);
+  assert.equal(life.lifeHousehold.journal.native[2].activities.work, .25);
 });
 
 it('une activité commencée par une coloc inspire une danse pendant une pause, sans interrompre les urgences', () => {

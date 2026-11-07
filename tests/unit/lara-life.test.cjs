@@ -305,7 +305,11 @@ it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urge
   assert.equal(chooseLifeActivity({ ...needs, company: 65 }, options, position, null, 10, {}, 0).activity, 'social');
   assert.equal(chooseLifeActivity(needs, options, position, null, 12, {}, 0).activity, 'meal');
   assert.equal(chooseLifeActivity({ ...needs, rest: 0 }, options, position, 'read', 21, {}, 0).activity, 'social');
-  assert.equal(chooseLifeActivity(needs, options, position, null, 23, {}, 0).activity, 'sleep');
+  for (const hour of [22, 23]) {
+    assert(!routineActivities(hour).includes('sleep'));
+    assert.equal(lifeClock((hour - 8) * 60).period, 'Soirée');
+  }
+  assert.equal(chooseLifeActivity(needs, options, position, null, 0, {}, 0).activity, 'sleep');
   assert.equal(chooseLifeActivity({ ...needs, meal: 100 }, options, position, null, 23, {}, 0).activity, 'meal');
   for (const activity of ['read', 'watch-tv', 'social']) {
     assert(evolveLife(needs, 10, activity, false).work < needs.work);
