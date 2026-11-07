@@ -4,7 +4,7 @@ import { WeatherSystem } from './WeatherSystem';
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
-import { useState, useCallback, useEffect, useRef, Suspense, lazy } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, Suspense, lazy } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
@@ -274,13 +274,16 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
+  const internal = useThree((state) => state.internal);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updateLoop = (event?: Event | { type: string }) => {
       const isXRActive = cameraState.isXR || gl.xr.isPresenting;
       const loop = isXRActive || cameraState.isIntroRunning || event?.type === 'start-camera-intro' ? 'always'
         : (showInventory || isCvModalOpen || isPhotoModeOpen || isIdle) ? 'never'
         : isOrbiting ? 'always' : 'demand';
+      // Discard queued frames before 'never' interprets their RAF timestamps as manual time.
+      if (loop === 'never') internal.frames = 0;
       setFrameloop(loop);
       if (loop !== 'never') invalidate();
     };
@@ -294,7 +297,7 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       gl.xr.removeEventListener('sessionend', updateLoop);
       window.removeEventListener('camera-intro-finished', updateLoop);
     };
-  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl, internal]);
 
   return null;
 }

@@ -13,26 +13,29 @@ it('reprend le rendu VR depuis une scène suspendue et rétablit la pause après
   xr.isPresenting = false;
   let loop;
   let cleanup;
-  const state = { gl: { xr }, setFrameloop: value => { loop = value; }, invalidate() {} };
+  const state = { gl: { xr }, internal: { frames: 2 }, setFrameloop: value => { loop = value; }, invalidate() {} };
   try {
     const { FrameloopController } = load('src/features/scene/Studio.tsx', {
-      react: { useEffect: effect => { cleanup = effect(); } },
+      react: { useLayoutEffect: effect => { cleanup = effect(); } },
       '@react-three/fiber': { useThree: select => select(state) },
       './cameraState': { cameraState },
-    }, source => `import { useEffect } from 'react';
+    }, source => `import { useLayoutEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { cameraState } from './cameraState';
 export ${source.slice(source.indexOf('function FrameloopController('), source.indexOf('function ActiveCameraCapture('))}`);
     FrameloopController({ isIdle: true, showInventory: true, isCvModalOpen: false, isPhotoModeOpen: false, isOrbiting: false });
     assert.equal(loop, 'never');
+    assert.equal(state.internal.frames, 0, 'Opening inventory must discard queued RAF frames before their timestamps can advance simulation time');
     cameraState.isXR = xr.isPresenting = true;
     document.dispatchEvent(new Event('vr-state-change'));
     assert.equal(loop, 'always');
+    state.internal.frames = 1;
     cameraState.isXR = false;
     document.dispatchEvent(new Event('vr-state-change'));
     xr.isPresenting = false;
     xr.dispatchEvent({ type: 'sessionend' });
     assert.equal(loop, 'never');
+    assert.equal(state.internal.frames, 0, 'Leaving XR must also discard frames when returning to the paused inventory');
     document.dispatchEvent(new Event('start-camera-intro'));
     assert.equal(loop, 'always');
     window.dispatchEvent(new Event('camera-intro-finished'));
