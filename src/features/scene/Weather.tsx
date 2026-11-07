@@ -12,6 +12,7 @@ import { LAYER_ENVIRONMENT } from '@config';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { simulationClock } from './ai/laraLifeStore';
 import { daylight, simulatedHour } from './DayNight';
+import { useSceneStore } from './store/useSceneStore';
 
 let saved: WeatherSave | undefined;
 let loadError: string | null = null;
@@ -150,7 +151,7 @@ export function Weather() {
     active.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
     active.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
     weatherRuntime.offset = active.offset.value.toArray();
-    material.current.visible = coverage > 0;
+    material.current.visible = coverage > 0 && useSceneStore.getState().layers.environment !== false;
     active.coverage.value = coverage;
     active.tint.value.set('#182338').lerp(CLOUD_DAY_COLOR, daylight(simulatedHour()));
   });
