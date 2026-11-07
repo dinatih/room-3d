@@ -60,7 +60,6 @@ export function DayNight() {
     if (previousNight.current !== night) {
       previousNight.current = night;
       const store = useSceneStore.getState();
-      if (store.layers.lightsHD !== night) store.toggleLayer('lightsHD');
       store.triggerAction('lamp-toggle', night);
     }
     scene.getObjectByName('SkySphere')?.traverse(child => {

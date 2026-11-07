@@ -7,7 +7,8 @@ function setup(mode = 'orbit', arrowControl = 'camera') {
   let frame;
   const state = { characterX: 0, characterZ: 0, followYaw: 0, positions: {}, recordUserControl() { this.isAIControlled = false; } };
   const constants = load('src/features/scene/camera/cameraConstants.ts', {
-    three: THREE, '../wallData': { ROOM_W: 600, ROOM_D: 1000 }, '../cameraState': { cameraState: state },
+    three: THREE, '../wallData': { ROOM_W: 600, ROOM_D: 1000, WALL_H: 250 }, '../cameraState': { cameraState: state },
+    '../tvData': require('../../src/features/scene/tvData.ts'),
   });
   const store = { arrowControl, layers: {} };
   const { useCameraFrameUpdate } = load('src/features/scene/camera/useCameraFrameUpdate.ts', {

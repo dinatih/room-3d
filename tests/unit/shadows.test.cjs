@@ -40,6 +40,18 @@ function compare(scene, camera) {
     return actual;
 }
 describe('Receveurs d’ombres', () => {
+    it('suspend une lampe éteinte après initialisation puis reprend ses ombres au rallumage', () => {
+        const { scene, camera } = world(), lamp = light(scene, THREE.PointLight);
+        receiver(scene); scene.updateMatrixWorld(true);
+        lamp.intensity = 0;
+        assert.deepEqual(after(scene, camera).shadows, [lamp.shadow]);
+        lamp.shadow.map = null;
+        assert.deepEqual(after(scene, camera).shadows, [], 'Initialiser la texture même à intensité nulle');
+        lamp.shadow.map = {}; lamp.intensity = 1;
+        assert.deepEqual(after(scene, camera).shadows, [], 'La même lampe reprend ses ombres');
+        lamp.intensity = 0;
+        assert.deepEqual(after(scene, camera).shadows, [lamp.shadow]);
+    });
     it('arrête les mesures dès que chaque lumière possède un receveur', () => {
         const { scene, camera } = world(); light(scene);
         for (let i = 0; i < 100; i++) receiver(scene, 0);

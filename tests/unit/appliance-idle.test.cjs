@@ -25,6 +25,8 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   const invalidate = () => {};
   const camera = new THREE.PerspectiveCamera(45, 1, 1, 50000);
   const ref = { current: null }, actionState = {};
+  const store = { furniture: { fridge: false, freezerOpen: false }, extraStates: {}, layers: { lightsHD: true } };
+  const sceneStore = { useSceneStore: select => select(store) };
   const clone = { useGLTFClone: () => ({ scene, animations }) };
   const utils = { removeGlbLines() {}, glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(10, 10, 10)) };
   const { [name]: Component } = load(`src/features/scene/items/${name}.tsx`, {
@@ -40,12 +42,12 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ camera, invalidate }) },
     '@features/scene/useGLTFClone': clone, '../useGLTFClone': clone,
     '@features/scene/glbUtils': utils, '../glbUtils': utils,
-    '@features/scene/store/useSceneStore': { useSceneStore: select => select({ furniture: { fridge: false, freezerOpen: false }, extraStates: {} }) },
-    '../objectActions': { getObjectActionIds: () => [primaryKey] }, '../ai/smartObjectRegistry': {},
+    '@features/scene/store/useSceneStore': sceneStore, '../store/useSceneStore': sceneStore,
+    '../objectActions': { getObjectActionIds: () => [primaryKey] }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { fridge: { slots: [] } } },
   });
-  const render = () => { effectIndex = 0; Component({ actionState, isPreview: true, onSize: size => sizes.push(size.toArray()) }); };
+  const render = (isPreview = true) => { effectIndex = 0; Component({ actionState, isPreview, onSize: size => sizes.push(size.toArray()) }); };
   render();
-  if (name === 'Fridge') assert.equal(anchor.children[0].shadow.camera.far, camera.far, 'les ombres couvrent aussi les pièces voisines');
+  if (name === 'Fridge') assert.equal(anchor.children[0].shadow.camera.far, 150, 'les ombres restent locales au réfrigérateur');
   const initial = updates; frame(null, 2); assert.equal(updates, initial);
   actionState[primaryKey] = true;
   if (name === 'NinjaSP101') actionState['ninja-light'] = true;
@@ -59,7 +61,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   if (name === 'Fridge') assert(anchor.children[0].intensity > 0);
   if (name === 'NinjaSP101') {
     assert(anchor.children[0].intensity > 0);
-    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 1);
   }
   const playing = ref.current, pose = primary.position.x;
   render();
@@ -78,10 +80,25 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   const closed = updates; frame(null, 2); assert.equal(updates, closed);
   if (name === 'NinjaSP101') {
     actionState['ninja-light'] = true; render(); frame(null, .125);
-    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 1.5, 'le fondu fonctionne aussi avec la porte fermée');
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, .5, 'le fondu fonctionne aussi avec la porte fermée');
     frame(null, .125);
-    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 3);
+    assert.equal(scene.getObjectByName('NinjaLampBulb').material.emissiveIntensity, 1);
     const lit = updates; frame(null, 2); assert.equal(updates, lit);
+  }
+  if (name === 'Fridge' || name === 'NinjaSP101') {
+    render(false);
+    const light = anchor.children[0];
+    assert.equal(light.castShadow, true, 'la qualité des ombres est configurée avant la première image');
+    assert.equal(light.visible, true);
+    for (const on of [false, true, false]) {
+      store.furniture.fridge = on; actionState['ninja-light'] = on; render(false);
+      frame(null, 2); frame(null, 2);
+      assert.equal(light.intensity > 0, on);
+      assert.equal(light.visible, true, 'allumer et éteindre conserve la lumière dans les shaders');
+      assert.equal(light.castShadow, true);
+    }
+    store.layers.lightsHD = false; render(false);
+    assert.equal(anchor.children[0].castShadow, false);
   }
   effects.forEach(effect => effect.cleanup?.());
 });

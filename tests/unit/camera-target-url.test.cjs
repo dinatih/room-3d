@@ -1,11 +1,11 @@
-const { it, after } = require('node:test');
+const { it, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const subjects = require('../../src/features/scene/camera/cameraSubjects.ts');
 const camera = load('src/features/scene/camera/cameraUrlParams.ts', { './cameraSubjects': subjects });
 const characters = load('src/features/scene/characterConfig.ts', {});
 const previousWindow = global.window;
-after(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
+afterEach(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
 function browser(query) {
   global.window = { location: new URL(`https://room.test/${query}`), history: {
     replaceState(_, __, url) { window.location = new URL(url); },

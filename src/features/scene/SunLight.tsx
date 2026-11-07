@@ -9,7 +9,7 @@ import { simulatedHour } from './DayNight';
  * scène via la même rotation enuToRoom que RealWorldLayer (VITE_STUDIO_AZ).
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils } from 'three';
 
@@ -66,7 +66,7 @@ export function SunLight() {
   const lightRef = useRef<DirectionalLight>(null!);
   const { invalidate } = useThree();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     function update() {
       if (!lightRef.current) return;
       const { azimuth, elevation } = solarPosition(LAT, LNG, (() => { const date = new Date('2026-03-20T00:00:00Z'); date.setUTCHours(0, simulatedHour() * 60 - LNG * 4); return date; })());
@@ -92,7 +92,6 @@ export function SunLight() {
       const { color, intensity } = sunParams(elevation);
       lightRef.current.color.copy(color);
       lightRef.current.intensity = intensity;
-      lightRef.current.visible = intensity > 0;
       invalidate();
     }
 
@@ -105,7 +104,6 @@ export function SunLight() {
     <directionalLight
       ref={lightRef}
       intensity={0}
-      visible={false}
       castShadow
       shadow-mapSize={[2048, 2048]}
       shadow-camera-near={1}

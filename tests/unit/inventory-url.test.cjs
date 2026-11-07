@@ -1,6 +1,6 @@
-const { it, after } = require('node:test');
+const { it, afterEach } = require('node:test');
 const previousWindow = global.window;
-after(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
+afterEach(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const { parseUrlInventory, inventoryUrl, updateUrlInventory } = load('src/features/inventory/inventoryUrlParams.ts', {

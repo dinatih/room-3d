@@ -189,7 +189,10 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     const nightFade = THREE.MathUtils.clamp((0.45 - light) / 0.45, 0, 1);
 
     if (groupRef.current) groupRef.current.visible = nightFade > 0.001;
-    if (nightFade <= 0.001) return;
+    if (nightFade <= 0.001) {
+      if (eastWallLightRef.current) eastWallLightRef.current.intensity = 0;
+      return;
+    }
 
     if (strobeMatRef.current) {
       strobeMatRef.current.uniforms.uTime.value = clock.elapsedTime;
@@ -211,7 +214,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   if (currentHdri !== 'default' || !enabled) return null;
 
   return (
-    <group ref={groupRef} name="EiffelTowerLights">
+    <>
       {/* Balayage lumineux puissant du phare sur le mur Est de l'appartement */}
       <pointLight
         ref={eastWallLightRef}
@@ -222,6 +225,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         intensity={0}
       />
 
+    <group ref={groupRef} name="EiffelTowerLights">
       {/* Illumination dorée de base */}
       <mesh geometry={glowGeo} renderOrder={-970}>
         <meshBasicMaterial
@@ -277,5 +281,6 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         </group>
       </group>
     </group>
+    </>
   );
 }

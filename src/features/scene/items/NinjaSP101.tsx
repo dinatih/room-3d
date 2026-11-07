@@ -60,7 +60,6 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     material.emissive.set('#ffd391');
     material.emissiveIntensity = 0;
     const light = new THREE.PointLight('#ffe0a6', 0, 70, 2);
-    light.visible = false;
     light.name = 'NinjaInteriorLight';
     light.castShadow = false;
     light.layers.enableAll();
@@ -94,14 +93,14 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     onSize?.(runtime.current!.size.clone());
   }, [scene, animations, onSize]);
 
+  useLayoutEffect(() => { runtime.current!.light.castShadow = lightsHD; }, [scene, animations, isPreview, invalidate, lightsHD]);
+
   useEffect(() => { invalidate(); }, [wantDoor, wantRack, lightOn, paused, invalidate]);
 
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r || paused) return;
-    r.light.castShadow = lightsHD;
     r.light.intensity = r.intensity * (r.lightTime / LIGHT_FADE_DURATION) * (lightsHD ? 1 : 0.25);
-    r.light.visible = r.light.intensity > 0;
     const advance = (time: number, end: number) => time < end ? Math.min(end, time + delta) : Math.max(end, time - delta);
     const doorEnd = wantDoor ? r.door.getClip().duration : 0;
     const rackEnd = wantRack ? r.rack.getClip().duration : 0;
@@ -115,7 +114,6 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
     r.lightTime = advance(r.lightTime, lightEnd);
     const brightness = r.lightTime / LIGHT_FADE_DURATION;
     r.light.intensity = r.intensity * brightness * (lightsHD ? 1 : 0.25);
-    r.light.visible = r.light.intensity > 0;
     r.material.emissiveIntensity = brightness;
     if (r.door.time !== doorEnd || r.rack.time !== rackEnd || r.lightTime !== lightEnd) invalidate();
   });

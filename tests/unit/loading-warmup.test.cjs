@@ -12,15 +12,17 @@ function deferred() {
 
 function warmup() {
   const shaders = deferred(), animation = deferred(), frames = new Map();
-  let effect, error = null, nextId = 0, ready = 0, invalidations = 0;
+  let effect, error = null, nextId = 0, ready = 0, invalidations = 0, compilations = 0;
+  const elements = { 'loading-bar': { style: {} }, 'loading-item': {} };
   const { GpuWarmup } = load('src/features/scene/Studio.tsx', {
     react: { useRef: value => ({ current: value }), useState: () => [error, value => { error = value; }], useEffect: fn => { effect = fn; } },
     '@react-three/fiber': { useThree: () => ({
-      gl: { compileAsync: () => shaders.promise, shadowMap: {} }, scene: {}, camera: {},
+      gl: { compileAsync: () => { compilations++; return shaders.promise; }, shadowMap: {} }, scene: {}, camera: {},
       invalidate: () => invalidations++,
     }) },
     './character/useCharacterAnimations': { cacheDynamicGLTF: () => animation.promise },
     'test-frame': {
+      document: { getElementById: id => elements[id] },
       requestAnimationFrame: fn => { frames.set(++nextId, fn); return nextId; },
       cancelAnimationFrame: id => frames.delete(id),
     },
@@ -30,14 +32,15 @@ function warmup() {
     return `import { useEffect, useRef, useState } from 'react';
       import { useThree } from '@react-three/fiber';
       import { cacheDynamicGLTF } from './character/useCharacterAnimations';
-      import { requestAnimationFrame, cancelAnimationFrame } from 'test-frame';
+      import { document, requestAnimationFrame, cancelAnimationFrame } from 'test-frame';
       const WARMUP_ANIM_PATHS = ['/walk.glb'];
       export ${component.getText(file)}`;
   });
   const render = () => GpuWarmup({ active: true, onReady: () => ready++ });
   render();
   return {
-    shaders, animation, frames, render, start: () => effect(),
+    shaders, animation, frames, render, elements, start: () => effect(),
+    get compilations() { return compilations; },
     get ready() { return ready; }, get invalidations() { return invalidations; },
     frame() { const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach(fn => fn()); },
   };
@@ -45,9 +48,12 @@ function warmup() {
 
 it('attend shaders et animations puis chauffe sur sept images, sans temporisation fixe', async () => {
   const test = warmup(), stop = test.start();
+  assert.equal(test.compilations, 1);
+  assert.match(test.elements['loading-item'].textContent, /Compilation/);
   test.shaders.resolve(); await tick();
   assert.equal(test.frames.size, 0);
   test.animation.resolve(); await tick();
+  assert.match(test.elements['loading-item'].textContent, /ombres/);
   for (let i = 0; i < 6; i++) { test.frame(); assert.equal(test.ready, 0); }
   test.frame();
   assert.equal(test.invalidations, 7);

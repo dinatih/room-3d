@@ -68,7 +68,6 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     // Modest 20 lm interior LED, converted to centimetre scene units.
     const intensity = 20 / (4 * Math.PI) * 100 ** 2;
     const bulb = new THREE.PointLight('#fff1d6', 0, 100, 2);
-    bulb.visible = false;
     bulb.name = 'FridgeInteriorLight';
     bulb.castShadow = false;
     bulb.layers.enableAll();
@@ -101,14 +100,14 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     onSize?.(runtime.current!.size.clone());
   }, [scene, animations, onSize]);
 
+  useLayoutEffect(() => { runtime.current!.bulb.castShadow = lightsHD; }, [scene, animations, isPreview, invalidate, lightsHD]);
+
   useEffect(() => { invalidate(); }, [wantDoor, wantCrisper, invalidate]);
 
   useFrame((_, delta) => {
     const r = runtime.current;
     if (!r || (isPreview && actionState.previewPaused)) return;
-    r.bulb.castShadow = lightsHD;
     r.bulb.intensity = wantDoor || r.door.time > 0 ? r.intensity * (lightsHD ? 1 : 0.25) : 0;
-    r.bulb.visible = r.bulb.intensity > 0;
     const doorEnd = wantDoor ? FRIDGE_DOOR_DURATION : 0;
     const drawerEnd = wantCrisper ? r.crisper.getClip().duration : 0;
     if (r.door.time === doorEnd && r.crisper.time === drawerEnd) return;
@@ -121,7 +120,6 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
     r.mixer.update(0);
     const lit = wantDoor || r.door.time > 0;
     r.bulb.intensity = lit ? r.intensity * (lightsHD ? 1 : 0.25) : 0;
-    r.bulb.visible = r.bulb.intensity > 0;
     if (r.door.time !== doorEnd || r.crisper.time !== drawerEnd) invalidate();
   });
 

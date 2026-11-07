@@ -13,7 +13,6 @@ import {
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
   PerspectiveCamera, OrthographicCamera, type LightShadow,
-  Object3D,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -147,7 +146,7 @@ const WARMUP_ANIM_PATHS = [
   ...NPC_WALK_ANIMATIONS.map(animKey => resolveAnimationPath(animKey)),
 ].filter(Boolean);
 
-/** Pré-compilation GPU shader par shader, pré-téléchargement des animations et warm-up de la scène. */
+/** Compilation asynchrone de la scène éclairée, animations et premières ombres. */
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   const readyRef = useRef(false);
@@ -161,47 +160,19 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
     const prepare = async () => {
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
 
-      const targets: { name: string; object: Object3D }[] = [];
-      const seenShaderKeys = new Set<string>();
-      scene.traverse(obj => {
-        const renderable = obj as any;
-        if (!renderable.isMesh && !renderable.isPoints && !renderable.isLine && !renderable.isSprite) return;
-        const mat = renderable.material;
-        if (!mat) return;
-        const mats = Array.isArray(mat) ? mat : [mat];
-        for (const m of mats) {
-          // Déduplication par signature de shader pour éviter de recompiler les doublons de 15 PNJ
-          const isSkinned = Boolean(renderable.isSkinnedMesh);
-          const shaderKey = `${m.type}::${m.name || 'unnamed'}::${isSkinned ? 'skinned' : 'static'}`;
-          if (!seenShaderKeys.has(shaderKey)) {
-            seenShaderKeys.add(shaderKey);
-            const baseName = m.name?.trim() || renderable.name?.trim() || m.type || 'Shader';
-            const name = isSkinned ? `${baseName} (animé)` : baseName;
-            targets.push({ name, object: renderable });
-          }
-        }
-      });
-
       const bar = document.getElementById('loading-bar');
       const itemEl = document.getElementById('loading-item');
-      const total = targets.length;
-
-      for (let i = 0; i < total; i++) {
-        if (cancelled) return;
-        const { name, object } = targets[i];
-        const pct = Math.round(((i + 1) / total) * 100);
-        if (bar) bar.style.width = `${pct}%`;
+      const phase = (text: string) => {
         if (itemEl) {
-          const text = `⚡ Shader ${i + 1}/${total} (${pct}%) : ${name}`;
           itemEl.textContent = text;
           itemEl.title = text;
         }
-        gl.compile(object, camera, scene);
-        await new Promise(r => setTimeout(r, 0));
-      }
-
+      };
+      if (bar) bar.style.width = '100%';
+      phase('⚡ Compilation GPU et chargement des animations…');
       await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
+      phase('⚡ Préparation des premières images et des ombres…');
 
       let frames = 0;
       const warmup = () => {

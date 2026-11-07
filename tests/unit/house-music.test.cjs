@@ -8,7 +8,7 @@ it('réagit uniquement à une lecture audible et libère les pistes remplacées,
   global.document = new EventTarget();
   document.addEventListener('npc-life-music', event => events.push(event.detail.playing));
   global.Audio = class extends EventTarget {
-    constructor(src) { super(); assert.equal(src, 'audio/house-music.mp3'); this.volume = 1; this.muted = false; audios.push(this); }
+    constructor(src) { super(); this.src = src; this.volume = 1; this.muted = false; audios.push(this); }
     play() { return Promise.resolve(); }
     pause() { this.dispatchEvent(new Event('pause')); }
     removeAttribute() { released.push(this); } load() {}

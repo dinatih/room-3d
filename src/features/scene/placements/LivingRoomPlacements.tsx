@@ -193,6 +193,8 @@ export function Beds() {
 export function Desks() {
   const [d1H, setD1H] = useState(SIT_H);
   const [d2H, setD2H] = useState(STAND_H);
+  const [d1Size, setD1Size] = useState<THREE.Vector3>();
+  const [d2Size, setD2Size] = useState<THREE.Vector3>();
   const [d1Pos, setD1Pos] = useState(0);
   const [d2Pos, setD2Pos] = useState(0);
 
@@ -235,7 +237,7 @@ export function Desks() {
       <PositionTransition furnitureKey="desk1-position" x={p1.x} z={p1.z} ry={p1.ry}>
         <group userData={{ hoverAction: { label: 'Bureau 1', actions: getObjectActionIds('desk-bollsidan-1') } }}>
           <group userData={{ sceneItemRoot: true }}>
-            <NavigationObstacle id="desk-bollsidan-1"><Bollsidan30574370 height={d1H} /></NavigationObstacle>
+            <NavigationObstacle id="desk-bollsidan-1" geometryKey={d1Size?.y}><Bollsidan30574370 height={d1H} onSize={setD1Size} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -250,7 +252,7 @@ export function Desks() {
           }
         }}>
           <group userData={{ sceneItemRoot: true }}>
-            <NavigationObstacle id="desk-bollsidan-2"><Bollsidan30574370 height={d2H} /></NavigationObstacle>
+            <NavigationObstacle id="desk-bollsidan-2" geometryKey={d2Size?.y}><Bollsidan30574370 height={d2H} onSize={setD2Size} /></NavigationObstacle>
           </group>
         </group>
       </PositionTransition>
@@ -419,7 +421,6 @@ function LampOla_() {
       <object3D ref={setTargetObj} position={[0, 250, 15]} />
       {targetObj && (
         <spotLight
-          visible={lampOn && lightsHD && brightness > 0}
           target={targetObj}
           position={[0, 100, 0]}
           angle={Math.PI / 3.2}
@@ -437,7 +438,6 @@ function LampOla_() {
         />
       )}
       <pointLight
-        visible={lampOn && brightness > 0}
         position={[0, 96, 0]}
         intensity={lampOn ? (lightsHD ? 35 : 3.5) * 100 ** 2 * brightness : 0}
         distance={lightsHD ? 0 : 350}

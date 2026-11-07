@@ -1,11 +1,11 @@
-const { it, after } = require('node:test');
+const { it, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const camera = load('src/features/scene/camera/cameraUrlParams.ts', {
   './cameraSubjects': require('../../src/features/scene/camera/cameraSubjects.ts'),
 });
 const previousWindow = global.window;
-after(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
+afterEach(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
 const { parseUrlLayerOverrides, updateUrlLayer } = load('src/features/scene/store/layerUrlParams.ts', {
   './debugPresets': { getDebugPreset: () => undefined },
   '../camera/cameraUrlParams': camera,
