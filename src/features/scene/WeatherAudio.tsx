@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Raycaster, Vector3 } from 'three';
+import { roofHeightAt } from './building/roofData';
 import { useWeather } from './Weather';
 import { windGust } from './WindPlant';
 import { simulationClock } from './ai/laraLifeStore';
@@ -8,8 +8,6 @@ import { isAppIdle, useAppIdle } from './idleState';
 
 export function WeatherAudio() {
   const audio = useRef<{ context: AudioContext; source: AudioBufferSourceNode; rain: GainNode; wind: GainNode } | null>(null);
-  const ray = useMemo(() => new Raycaster(new Vector3(), new Vector3(0, 1, 0)), []);
-  ray.layers.enableAll();
   const idle = useAppIdle();
   useEffect(() => {
     const start = () => {
@@ -42,12 +40,10 @@ export function WeatherAudio() {
   useEffect(() => {
     if (audio.current) void (idle || document.hidden ? audio.current.context.suspend() : audio.current.context.resume()).catch(console.error);
   }, [idle]);
-  useFrame(({ scene, camera }) => {
+  useFrame(({ camera }) => {
     if (!audio.current) return;
     const { rain, rainVolume, windSpeed } = useWeather.getState();
-    const roof = scene.getObjectByName('ceiling-group');
-    ray.ray.origin.set(camera.position.x, camera.position.y, camera.position.z);
-    const indoors = roof ? ray.intersectObject(roof, true).length > 0 : false;
+    const indoors = camera.position.y < roofHeightAt(camera.position.x, camera.position.z);
     const volume = idle || document.hidden ? 0 : rainVolume * (indoors ? 0.27 : 1);
     const { context, rain: rainGain, wind } = audio.current;
     rainGain.gain.setTargetAtTime(rain * volume * 0.3, context.currentTime, 0.25);

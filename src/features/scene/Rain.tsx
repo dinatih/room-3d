@@ -1,58 +1,82 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box3, BufferAttribute, LineBasicMaterial, LineSegments, Points, Raycaster, Vector3 } from 'three';
+import { Color, LineSegments, Points, ShaderMaterial, Vector2, Vector4 } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
+import { CEILING_CANOPY, CEILING_Y, SLAB_FOOTPRINT } from './building/roofData';
 import { useWeather } from './Weather';
 
 const COUNT = 4000;
 const HEIGHT = 1800;
-const SPEED = 900; // cm/s, terminal speed of large raindrops
 
 export function Rain({ snow = false }: { snow?: boolean }) {
-  const lines = useRef<LineSegments | Points>(null!);
+  const particles = useRef<LineSegments | Points>(null!);
+  const material = useRef<ShaderMaterial>(null!);
   const radius = snow ? HEIGHT / 2 : SKY_RADIUS;
-  const drops = useMemo(() => Float32Array.from({ length: COUNT * 3 }, (_, i) => i % 3 === 1 ? Math.random() * HEIGHT : (Math.random() - 0.5) * radius * 2), [radius]);
-  const vertices = useMemo(() => new Float32Array(COUNT * (snow ? 3 : 6)), [snow]);
-  const ray = useMemo(() => new Raycaster(new Vector3(), new Vector3(0, -1, 0)), []);
-  ray.layers.enableAll();
-  const roofBounds = useMemo(() => new Box3(), []);
-  useFrame(({ scene, camera }, delta) => {
-    const { rain: rainfall, snow: snowfall, windSpeed, windDirection } = useWeather.getState();
-    const rain = snow ? snowfall : rainfall;
-    const speed = snow ? 100 : SPEED; // cm/s: slow flakes versus raindrops
-    lines.current.visible = rain > 0;
-    if (!rain) return;
-    const roof = scene.getObjectByName('ceiling-group');
-    if (roof) roofBounds.setFromObject(roof);
-    const underRoof = (x: number, z: number) => !!roof && x >= roofBounds.min.x && x <= roofBounds.max.x && z >= roofBounds.min.z && z <= roofBounds.max.z;
-    const angle = windDirection * Math.PI / 180;
-    const dx = Math.cos(angle) * windSpeed * 100, dz = Math.sin(angle) * windSpeed * 100;
-    const centerX = snow ? camera.position.x - SKY_CENTER[0] : 0;
-    const centerZ = snow ? camera.position.z - SKY_CENTER[2] : 0;
-    for (let i = 0; i < Math.floor(COUNT * rain); i++) {
-      const k = i * 3, v = i * 6;
-      drops[k] = ((drops[k] - centerX + dx * delta + radius) % (radius * 2) + radius * 2) % (radius * 2) - radius + centerX;
-      drops[k + 2] = ((drops[k + 2] - centerZ + dz * delta + radius) % (radius * 2) + radius * 2) % (radius * 2) - radius + centerZ;
-      drops[k + 1] = ((drops[k + 1] - speed * delta) % HEIGHT + HEIGHT) % HEIGHT;
-      const x = drops[k] + SKY_CENTER[0], z = drops[k + 2] + SKY_CENTER[2], y = drops[k + 1];
-      ray.ray.origin.set(x, HEIGHT, z);
-      const hit = underRoof(x, z) ? ray.intersectObject(roof!, true)[0] : undefined;
-      const floor = hit?.point.y ?? 0;
-      if (snow) vertices.set([x, y < floor ? -HEIGHT : y, z], k);
-      else vertices.set([x, Math.max(floor, y), z, x, Math.max(floor, y + SPEED * 0.025), z], v);
+  const speed = snow ? 100 : 900; // terminal speed in cm/s
+  const data = useMemo(() => {
+    const positions = new Float32Array(COUNT * (snow ? 3 : 6));
+    const ends = new Float32Array(COUNT * (snow ? 1 : 2));
+    for (let i = 0; i < COUNT; i++) {
+      const seed = [(Math.random() - 0.5) * radius * 2, Math.random() * HEIGHT, (Math.random() - 0.5) * radius * 2];
+      positions.set(seed, i * (snow ? 3 : 6));
+      if (!snow) { positions.set(seed, i * 6 + 3); ends[i * 2 + 1] = 1; }
     }
-    (lines.current.geometry.attributes.position as BufferAttribute).needsUpdate = true;
-    lines.current.geometry.setDrawRange(0, Math.floor(COUNT * rain) * (snow ? 1 : 2));
-    (lines.current.material as LineBasicMaterial).opacity = 0.5;
+    return { positions, ends };
+  }, [snow, radius]);
+  const uniforms = useMemo(() => ({
+    fall: { value: 0 }, drift: { value: new Vector2() }, center: { value: new Vector2() }, pointSize: { value: 3 },
+    color: { value: new Color(snow ? 'white' : '#bed5ed') },
+    roof: { value: SLAB_FOOTPRINT.map(([x, z]) => new Vector2(x, z)) },
+    canopy: { value: new Vector4(CEILING_CANOPY.x, CEILING_CANOPY.z, CEILING_CANOPY.width / 2, CEILING_CANOPY.depth / 2) },
+  }), [snow]);
+  useFrame(({ camera, gl }, delta) => {
+    const weather = useWeather.getState();
+    const amount = snow ? weather.snow : weather.rain;
+    particles.current.visible = amount > 0;
+    if (!amount) return;
+    const active = material.current.uniforms;
+    active.fall.value = (active.fall.value + speed * delta) % HEIGHT;
+    const angle = weather.windDirection * Math.PI / 180;
+    active.drift.value.x = (active.drift.value.x + Math.cos(angle) * weather.windSpeed * 100 * delta) % (radius * 2);
+    active.drift.value.y = (active.drift.value.y + Math.sin(angle) * weather.windSpeed * 100 * delta) % (radius * 2);
+    active.center.value.set(snow ? camera.position.x : SKY_CENTER[0], snow ? camera.position.z : SKY_CENTER[2]);
+    active.pointSize.value = 3 * gl.getPixelRatio();
+    particles.current.geometry.setDrawRange(0, Math.floor(COUNT * amount) * (snow ? 1 : 2));
   });
-  if (snow) return <points ref={lines as React.RefObject<Points>} frustumCulled={false}>
-    <bufferGeometry><bufferAttribute attach="attributes-position" args={[vertices, 3]} /></bufferGeometry>
-    <pointsMaterial color="white" size={3} sizeAttenuation={false} transparent depthWrite={false} onBeforeCompile={shader => {
-      shader.fragmentShader = shader.fragmentShader.replace('#include <map_particle_fragment>', '#include <map_particle_fragment>\n diffuseColor.a *= 1.0 - smoothstep(0.3, 0.5, length(gl_PointCoord - vec2(0.5)));');
-    }} />
-  </points>;
-  return <lineSegments ref={lines as React.RefObject<LineSegments>} frustumCulled={false}>
-    <bufferGeometry><bufferAttribute attach="attributes-position" args={[vertices, 3]} /></bufferGeometry>
-    <lineBasicMaterial color="#bed5ed" transparent depthWrite={false} />
-  </lineSegments>;
+  const geometry = <bufferGeometry>
+    <bufferAttribute attach="attributes-position" args={[data.positions, 3]} />
+    <bufferAttribute attach="attributes-endpoint" args={[data.ends, 1]} />
+  </bufferGeometry>;
+  const shader = <shaderMaterial ref={material} uniforms={uniforms} transparent depthWrite={false}
+    vertexShader={`
+      uniform float fall, pointSize; uniform vec2 drift, center; uniform vec2 roof[${SLAB_FOOTPRINT.length}]; uniform vec4 canopy;
+      attribute float endpoint; varying float exposed;
+      void main() {
+        vec2 xz = mod(position.xz + drift - center + ${radius.toFixed(1)}, ${(radius * 2).toFixed(1)}) - ${radius.toFixed(1)} + center;
+        bool inside = false;
+        for (int i = 0, j = ${SLAB_FOOTPRINT.length - 1}; i < ${SLAB_FOOTPRINT.length}; j = i++) {
+          vec2 a = roof[i], b = roof[j];
+          if ((a.y > xz.y) != (b.y > xz.y) && xz.x < (b.x-a.x)*(xz.y-a.y)/(b.y-a.y)+a.x) inside = !inside;
+        }
+        float floorY = inside ? ${CEILING_Y.toFixed(1)} : 0.0;
+        if (all(lessThanEqual(abs(xz - canopy.xy), canopy.zw))) floorY = ${(CEILING_Y + CEILING_CANOPY.height).toFixed(1)};
+        float y = mod(position.y - fall, ${HEIGHT.toFixed(1)});
+        exposed = step(floorY, y);
+        y = max(floorY, y + endpoint * ${(speed * 0.025).toFixed(1)});
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(xz.x, y, xz.y, 1.0);
+        gl_PointSize = pointSize;
+      }`}
+    fragmentShader={`
+      uniform vec3 color; varying float exposed;
+      void main() {
+        if (exposed < 0.5) discard;
+        float alpha = 0.5;
+        ${snow ? 'alpha *= 1.0 - smoothstep(0.3, 0.5, length(gl_PointCoord - vec2(0.5)));' : ''}
+        gl_FragColor = vec4(color, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`} />;
+  return snow
+    ? <points ref={particles as React.RefObject<Points>} frustumCulled={false}>{geometry}{shader}</points>
+    : <lineSegments ref={particles as React.RefObject<LineSegments>} frustumCulled={false}>{geometry}{shader}</lineSegments>;
 }

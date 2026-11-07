@@ -95,7 +95,10 @@ export function publishLife(id: LifeCharacterId, patch: Partial<LifeSnapshot>) {
 export function advanceSimulationClock(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid simulation duration');
   if (!seconds) return;
+  const previousMinute = Math.floor(simulationClock.minutes);
   simulationClock.minutes += seconds * useLaraLifeStore.getState().speed;
   for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;
+  // The UI displays whole simulated minutes; live controllers keep the exact shared time.
+  if (Math.floor(simulationClock.minutes) === previousMinute) return;
   useLaraLifeStore.setState(state => ({ characters: Object.fromEntries(LIFE_CHARACTER_IDS.map(id => [id, { ...state.characters[id], elapsedSeconds: simulationClock.minutes }])) as typeof state.characters }));
 }

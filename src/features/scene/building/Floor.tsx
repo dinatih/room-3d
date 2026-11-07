@@ -1,3 +1,4 @@
+import { CEILING_CANOPY, CEILING_Y, SLAB_FOOTPRINT } from './roofData';
 /**
  * Floor.tsx — Sols, revêtements (parquet, carrelage, PVC), plinthes, dalle béton et plafonds.
  */
@@ -9,7 +10,6 @@ import { BermudaGround } from './BermudaGround';
 import { MergedStaticGroup } from './MergedStaticGroup';
 import { CategoryLayerGroup } from '../sceneLayer';
 import {
-  WALL_H,
   ROOM_WEST_WALL, ROOM_NORTH_WALL, ROOM_EAST_WALL, ROOM_SOUTH_WALL,
   DOOR_START, DOOR_END,
   DOOR_BATH_START, DOOR_BATH_END, DOOR_WHITE_WIDTH, DOOR_FRAME_OVERLAP,
@@ -25,9 +25,6 @@ import {
   boxFaceMats, qrGeo, architecturalGlassMat
 } from './buildingCommon';
 import { P } from './Walls';
-
-const BLDG_Z_MIN = -30;
-const CEIL_THICK = 20;
 
 const INT_X_DOOR_S = CORRIDOR_WEST_WALL;
 const BATH_DOOR_CENTER_Z = (pZ('door-bath-n') + pZ('door-bath-s')) / 2;
@@ -505,15 +502,7 @@ export function Floor() {
   const wireframeStructure = useSceneStore(state => state.layers.wireframeStructure);
   const globalWireframe = useSceneStore(state => state.layers.wireframe);
 
-  const slabShape = useMemo(() => new THREE.Shape([
-    new THREE.Vector2(-20, 30),
-    new THREE.Vector2(316, 30),
-    new THREE.Vector2(316, 230),
-    new THREE.Vector2(326, 230),
-    new THREE.Vector2(326, 220),
-    new THREE.Vector2(326, -547.77),
-    new THREE.Vector2(-20, -747.53),
-  ]), []);
+  const slabShape = useMemo(() => new THREE.Shape(SLAB_FOOTPRINT.map(([x, z]) => new THREE.Vector2(x, -z))), []);
 
   const slabTopGeo = useMemo(() => {
     const g = new THREE.ShapeGeometry(slabShape);
@@ -575,7 +564,7 @@ export function Floor() {
 
         <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
           <MergedStaticGroup name="merged-ceiling" materialOverride={iceCastle ? architecturalGlassMat : undefined}>
-            <group position={[0, WALL_H - 1, 0]}>
+            <group position={[0, CEILING_Y, 0]}>
               <mesh
                 geometry={slabTopGeo}
                 material={ceilBottomBack}
@@ -586,11 +575,11 @@ export function Floor() {
 
             <mesh
               material={ceilMats}
-              position={[300 - 235 / 2 + 16, WALL_H - 1 + CEIL_THICK / 2, BLDG_Z_MIN - 75]}
+              position={[CEILING_CANOPY.x, CEILING_Y + CEILING_CANOPY.height / 2, CEILING_CANOPY.z]}
               receiveShadow
               userData={{ brickType: 'ceiling' }}
             >
-              <boxGeometry args={[235, CEIL_THICK, 150]} />
+              <boxGeometry args={[CEILING_CANOPY.width, CEILING_CANOPY.height, CEILING_CANOPY.depth]} />
             </mesh>
           </MergedStaticGroup>
         </group>

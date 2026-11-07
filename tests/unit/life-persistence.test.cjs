@@ -229,3 +229,18 @@ it('rejette les portions et bilans invalides avant restauration', () => {
     assert.throws(() => persistence.parseLifeSave(JSON.stringify(saved)));
   }
 });
+
+it('publie l’horloge à la précision affichée sans perdre le temps exact des contrôleurs', () => {
+  withBrowser(w => {
+    const store = w.loadStore();
+    let publications = 0;
+    const stop = store.useLaraLifeStore.subscribe((state, previous) => { if (state.characters !== previous.characters) publications++; });
+    for (let i = 0; i < 600; i++) store.advanceSimulationClock(1/60);
+    stop();
+    assert.equal(publications, Math.floor(store.simulationClock.minutes));
+    for (const id of life.LIFE_CHARACTER_IDS) {
+      assert.equal(store.characterLives[id].elapsedSeconds, store.simulationClock.minutes);
+      assert.equal(Math.floor(store.useLaraLifeStore.getState().characters[id].elapsedSeconds), Math.floor(store.simulationClock.minutes));
+    }
+  });
+});

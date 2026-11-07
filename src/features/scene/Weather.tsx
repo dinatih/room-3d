@@ -1,3 +1,5 @@
+import { useShallow } from 'zustand/react/shallow';
+import { CLOUD_NOISE_PERIOD, createCloudNoise } from './cloudNoise';
 import { WeatherAudio } from './WeatherAudio';
 import { DEFAULT_WEATHER, WEATHER_SAVE_KEY, parseWeatherSave, type WeatherSave, type WeatherSettings } from './weatherPersistence';
 import { advanceWeatherSurface, weatherSurface } from './weatherSurface';
@@ -54,6 +56,7 @@ if (typeof window !== 'undefined') {
 // Artistic cycle: six simulated hours per condition, thirty-minute transitions.
 const PERIOD = 6 * 60;
 const TRANSITION = 30;
+const CLOUD_DAY_COLOR = new Color('#edf1f5');
 const phases = [
   { coverage: 0.05, rain: 0, snow: 0, windSpeed: 1, windDirection: 90 },
   { coverage: 0.8, rain: 0, snow: 0, windSpeed: 4, windDirection: 120 },
@@ -77,7 +80,7 @@ const settings = [
 ] as const;
 
 export function WeatherControls() {
-  const weather = useWeather();
+  const weather = useWeather(useShallow(state => ({ ...state, ...Object.fromEntries(settings.map(({ key, step }) => [key, Math.round(state[key] / step) * step])) })));
   return <fieldset className="p-2 border-bottom" onKeyDown={event => event.stopPropagation()}>
     <legend className="small fw-semibold mb-1">Météo</legend>
     <div className="form-check form-switch small">
@@ -108,9 +111,11 @@ export function Weather() {
       document.removeEventListener('visibilitychange', visibility);
     };
   }, []);
+  const noiseTexture = useMemo(createCloudNoise, []);
+  useEffect(() => () => noiseTexture.dispose(), [noiseTexture]);
   const previousMinutes = useRef(simulationClock.minutes);
   const material = useRef<ShaderMaterial>(null!);
-  const uniforms = useMemo(() => ({ offset: { value: new Vector2(...weatherRuntime.offset) }, coverage: { value: 0 }, tint: { value: new Color() } }), []);
+  const uniforms = useMemo(() => ({ cloudNoise: { value: noiseTexture }, offset: { value: new Vector2(...weatherRuntime.offset) }, coverage: { value: 0 }, tint: { value: new Color() } }), [noiseTexture]);
   useFrame((_, delta) => {
     const state = useWeather.getState();
     const minutes = simulationClock.minutes;
@@ -133,8 +138,9 @@ export function Weather() {
     active.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
     active.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
     weatherRuntime.offset = active.offset.value.toArray();
+    material.current.visible = coverage > 0;
     active.coverage.value = coverage;
-    active.tint.value.set('#182338').lerp(new Color('#edf1f5'), daylight(simulatedHour()));
+    active.tint.value.set('#182338').lerp(CLOUD_DAY_COLOR, daylight(simulatedHour()));
   });
   return <CategoryLayerGroup layer={LAYER_ENVIRONMENT} register={false}>
     <WeatherAudio />
@@ -143,17 +149,12 @@ export function Weather() {
       <shaderMaterial ref={material} uniforms={uniforms} side={BackSide} transparent depthWrite={false}
         vertexShader={`varying vec3 direction; void main() { direction = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`}
         fragmentShader={`
-          varying vec3 direction; uniform vec2 offset; uniform float coverage; uniform vec3 tint;
-          float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-          float noise(vec2 p) {
-            vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
-            return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
-          }
+          varying vec3 direction; uniform vec2 offset; uniform float coverage; uniform vec3 tint; uniform sampler2D cloudNoise;
           void main() {
             vec3 ray = normalize(direction);
             if (ray.y <= 0.0) discard;
             vec2 p = ray.xz / max(ray.y, 0.05) * 3.0 - offset / 3000.0;
-            float density = noise(p)*0.57 + noise(p*2.0)*0.28 + noise(p*4.0)*0.15;
+            float density = texture2D(cloudNoise, p / ${CLOUD_NOISE_PERIOD.toFixed(1)}).r;
             float alpha = smoothstep(1.0-coverage, 1.15-coverage, density) * smoothstep(0.0, 0.2, ray.y) * coverage;
             gl_FragColor = vec4(tint, alpha);
             #include <tonemapping_fragment>

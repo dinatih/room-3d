@@ -45,18 +45,18 @@ export function DayNight() {
       if (store.layers.lightsHD !== night) store.toggleLayer('lightsHD');
       store.triggerAction('lamp-toggle', night);
     }
-    scene.traverse(object => {
-      if (object.name === 'SkySphere') object.traverse(child => {
-        const material = (child as Mesh).material;
-        if (material instanceof MeshBasicMaterial && material.map) material.color.copy(nightColor).lerp(dayColor, light);
-      });
+    scene.getObjectByName('SkySphere')?.traverse(child => {
+      const material = (child as Mesh).material;
+      if (material instanceof MeshBasicMaterial && material.map) material.color.copy(nightColor).lerp(dayColor, light);
+    });
+    for (const object of scene.children) {
       if (object.type === 'AmbientLight' || object.type === 'DirectionalLight') {
         const source = object as import('three').Light;
         if (source.userData.lastNightIntensity !== source.intensity) source.userData.dayIntensity = source.intensity;
         source.intensity = source.userData.dayIntensity * (0.12 + 0.88 * light);
         source.userData.lastNightIntensity = source.intensity;
       }
-    });
+    }
     if (scene.userData.lastNightEnvironment !== scene.environmentIntensity) scene.userData.dayEnvironmentIntensity = scene.environmentIntensity;
     scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * (0.12 + 0.88 * light);
     scene.userData.lastNightEnvironment = scene.environmentIntensity;
