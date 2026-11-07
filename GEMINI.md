@@ -65,3 +65,14 @@ Toujours lire intégralement [AGENTS.md](AGENTS.md) avant de commencer une tâch
 > - Si un fichier présente un diff qui ne concerne pas la tâche active, **ne JAMAIS l'écraser ni le restaurer** !
 > - Se contenter de `git add <fichier>` uniquement sur les fichiers modifiés par la tâche en cours lors du commit, en laissant les modifications externes intactes dans le working tree.
 
+
+# VÉRIFICATION DOCUMENTAIRE & VERSIONING (THREE.JS, R3F, REACT)
+
+> [!IMPORTANT]
+> **Interdiction d'assumer d'anciennes versions ou comportements par habitude** :
+> Les technologies du projet (Three.js r186+, R3F, React 19, Vite 8) évoluent rapidement.
+> - **Ne pas inventer de diagnostics basés sur d'anciennes versions** (ex: gestion du cache des shaders, TSL, WebGPU, comportements de compilation).
+> - **Recherche web obligatoire (`search_web`)** dès qu'un doute ou un sujet technique d'architecture/optimisation se pose sur les APIs externes.
+> - **Vérification ciblée des modules installés** : Pour vérifier le comportement réel d'une méthode Three.js ou d'une dépendance du projet, inspecter directement sa définition de types ou son code source dans la dépendance installée plutôt que de deviner.
+
+
