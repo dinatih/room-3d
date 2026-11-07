@@ -44,7 +44,10 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const duoTicks = [];
   const duoDefinitions = {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
-    './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => objects[objectId], buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
+    './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => {
+      const object = objects[objectId];
+      return object?.rotationY ? { ...object, slots: object.slots.map(slot => ({ ...slot, rotY: (slot.rotY ?? 0) + object.rotationY })) } : object;
+    }, buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates,
       getLaraLifeCandidates: (characterId, dirty, places, relationships, elapsed, excluded = new Set()) => candidates.filter(c => (c.activity !== 'wash-hands' || dirty)
         && (c.activity !== 'meal' || !excluded.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), buildLaraLifeInstructions: (characterId, candidate) => candidate.activity === 'toilet' ? [
@@ -119,6 +122,19 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     pauseNavigation: value => { navigationPending = value; },
     fail: objectId => { failedId = objectId; }, changeGeometry: () => { revision++; }, blockActor: objectId => { actorBlockedId = objectId; } };
 }
+
+it('conserve la rotation du meuble lors des variations répétées sur un lit', () => {
+  const w = world('safa');
+  w.objects.rest.rotationY = Math.PI / 2;
+  Object.assign(w.objects.rest.slots[0], { rotY: Math.PI / 2, animation: 'yoga-yogic-sleep-pose-a' });
+  w.controller.configure({ scenario: [{ type: 'USE_OBJECT', smartObjectId: 'rest', slotId: 'use',
+    rotY: Math.PI, duration: 1, repeatCount: 3, repeatVariation: true }], loop: false });
+  w.tick(.1);
+  assert.equal(w.controller.state.rotY, Math.PI);
+  w.tick(1);
+  assert.equal(w.controller.state.animation, 'yoga-yogic-sleep-pose-a');
+  assert.equal(w.controller.state.rotY, Math.PI);
+});
 
 for (const work of [0, 36]) it(`Rosanna utilise une Dröna libre plutôt que rester debout : stimulation ${work}`, () => {
   const w = world('rosanna');

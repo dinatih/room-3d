@@ -1755,7 +1755,7 @@ export function createAgentController(
         if ((repeatIndex + 1 < targetRepeats || continueSleeping) && !cleaningDone) {
           repeatIndex++;
           if (repeatVariation && currentInstruction.smartObjectId && currentInstruction.slotId) {
-            const obj = SMART_OBJECTS[currentInstruction.smartObjectId];
+            const obj = getSmartObject(currentInstruction.smartObjectId);
             const slot = obj?.slots?.find(s => s.slotId === currentInstruction.slotId);
             if (slot) {
               const res = resolveSlotAnimation(slot);

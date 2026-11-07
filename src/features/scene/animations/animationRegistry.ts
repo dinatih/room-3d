@@ -9230,7 +9230,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/npz/moyo/anim_yoga_yogic_sleep_pose_a.glb',
     category: 'yoga',
     label: `[YOGA] Yogic sleep pose (1754f / 58.5s, 785KB)`,
-    tags: ['yoga', 'fitness'],
+    tags: ['yoga', 'fitness', 'laying-front'],
     duration: 58.5,
   },
 
