@@ -39,7 +39,8 @@ function LightStrip({ name, segments, rainbow = false }: { name: string; segment
     {segments.map(({ position, size }, index) => <group key={index} position={position}>
       <mesh material={material}><boxGeometry args={size} /></mesh>
       <pointLight ref={light => { lights.current[index] = light; }} position={[0, 0, rainbow ? 2 : -2]} color={material.color}
-        intensity={on ? 2 * 100 ** 2 : 0} distance={250} decay={2}
+        intensity={on ? (lightsHD ? 120 : 2.5) : 0}
+        distance={lightsHD ? 0 : 250} decay={lightsHD ? 1 : 2}
         castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} />
     </group>)}
   </group>;
