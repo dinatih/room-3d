@@ -172,7 +172,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       phase('⚡ Compilation GPU et chargement des animations…');
       await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
-      phase('⚡ Préparation des premières images et des ombres…');
+      phase('⚡ Initialisation du rendu 3D…');
 
       let frames = 0;
       const warmup = () => {

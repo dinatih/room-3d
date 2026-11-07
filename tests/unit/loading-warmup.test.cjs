@@ -53,7 +53,7 @@ it('attend shaders et animations puis chauffe sur sept images, sans temporisatio
   test.shaders.resolve(); await tick();
   assert.equal(test.frames.size, 0);
   test.animation.resolve(); await tick();
-  assert.match(test.elements['loading-item'].textContent, /ombres/);
+  assert.match(test.elements['loading-item'].textContent, /Initialisation du rendu 3D/);
   for (let i = 0; i < 6; i++) { test.frame(); assert.equal(test.ready, 0); }
   test.frame();
   assert.equal(test.invalidations, 7);
