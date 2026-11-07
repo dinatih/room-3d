@@ -14,10 +14,10 @@ const RAINBOW_PERIOD_SECONDS = 60;
 type Segment = { position: [number, number, number]; size: [number, number, number] };
 const windowSegments: Segment[] = [
   { position: [0, WINDOW_TOP, 0], size: [WINDOW_WIDTH, STRIP_WIDTH, STRIP_WIDTH] },
-  ...[-1, 1].map((side): Segment => ({
-    position: [side * WINDOW_WIDTH / 2, WINDOW_TOP / 2, 0],
+  {
+    position: [-WINDOW_WIDTH / 2, WINDOW_TOP / 2, 0],
     size: [STRIP_WIDTH, WINDOW_TOP, STRIP_WIDTH],
-  })),
+  },
 ];
 const gardenSegments: Segment[] = [
   { position: [0, 0, 0], size: [STEP_WIDTH, STRIP_WIDTH, STRIP_WIDTH] },

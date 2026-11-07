@@ -21,8 +21,13 @@ export const DF = 33;
 export const DRONA_DEPTH = 38;
 const PANEL = 0.2;
 const parts: THREE.BufferGeometry[] = [];
-function panel(w: number, h: number, d: number, x: number, y: number, z: number) {
-  parts.push(new THREE.BoxGeometry(w, h, d).translate(x, y, z));
+function panel(w: number, h: number, d: number, x: number, y: number, z: number, tint = 0xffffff) {
+  const geometry = new THREE.BoxGeometry(w, h, d).translate(x, y, z);
+  const color = new THREE.Color(tint);
+  const colors = new Float32Array(geometry.attributes.position.count * 3);
+  for (let i = 0; i < colors.length; i += 3) color.toArray(colors, i);
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  parts.push(geometry);
 }
 panel(DF, PANEL, DRONA_DEPTH, 0, -DF / 2 + PANEL / 2, 0);
 for (const side of [-1, 1]) {
@@ -31,6 +36,7 @@ for (const side of [-1, 1]) {
   // Folded rim and wide fabric pull tab, matching the GLB's upper band.
   panel(DF, 0.6, 0.4, 0, (DF - 0.6) / 2, side * (DRONA_DEPTH - 0.4) / 2);
   panel(DF - 2 * PANEL, 6, PANEL, 0, DF / 2 - 0.6 - 3, side * (DRONA_DEPTH + PANEL) / 2);
+  panel(DF - 2 * PANEL, 0.3, PANEL, 0, DF / 2 - 0.6 - 6 + 0.15, side * (DRONA_DEPTH / 2 + PANEL * 1.5), 0x800000);
 }
 const cellGeometry = mergeGeometries(parts, false)!;
 parts.forEach(part => part.dispose());
@@ -48,7 +54,7 @@ weaveMap.magFilter = THREE.LinearFilter;
 weaveMap.minFilter = THREE.LinearMipmapLinearFilter;
 weaveMap.generateMipmaps = true;
 weaveMap.needsUpdate = true;
-const cellMaterial = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.95, bumpMap: weaveMap, bumpScale: 0.015 });
+const cellMaterial = new THREE.MeshStandardMaterial({ color: 0xcc0000, vertexColors: true, roughness: 0.95, bumpMap: weaveMap, bumpScale: 0.015 });
 
 const GLB_DRONA = 'items/dröna/DRÖNA_high.glb';
 const preparedGeometries = new WeakMap<THREE.BufferGeometry, THREE.BufferGeometry>();
