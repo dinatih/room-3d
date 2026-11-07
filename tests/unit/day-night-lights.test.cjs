@@ -3,9 +3,10 @@ const assert = require('node:assert/strict');
 const THREE = require('three');
 const { load } = require('../support/load-ts.cjs');
 
-it('change les lampes au passage jour/nuit sans modifier la qualité choisie', () => {
+it('active les lumières HD la nuit et les désactive le jour, une fois par transition', () => {
   for (const lightsHD of [false, true]) {
     const scene = new THREE.Scene(), clock = { minutes: 0 }, actions = [];
+    const layers = { lightsHD }, qualities = [];
     scene.add(new THREE.AmbientLight('white', 2));
     const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial())];
     let frame;
@@ -14,17 +15,21 @@ it('change les lampes au passage jour/nuit sans modifier la qualité choisie', (
       react: { useLayoutEffect() {}, useMemo: fn => fn(), useRef: value => ({ current: refs.shift() ?? value }) },
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },
       './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 }, './ai/laraLifeStore': { simulationClock: clock },
-      './store/useSceneStore': { useSceneStore: { getState: () => ({ layers: { lightsHD },
-        toggleLayer: () => assert.fail('Day/night must preserve graphics quality'),
+      './store/useSceneStore': { useSceneStore: { getState: () => ({ layers,
+        toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
         triggerAction: (...action) => actions.push(action) }) } },
     });
     DayNight(); frame({ scene });
+    assert.equal(layers.lightsHD, false);
     assert.equal(scene.children[0].intensity, 2);
     clock.minutes = 12 * 60; frame({ scene }); frame({ scene });
+    assert.equal(layers.lightsHD, true);
     assert(scene.children[0].intensity < 2);
     clock.minutes = 24 * 60; frame({ scene });
+    assert.equal(layers.lightsHD, false);
     assert.equal(scene.children[0].intensity, 2);
     assert.deepEqual(actions, [['lamp-toggle', false], ['lamp-toggle', true], ['lamp-toggle', false]]);
+    assert.deepEqual(qualities, lightsHD ? [false, true, false] : [true, false]);
   }
 });
 
