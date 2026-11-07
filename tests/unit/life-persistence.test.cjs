@@ -261,3 +261,26 @@ it('fait durer une journée douze minutes à ×1 et la nuit de minuit à six heu
     assert.equal(life.lifeClock(store.simulationClock.minutes).time, '08:00');
   });
 });
+
+it('sélectionne toujours la prochaine heure sans inventer de besoins ou de souvenirs et conserve une sauvegarde valide', () => {
+  withBrowser(w => {
+    const store = w.loadStore(), before = structuredClone(store.characterLives);
+    store.useLaraLifeStore.setState({ speed: 10 });
+    for (const [minute, day, time] of [[20 * 60, 1, '20:00'], [6 * 60, 2, '06:00'], [6 * 60, 2, '06:00'], [24 * 60, 3, '00:00'], [0, 3, '00:00']]) {
+      store.advanceToTime(minute);
+      for (const id of life.LIFE_CHARACTER_IDS) {
+        assert.equal(life.lifeClock(store.characterLives[id].elapsedSeconds).day, day);
+        assert.equal(life.lifeClock(store.useLaraLifeStore.getState().characters[id].elapsedSeconds).time, time);
+        assert.deepEqual(store.characterLives[id], { ...before[id], elapsedSeconds: store.simulationClock.minutes });
+      }
+    }
+    assert.deepEqual(life.lifeHousehold.journal, {});
+    store.saveLives();
+    assert.equal(persistence.parseLifeSave(w.storage.get(persistence.LIFE_SAVE_KEY)).characters.native.elapsedSeconds, store.simulationClock.minutes);
+    store.advanceSimulationClock(.025);
+    const current = store.simulationClock.minutes;
+    store.advanceToTime(0);
+    assert.equal(store.simulationClock.minutes, current, 'Selecting the displayed minute must not skip another day');
+    for (const invalid of [-1, 1441, NaN, Infinity, .5]) assert.throws(() => store.advanceToTime(invalid));
+  });
+});

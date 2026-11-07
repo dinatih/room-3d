@@ -5,7 +5,8 @@ import type { GroundType, LayerState } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { WeatherControls } from './Weather';
 import { solarPosition } from './SunLight';
-import { useLaraLifeStore } from './ai/laraLifeStore';
+import { advanceToTime, useLaraLifeStore } from './ai/laraLifeStore';
+import { cameraState } from './cameraState';
 import { isLifeCharacter, lifeClock, LIFE_SPEEDS } from './ai/laraLife';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from './ai/lifeHousekeeping';
 
@@ -36,7 +37,12 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const character = characters[selectedCharacterId];
   const clock = lifeClock(character?.elapsedSeconds ?? 0);
   const hourFloat = (8 + (character?.elapsedSeconds ?? 0) / 60) % 24;
-  const progressPct = ((hourFloat / 24) * 100).toFixed(1);
+  const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
+  const commitTime = (minute: number) => {
+    advanceToTime(minute);
+    setSelectedMinute(null);
+    cameraState.invalidate?.();
+  };
 
   const envNeed = roomDirt(home, character?.room ?? 'living');
   const cleanliness = `${HOME_ROOMS[character?.room ?? 'living']} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
@@ -104,7 +110,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             </span>
             <button
               type="button"
-              className="btn btn-sm btn-light text-dark border-secondary py-0 px-2 text-nowrap small"
+              className="btn btn-sm btn-outline-dark py-0 px-2 text-nowrap small"
               title="Accélérer la vie de la colocation : ×1, ×3, ×10"
               onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}
             >
@@ -112,27 +118,12 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             </button>
           </div>
 
-          {/* Barre 24h visuelle avec curseur */}
-          <div className="position-relative my-2">
-            <div
-              className="w-100 rounded-pill"
-              style={{
-                height: '8px',
-                background: 'linear-gradient(to right, #0d1b2a 0%, #1b263b 25%, #415a77 30%, #e0a96d 50%, #415a77 75%, #1b263b 85%, #0d1b2a 100%)',
-              }}
-            />
-            {/* Curseur de position sur 24h */}
-            <div
-              className="position-absolute top-50 translate-middle rounded-circle bg-warning border border-white shadow-sm"
-              style={{
-                left: `${progressPct}%`,
-                width: '14px',
-                height: '14px',
-                pointerEvents: 'none',
-              }}
-              title={`${clock.time} (${progressPct} %)`}
-            />
-          </div>
+          <input type="range" className="form-range my-1" min={0} max={24 * 60} step={1}
+            aria-label="Avancer l’heure de la journée" title="Avancer à cette heure ; une heure antérieure passe au lendemain"
+            value={selectedMinute ?? Math.floor(hourFloat * 60)} onChange={event => setSelectedMinute(Number(event.target.value))}
+            onPointerUp={event => commitTime(Number(event.currentTarget.value))} onPointerCancel={() => setSelectedMinute(null)}
+            onKeyDown={event => event.stopPropagation()} onKeyUp={event => { event.stopPropagation(); if (selectedMinute !== null) commitTime(Number(event.currentTarget.value)); }}
+            onBlur={event => { if (selectedMinute !== null) commitTime(Number(event.currentTarget.value)); }} />
           <div className="d-flex justify-content-between text-muted" style={{ fontSize: '0.65rem' }}>
             <span>0h</span>
             <span>6h</span>
