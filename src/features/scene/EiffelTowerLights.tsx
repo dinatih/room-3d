@@ -4,12 +4,20 @@ import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './DayNight';
 
-const AZ_CENTER = 174.31;
+const AZ_SPIRE = 173.50;
 const STROBE_COUNT = 140;
+
+const UPPER_LEVELS = [
+  { elev: -6.86, l: 172.88, r: 174.38 }, // 1er étage
+  { elev: -4.22, l: 173.25, r: 173.95 }, // 2ème étage
+  { elev: -0.88, l: 173.39, r: 173.71 }, // 3ème étage / dôme
+  { elev: 0.53, l: 173.48, r: 173.52 },  // Sommet / antenne
+];
+
 const PILLARS: [number, number, number, number][] = [
-  [-0.60, -0.28, -0.36, -0.12], // Pilier avant-gauche
-  [-0.04, 0.20, -0.02, 0.12],  // Pilier arrière (perspective 3/4)
-  [0.30, 0.62, 0.12, 0.36],   // Pilier avant-droit
+  [172.48, 172.85, 172.88, 173.25], // Pilier avant-gauche
+  [173.40, 173.95, 173.45, 173.80], // Pilier arrière (vue 3/4 dans l'arche)
+  [174.35, 174.75, 174.00, 174.38], // Pilier avant-droit
 ];
 
 function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
@@ -38,19 +46,13 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
 
   // 1. Silhouette dorée (corps supérieur + piliers évasés et arche)
   const glowGeo = useMemo(() => {
-    const upperLevels = [
-      { elev: -6.86, hw: 0.36 },
-      { elev: -4.22, hw: 0.20 },
-      { elev: -0.88, hw: 0.08 },
-      { elev: 0.53, hw: 0.02 },
-    ];
     const pos: number[] = [];
     const idx: number[] = [];
-    for (let i = 0; i < upperLevels.length; i++) {
-      const { elev, hw } = upperLevels[i];
-      pos.push(...toSpherical(AZ_CENTER - hw, elev, r * 0.999));
-      pos.push(...toSpherical(AZ_CENTER + hw, elev, r * 0.999));
-      if (i < upperLevels.length - 1) {
+    for (let i = 0; i < UPPER_LEVELS.length; i++) {
+      const { elev, l, r: rAz } = UPPER_LEVELS[i];
+      pos.push(...toSpherical(l, elev, r * 0.999));
+      pos.push(...toSpherical(rAz, elev, r * 0.999));
+      if (i < UPPER_LEVELS.length - 1) {
         const v = i * 2;
         idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
       }
@@ -59,10 +61,10 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     for (const [b0, b1, t0, t1] of PILLARS) {
       const v = pos.length / 3;
       pos.push(
-        ...toSpherical(AZ_CENTER + b0, -9.32, r * 0.999),
-        ...toSpherical(AZ_CENTER + b1, -9.32, r * 0.999),
-        ...toSpherical(AZ_CENTER + t0, -6.86, r * 0.999),
-        ...toSpherical(AZ_CENTER + t1, -6.86, r * 0.999),
+        ...toSpherical(b0, -9.32, r * 0.999),
+        ...toSpherical(b1, -9.32, r * 0.999),
+        ...toSpherical(t0, -6.86, r * 0.999),
+        ...toSpherical(t1, -6.86, r * 0.999),
       );
       idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
     }
@@ -84,12 +86,17 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       if (elev < -6.86) {
         const [b0, b1, t0, t1] = PILLARS[Math.floor(Math.random() * 3)];
         const norm = (elev - (-9.32)) / (-6.86 - (-9.32));
-        const mid = ((b0 + b1) / 2) * (1 - norm) + ((t0 + t1) / 2) * norm;
-        az = AZ_CENTER + mid + (Math.random() - 0.5) * 0.12;
+        const laz = b0 * (1 - norm) + t0 * norm;
+        const raz = b1 * (1 - norm) + t1 * norm;
+        az = laz + Math.random() * (raz - laz);
       } else {
-        const normUpper = (elev - (-6.86)) / (0.53 - (-6.86));
-        const hw = (1 - normUpper) * 0.36;
-        az = AZ_CENTER + (Math.random() - 0.5) * 2 * hw;
+        const seg = UPPER_LEVELS.findIndex((lv, idx) => idx > 0 && elev <= lv.elev) || 1;
+        const p0 = UPPER_LEVELS[seg - 1];
+        const p1 = UPPER_LEVELS[seg];
+        const t = (elev - p0.elev) / (p1.elev - p0.elev);
+        const laz = p0.l * (1 - t) + p1.l * t;
+        const raz = p0.r * (1 - t) + p1.r * t;
+        az = laz + Math.random() * (raz - laz);
       }
       const [x, y, z] = toSpherical(az, elev, r);
       pos[i * 3] = x;
@@ -142,7 +149,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
   }), []);
 
   // 3. Phare rotatif au sommet (axe vertical monde, inclinaison ascendante vers le ciel)
-  const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_CENTER, 0.53, r)), [r]);
+  const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_SPIRE, 0.53, r)), [r]);
 
   const beaconGeo = useMemo(() => {
     const len = 3900; // S'étend sur 39 m pour atteindre et traverser l'appartement (à ~34 m)
@@ -194,7 +201,7 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     if (beaconRef.current) {
       beaconRef.current.rotation.y += delta * 0.35;
       // Balayage lumineux sur le mur Est : pic quand l'un des deux faisceaux traverse l'azimut de l'appartement
-      const sweep = Math.pow(Math.abs(Math.cos(beaconRef.current.rotation.y - 3.052)), 40.0);
+      const sweep = Math.pow(Math.abs(Math.cos(beaconRef.current.rotation.y + 3.028)), 40.0);
       if (eastWallLightRef.current) {
         eastWallLightRef.current.intensity = sweep * 28.0 * nightFade;
       }
