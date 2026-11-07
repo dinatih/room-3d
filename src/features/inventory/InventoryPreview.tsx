@@ -1251,7 +1251,7 @@ export function InventoryPreview({
           {showing3D ? (
             <>
             <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={{ type: THREE.PCFShadowMap }} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
-              <PreviewEnvironment showGrid={showGrid} neutralLighting={neutralLighting || Boolean(smartAction)} />
+              <PreviewEnvironment showGrid={showGrid || walkDebug} neutralLighting={neutralLighting || Boolean(smartAction)} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[boundsRadius * 2, boundsRadius * 3, boundsRadius * 2]} intensity={1.0} castShadow
                 onUpdate={light => { light.layers.enableAll(); light.shadow.camera.layers.enableAll(); light.shadow.camera.updateProjectionMatrix(); }}
