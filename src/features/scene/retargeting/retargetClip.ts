@@ -4,6 +4,7 @@ import { getDepth } from './hairChain';
 import { resolveTargetBoneName } from './boneResolver';
 import { retargetH2Clip } from './unitreeH2Retarget';
 import { bakeFootContacts } from './footContacts';
+import { groundWalkClip } from './walkGrounding';
 import { ANIMATION_WALK_SPEEDS } from '../ai/agent/agentWalkAnimations';
 import { INTERX_MANIFEST } from '../animations/interxManifest';
 
@@ -444,20 +445,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
           }
         }
 
-        const restX = clone.values[0];
-        const restY = clone.values[1];
-        const restZ = clone.values[2];
-
-        let isFlat = true;
-        for (let j = 1; j < clone.values.length / 3; j++) {
-          if (Math.abs(clone.values[3*j] - restX) > 0.001 ||
-              Math.abs(clone.values[3*j+1] - restY) > 0.001 ||
-              Math.abs(clone.values[3*j+2] - restZ) > 0.001) {
-            isFlat = false;
-            break;
-          }
-        }
-
         const animNameLower = rawClip.name.toLowerCase();
         const isYoga = animNameLower.includes('yoga');
         // Registered locomotion is driven by navigation, including CC walks.
@@ -496,32 +483,6 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               .applyMatrix3(centimetersToTarget);
             bone.defaultPosition.clone().add(displacement).toArray(clone.values, index * 3);
           }
-        } else if (isFlat && isWalk) {
-          const duration = workingClip.duration;
-          const fps = 30;
-          const numFrames = Math.ceil(duration * fps) + 1;
-          const newTimes = new Float32Array(numFrames);
-          const newValues = new Float32Array(numFrames * 3);
-
-          for (let f = 0; f < numFrames; f++) {
-            const t = Math.min(f / fps, duration);
-            newTimes[f] = t;
-            const phase = (t / duration) * 2.0 * Math.PI;
-            const dx = 0.5 * Math.cos(phase);
-            const dy = 0.0;
-            const dz = 0.0; // Pas d'oscillation avant/arrière pour éviter la saccade sur la marche in-place
-
-            const dP = new THREE.Vector3(dx, dy, dz)
-              .applyQuaternion(P_src)
-              .applyQuaternion(P_tgt_inv);
-            const resPos = bone.defaultPosition.clone().add(dP);
-
-            newValues[3*f] = resPos.x;
-            newValues[3*f+1] = resPos.y;
-            newValues[3*f+2] = resPos.z;
-          }
-          clone.times = newTimes;
-          clone.values = newValues;
         } else {
           let yMinDelta = 0;
           if (animNameLower.includes('takedown')) {
@@ -570,13 +531,19 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               let yVal = clone.values[3*j+1] + yMinDelta;
               // Substring matching also freezes twist-pose, boat-pose and split-pose.
               const isTPose = animNameLower === 't-pose';
-              const dy = (isWalk || isTPose) ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
+              const dy = isTPose ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
               const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
               const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
               const dP = new THREE.Vector3(dx, dy, dz)
                 .applyQuaternion(P_src)
                 .applyQuaternion(P_tgt_inv);
+              if (isWalk) {
+                dP.applyQuaternion(P_tgt);
+                dP.x = 0;
+                dP.z = 0;
+                dP.applyQuaternion(P_tgt_inv);
+              }
               const resPos = bone.defaultPosition.clone().add(dP);
 
               clone.values[3*j] = resPos.x;
@@ -780,5 +747,8 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
     }
   }
   // H2 uses its constrained motors and mesh sole bounds, without humanoid toe joints.
+  if (supportBone === 'ToeBase' && Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, rawClip.name) && !rawClip.name.includes('run')) {
+    return groundWalkClip(targetInstance, result);
+  }
   return supportBone === 'ToeBase' && animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
 }

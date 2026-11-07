@@ -125,7 +125,24 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
       const clip = retargetClip(source.animations[0], scene, source.scene, definition.rootMotionSpace); clip.name = id;
       const speed = getWalkCycleSpeed(clip, scene);
       assert(Number.isFinite(speed) && speed > 0);
-      if (path.includes('/lara/') && definition.walkSpeed === undefined) assert.equal(Number(speed.toFixed(1)), Number(ANIMATION_WALK_SPEEDS[id].toFixed(1)), id);
+      // Navigation speeds are desired speeds; grounding changes the retargeted
+      // stride, which must be measured rather than forced back to that value.
+      if (!id.includes('run')) {
+        const soles = ['Left', 'Right'].flatMap(side => ['Foot', 'ToeBase'].map(part => {
+          const bone = scene.getObjectByName(resolveTargetBoneName(scene, side + part));
+          const local = bone.worldToLocal(bone.getWorldPosition(new THREE.Vector3()).setY(0));
+          return { bone, local };
+        }));
+        const mixer = new THREE.AnimationMixer(scene);
+        mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
+        for (let sample = 0; sample <= 100; sample++) {
+          mixer.setTime(clip.duration * sample / 100); scene.updateMatrixWorld(true);
+          const floor = Math.min(...soles.map(({ bone, local }) => bone.localToWorld(local.clone()).y));
+          // One millimetre between baked keys, well below the preview's ±2 cm guides.
+          assert(Math.abs(floor) < 0.1, `${path} / ${id}: sole ${floor} cm at sample ${sample}`);
+        }
+        mixer.stopAllAction(); mixer.uncacheRoot(scene); scene.updateMatrixWorld(true);
+      }
       for (const track of clip.tracks.filter(track => track.name.endsWith('.position'))) {
         const bone = scene.getObjectByName(track.name.slice(0, -'.position'.length));
         const start = new THREE.Vector3().fromArray(track.values).applyMatrix4(bone.parent.matrixWorld);
