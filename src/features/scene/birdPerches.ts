@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { MeshBVH, SkinnedMeshBVH } from 'three-mesh-bvh';
 import { GARDEN_PANEL_DEFS, DiagWall, pEast, pWest, pNorth } from './wallData';
 
 export const ROBIN_HEIGHT = 15; // cm
@@ -95,9 +96,42 @@ function supportsOf(world: THREE.Scene): THREE.Object3D[] {
   return supports;
 }
 
+const perchTrees = new WeakMap<THREE.Mesh, {
+  tree: MeshBVH | SkinnedMeshBVH; geometry: THREE.BufferGeometry;
+  transforms: THREE.Matrix4[]; morphs: number[]; positionVersion: number;
+}>();
+
+/** Keep triangle identities and alpha hits; refit animated supports only when their pose changes. */
 function castAt(x: number, z: number, top: number, meshes: THREE.Mesh[]): THREE.Intersection | undefined {
   raycaster.set(new THREE.Vector3(x, top, z), DOWN);
-  return raycaster.intersectObjects(meshes, false).find(solidHit);
+  const hits: THREE.Intersection[] = [];
+  for (const mesh of meshes) {
+    if (!raycaster.layers.test(mesh.layers)) continue;
+    const skinned = mesh as THREE.SkinnedMesh;
+    const morphs = mesh.morphTargetInfluences ?? [];
+    // SkinnedMeshBVH currently treats material arrays as a single double-sided material.
+    if ((skinned.isSkinnedMesh || morphs.length) && Array.isArray(mesh.material)) { mesh.raycast(raycaster, hits); continue; }
+    const transforms = skinned.isSkinnedMesh
+      ? [skinned.bindMatrix, skinned.bindMatrixInverse, ...skinned.skeleton.bones.map(bone => bone.matrixWorld), ...skinned.skeleton.boneInverses] : [];
+    const position = mesh.geometry.getAttribute('position');
+    const positionVersion = position instanceof THREE.InterleavedBufferAttribute ? position.data.version : position.version;
+    let cached = perchTrees.get(mesh);
+    if (!cached || cached.geometry !== mesh.geometry) {
+      const options = { indirect: true, setBoundingBox: false };
+      cached = { tree: skinned.isSkinnedMesh || morphs.length ? new SkinnedMeshBVH(skinned, options) : new MeshBVH(mesh.geometry, options),
+        geometry: mesh.geometry, transforms: transforms.map(matrix => matrix.clone()), morphs: [...morphs], positionVersion };
+      perchTrees.set(mesh, cached);
+    }
+    const entry = cached;
+    if (positionVersion !== entry.positionVersion || transforms.some((matrix, i) => !matrix.equals(entry.transforms[i]))
+        || morphs.some((value, i) => value !== entry.morphs[i])) {
+      entry.tree.refit();
+      transforms.forEach((matrix, i) => entry.transforms[i].copy(matrix));
+      entry.morphs = [...morphs]; entry.positionVersion = positionVersion;
+    }
+    entry.tree.raycastObject3D(mesh, raycaster, hits);
+  }
+  return hits.sort((a, b) => a.distance - b.distance).find(solidHit);
 }
 
 function groundObstacles(world: THREE.Scene, ground: THREE.Object3D): THREE.Object3D[] {
