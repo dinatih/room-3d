@@ -80,6 +80,8 @@ const _tmpEyesWorldPos = new THREE.Vector3();
 const _tmpHeadForward = new THREE.Vector3();
 const _tmpHeadUp = new THREE.Vector3();
 const _tmpAnimOrigin = new THREE.Vector3();
+const _previewHipsPosition = new THREE.Vector3();
+const _previewHipsRest = new THREE.Vector3();
 const syncVec = (target: { x: number; y: number; z: number } | null, v: THREE.Vector3) =>
   target ? (target.x = v.x, target.y = v.y, target.z = v.z, target) : { x: v.x, y: v.y, z: v.z };
 
@@ -1143,8 +1145,14 @@ export function Character({
 
       // Verrouillage optionnel des hanches sur place (Hips-Lock X/Z) pour tester/comparer
       if ((store.lockHipsXZ || store.walkDebug) && parts.bones.hips) {
-        parts.bones.hips.position.x = 0;
-        parts.bones.hips.position.z = 0;
+        const hips = parts.bones.hips;
+        const parent = hips.parent!;
+        parent.updateWorldMatrix(true, false);
+        _previewHipsPosition.copy(hips.position).applyMatrix4(parent.matrixWorld);
+        _previewHipsRest.copy(hips.userData.restPos).applyMatrix4(parent.matrixWorld);
+        _previewHipsPosition.x = _previewHipsRest.x;
+        _previewHipsPosition.z = _previewHipsRest.z;
+        hips.position.copy(parent.worldToLocal(_previewHipsPosition));
       }
 
       if (isVisibleInFrustum) {
