@@ -6,7 +6,7 @@ import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom 
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
-import { canCharacterPerformDuo, getDuoAnimationForClip } from '../animations/duoAnimations';
+import { getDuoAnimationForClip } from '../animations/duoAnimations';
 import { createRouteState, followRoute, resetRoute, recoverDoorContact, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation, navigationDiagnostics } from './navigation/service';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
@@ -265,7 +265,6 @@ export function createAgentController(
   let duoRole: DuoRole | null = null;
   let duoWaitTimer: number = 0;
   let duoInvited: boolean = false;
-  let lastDuoEndTime: number = 0;
 
   // Répétitions d'animation et variations pour SmartObjects
   let repeatIndex: number = 0;
@@ -1592,11 +1591,10 @@ export function createAgentController(
           if (!isDuoAction) {
             const rawAnim = currentInstruction.animation || target.anim || '';
             const duoDef = currentInstruction.smartObjectId ? getDuoAnimationForClip(rawAnim) : undefined;
-            const isDuoCooldown = Date.now() - lastDuoEndTime < 15000;
 
-            if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRole) {
+            if (duoDef && !duoRole) {
               const duoRes = startAgentDuoSession(currentInstruction.smartObjectId!, currentInstruction.slotId, duoDef.id);
-              if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+              if (!duoRes || (duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                 agentStatus = 'IDLE';
                 state.animation = 'idle';
                 releaseClaimedSlot();
@@ -1632,7 +1630,7 @@ export function createAgentController(
           triggerInstructionEvent(currentInstruction);
 
           const animation = currentInstruction.animation || target.anim || '';
-          const isDuoWaiting = isDuoAction && duoSessionManager.isWaitingPartner(_characterId);
+          const isDuoWaiting = (isDuoAction || !!duoRole) && duoSessionManager.isWaitingPartner(_characterId);
           if (!isDuoWaiting) {
             const objName = currentInstruction.smartObjectId ? (SMART_OBJECTS[currentInstruction.smartObjectId]?.name || currentInstruction.smartObjectId) : '';
             const logKey = `interact-${stepIndex}-${animation}-${objName}`;
@@ -1701,7 +1699,6 @@ export function createAgentController(
               resetDuoState();
               advanceToNextStep(hasNavStep);
             }
-            lastDuoEndTime = Date.now();
           },
           setDuoWaitTimer: (t) => { duoWaitTimer = t; },
           setDuoInvited: (inv) => { duoInvited = inv; }
@@ -1765,10 +1762,9 @@ export function createAgentController(
                 state.animation = res.animation;
 
                 const duoDef = getDuoAnimationForClip(res.animation);
-                const isDuoCooldown = Date.now() - lastDuoEndTime < 15000;
-                if (duoDef && !isDuoCooldown && !duoSessionManager.isPlaying(_characterId) && !duoRole) {
+                if (duoDef && !duoRole) {
                   const duoRes = startAgentDuoSession(currentInstruction.smartObjectId, currentInstruction.slotId, duoDef.id);
-                  if ((!duoRes && !canCharacterPerformDuo(_characterId, duoDef)) || (duoRes && duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
+                  if (!duoRes || (duoRes.targetA !== _characterId && duoRes.targetB !== _characterId)) {
                     agentStatus = 'IDLE';
                     state.animation = 'idle';
                     releaseClaimedSlot();

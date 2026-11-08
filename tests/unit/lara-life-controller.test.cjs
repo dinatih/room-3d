@@ -1452,3 +1452,27 @@ it('la musique inspire une danseuse disponible et respecte les urgences, la piè
     } finally { disconnect(); global.document = previous; }
   }
 });
+
+for (const variation of [false, true]) for (const accepted of [false, true]) it(`un clip duo tiré sur un objet exige une session : variation=${variation}, acceptée=${accepted}`, () => {
+  const w = world('safa'), calls = [];
+  const clip = 'interx-g049t002a009r013-p1';
+  w.duoDefinitions.bath = { id: 'interx-g049t002a009r013', animA: clip, animB: 'interx-g049t002a009r013-p2' };
+  w.duo.startDuoSession = (...args) => {
+    calls.push(args);
+    return accepted ? { targetA: 'safa', targetB: 'marissa', actualSlotId: 'center' } : null;
+  };
+  w.objects['bathtub-garden'].slots[0].animation = variation ? 'bath' : clip;
+  w.controller.configure({ scenario: [{ type: 'USE_OBJECT', smartObjectId: 'bathtub-garden', slotId: 'center',
+    duration: 1, repeatCount: 2, repeatVariation: variation }], loop: false });
+  w.tick(.1);
+  if (variation) {
+    assert.equal(w.controller.state.animation, 'bath');
+    w.objects['bathtub-garden'].slots[0].animation = clip;
+    w.tick(1);
+  }
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][4], 'interx-g049t002a009r013');
+  assert.equal(w.controller.state.animation, accepted ? 'female-standing-pose' : 'idle');
+  assert(!w.logs.some(log => log.action === 'use_object' && log.animation?.id === clip));
+  if (!accepted) assert.equal(w.reservations.size, 0);
+});
