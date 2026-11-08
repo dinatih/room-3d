@@ -99,7 +99,7 @@ export function WeatherControls() {
         <input id="weather-auto" type="checkbox" className="form-check-input" checked={weather.automatic} onChange={event => useWeather.setState({ automatic: event.target.checked })} />
         <label htmlFor="weather-auto" className="form-check-label">Météo automatique</label>
       </div>
-      {weather.automatic && <p className="small text-muted mb-1">Changement toutes les 6 h simulées (6 min à ×1), transition sur 30 min simulées.</p>}
+      {weather.automatic && <p className="small text-muted mb-1">Cycle : beau temps → nuages → pluie → neige. Chaque phase dure 6 h simulées (3 min à ×1), avec une transition de 30 min simulées (15 s à ×1).</p>}
       {weather.saveError && <div className="alert alert-warning small p-2" role="alert">
         {weather.saveError}
         <button className="btn btn-sm btn-outline-secondary mt-1" onClick={() => { window.localStorage.removeItem(WEATHER_SAVE_KEY); window.location.reload(); }}>Réinitialiser la météo</button>
