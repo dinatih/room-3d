@@ -2632,7 +2632,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/miley/miley_armature_doubleblade_broadswordplay_m.glb',
     category: 'combat',
     label: `[MILEY] Doubleblade Broadswordplay M (503f / 8.4s, 1279KB)`,
-    tags: ['combat', 'laying'],
+    tags: ['combat'],
     duration: 8.4,
   },
   {
@@ -2987,7 +2987,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/miley/miley_armature_musicalplaytime_f.glb',
     category: 'dances',
     label: `[MILEY] Musicalplaytime F (562f / 9.4s, 1155KB)`,
-    tags: ['dance', 'laying'],
+    tags: ['dance'],
     duration: 9.4,
   },
   {
@@ -9629,7 +9629,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     category: 'interactions',
     label: "S'allonger (lit / sol)",
     aliases: ['lie-down', 's-allonger', 'coucher'],
-    tags: ['bed', 'lie', 'sleep', 'rest', 'transition', 'interaction'],
+    tags: ['bed', 'lie', 'sleep-transition', 'rest', 'transition', 'interaction'],
     duration: 7.9,
   },
   {
@@ -9638,7 +9638,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     category: 'interactions',
     label: 'Se relever (lit / sol)',
     aliases: ['get-up', 'se-relever', 'reveil'],
-    tags: ['bed', 'get-up', 'wake', 'rise', 'transition', 'interaction'],
+    tags: ['bed', 'get-up', 'wake', 'rise', 'sleep-transition', 'transition', 'interaction'],
     duration: 5.6,
     loop: 'once',
   },

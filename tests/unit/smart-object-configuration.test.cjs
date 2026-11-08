@@ -31,6 +31,9 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
   });
   const sleepIds = getAnimationsByTags('sleep').map(animation => animation.id);
   assert.ok(sleepIds.includes('laying-sleeping'));
+  assert.ok(getAnimationsByTags('sleep').every(animation => !animation.tags.includes('transition')));
+  assert.deepEqual(getAnimationsByTags('sleep-transition').map(animation => animation.id), ['lie-down-bed', 'get-up-bed']);
+  assert.ok(getAnimationsByTags('laying').every(animation => !animation.id.startsWith('miley-')));
   for (const bed of Object.values(beds)) {
     for (const slot of bed.slots.filter(slot => slot.slotId.startsWith('lie-down'))) {
       const variants = resolveSlotAnimationInfo(slot).variants;
