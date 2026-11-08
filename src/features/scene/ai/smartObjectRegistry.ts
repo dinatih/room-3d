@@ -81,16 +81,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [side * BED_FRAME_LENGTH / 4, 0, BED_FRAME_WIDTH + HUMAN_BODY_RADIUS] as [number, number, number],
         animationsRandom: 'seated-front',
       })),
-      ...Array.from({ length: 4 }, (_, i) => ({
-        slotId: `lie-down-cross-${i + 1}`,
-        name: `Dormir en travers (${i + 1}/4)`,
-        excludes: ['seat-north', 'seat-south', ...Array.from({ length: 3 }, (_, j) => `lie-down-length-${j + 1}`)],
-        relative: true,
-        offset: [BED_FRAME_LENGTH * (i - 1.5) / 4, 45, 0] as [number, number, number],
-        approachOffset: [BED_FRAME_LENGTH * (i - 1.5) / 4, 0, BED_FRAME_WIDTH + HUMAN_BODY_RADIUS] as [number, number, number],
-        rotY: 0,
-        animationsRandom: 'sleep',
-      })),
       ...Array.from({ length: 3 }, (_, i) => ({
         slotId: `lie-down-length-${i + 1}`,
         name: `Dormir dans la longueur (${['Gauche', 'Milieu', 'Droite'][i]})`,
@@ -1490,8 +1480,6 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
       : slot.offset || [0, 0, 0];
     const localApproach = bedSeat
       ? [localOffset[0], 0, localOffset[2] + bedSide * HUMAN_BODY_RADIUS]
-      : objectId === 'bed-double' && slot.slotId.startsWith('lie-down-cross-')
-      ? [slot.approachOffset![0], 0, (positionState['bed-position']?.idx === 1 ? -1 : 1) * (BED_FRAME_WIDTH + HUMAN_BODY_RADIUS)]
       : slot.approachOffset;
 
     const ox = localOffset[0];

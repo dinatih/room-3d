@@ -65,16 +65,10 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
     const animation = registry.ANIMATION_DEFINITIONS.find(animation => animation.id === id);
     assert.deepEqual(animation.tags, ['combat']);
   }
-  const cross = beds['bed-double'].slots.filter(slot => slot.slotId.startsWith('lie-down-cross-'));
   const length = beds['bed-double'].slots.filter(slot => slot.slotId.startsWith('lie-down-length-'));
-  assert.equal(cross.length, 4);
+  assert.equal(beds['bed-double'].slots.length, 5, 'Deux assises et trois couchages dans la longueur');
   assert.equal(length.length, 3);
   assert.equal(length[1].offset[2], 0, 'Une place doit rester au milieu du lit');
-  for (const slot of cross) {
-    assert.equal(slot.rotY, 0);
-    for (const other of length) assert.ok(slot.excludes.includes(other.slotId));
-    for (const other of cross) assert.ok(!slot.excludes.includes(other.slotId));
-  }
   for (const slot of length) {
     assert.equal(slot.rotY, Math.PI / 2);
     for (const other of length) assert.ok(!slot.excludes.includes(other.slotId));
