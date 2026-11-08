@@ -641,7 +641,9 @@ function advanceRoute(route: RouteState, agentId: string, start: Point, target: 
   const step = Math.min(travel, remaining);
   // Finish the waypoint on the last step. A lateral offset here would miss it
   // indefinitely, making the actor circle and preventing the next instruction.
-  const steered = step === remaining ? direction : steer?.(direction, remaining) ?? direction;
+  // Crowd paths already avoid actor footprints. Steering away from their tangent
+  // vertices can keep an actor circling instead of ever reaching the waypoint.
+  const steered = step === remaining || graph === route.crowd?.graph ? direction : steer?.(direction, remaining) ?? direction;
   let proposed = { x: start.x + steered.x * step, z: start.z + steered.z * step };
   let straight = steered.x === direction.x && steered.z === direction.z;
   // Steering may enter free space that cannot see the next corner. Preserve visibility
