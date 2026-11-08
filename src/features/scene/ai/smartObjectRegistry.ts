@@ -718,7 +718,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Studio voisin Ouest (Églantine)',
     category: 'outdoor',
     position: [-200, 0, 500],
-    rotationY: Math.PI / 2,
     slots: [
       {
         slotId: 'yoga',
@@ -791,7 +790,6 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Studio voisin Est (Damien)',
     category: 'outdoor',
     position: [500, 0, 100],
-    rotationY: -Math.PI / 2,
     slots: [
       {
         slotId: 'salsa-samba',
