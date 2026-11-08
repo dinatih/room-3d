@@ -1180,7 +1180,12 @@ export function createAgentController(
       }
       if (currentInstruction.smartObjectId && currentInstruction.type !== 'OBSERVE_OBJECT') {
         if (!OccupancyManager.canUseObject(currentInstruction.smartObjectId, _characterId)) {
-          throw new Error(`Access denied to ${currentInstruction.smartObjectId} for ${_characterId}`);
+          appLog(_characterId, `⚠️ Activité devenue indisponible : ${currentInstruction.smartObjectId}`, {
+            category: 'object', action: 'access_denied', actors: [_characterId],
+            object: { id: currentInstruction.smartObjectId, slotId: currentInstruction.slotId },
+          });
+          retrySmartAction(currentInstruction.smartObjectId);
+          return state;
         }
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';

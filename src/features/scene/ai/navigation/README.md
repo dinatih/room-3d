@@ -45,7 +45,7 @@ une mesure visuelle, sans imposer la largeur des passages. Les hauteurs excluent
 les volumes qui ne rencontrent pas le corps. Les limites du sol sont des
 barrières ; un trajet ne peut pas traverser un vide entre deux surfaces.
 
-L'esquive latérale anticipe la largeur réelle des modèles. Cette préférence
+L'esquive latérale utilise un rayon fixe de 12 cm par PNJ. Cette préférence
 reste souple : elle est abandonnée si elle coupe la visibilité du prochain point
 ou rencontre un obstacle. Un détour inter-PNJ indisponible laisse continuer la
 marche ; il ne transforme pas une rencontre en attente obligatoire.

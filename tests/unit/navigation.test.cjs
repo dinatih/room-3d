@@ -311,7 +311,7 @@ describe('Navigation et portes — géométrie isolée', () => {
             }
         } finally { delete cameraState.positions.walker; delete cameraState.positions.encounter; obstacles.removeAgentProfile('encounter'); }
     });
-    it('esquive la largeur visuelle sans élargir les collisions obligatoires', () => {
+    it('esquive avec un rayon de 12 cm sans élargir les collisions obligatoires', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
         const avoidance = loadAvoidance();
@@ -319,9 +319,9 @@ describe('Navigation et portes — géométrie isolée', () => {
         obstacles.setAgentProfile('encounter', { radius: 20, height: 170 });
         const target = { x: 100, z: 0 }, route = crowded.createRouteState();
         let position = { x: -100, z: 0 }, lateral = 0;
-        cameraState.positions.encounter = { x: 0, z: 20, y: 0 };
+        cameraState.positions.encounter = { x: 0, z: 14, y: 0 };
         try {
-            // This neighbour misses the 12 cm hard footprint but intersects the bodies.
+            // This neighbour misses the 12 cm hard footprint but enters the 24 cm soft clearance.
             for (let frame = 0; frame < 200 && g.distance(position, target); frame++) {
                 cameraState.positions.walker = { ...position, y: 0 };
                 const next = crowded.followRoute(route, 'walker', position, target, 3, (direction, remaining) => {

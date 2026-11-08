@@ -136,6 +136,17 @@ it('conserve la rotation du meuble lors des variations répétées sur un lit', 
   assert.equal(w.controller.state.rotY, Math.PI);
 });
 
+it('Ybot abandonne la télé devenue indisponible sans répéter une exception à chaque frame', () => {
+  const w = world('ybot');
+  w.objects['tv-view'] = { ...w.objects.rest, id: 'tv-view' };
+  w.controller.configure({ scenario: [{ type: 'USE_OBJECT', smartObjectId: 'tv-view', slotId: 'use' }], loop: false });
+  w.occupancy.canUseObject = id => id !== 'tv-view';
+  for (let frame = 0; frame < 10; frame++) assert.doesNotThrow(() => w.tick(.1));
+  assert.equal(w.logs.filter(log => log.action === 'access_denied').length, 1);
+  assert(w.logs.some(log => log.action === 'retry_smartaction' && log.object.id === 'tv-view'));
+  assert(!w.reservations.has('tv-view:use'));
+});
+
 for (const work of [0, 36]) it(`Rosanna utilise une Dröna libre plutôt que rester debout : stimulation ${work}`, () => {
   const w = world('rosanna');
   w.tick(); w.tick();

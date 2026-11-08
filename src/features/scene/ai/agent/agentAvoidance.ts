@@ -8,6 +8,7 @@ import { devLog } from '@/devLog';
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
 const TWO_PI = 2 * Math.PI;
+const STEERING_RADIUS_CM = 12;
 // Fixed avoidance radius in centimetres, shared with the debug display.
 export const actorRadius = (_profile: { radius: number }): number => NAVIGATION_RADIUS_CM;
 export const actorClearance = (profile: { radius: number }, body: { radius: number }): number =>
@@ -92,8 +93,8 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
-      // Visual personal space only: do not widen hard collisions or door passages.
-      const clearance = Math.max(profile.radius, actorRadius(profile)) + Math.max(body.radius, actorRadius(body));
+      // Soft sidestep radius; hard collisions and door passages keep their own radius.
+      const clearance = 2 * STEERING_RADIUS_CM;
       // Respect both the current footprint and the predicted moving footprint.
       for (const otherVelocity of [undefined, ...(ownVelocity && velocities.has(otherId) ? [velocities.get(otherId)] : [])]) {
         const vx = dirX * speed - (otherVelocity?.x ?? 0), vz = dirZ * speed - (otherVelocity?.z ?? 0);
