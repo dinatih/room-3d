@@ -127,3 +127,25 @@ it('sort uniquement des assises configurées et attend la fin réelle du relève
   assert.equal(entry.status(), 'MOVING', 'L’arrivée doit poursuivre USE_OBJECT sans repasser par l’attente debout');
   assert.equal(entry.state.animation, 'sitting-idle');
 });
+
+it('préserve la vitesse des clips à l’entrée et à la sortie des poses d’attente duo', () => {
+  const { isLocomotionAnimation, getCrossfadeDuration } = require('../../src/features/scene/animations/animationTransitions.ts');
+  for (const pose of ['female-standing-pose', 'female-standing-pose-1']) {
+    assert.equal(isLocomotionAnimation(pose), false);
+    for (const [fromId, toId, fromDuration, toDuration] of [
+      ['walking', pose, 3, .1], [pose, 'walking', .1, 3], [pose, 'interx-g049t002a009r013-p1', .1, 30],
+    ]) {
+      const mixer = new THREE.AnimationMixer(new THREE.Object3D());
+      const from = mixer.clipAction(new THREE.AnimationClip(fromId, fromDuration, [])).play();
+      const to = mixer.clipAction(new THREE.AnimationClip(toId, toDuration, []));
+      to.crossFadeFrom(from, getCrossfadeDuration(fromId, toId), isLocomotionAnimation(fromId) && isLocomotionAnimation(toId)).play();
+      for (let frame = 0; frame < 30; frame++) {
+        mixer.update(1 / 60);
+        assert.equal(from.getEffectiveTimeScale(), 1, `${fromId} → ${toId}`);
+        assert.equal(to.getEffectiveTimeScale(), 1, `${fromId} → ${toId}`);
+      }
+    }
+  }
+  assert(isLocomotionAnimation('walking'));
+  assert.equal(getCrossfadeDuration('walking', 'running'), .2);
+});

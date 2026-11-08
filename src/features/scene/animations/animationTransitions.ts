@@ -26,19 +26,16 @@ const TRANSITION_CLIP_IDS = new Set([
 
 export const isPostureTransition = (key: string) => TRANSITION_CLIP_IDS.has(getAnimationDef(key)?.id ?? key);
 
+export const isLocomotionAnimation = (key?: string | null) =>
+  Boolean(key && getAnimationDef(key)?.tags.some(tag => ['locomotion', 'walk', 'run'].includes(tag)));
+
 /**
  * Calcule la durée de crossfade Three.js :
  * 0.2s pour les transitions de locomotion (walk/run), 0.4s pour les autres poses.
  */
 export function getCrossfadeDuration(fromKey?: string | null, toKey?: string | null): number {
   if (!fromKey || !toKey || fromKey === toKey) return 0.2;
-  const fromDef = getAnimationDef(fromKey);
-  const toDef = getAnimationDef(toKey);
-
-  const isLocomotion = (d?: typeof fromDef) =>
-    Boolean(d?.tags.some(t => t === 'locomotion' || t === 'walk' || t === 'run'));
-
-  if (isLocomotion(fromDef) && isLocomotion(toDef)) {
+  if (isLocomotionAnimation(fromKey) && isLocomotionAnimation(toKey)) {
     return 0.2;
   }
 

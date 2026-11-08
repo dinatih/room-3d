@@ -39,7 +39,7 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
 import { resolveAnimationId, getAnimationOriginTransform, getAnimationDef } from '../animations/animationResolver';
-import { getCrossfadeDuration, isPostureTransition, lerpAngle } from '../animations/animationTransitions';
+import { getCrossfadeDuration, isLocomotionAnimation, isPostureTransition, lerpAngle } from '../animations/animationTransitions';
 import { createPostureMotion, fitPostureTransition } from '../animations/postureTransition';
 
 import type { CharacterProps } from './characterTypes';
@@ -967,7 +967,7 @@ export function Character({
             to.setEffectiveTimeScale(1);
             to.setEffectiveWeight(1);
             if (animCrossfade) {
-              to.crossFadeFrom(from, blendDuration, !postureTransition && !isPostureTransition(activeActionName.current));
+              to.crossFadeFrom(from, blendDuration, isLocomotionAnimation(activeActionName.current) && isLocomotionAnimation(target));
             } else {
               from.stop();
             }
