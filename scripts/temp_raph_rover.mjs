@@ -91,7 +91,7 @@ if (process.argv.includes('--render')) {
     const page = await browser.newPage();
     await page.setViewport({ width: 1000, height: 750 });
     await page.goto('http://127.0.0.1:5173/AGENTS.md');
-    for (const id of [process.argv.includes('--fpv') ? 'dji-fpv' : 'raph-rover']) {
+    for (const id of ['raph-rover']) {
       await page.evaluate(async id => {
         const THREE = await import('/node_modules/.vite/deps/three.js');
         const { GLTFLoader } = await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');

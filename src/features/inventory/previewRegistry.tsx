@@ -113,7 +113,7 @@ import { resolveAnimationId } from '@features/scene/animations/animationResolver
 import { Goldfish } from '@features/scene/items/Goldfish';
 import { RobinBird }                                  from '@features/scene/items/RobinBird';
 import { BlackHornetDrone }                            from '@features/scene/items/BlackHornetDrone';
-import { DjiNeoDrone, DjiAvata2Drone, DjiFpvDrone } from '@features/scene/items/DjiDrone';
+import { DjiNeoDrone, DjiAvata2Drone } from '@features/scene/items/DjiDrone';
 import { BirdFeeder }                                 from '@features/scene/items/BirdFeeder';
 import { GoogleNestMini }                             from '@features/scene/items/GoogleNestMini';
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
@@ -292,7 +292,7 @@ CHARACTERS.forEach(char => {
 
 for (const [id, Model] of [
   ['ushiro', ShibaInu], ['robin-bird', RobinBird], ['black-hornet-drone', BlackHornetDrone],
-  ['dji-neo', DjiNeoDrone], ['dji-avata-2', DjiAvata2Drone], ['dji-fpv', DjiFpvDrone],
+  ['dji-neo', DjiNeoDrone], ['dji-avata-2', DjiAvata2Drone],
 ] as const) {
   SCENE_REGISTRY[id] = function AnimatedPreview({ actionState, onSize }: SceneItemProps) {
     return <Model isPreview previewAnim={actionState.characterAnim} onSize={onSize} />;

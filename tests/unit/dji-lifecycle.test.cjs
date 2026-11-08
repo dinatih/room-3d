@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const THREE = require('three');
 const { load } = require('../support/load-ts.cjs');
 
-for (const name of ['DjiNeoDrone', 'DjiAvata2Drone', 'DjiFpvDrone']) it(`${name}: mesurer à nouveau conserve animation et visite`, () => {
+for (const name of ['DjiNeoDrone', 'DjiAvata2Drone']) it(`${name}: mesurer à nouveau conserve animation et visite`, () => {
   const root = new THREE.Group(), pivot = new THREE.Group(), scene = new THREE.Group();
   pivot.name = 'DronePivot'; root.add(pivot); pivot.add(scene);
   scene.add(new THREE.Mesh(new THREE.BoxGeometry(2, 3, 4), new THREE.MeshStandardMaterial()));
