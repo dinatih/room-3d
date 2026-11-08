@@ -97,7 +97,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [-35, 45, 0],
         approachOffset: [-35, 0, -80 - HUMAN_BODY_RADIUS],
-        animationsRandom: 'laying',
+        animationsRandom: 'sleep',
       },
       {
         slotId: 'lie-down-right',
@@ -106,7 +106,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         relative: true,
         offset: [35, 45, 0],
         approachOffset: [35, 0, 80 + HUMAN_BODY_RADIUS],
-        animationsRandom: 'laying',
+        animationsRandom: 'sleep',
       }
     ]
   },
@@ -145,7 +145,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [1.5, 45, 0],
         approachOffset: [1.5, 0, 40 + HUMAN_BODY_RADIUS],
-        animationsRandom: 'laying-front',
+        animationsRandom: 'sleep',
         rotY: Math.PI / 2,
       }
     ]
@@ -187,7 +187,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         name: 'Dormir couché',
         offset: [0, 45, 0],
         approachOffset: [0, 0, -40 - HUMAN_BODY_RADIUS],
-        animationsRandom: 'laying-front',
+        animationsRandom: 'sleep',
         rotY: Math.PI / 2,
       }
     ]

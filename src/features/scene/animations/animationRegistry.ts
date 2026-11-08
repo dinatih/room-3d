@@ -5029,7 +5029,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_gunplay.glb',
     category: 'combat',
     label: `Gunplay (7f / 0.2s, 69KB)`,
-    tags: ['combat', 'laying'],
+    tags: ['combat'],
     duration: 0.2,
   },
   {
@@ -5037,7 +5037,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_gunplay_1.glb',
     category: 'combat',
     label: `Gunplay (77f / 2.6s, 90KB)`,
-    tags: ['combat', 'laying'],
+    tags: ['combat'],
     duration: 2.6,
   },
   {
@@ -5045,7 +5045,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
     path: 'animations/mixamo/anim_gunplay_shooting.glb',
     category: 'combat',
     label: `Gunplay Shooting (77f / 2.6s, 90KB)`,
-    tags: ['combat', 'laying'],
+    tags: ['combat'],
     duration: 2.6,
   },
   {
