@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Object3D, Vector3 } from 'three';
+import { Group, Mesh, Object3D, Vector3 } from 'three';
+import { LAYER_WALKER_DETAIL } from '@config';
 import type { SceneItemProps } from '@shared/types';
 import { INVENTORY } from '@features/inventory/inventoryData';
 import { Microduck } from '../items/Microduck';
@@ -42,6 +43,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const cameraForward = useRef(new Vector3());
   const cameraUp = useRef(new Vector3());
   const cameraLens = useRef<Object3D | null>(null);
+  const hiddenMeshes = useRef(new Map<Mesh, number>());
   const cameraRadius = useRef(0);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
@@ -82,6 +84,8 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       removeAgentProfile(id);
       reserveAgentDestination(id, null);
       cameraLens.current = null;
+      hiddenMeshes.current.forEach((mask, mesh) => { mesh.layers.mask = mask; });
+      hiddenMeshes.current.clear();
       delete cameraState.positions[id];
       delete cameraState.animalViews[id];
       if (cameraState.animalTarget === id) {
@@ -190,8 +194,21 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   useFrame(() => {
     const root = group.current;
     if (!root || !profile || !navigationEnabled) return;
+    const inFPV = cameraState.animalTarget === id && cameraState.mode === 'fpv';
+    if (inFPV && !hiddenMeshes.current.size) {
+      root.traverse(object => {
+        const mesh = object as Mesh;
+        if (!mesh.isMesh || hiddenMeshes.current.has(mesh)) return;
+        hiddenMeshes.current.set(mesh, mesh.layers.mask);
+        mesh.layers.set(LAYER_WALKER_DETAIL);
+      });
+    } else if (!inFPV && hiddenMeshes.current.size) {
+      hiddenMeshes.current.forEach((mask, mesh) => { mesh.layers.mask = mask; });
+      hiddenMeshes.current.clear();
+    }
     const lens = (cameraLens.current ??= root.getObjectByName('lens_mesh_22') ?? null);
     if (lens) {
+      lens.updateWorldMatrix(true, false);
       cameraEyes.current.set(0, 0.027, 0);
       lens.localToWorld(cameraEyes.current);
       cameraForward.current.set(0, 1, 0).transformDirection(lens.matrixWorld);
