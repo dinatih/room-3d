@@ -8,6 +8,7 @@ import { ALL_HAIR_COLORS } from './sidepanel/types';
 import { CAMERA_SUBJECTS, CHARACTER_CONTROL_ANIMATIONS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { getAnimationDef } from './animations/animationResolver';
 import { PanelPopover } from './sidepanel/PanelPopover';
+import { CHARACTERS, npcLabel } from './characterConfig';
 import './Controller.scss';
 
 type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight';
@@ -127,8 +128,19 @@ export function Controller({ visible = false }: { visible?: boolean }) {
     { target: 'studio', label: 'Appartement', icon: 'bi-building' },
   ] as const;
   const subjectId = animal ?? (mode === 'follow' || mode === 'fpv' ? 'character' : '');
-  const subject = CAMERA_SUBJECTS.find(choice => choice.id === subjectId) ?? CAMERA_SUBJECTS[0];
+  const subjects = [
+    ...CHARACTERS.map(character => ({ id: character.id, label: npcLabel(character), icon: 'bi-person-bounding-box', cameraSubject: 'character' })),
+    ...CAMERA_SUBJECTS.filter(choice => choice.id !== 'character').map(choice => ({ ...choice, cameraSubject: choice.id })),
+  ];
+  const selectedSubjectId = subjectId === 'character' ? activeCharacterId : subjectId;
+  const subject = subjects.find(choice => choice.id === (animal ?? activeCharacterId)) ?? CAMERA_SUBJECTS[0];
   const refreshSubjects = () => setAvailableSubjects(Object.keys(cameraState.animalViews));
+  const pickSubject = (choice: typeof subjects[number], button: HTMLButtonElement) => {
+    releaseAll();
+    if (choice.cameraSubject === 'character') useSceneStore.getState().setActiveCharacterId(choice.id);
+    document.dispatchEvent(new CustomEvent('camera-subject', { detail: choice.cameraSubject }));
+    (button.closest('[popover]') as HTMLDivElement).hidePopover();
+  };
 
   return (
     <div className="game-controller d-flex flex-column align-items-center gap-1">
@@ -210,6 +222,13 @@ export function Controller({ visible = false }: { visible?: boolean }) {
                     refreshSubjects();
                     requestAnimationFrame(() => (popover.querySelector<HTMLButtonElement>('[aria-selected="true"]:not(:disabled)') ?? popover.querySelector<HTMLButtonElement>('[role="option"]:not(:disabled)'))?.focus());
                   }}>
+                    <button type="button" className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 w-100 mb-2"
+                      onClick={event => {
+                        const choices = subjects.filter(choice => choice.cameraSubject === 'character' || availableSubjects.includes(choice.id));
+                        pickSubject(choices[Math.floor(Math.random() * choices.length)], event.currentTarget);
+                      }}>
+                      <i className="bi bi-shuffle" aria-hidden="true" />Choisir un sujet aléatoire
+                    </button>
                     <div role="listbox" aria-label="Position caméra" className="d-flex flex-column gap-1" onKeyDown={event => {
                       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
                       event.preventDefault();
@@ -218,16 +237,12 @@ export function Controller({ visible = false }: { visible?: boolean }) {
                       const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : index < 0 ? (event.key === 'ArrowDown' ? 0 : options.length - 1) : (index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length;
                       options[next].focus();
                     }}>
-                      {CAMERA_SUBJECTS.map(choice => <button key={choice.id} type="button" role="option" aria-selected={choice.id === subjectId}
-                        className={`btn btn-sm d-flex align-items-center gap-2 text-start ${choice.id === subjectId ? 'btn-primary' : 'btn-outline-secondary border-0'}`}
-                        disabled={choice.id !== 'character' && !availableSubjects.includes(choice.id)}
-                        onClick={event => {
-                          releaseAll();
-                          document.dispatchEvent(new CustomEvent('camera-subject', { detail: choice.id }));
-                          (event.currentTarget.closest('[popover]') as HTMLDivElement).hidePopover();
-                        }}>
+                      {subjects.map(choice => <button key={choice.id} type="button" role="option" aria-selected={choice.id === selectedSubjectId}
+                        className={`btn btn-sm d-flex align-items-center gap-2 text-start ${choice.id === selectedSubjectId ? 'btn-primary' : 'btn-outline-secondary border-0'}`}
+                        disabled={choice.cameraSubject !== 'character' && !availableSubjects.includes(choice.id)}
+                        onClick={event => pickSubject(choice, event.currentTarget)}>
                         <i className={`bi ${choice.icon}`} aria-hidden="true" /><span>{choice.label}</span>
-                        {choice.id === subjectId && <i className="bi bi-check2 ms-auto" aria-hidden="true" />}
+                        {choice.id === selectedSubjectId && <i className="bi bi-check2 ms-auto" aria-hidden="true" />}
                       </button>)}
                     </div>
                   </PanelPopover>
