@@ -52,8 +52,6 @@ export function GardenFurniture() {
       {/* Baignoire Balnéo */}
       <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ sceneItemRoot: true, skipMerge: true, birdSupport: { id: 'bathtub', kind: 'furniture' }, itemName: 'Baignoire Balnéo', hoverAction: { label: 'Baignoire Balnéo', actions: SMART_OBJECTS['bathtub-garden'].slots.map(slot => `smart-object:::bathtub-garden:::${slot.slotId}`) } }}>
         <NavigationObstacle id="bathtub-garden"><Bathtub /></NavigationObstacle>
-        {/* Ballon de plage flottant sur l'eau de la baignoire avec physique */}
-        <BeachBall />
       </group>
 
       {/* Boîte de rangement Vättersö */}
@@ -69,6 +67,11 @@ export function GardenFurniture() {
 export function GardenDecor() {
   return (
     <MergedStaticGroup name="merged-garden-decor">
+      {/* Ballon de plage flottant sur l'eau de la baignoire avec physique */}
+      <group position={BATHTUB.position} rotation={BATHTUB.rotation} userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Ballon de plage' }}>
+        <BeachBall />
+      </group>
+
       <group position={ULOTTE_BOWL_POSITION} userData={{ skipMerge: true, itemName: 'Gamelle d’Ulotte — jardin voisin Est' }}>
         <NavigationObstacle id="ulotte-bowl"><DogBowl feedingStation /></NavigationObstacle>
       </group>
