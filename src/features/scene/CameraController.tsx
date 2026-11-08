@@ -67,7 +67,7 @@ import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './char
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
 const FPV_DEFAULT_FOV = 120;
-const FPV_DEFAULT_PITCH = -0.50;
+const FPV_DEFAULT_PITCH = -0.20;
 
 const _tmpEyeTargetVec = new THREE.Vector3();
 const _tmpEyeLookVec = new THREE.Vector3();
