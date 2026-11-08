@@ -173,7 +173,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         bar.style.width = '100%';
         bar.classList.add('is-preparing');
       }
-      phase('⚡ Compilation GPU et chargement des animations…');
+      phase('⚡ Compilation des shaders GPU…');
       // Laisser peindre le libellé avant la préparation synchrone de compileAsync.
       const paint = () => new Promise<void>(resolve => {
         frame = requestAnimationFrame(() => {
@@ -183,9 +183,12 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       await paint();
       if (cancelled) return;
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
-      await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
+      const shadersPromise = gl.compileAsync(scene, camera);
+      const shaderCount = gl.info.programs?.length ?? 0;
+      phase(`⚡ Compilation : ${shaderCount} shaders GPU · animations…`);
+      await Promise.all([shadersPromise, animsPromise]);
       if (cancelled) return;
-      phase('⚡ Initialisation du rendu 3D…');
+      phase(`⚡ Rendu 3D · ${shaderCount} shaders GPU préparés`);
       await paint();
       if (cancelled) return;
 
