@@ -290,6 +290,13 @@ export function ViewControlBar({
               title="Follow / FPV (F / V : alterner)"
               aria-pressed={cameraMode === 'follow'}
             ><span className="fw-semibold">Follow</span></button>
+            <button
+              type="button"
+              className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
+              onClick={() => dispatchCameraMode('fpv')}
+              title="FPV / Follow (V / F : alterner)"
+              aria-pressed={cameraMode === 'fpv'}
+            ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
             {isVRSupported && (
               <button
                 type="button"
@@ -316,13 +323,6 @@ export function ViewControlBar({
                 <span className="fw-semibold">{isImmersiveActive ? 'Quitter' : 'Immer'}</span>
               </button>
             )}
-            <button
-              type="button"
-              className={`${TOOLBAR_BUTTON_CLASS} ${cameraMode === 'fpv' ? 'view-control-bar__btn--blue' : 'btn-outline-secondary'}`}
-              onClick={() => dispatchCameraMode('fpv')}
-              title="FPV / Follow (V / F : alterner)"
-              aria-pressed={cameraMode === 'fpv'}
-            ><i className="bi bi-eye-fill" aria-hidden="true" /><span className="fw-semibold">FPV</span></button>
           </div>
         )}
       </div>
