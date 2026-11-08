@@ -169,7 +169,10 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
           itemEl.title = text;
         }
       };
-      if (bar) bar.style.width = '100%';
+      if (bar) {
+        bar.style.width = '100%';
+        bar.classList.add('is-preparing');
+      }
       phase('⚡ Compilation GPU et chargement des animations…');
       // Laisser peindre le libellé avant la préparation synchrone de compileAsync.
       const paint = () => new Promise<void>(resolve => {
@@ -345,11 +348,14 @@ function LoadingProgress({
       const itemEl = document.getElementById('loading-item');
 
       const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
-      if (bar) bar.style.width = `${pct}%`;
+      if (bar) {
+        bar.style.width = `${pct}%`;
+        bar.classList.toggle('is-preparing', !active && loaded > 0 && loaded >= total && !errors.length);
+      }
       if (itemEl) {
         const fileName = item.split('/').pop()?.split('?')[0] || item;
         itemEl.textContent = errors.length ? `❌ Échec du chargement : ${errors.join(', ')}`
-          : !active && loaded > 0 && loaded >= total ? '🛠️ Fichiers chargés · préparation de la scène 3D…'
+          : !active && loaded > 0 && loaded >= total ? '🛠️ Préparation de la scène 3D…'
           : `📦 Chargement des fichiers : ${fileName} (${loaded}/${total})`;
         itemEl.title = item;
       }

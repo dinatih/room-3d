@@ -214,6 +214,13 @@
         transition: width 0.15s ease;
         box-shadow: 0 0 8px rgba(211, 47, 47, 0.4);
       }
+      #loading-bar.is-preparing {
+        animation: loading-pulse 1s ease-in-out infinite alternate;
+      }
+      @keyframes loading-pulse {
+        from { opacity: 1; }
+        to { opacity: 0.35; }
+      }
       #loading-item {
         font-family: monospace; font-size: 11px;
         color: #1f2937; font-weight: 600; margin-top: 8px;
