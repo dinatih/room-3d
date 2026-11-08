@@ -1,6 +1,6 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Group, Vector3 } from 'three';
+import { Group, Object3D, Vector3 } from 'three';
 import type { SceneItemProps } from '@shared/types';
 import { INVENTORY } from '@features/inventory/inventoryData';
 import { Microduck } from '../items/Microduck';
@@ -40,6 +40,8 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const cameraMount = useRef(new Vector3());
   const cameraEyes = useRef(new Vector3());
   const cameraForward = useRef(new Vector3());
+  const cameraUp = useRef(new Vector3());
+  const cameraLens = useRef<Object3D | null>(null);
   const cameraRadius = useRef(0);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
   const route = useRef(createRouteState());
@@ -79,6 +81,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       resetRoute(route.current, id);
       removeAgentProfile(id);
       reserveAgentDestination(id, null);
+      cameraLens.current = null;
       delete cameraState.positions[id];
       delete cameraState.animalViews[id];
       if (cameraState.animalTarget === id) {
@@ -187,12 +190,26 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   useFrame(() => {
     const root = group.current;
     if (!root || !profile || !navigationEnabled) return;
-    cameraEyes.current.copy(cameraMount.current);
-    root.localToWorld(cameraEyes.current);
-    root.getWorldDirection(cameraForward.current);
+    const lens = (cameraLens.current ??= root.getObjectByName('lens_mesh_22') ?? null);
+    if (lens) {
+      cameraEyes.current.set(0, 0.027, 0);
+      lens.localToWorld(cameraEyes.current);
+      cameraForward.current.set(0, 1, 0).transformDirection(lens.matrixWorld);
+      cameraUp.current.set(0, 0, 1).transformDirection(lens.matrixWorld);
+    } else {
+      cameraEyes.current.copy(cameraMount.current);
+      root.localToWorld(cameraEyes.current);
+      root.getWorldDirection(cameraForward.current);
+    }
     const view = cameraState.animalViews[id] ??= { eyes: { x: 0, y: 0, z: 0 }, forward: { x: 0, y: 0, z: 1 }, radius: cameraRadius.current };
     Object.assign(view.eyes, cameraEyes.current);
     Object.assign(view.forward, cameraForward.current);
+    if (lens) {
+      view.up ??= { x: 0, y: 1, z: 0 };
+      Object.assign(view.up, cameraUp.current);
+    } else if (view.up) {
+      delete view.up;
+    }
   }, -0.5);
 
   return (

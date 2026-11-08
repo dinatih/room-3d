@@ -315,20 +315,20 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const isFPV = modeRef.current === 'fpv';
     const animal = cameraState.animalTarget && cameraState.animalViews[cameraState.animalTarget];
     if (animal && (isFPV || modeRef.current === 'follow')) {
-      const { eyes, forward } = animal;
+      const { eyes, forward, up } = animal;
       const activeCam = ctrl.object;
-      activeCam.up.set(0, 1, 0);
+      activeCam.up.set(up?.x ?? 0, up?.y ?? 1, up?.z ?? 0);
       if (isFPV) {
         activeCam.position.set(eyes.x, eyes.y, eyes.z);
         const look = _tmpAnimalTarget.set(forward.x, forward.y, forward.z);
-        if (!useDroneControlStore.getState().piloting) {
+        if (!up && !useDroneControlStore.getState().piloting) {
           look.applyAxisAngle(activeCam.up, orbitYaw.current);
           const heading = Math.hypot(look.x, look.z) > Number.EPSILON ? Math.atan2(look.x, look.z) : (cameraState.positions[cameraState.animalTarget!]?.yaw ?? 0);
           _tmpEyeRightVec.set(-Math.cos(heading), 0, Math.sin(heading));
           look.applyAxisAngle(_tmpEyeRightVec, followPitch.current);
         }
         ctrl.target.set(eyes.x + look.x, eyes.y + look.y, eyes.z + look.z);
-        if (cameraState.animalTarget === 'drone') {
+        if (up || cameraState.animalTarget === 'drone') {
           activeCam.lookAt(ctrl.target);
           activeCam.updateMatrixWorld();
           return;

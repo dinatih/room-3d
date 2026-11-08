@@ -14,7 +14,7 @@ export const cameraState = {
   mode: parseUrlCameraMode() as CameraMode,
   /** Animal observé, indépendant du personnage humain actif. */
   animalTarget: null as string | null,
-  animalViews: {} as Record<string, { eyes: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number }; radius: number }>,
+  animalViews: {} as Record<string, { eyes: { x: number; y: number; z: number }; forward: { x: number; y: number; z: number }; radius: number; up?: { x: number; y: number; z: number } }>,
   /** Vue placée dans les yeux : tête masquée en caméra principale, visible dans les miroirs. */
   isFirstPersonView(): boolean {
     return (this.mode === 'fpv' && !this.animalTarget) || this.isXR || (this.mode === 'plane' && this.planeViewMode === 'character');
