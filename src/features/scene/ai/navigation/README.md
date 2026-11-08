@@ -45,6 +45,11 @@ une mesure visuelle, sans imposer la largeur des passages. Les hauteurs excluent
 les volumes qui ne rencontrent pas le corps. Les limites du sol sont des
 barrières ; un trajet ne peut pas traverser un vide entre deux surfaces.
 
+L'esquive latérale anticipe la largeur réelle des modèles. Cette préférence
+reste souple : elle est abandonnée si elle coupe la visibilité du prochain point
+ou rencontre un obstacle. Un détour inter-PNJ indisponible laisse continuer la
+marche ; il ne transforme pas une rencontre en attente obligatoire.
+
 La préférence de confort est de 20 cm : les extrémités des passages sont
 resserrées dans leur espace libre, sans dépasser la moitié de leur largeur.
 Un passage étroit reste donc ouvert. Ce choix remplace l'ancienne optimisation

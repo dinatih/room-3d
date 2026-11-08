@@ -311,6 +311,37 @@ describe('Navigation et portes — géométrie isolée', () => {
             }
         } finally { delete cameraState.positions.walker; delete cameraState.positions.encounter; obstacles.removeAgentProfile('encounter'); }
     });
+    it('esquive la largeur visuelle sans élargir les collisions obligatoires', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const avoidance = loadAvoidance();
+        const crowded = load('src/features/scene/ai/navigation/service.ts', { ...navigationDependencies, '../agent/agentAvoidance': avoidance });
+        obstacles.setAgentProfile('encounter', { radius: 20, height: 170 });
+        const target = { x: 100, z: 0 }, route = crowded.createRouteState();
+        let position = { x: -100, z: 0 }, lateral = 0;
+        cameraState.positions.encounter = { x: 0, z: 20, y: 0 };
+        try {
+            // This neighbour misses the 12 cm hard footprint but intersects the bodies.
+            for (let frame = 0; frame < 200 && g.distance(position, target); frame++) {
+                cameraState.positions.walker = { ...position, y: 0 };
+                const next = crowded.followRoute(route, 'walker', position, target, 3, (direction, remaining) => {
+                    const s = avoidance.computeSteeringVector('walker', position.x, position.z, direction.x, direction.z, remaining);
+                    return { x: s.steerX, z: s.steerZ };
+                });
+                assert(g.distance(position, next) > 0, 'Soft avoidance must keep advancing');
+                assert.equal(route.error, null);
+                lateral = Math.max(lateral, Math.abs(next.z));
+                position = next;
+            }
+            assert(lateral > obstacles.NAVIGATION_RADIUS_CM, 'The sidestep must be visible beyond the hard footprint');
+            assert.deepEqual(position, target);
+        } finally {
+            crowded.resetRoute(route, 'walker');
+            delete cameraState.positions.walker;
+            delete cameraState.positions.encounter;
+            obstacles.removeAgentProfile('encounter');
+        }
+    });
     it('utilise le même rayon pour les PNJ, murs, meubles et portes malgré un modèle plus large', () => {
         const gap = 4 * obstacles.NAVIGATION_RADIUS_CM;
         setup({ living: { ...leaf, length: gap, thickness: 1, pivot: { x: -gap / 2, z: 0 } } }, gap);

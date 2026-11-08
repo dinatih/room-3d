@@ -92,7 +92,8 @@ export function computeSteeringVector(characterId: string, currentX: number, cur
       const other = cameraState.positions[otherId], body = getAgentProfile(otherId);
       if (other.y >= y + profile.height || other.y + body.height <= y) continue;
       const dx = other.x - currentX, dz = other.z - currentZ;
-      const clearance = actorClearance(profile, body);
+      // Visual personal space only: do not widen hard collisions or door passages.
+      const clearance = Math.max(profile.radius, actorRadius(profile)) + Math.max(body.radius, actorRadius(body));
       // Respect both the current footprint and the predicted moving footprint.
       for (const otherVelocity of [undefined, ...(ownVelocity && velocities.has(otherId) ? [velocities.get(otherId)] : [])]) {
         const vx = dirX * speed - (otherVelocity?.x ?? 0), vz = dirZ * speed - (otherVelocity?.z ?? 0);
