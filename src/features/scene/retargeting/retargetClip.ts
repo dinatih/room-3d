@@ -542,10 +542,10 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
                 .applyQuaternion(P_tgt_inv);
               if (isWalk) {
                 dP.applyQuaternion(P_tgt);
-                // Keep authored weight transfer; remove only net lateral travel over the loop.
+                // Keep authored weight transfer; remove only net horizontal travel over the loop.
                 const phase = (clone.times[j] - clone.times[0]) / (clone.times[clone.times.length - 1] - clone.times[0]);
                 dP.x -= THREE.MathUtils.lerp(walkStart.x, walkEnd.x, phase);
-                dP.z = 0;
+                dP.z -= THREE.MathUtils.lerp(walkStart.z, walkEnd.z, phase);
                 dP.applyQuaternion(P_tgt_inv);
               }
               const resPos = bone.defaultPosition.clone().add(dP);
@@ -752,7 +752,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
   // H2 uses its constrained motors and mesh sole bounds, without humanoid toe joints.
   if (supportBone === 'ToeBase' && Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, rawClip.name) && !rawClip.name.includes('run')) {
-    return groundWalkClip(targetInstance, result, ['miley-armature-walk-relaxed-loop', 'walking-slow'].includes(rawClip.name));
+    return groundWalkClip(targetInstance, result);
   }
   return supportBone === 'ToeBase' && animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
 }

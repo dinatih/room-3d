@@ -82,6 +82,7 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
   const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
   const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
   const { resolveTargetBoneName } = require('../../src/features/scene/retargeting/boneResolver.ts');
+  const { supportCorrections } = require('../../scripts/bake-walk-stride.cjs');
   const read = async path => {
     const loader = new GLTFLoader();
     loader.setDRACOLoader({ preload() {} }); // Mesh decoding is skipped by SkeletonOnly.
@@ -121,6 +122,8 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
     for (const definition of definitions) {
       const { id } = definition;
       const source = await read(`public/${definition.path}`);
+      assert(source.scene.userData.walkStrideBake, `${id}: source GLB must contain its baked repair`);
+      assert.equal(source.scene.userData.animationSampling, 'source', `${id}: retain authored contact samples`);
       source.animations[0].name = id; // The worker receives the canonical animation ID.
       const clip = retargetClip(source.animations[0], scene, source.scene, definition.rootMotionSpace); clip.name = id;
       const speed = getWalkCycleSpeed(clip, scene);
@@ -141,6 +144,19 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
           // One millimetre between baked keys, well below the preview's ±2 cm guides.
           assert(Math.abs(floor) < 0.1, `${path} / ${id}: sole ${floor} cm at sample ${sample}`);
         }
+        mixer.stopAllAction(); mixer.uncacheRoot(scene); scene.updateMatrixWorld(true);
+      }
+      if (path.includes('/lara/')) {
+        const feet = ['Left', 'Right'].map(side => scene.getObjectByName(resolveTargetBoneName(scene, side + 'ToeBase')));
+        const mixer = new THREE.AnimationMixer(scene);
+        mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;
+        const samples = Math.ceil(clip.duration * 240);
+        const frames = Array.from({ length: samples + 1 }, (_, index) => {
+          mixer.setTime(clip.duration * index / samples); scene.updateMatrixWorld(true);
+          return { feet: feet.map(foot => foot.getWorldPosition(new THREE.Vector3())) };
+        });
+        const error = Math.max(...supportCorrections(frames).map(delta => Math.hypot(delta.x, delta.z)));
+        assert(error < 0.1, `${id}: source repair leaves ${error} cm horizontal support error`);
         mixer.stopAllAction(); mixer.uncacheRoot(scene); scene.updateMatrixWorld(true);
       }
       for (const track of clip.tracks.filter(track => track.name.endsWith('.position'))) {
