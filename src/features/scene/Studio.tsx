@@ -58,7 +58,7 @@ import { LandingStrips }              from '@features/scene/LandingStrips';
 import { useSceneStore }              from '@features/scene/store/useSceneStore';
 import type { LayerState } from './sidepanel/types';
 import { HDRI_LIST, getHdriById }  from '@features/scene/hdriConfig';
-import { useAppIdle }                  from './idleState';
+import { resetAppIdle, useAppIdle }    from './idleState';
 import { MeasurementTool }            from './MeasurementTool';
 import { RealMeasurementsLayer }      from './RealMeasurementsLayer';
 import { AppConsole }                 from '@features/ui/AppConsole';
@@ -158,7 +158,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
   useLayoutEffect(() => {
     if (!active || readyRef.current) return;
     let cancelled = false;
-    let frame: number | undefined;
+    let timer: ReturnType<typeof setTimeout>;
 
     const prepare = async () => {
       const bar = document.getElementById('loading-bar');
@@ -178,13 +178,11 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         bar.classList.add('is-preparing');
       }
       phase('⚡ Compilation des shaders GPU…');
-      // Laisser peindre le libellé avant la préparation synchrone de compileAsync.
-      const paint = () => new Promise<void>(resolve => {
-        frame = requestAnimationFrame(() => {
-          frame = requestAnimationFrame(() => resolve());
-        });
+      // Céder la main sans attendre une image, suspendue dans un onglet caché.
+      const pause = () => new Promise<void>(resolve => {
+        timer = setTimeout(resolve, 0);
       });
-      await paint();
+      await pause();
       if (cancelled) return;
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
       const targets: Mesh[] = [];
@@ -198,6 +196,8 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         targets.push(mesh);
       });
       for (const [index, mesh] of targets.entries()) {
+        // Éviter une temporisation de compilation ralentie par objet en arrière-plan.
+        if (document.hidden) break;
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         const name = materials.map(material => material.name || material.type).join(', ');
         phase(`⚡ Préparation 3D ${index + 1}/${targets.length} : ${name}`);
@@ -211,23 +211,17 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       if (cancelled) return;
       updateShaders();
       phase('⚡ Initialisation du rendu 3D…');
-      await paint();
+      await pause();
       if (cancelled) return;
 
+      // Préparer textures et ombres même si la boucle R3F est suspendue.
+      gl.shadowMap.needsUpdate = true;
+      gl.render(scene, camera);
+      readyRef.current = true;
       setCompiling(false);
-      let frames = 0;
-      const warmup = () => {
-        frames++;
-        gl.shadowMap.needsUpdate = true;
-        invalidate();
-        if (frames < 7) {
-          frame = requestAnimationFrame(warmup);
-        } else if (!readyRef.current) {
-          readyRef.current = true;
-          onReady();
-        }
-      };
-      frame = requestAnimationFrame(warmup);
+      invalidate();
+      phase('✅ Scène 3D prête');
+      onReady();
     };
     void prepare().catch(error => {
       if (!cancelled) setWarmupError(error instanceof Error ? error : new Error(String(error)));
@@ -235,7 +229,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
 
     return () => {
       cancelled = true;
-      if (frame !== undefined) cancelAnimationFrame(frame);
+      clearTimeout(timer);
     };
   }, [active, gl, scene, camera, invalidate, onReady]);
 
@@ -401,9 +395,16 @@ function LoadingProgress({
 
   // 2. Lancement dès que les assets sont chargés et l'optimisation GPU terminée
   useEffect(() => {
-    if (!assetsDoneRef.current || !sceneReady || hasLaunchedRef.current) return;
-    hasLaunchedRef.current = true;
-    onLaunch();
+    if (!assetsDoneRef.current || !sceneReady) return;
+    const launch = () => {
+      if (document.hidden || hasLaunchedRef.current) return;
+      hasLaunchedRef.current = true;
+      resetAppIdle();
+      onLaunch();
+    };
+    document.addEventListener('visibilitychange', launch);
+    launch();
+    return () => document.removeEventListener('visibilitychange', launch);
   }, [sceneReady, onLaunch]);
 
   return null;
@@ -444,6 +445,8 @@ function SceneDirectionalLight() {
 }
 
 export function Studio() {
+  // ResizeObserver peut attendre une image visible avant de mesurer les Canvas.
+  useEffect(() => { window.dispatchEvent(new Event('resize')); }, []);
   const weatherEnabled = useWeather(state => state.enabled);
   const isMobile = useIsMobile();
   const layers = useSceneStore(state => state.layers);

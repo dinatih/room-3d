@@ -28,10 +28,8 @@ export function GlbReveal() {
       }
       if (!active && hiddenRef.current && !revealedRef.current) {
         revealedRef.current = true;
-        requestAnimationFrame(() => {
-          scene.traverse(obj => {
-            if (obj.userData?.sceneItemRoot) obj.visible = true;
-          });
+        scene.traverse(obj => {
+          if (obj.userData?.sceneItemRoot) obj.visible = true;
         });
       }
     };
