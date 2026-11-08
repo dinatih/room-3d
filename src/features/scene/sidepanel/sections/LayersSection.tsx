@@ -2,6 +2,8 @@ import { useSceneStore } from '../../store/useSceneStore';
 import type { ScreenVideoQuality } from '../../screenVideoConfig';
 import { dispatchKey, type LayerState, type LidarMode } from '../types';
 import { NAVIGATION_COMFORT_CM, NAVIGATION_COMFORT_COLOR } from '../../ai/navigation/comfort';
+import { DEBUG_PRESETS } from '../../store/debugPresets';
+import { LAYER_DEFAULTS } from '../../store/layerUrlParams';
 
 export interface LayersSectionProps {
   layers: LayerState;
@@ -27,6 +29,21 @@ export function LayersSection({
   const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
   const setScreenVideosEnabled = useSceneStore(state => state.setScreenVideosEnabled);
   const setScreenVideoQuality = useSceneStore(state => state.setScreenVideoQuality);
+
+  function applyDebugPreset(name: string) {
+    const preset = DEBUG_PRESETS[name];
+    const url = new URL(window.location.href);
+    url.searchParams.set('debug', name);
+    window.history.replaceState(window.history.state, '', url);
+    const keys = new Set(Object.values(DEBUG_PRESETS).flatMap(value => Object.keys(value.layers))) as Set<keyof LayerState>;
+    for (const key of keys) {
+      const enabled = preset.layers[key] ?? LAYER_DEFAULTS[key] ?? true;
+      if (Boolean(layers[key]) !== enabled) onToggleLayer(key);
+    }
+    if (!['1', 'true'].includes(url.searchParams.get('perfGraph') ?? '')) {
+      document.dispatchEvent(new CustomEvent('toggle-perf'));
+    }
+  }
 
   const iconLabel = (icon: string, label: string) => (
     <span className="d-inline-flex align-items-center gap-1"><i className={`bi ${icon}`} aria-hidden="true" />{label}</span>
@@ -95,6 +112,11 @@ export function LayersSection({
 
   return (
     <div className="d-flex flex-column bg-transparent">
+      <div className="d-flex flex-wrap gap-2 px-3 py-2 border-bottom" role="group" aria-label="Modes de diagnostic">
+        {([['characters-only', 'Personnages seuls'], ['studio-only', 'Studio seul']] as const).map(([name, label]) => (
+          <button key={name} type="button" className="btn btn-sm btn-outline-secondary" onClick={() => applyDebugPreset(name)}>{label}</button>
+        ))}
+      </div>
       {layerBtn(iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
       <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
         <div className="form-check form-switch small mb-0">
