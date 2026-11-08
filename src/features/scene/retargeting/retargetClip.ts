@@ -752,7 +752,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
   // H2 uses its constrained motors and mesh sole bounds, without humanoid toe joints.
   if (supportBone === 'ToeBase' && Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, rawClip.name) && !rawClip.name.includes('run')) {
-    return groundWalkClip(targetInstance, result);
+    return groundWalkClip(targetInstance, result, ['miley-armature-walk-relaxed-loop', 'walking-slow'].includes(rawClip.name));
   }
   return supportBone === 'ToeBase' && animScene?.userData.footContacts ? bakeFootContacts(targetInstance, result, animScene.userData.footContacts) : result;
 }

@@ -11,7 +11,7 @@ import { useItemAnnotations, updateAnnotation, exportAnnotationsJson, ANNOTATION
 import { getAnimationOriginTransform, getDuoAnimationTransformOverride, setAnimationTransformOverride, setDuoAnimationTransformOverride } from '@features/scene/animations/animationResolver';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import { INVENTORY } from './inventoryData';
-import { ANIMATION_WALK_SPEEDS } from '@features/scene/ai/agent/agentWalkAnimations';
+import { ANIMATION_WALK_SPEEDS, NPC_WALK_ANIMATIONS } from '@features/scene/ai/agent/agentWalkAnimations';
 import {
   STUDIO_CATALOG, SOURCE_LABELS, EMPTY_STUDIO_FILTERS,
   filterStudioAnimations, adjacentStudioAnimation, type StudioFilters, type StudioAnimation,
@@ -32,7 +32,8 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
   const [actorId, setActorId] = useState('native');
   const [partnerId, setPartnerId] = useState('rosanna');
   const [moreFilters, setMoreFilters] = useState(false);
-  const [walksOnly, setWalksOnly] = useState(false);
+  const [walkFilter, setWalkFilter] = useState<'' | 'pool' | 'all'>('');
+  const walksOnly = walkFilter !== '';
   const walkCycleSpeed = useAnimPreviewStore(state => state.walkCycleSpeed);
   useEffect(() => {
     useAnimPreviewStore.setState({ walkDebug: walksOnly && mode === 'solo', walkCycleSpeed: null });
@@ -43,7 +44,7 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
   const searchRef = useRef<HTMLInputElement>(null);
   const { allAnnotations } = useItemAnnotations();
   const filters = filtersByMode[mode];
-  const catalog = useMemo(() => STUDIO_CATALOG[mode].filter(a => !walksOnly || mode !== 'solo' || Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, a.id)), [mode, walksOnly]);
+  const catalog = useMemo(() => STUDIO_CATALOG[mode].filter(a => !walkFilter || mode !== 'solo' || (walkFilter === 'pool' ? NPC_WALK_ANIMATIONS.includes(a.id) : Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, a.id))), [mode, walkFilter]);
   const results = useMemo(() => filterStudioAnimations(catalog, filters, allAnnotations), [catalog, filters, allAnnotations]);
   const [missingTarget, setMissingTarget] = useState(initialTarget?.type === 'animation' && !STUDIO_CATALOG[initialTarget.mode].some(a => a.id === initialTarget.id));
   const active = missingTarget ? undefined : results.find(a => a.id === selection[mode]) ?? results[0];
@@ -213,7 +214,9 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
             </button>)}
           </div>
           <div className="input-group input-group-sm mb-2">
-            {mode === 'solo' && <button type="button" className={`btn ${walksOnly ? 'btn-primary' : 'btn-outline-primary'}`} aria-pressed={walksOnly} onClick={() => setWalksOnly(value => !value)}>Marches</button>}
+            {mode === 'solo' && <select className="form-select form-select-sm w-auto" aria-label="Filtrer les marches" value={walkFilter} onChange={event => setWalkFilter(event.target.value as typeof walkFilter)}>
+              <option value="">Toutes les animations</option><option value="pool">Marches · pool PNJ ({NPC_WALK_ANIMATIONS.length})</option><option value="all">Toutes les marches</option>
+            </select>}
             <input ref={searchRef} type="text" className="form-control" aria-label="Rechercher une animation"
               placeholder="Nom, identifiant, tags, notes…" value={filters.search} onChange={e => updateFilters({ search: e.target.value })} />
             {filters.search && <button type="button" className="btn btn-outline-secondary px-3"
