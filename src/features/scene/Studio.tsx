@@ -5,7 +5,7 @@ import { WeatherSystem } from './WeatherSystem';
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
  */
 import { useState, useCallback, useEffect, useLayoutEffect, useRef, Suspense, lazy } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 
 import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
 import {
@@ -150,16 +150,17 @@ const WARMUP_ANIM_PATHS = [
 function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }) {
   const { gl, scene, camera, invalidate } = useThree();
   const readyRef = useRef(false);
+  const [compiling, setCompiling] = useState(true);
   const [warmupError, setWarmupError] = useState<Error | null>(null);
+  // Éviter qu'un premier rendu compile les shaders avant la phase annoncée.
+  useFrame(() => {}, compiling ? 1 : 0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active || readyRef.current) return;
     let cancelled = false;
     let frame: number | undefined;
 
     const prepare = async () => {
-      const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
-
       const bar = document.getElementById('loading-bar');
       const itemEl = document.getElementById('loading-item');
       const phase = (text: string) => {
@@ -170,10 +171,22 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       };
       if (bar) bar.style.width = '100%';
       phase('⚡ Compilation GPU et chargement des animations…');
+      // Laisser peindre le libellé avant la préparation synchrone de compileAsync.
+      const paint = () => new Promise<void>(resolve => {
+        frame = requestAnimationFrame(() => {
+          frame = requestAnimationFrame(() => resolve());
+        });
+      });
+      await paint();
+      if (cancelled) return;
+      const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
       await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
       phase('⚡ Initialisation du rendu 3D…');
+      await paint();
+      if (cancelled) return;
 
+      setCompiling(false);
       let frames = 0;
       const warmup = () => {
         frames++;
@@ -319,34 +332,41 @@ function LoadingProgress({
   onAssetsLoaded: () => void;
   onLaunch: () => void;
 }) {
-  const { active, loaded, total, item } = useProgress();
   const assetsDoneRef = useRef(false);
   const hasLaunchedRef = useRef(false);
 
-  // 1. Suivi du téléchargement des assets (ratio absolu loaded/total pour éviter les allers-retours de Drei)
+  // Suivre le gestionnaire directement, avant les rendus React coûteux de la scène.
   useEffect(() => {
-    if (assetsDoneRef.current) return;
-    const bar = document.getElementById('loading-bar');
-    const itemEl = document.getElementById('loading-item');
+    let timer: ReturnType<typeof setTimeout>;
+    const update = ({ active, loaded, total, item, errors }: ReturnType<typeof useProgress.getState>) => {
+      clearTimeout(timer);
+      if (assetsDoneRef.current) return;
+      const bar = document.getElementById('loading-bar');
+      const itemEl = document.getElementById('loading-item');
 
-    const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
-    if (bar) bar.style.width = `${pct}%`;
-    if (itemEl && item) {
-      const fileName = item.split('/').pop()?.split('?')[0] || item;
-      itemEl.textContent = `📦 Téléchargement : ${fileName} (${loaded}/${total})`;
-      itemEl.title = item;
-    }
+      const pct = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+      if (bar) bar.style.width = `${pct}%`;
+      if (itemEl) {
+        const fileName = item.split('/').pop()?.split('?')[0] || item;
+        itemEl.textContent = errors.length ? `❌ Échec du chargement : ${errors.join(', ')}`
+          : !active && loaded > 0 && loaded >= total ? '🛠️ Fichiers chargés · préparation de la scène 3D…'
+          : `📦 Chargement des fichiers : ${fileName} (${loaded}/${total})`;
+        itemEl.title = item;
+      }
 
-    if (!active && loaded > 0 && loaded >= total) {
-      const timer = setTimeout(() => {
-        if (!assetsDoneRef.current) {
-          assetsDoneRef.current = true;
-          onAssetsLoaded();
-        }
-      }, 60);
-      return () => clearTimeout(timer);
-    }
-  }, [active, loaded, total, item, onAssetsLoaded]);
+      if (!active && loaded > 0 && loaded >= total && !errors.length) {
+        timer = setTimeout(() => {
+          if (!assetsDoneRef.current) {
+            assetsDoneRef.current = true;
+            onAssetsLoaded();
+          }
+        }, 60);
+      }
+    };
+    const unsubscribe = useProgress.subscribe(update);
+    update(useProgress.getState());
+    return () => { unsubscribe(); clearTimeout(timer); };
+  }, [onAssetsLoaded]);
 
   // 2. Lancement dès que les assets sont chargés et l'optimisation GPU terminée
   useEffect(() => {
