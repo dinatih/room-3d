@@ -276,8 +276,8 @@ export function ViewControlBar({
               type="button"
               className={`${TOOLBAR_BUTTON_CLASS} view-control-bar__btn--yellow`}
               onClick={chooseRandomCharacter}
-              title="Changer aléatoirement le PNJ actif parmi les personnages visibles (S)"
-              aria-label="Changer aléatoirement le PNJ actif (S)"
+              title="Changer aléatoirement de sujet (personnages, robots, animaux) (S)"
+              aria-label="Changer aléatoirement de sujet (S)"
               aria-keyshortcuts="s"
             >
               <i className="bi bi-shuffle" aria-hidden="true" />

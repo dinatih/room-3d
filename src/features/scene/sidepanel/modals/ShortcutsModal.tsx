@@ -42,7 +42,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           <div className="modal-body py-1">
             <div>
               <Section title="Global" />
-              <R label={<>PNJ actif aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['S']} />
+              <R label={<>Sujet aléatoire (personnages, robots, animaux) <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['S']} />
               <R label={<><i className="bi bi-camera me-1" aria-hidden="true" />Photo Raytracing HD</>} keys={['F10']} />
               <R label="Inventaire (toggle)"        keys={['I']} />
               <R label="Inventaire Animations (direct)" keys={['Shift+I']} />
