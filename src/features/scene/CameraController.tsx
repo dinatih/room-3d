@@ -66,7 +66,7 @@ import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButton
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
 import { getInventoryGridCameraTarget } from './inventoryGridCamera';
 
-const FPV_DEFAULT_FOV = 100;
+const FPV_DEFAULT_FOV = 120;
 const FPV_DEFAULT_PITCH = -0.50;
 
 const _tmpEyeTargetVec = new THREE.Vector3();
