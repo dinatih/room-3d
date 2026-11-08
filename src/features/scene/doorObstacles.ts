@@ -42,7 +42,7 @@ export const glassShutterState = { clearHeight: 210 };
 /** Live animation commands, sampled with navigation stops and world snapshots. */
 export const glassDoorState = {
   right: { allowed: Math.PI / 2, push: 0, minimum: 0, target: 0, manualOpen: false },
-  left: { allowed: Math.PI / 2, push: 0, minimum: 0, target: 0, manualOpen: false },
+  left: { allowed: Math.PI, push: 0, minimum: 0, target: 0, manualOpen: false },
   rightClearsLeft: false, shutterPercent: 0, targetShutter: 0,
 };
 
@@ -290,7 +290,7 @@ export const DOOR_CONFIGS = {
     thickness: 5.5,
     closedDir: { x: 1, z: 0 },
     openNormal: { x: 0, z: 1 },  // Pivote vers le séjour (Z positif)
-    maxAngle: Math.PI / 2,
+    maxAngle: Math.PI,
     yMin: 20,
     yMax: 210,
     margin: 3.0,
