@@ -53,6 +53,8 @@ class SmartObjectOccupancyManager {
   }
 
   canUseObject(objectId: string, characterId?: string): boolean {
+    const state = useSceneStore.getState();
+    if (objectId === 'tv-view' && (state.desk2ScreenActive || state.extraStates.desk2Screen)) return false;
     const owner = SMART_OBJECTS[objectId]?.ownerCharacterId;
     return !owner || owner === characterId;
   }

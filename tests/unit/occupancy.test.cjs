@@ -8,7 +8,7 @@ function fixture() {
     const objects = { living: { id: 'living', position: [100, 0, 100], slots }, outside: { id: 'outside', position: [100, 0, -100], slots: [{ slotId: 'use', offset: [100, 0, -100] }] } };
     objects.corridor = { id: 'corridor', position: [250, 0, 550], slots: slots.map(slot => ({ ...slot, offset: [250, 0, 550] })) };
     for (const id of ['toilet', 'vasque-sdb', 'sdb-closet', 'shower', 'storage-box']) objects[id] = { id, position: [100, 0, 550], slots: [{ slotId: 'use', offset: [100, 0, 550], approachOffset: [250, 0, 550] }] };
-    const camera = { positions: {} }, store = { activeCharacterId: 'player' };
+    const camera = { positions: {} }, store = { activeCharacterId: 'player', desk2ScreenActive: false, extraStates: { desk2Screen: false } };
     const module = load('src/features/scene/ai/occupancyManager.ts', {
         './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: id => objects[id] },
         '../cameraState': { cameraState: camera }, '../characterConfig': { CHARACTERS: [...ids, 'player', 'ybot'].map(id => ({ id })) },
@@ -17,6 +17,22 @@ function fixture() {
     });
     return { ids, camera, store, objects, ...module, manager: module.OccupancyManager };
 }
+
+it('rend la télé indisponible pendant l’utilisation automatique ou manuelle de l’ordinateur', () => {
+    const { manager, store, objects } = fixture();
+    objects['tv-view'] = { id: 'tv-view', position: [100, 0, 100], slots: [{ slotId: 'watch' }] };
+    for (const state of [store, store.extraStates]) {
+        const key = state === store ? 'desk2ScreenActive' : 'desk2Screen';
+        state[key] = true;
+        assert.equal(manager.canUseObject('tv-view', 'player'), false);
+        assert.equal(manager.getAvailableSlot('tv-view', 'npc-0'), null);
+        assert.equal(manager.claimSlot('tv-view', 'watch', 'npc-0'), false);
+        assert(manager.canUseObject('outside', 'npc-0'));
+        state[key] = false;
+        assert(manager.claimSlot('tv-view', 'watch', 'npc-0'));
+        manager.releaseAllForCharacter('npc-0');
+    }
+});
 
 it('exclut réciproquement les objets et slots d’un groupe, puis les libère', () => {
     const { manager, objects } = fixture();

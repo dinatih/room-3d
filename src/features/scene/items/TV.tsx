@@ -19,10 +19,9 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  const { isVideoActive: videoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
+  const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
 
   const isTvOn = actionState[ACTION_KEY] ?? false;
-  const isVideoActive = videoActive && isTvOn;
   const isDisplaying = isVideoActive || isTvOn;
   const activeTex = isVideoActive ? videoTex : (isTvOn ? screenTex : null);
   const [screenZ, setScreenZ] = useState(0);
