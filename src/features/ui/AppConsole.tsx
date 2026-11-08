@@ -271,7 +271,7 @@ export function AppConsole({
   // À l'ouverture, montrer les derniers messages même si le défilement est en pause.
   useLayoutEffect(() => {
     if (logAreaRef.current) logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
-  }, [open, hidden]);
+  }, [open, hidden, activeCharacterId, filterBubbleOnly]);
 
   // Auto-scroll du panneau de logs si non en pause
   useEffect(() => {
@@ -393,6 +393,14 @@ export function AppConsole({
       setIsMaximized(false);
       setCycleStep(0);
     }
+  };
+
+  const selectLogCharacter = (id: string) => {
+    useSceneStore.getState().setActiveCharacterId(id);
+    setFilterBubbleOnly(true);
+    setCategoryFilter('');
+    setActionFilter('');
+    setCycleStep(2);
   };
 
   return (
@@ -579,15 +587,19 @@ export function AppConsole({
                       ) : tagParts.map((part, i) => {
                         const ch = findCharacter(part);
                         const partColor = ch?.color ?? getTagColor(part);
+                        const Tag = ch ? 'button' : 'span';
                         return (
                           <span key={i}>
                             {i > 0 && <span className="text-muted mx-0.5" style={{ fontSize: '8px' }}>+</span>}
-                            <span
+                            <Tag
+                              type={ch ? 'button' : undefined}
+                              onClick={ch ? () => selectLogCharacter(ch.id) : undefined}
+                              title={ch ? `Activer ${ch.name} et afficher ses logs` : undefined}
                               className="badge py-0 px-1 font-monospace"
                               style={{ backgroundColor: `${partColor}18`, color: partColor, border: `1px solid ${partColor}40`, fontSize: '10px' }}
                             >
                               {ch ? `${ch.emoji} ${ch.name}` : part}
-                            </span>
+                            </Tag>
                           </span>
                         );
                       })}
