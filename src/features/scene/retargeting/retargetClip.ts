@@ -527,20 +527,24 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
               clone.values[3*j+2] = resPos.z;
             }
           } else {
+            const walkStart = new THREE.Vector3().fromArray(clone.values).sub(srcRestPos).multiplyScalar(computedHipsRatio).applyQuaternion(P_src);
+            const walkEnd = new THREE.Vector3().fromArray(clone.values, clone.values.length - 3).sub(srcRestPos).multiplyScalar(computedHipsRatio).applyQuaternion(P_src);
             for (let j = 0; j < clone.values.length / 3; j++) {
               let yVal = clone.values[3*j+1] + yMinDelta;
               // Substring matching also freezes twist-pose, boat-pose and split-pose.
               const isTPose = animNameLower === 't-pose';
               const dy = isTPose ? 0.0 : (yVal - srcRestPos.y) * computedHipsRatio;
-              const dx = (isWalk || isTPose) ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
-              const dz = (isWalk || isTPose) ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
+              const dx = isTPose ? 0.0 : (clone.values[3*j] - srcRestPos.x) * computedHipsRatio;
+              const dz = isTPose ? 0.0 : (clone.values[3*j+2] - srcRestPos.z) * computedHipsRatio;
 
               const dP = new THREE.Vector3(dx, dy, dz)
                 .applyQuaternion(P_src)
                 .applyQuaternion(P_tgt_inv);
               if (isWalk) {
                 dP.applyQuaternion(P_tgt);
-                dP.x = 0;
+                // Keep authored weight transfer; remove only net lateral travel over the loop.
+                const phase = (clone.times[j] - clone.times[0]) / (clone.times[clone.times.length - 1] - clone.times[0]);
+                dP.x -= THREE.MathUtils.lerp(walkStart.x, walkEnd.x, phase);
                 dP.z = 0;
                 dP.applyQuaternion(P_tgt_inv);
               }

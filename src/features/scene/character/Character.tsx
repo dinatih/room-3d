@@ -1145,7 +1145,7 @@ export function Character({
       }
 
       // Verrouillage optionnel des hanches sur place (Hips-Lock X/Z) pour tester/comparer
-      if ((store.lockHipsXZ || store.walkDebug) && parts.bones.hips) {
+      if (store.lockHipsXZ && parts.bones.hips) {
         const hips = parts.bones.hips;
         const parent = hips.parent!;
         parent.updateWorldMatrix(true, false);
