@@ -109,7 +109,7 @@ export function Beds() {
       const night = hour >= 2 && hour < 6;
       if (night && nightDay !== day) {
         nightDay = day;
-        daytimePositions = Object.fromEntries(['desk1-position', 'desk2-position', 'smorkull-position'].map(key => [key, positionState[key]?.idx ?? 0]));
+        daytimePositions = Object.fromEntries(['desk1-position', 'desk2-position'].map(key => [key, positionState[key]?.idx ?? 0]));
         setDoublePosIdx(Math.random() < 0.5 ? 0 : 1);
         if (!useSceneStore.getState().furniture.bedDouble) useSceneStore.getState().toggleFurniture('bedDouble');
       } else if (!night && nightDay !== undefined) {
@@ -128,31 +128,28 @@ export function Beds() {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'bed-position') {
-        setDoublePosIdx(i => {
-          const next = (i + 1) % DOUBLE_BED_POSITIONS.length;
-          positionState['bed-position'] = { idx: next, total: DOUBLE_BED_POSITIONS.length };
-          positionState['bed-west-position'] = { idx: isDouble ? next : -1, total: DOUBLE_BED_POSITIONS.length };
-          positionState['bed-east-position'] = { idx: isDouble ? next : -1, total: DOUBLE_BED_POSITIONS.length };
-          return next;
-        });
+        setDoublePosIdx(i => (i + 1) % DOUBLE_BED_POSITIONS.length);
       }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, [isDouble]);
+  }, []);
 
   useEffect(() => {
     positionState['bed-position'] = { idx: doublePosIdx, total: DOUBLE_BED_POSITIONS.length };
     positionState['bed-double'] = { idx: isDouble ? 1 : 0, total: 2 };
     positionState['bed-west-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
     positionState['bed-east-position'] = { idx: isDouble ? doublePosIdx : -1, total: DOUBLE_BED_POSITIONS.length };
+    useSceneStore.setState(state => ({ extraStates: { ...state.extraStates, 'bed-position': doublePosIdx === 1 } }));
   }, [doublePosIdx, isDouble]);
 
   useEffect(() => {
-    if (!isDouble || doublePosIdx > 1) return;
-    const positions = doublePosIdx === 0
-      ? { 'desk1-position': 1, 'desk2-position': 1 }
-      : { 'desk1-position': DESK1_POSITIONS.length - 1, 'desk2-position': DESK2_POSITIONS.length - 1, 'smorkull-position': SMORKULL_POSITIONS.length - 1 };
+    const east = isDouble && doublePosIdx === 1;
+    const positions: Record<string, number> = { 'smorkull-position': east ? SMORKULL_POSITIONS.length - 1 : 0 };
+    if (isDouble) Object.assign(positions, {
+      'desk1-position': east ? DESK1_POSITIONS.length - 1 : 1,
+      'desk2-position': east ? DESK2_POSITIONS.length - 1 : 1,
+    });
     for (const [key, index] of Object.entries(positions)) {
       document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index } }));
     }

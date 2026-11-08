@@ -71,15 +71,17 @@ export interface DoubleBedConfig {
   east: { x: number; z: number };
 }
 
+export const BED_FRAME_WIDTH = 83;
+export const BED_FRAME_LENGTH = 205;
+
 export const SINGLE_BED_POSITIONS = {
   west: { x: 74, z: 166, ry: Math.PI / 2 },
   east: { x: ROOM_W - 45.5, z: 190, ry: Math.PI / 2 },
 } as const;
 
 export const DOUBLE_BED_POSITIONS: readonly DoubleBedConfig[] = [
-  { label: 'Mur Ouest', west: { x: 74, z: 180 },               east: { x: 157, z: 180 } },
+  { label: 'Mur Ouest', west: { x: 16 + 22 / 2 + BED_FRAME_WIDTH / 2, z: 180 }, east: { x: 16 + 22 / 2 + BED_FRAME_WIDTH * 1.5, z: 180 } },
   { label: 'Mur Est',   west: { x: ROOM_W - 128.5, z: 190 },     east: { x: ROOM_W - 45.5, z: 190 } },
-  { label: 'Centré',    west: { x: ROOM_W / 2 - 41.5, z: 190 }, east: { x: ROOM_W / 2 + 41.5, z: 190 } },
 ];
 
 // Positions du lit Ouest (Utåker frame Ouest / 'bed-west')

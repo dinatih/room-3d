@@ -15,7 +15,7 @@ import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDron
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
-import { DOUBLE_BED_POSITIONS } from '../furniturePositions';
+import { DOUBLE_BED_POSITIONS, BED_FRAME_WIDTH, BED_FRAME_LENGTH } from '../furniturePositions';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
@@ -90,24 +90,26 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         approachOffset: [0, 0, 80 + HUMAN_BODY_RADIUS],
         animationsRandom: 'seated-front',
       },
-      {
-        slotId: 'lie-down-left',
-        excludes: ['seat-left', 'seat-right'],
-        name: 'Dormir couché (Gauche)',
+      ...Array.from({ length: 4 }, (_, i) => ({
+        slotId: `lie-down-cross-${i + 1}`,
+        name: `Dormir en travers (${i + 1}/4)`,
+        excludes: ['seat-left', 'seat-right', ...Array.from({ length: 3 }, (_, j) => `lie-down-length-${j + 1}`)],
         relative: true,
-        offset: [-35, 45, 0],
-        approachOffset: [-35, 0, -80 - HUMAN_BODY_RADIUS],
+        offset: [BED_FRAME_LENGTH * (i - 1.5) / 4, 45, 0] as [number, number, number],
+        approachOffset: [BED_FRAME_LENGTH * (i - 1.5) / 4, 0, BED_FRAME_WIDTH + HUMAN_BODY_RADIUS] as [number, number, number],
+        rotY: 0,
         animationsRandom: 'sleep',
-      },
-      {
-        slotId: 'lie-down-right',
+      })),
+      ...Array.from({ length: 3 }, (_, i) => ({
+        slotId: `lie-down-length-${i + 1}`,
+        name: `Dormir dans la longueur (${['Gauche', 'Milieu', 'Droite'][i]})`,
         excludes: ['seat-left', 'seat-right'],
-        name: 'Dormir couché (Droite)',
         relative: true,
-        offset: [35, 45, 0],
-        approachOffset: [35, 0, 80 + HUMAN_BODY_RADIUS],
+        offset: [0, 45, 2 * BED_FRAME_WIDTH * (i - 1) / 3] as [number, number, number],
+        approachOffset: [-BED_FRAME_LENGTH / 2 - HUMAN_BODY_RADIUS, 0, 2 * BED_FRAME_WIDTH * (i - 1) / 3] as [number, number, number],
+        rotY: Math.PI / 2,
         animationsRandom: 'sleep',
-      }
+      })),
     ]
   },
   'bed-west': {
@@ -913,6 +915,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'hugs-point': {
     id: 'hugs-point',
+    get exclusiveGroup() { return positionState['bed-double']?.idx === 1 ? 'interx-garden' : undefined; },
     name: '💖 Point Câlins',
     category: 'decor',
     position: [180, 0, 200],
@@ -1452,7 +1455,7 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
   // 1. Résolution de la transformation monde via getObjectTransform
   let transform = base.itemId ? getObjectTransform(base.itemId) : undefined;
   if (positionState['bed-double']?.idx === 1) {
-    if (objectId === 'interx-affection-point') {
+    if (objectId === 'interx-affection-point' || objectId === 'hugs-point') {
       // Inter-X includes travelling duos: use the existing open garden area.
       transform = { position: SMART_OBJECTS['interx-affection-garden-point'].position!, rotationY: 0 };
     } else if (objectId === 'clean-floor-living' || objectId === 'dance-mirror-south' || objectId === 'dance-bed-east-north') {
@@ -1490,7 +1493,9 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
     }
 
     const localOffset = slot.offset || [0, 0, 0];
-    const localApproach = slot.approachOffset;
+    const localApproach = objectId === 'bed-double' && slot.slotId.startsWith('lie-down-cross-')
+      ? [slot.approachOffset![0], 0, (positionState['bed-position']?.idx === 1 ? -1 : 1) * (BED_FRAME_WIDTH + HUMAN_BODY_RADIUS)]
+      : slot.approachOffset;
 
     const ox = localOffset[0];
     const oy = localOffset[1];

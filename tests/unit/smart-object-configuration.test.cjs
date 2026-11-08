@@ -24,10 +24,10 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
   const { getAnimationsByTags, resolveSlotAnimationInfo } = load('src/features/scene/animations/animationResolver.ts', {
     './animationRegistry': registry, './duoAnimations': {},
   });
-  const { beds } = load('src/features/scene/ai/smartObjectRegistry.ts', {}, source => {
+  const { beds } = load('src/features/scene/ai/smartObjectRegistry.ts', { furniture: require('../../src/features/scene/furniturePositions.ts') }, source => {
     const begin = source.indexOf("  'bed-double': {");
     const end = source.indexOf("\n  },", source.indexOf("  'bed-east': {", begin)) + 5;
-    return `const HUMAN_BODY_RADIUS = 20; export const beds = { ${source.slice(begin, end)} };`;
+    return `import { BED_FRAME_WIDTH, BED_FRAME_LENGTH } from 'furniture'; const HUMAN_BODY_RADIUS = 20; export const beds = { ${source.slice(begin, end)} };`;
   });
   const sleepIds = getAnimationsByTags('sleep').map(animation => animation.id);
   assert.ok(sleepIds.includes('laying-sleeping'));
@@ -44,5 +44,19 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
   for (const id of ['gunplay', 'gunplay-1', 'gunplay-shooting']) {
     const animation = registry.ANIMATION_DEFINITIONS.find(animation => animation.id === id);
     assert.deepEqual(animation.tags, ['combat']);
+  }
+  const cross = beds['bed-double'].slots.filter(slot => slot.slotId.startsWith('lie-down-cross-'));
+  const length = beds['bed-double'].slots.filter(slot => slot.slotId.startsWith('lie-down-length-'));
+  assert.equal(cross.length, 4);
+  assert.equal(length.length, 3);
+  assert.equal(length[1].offset[2], 0, 'Une place doit rester au milieu du lit');
+  for (const slot of cross) {
+    assert.equal(slot.rotY, 0);
+    for (const other of length) assert.ok(slot.excludes.includes(other.slotId));
+    for (const other of cross) assert.ok(!slot.excludes.includes(other.slotId));
+  }
+  for (const slot of length) {
+    assert.equal(slot.rotY, Math.PI / 2);
+    for (const other of length) assert.ok(!slot.excludes.includes(other.slotId));
   }
 });
