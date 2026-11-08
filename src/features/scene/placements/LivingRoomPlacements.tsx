@@ -124,9 +124,12 @@ export function Beds() {
   }, [doublePosIdx, isDouble]);
 
   useEffect(() => {
-    if (!isDouble || doublePosIdx !== 0) return;
-    for (const key of ['desk1-position', 'desk2-position']) {
-      document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index: 1 } }));
+    if (!isDouble || doublePosIdx > 1) return;
+    const positions = doublePosIdx === 0
+      ? { 'desk1-position': 1, 'desk2-position': 1 }
+      : { 'desk1-position': DESK1_POSITIONS.length - 1, 'desk2-position': DESK2_POSITIONS.length - 1, 'smorkull-position': SMORKULL_POSITIONS.length - 1 };
+    for (const [key, index] of Object.entries(positions)) {
+      document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index } }));
     }
   }, [isDouble, doublePosIdx]);
 
@@ -336,17 +339,21 @@ export function OfficeChair() {
   }, []);
   useEffect(() => {
     const handler = (e: Event) => {
-      const { key } = (e as CustomEvent).detail as { key: string };
+      const { key, index } = (e as CustomEvent).detail as { key: string; index?: number };
       if (key === 'smorkull-position') {
         setPosIdx(i => {
-          const next = (i + 1) % SMORKULL_POSITIONS.length;
+          const next = index ?? (i + 1) % SMORKULL_POSITIONS.length;
           positionState['smorkull-position'] = { idx: next, total: SMORKULL_POSITIONS.length };
           return next;
         });
       }
     };
     document.addEventListener('furniture-toggle', handler);
-    return () => document.removeEventListener('furniture-toggle', handler);
+    document.addEventListener('furniture-position-set', handler);
+    return () => {
+      document.removeEventListener('furniture-toggle', handler);
+      document.removeEventListener('furniture-position-set', handler);
+    };
   }, []);
   useEffect(() => { positionState['smorkull-position'] = { idx: posIdx, total: SMORKULL_POSITIONS.length }; }, [posIdx]);
   const p = parking ?? SMORKULL_POSITIONS[posIdx];

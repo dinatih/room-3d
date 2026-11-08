@@ -28,11 +28,14 @@ const DESK_DEPTH = 36;
 const EAST_DESK_X = ROOM_W - FURNITURE_WALL_CLEARANCE - DESK_DEPTH / 2;
 const FREEZER_NORTH_Z = ROOM_D - SHOE_HAT_RACK.width - 47.37 - FURNITURE_WALL_CLEARANCE;
 const EAST_DESK2_Z = FREEZER_NORTH_Z - DESK_WIDTH / 2;
+// DIMPA : centre X=16, profondeur 22 cm ; bureaux accolés côté séjour.
+const DIMPA_DESK_X = 16 + 22 / 2 + DESK_DEPTH / 2;
 
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
   { x: 73.5, z: 18,   ry: 0           },
   { x: EAST_DESK_X, z: EAST_DESK2_Z - DESK_WIDTH, ry: -Math.PI / 2 },
   { x: 40,   z: 60,   ry: Math.PI     },
+  { x: DIMPA_DESK_X, z: 155, ry: Math.PI / 2 },
 ];
 
 export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
@@ -40,6 +43,7 @@ export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
   { x: EAST_DESK_X, z: EAST_DESK2_Z, ry: -Math.PI / 2 },
   { x: 240, z: 120, ry: Math.PI     },
   { x: 73.5, z: 18, ry: Math.PI     },
+  { x: DIMPA_DESK_X, z: 155 + DESK_WIDTH, ry: Math.PI / 2 },
 ];
 
 export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
@@ -47,6 +51,7 @@ export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
   { x: 150, z: 100, ry: Math.PI      },
   { x: 150, z: 300, ry: Math.PI      },
   { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
+  { x: DIMPA_DESK_X + DESK_DEPTH / 2 + 66 / 2, z: 155, ry: -Math.PI / 2 }, // devant bureau 1 / DIMPA
 ];
 
 export const AIRPERFORMER_POSITIONS: readonly FurnitureTransform[] = [
