@@ -11,6 +11,8 @@ import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
+import { simulationClock, useLaraLifeStore } from '../ai/laraLifeStore';
+import { lifeClock } from '../ai/laraLife';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
@@ -98,6 +100,29 @@ export function Beds() {
   const toggles = useFurnitureToggles(['bed-double']);
   const isDouble = !!toggles['bed-double'];
   const [doublePosIdx, setDoublePosIdx] = useState(0);
+
+  useEffect(() => {
+    let nightDay: number | undefined;
+    let daytimePositions: Record<string, number> = {};
+    const update = () => {
+      const { day, hour } = lifeClock(simulationClock.minutes);
+      const night = hour >= 2 && hour < 6;
+      if (night && nightDay !== day) {
+        nightDay = day;
+        daytimePositions = Object.fromEntries(['desk1-position', 'desk2-position', 'smorkull-position'].map(key => [key, positionState[key]?.idx ?? 0]));
+        setDoublePosIdx(Math.random() < 0.5 ? 0 : 1);
+        if (!useSceneStore.getState().furniture.bedDouble) useSceneStore.getState().toggleFurniture('bedDouble');
+      } else if (!night && nightDay !== undefined) {
+        nightDay = undefined;
+        if (useSceneStore.getState().furniture.bedDouble) useSceneStore.getState().toggleFurniture('bedDouble');
+        for (const [key, index] of Object.entries(daytimePositions)) {
+          document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index } }));
+        }
+      }
+    };
+    update();
+    return useLaraLifeStore.subscribe(update);
+  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {

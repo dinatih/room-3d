@@ -15,6 +15,7 @@ import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDron
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
+import { DOUBLE_BED_POSITIONS } from '../furniturePositions';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
@@ -928,6 +929,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'interx-affection-point': {
     id: 'interx-affection-point',
+    get exclusiveGroup() { return positionState['bed-double']?.idx === 1 ? 'interx-garden' : undefined; },
     name: '🫂 Point Duo Inter-X',
     category: 'decor',
     position: [180, 0, 100],
@@ -954,6 +956,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   },
   'interx-affection-garden-point': {
     id: 'interx-affection-garden-point',
+    exclusiveGroup: 'interx-garden',
     name: '🫂 Point Duo Inter-X Jardin',
     category: 'outdoor',
     position: [150, 0, -200],
@@ -1447,7 +1450,23 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
   if (!base) return undefined;
 
   // 1. Résolution de la transformation monde via getObjectTransform
-  const transform = base.itemId ? getObjectTransform(base.itemId) : undefined;
+  let transform = base.itemId ? getObjectTransform(base.itemId) : undefined;
+  if (positionState['bed-double']?.idx === 1) {
+    if (objectId === 'interx-affection-point') {
+      // Inter-X includes travelling duos: use the existing open garden area.
+      transform = { position: SMART_OBJECTS['interx-affection-garden-point'].position!, rotationY: 0 };
+    } else if (objectId === 'clean-floor-living' || objectId === 'dance-mirror-south' || objectId === 'dance-bed-east-north') {
+      const bed = DOUBLE_BED_POSITIONS[positionState['bed-position']?.idx ?? 0];
+      const westDesk = getObjectTransform('desk-bollsidan-1')!;
+      const eastDesk = getObjectTransform('desk-bollsidan-2')!;
+      // Centre of the aisle between the double bed (83 cm per frame) and desks (36 cm deep).
+      const westSide = bed.west.x > ROOM_W / 2;
+      const x = westSide
+        ? (Math.max(westDesk.position[0], eastDesk.position[0]) + 36 / 2 + bed.west.x - 83 / 2) / 2
+        : (bed.east.x + 83 / 2 + Math.min(westDesk.position[0], eastDesk.position[0]) - 36 / 2) / 2;
+      transform = { position: [x, 0, base.position![2]], rotationY: base.rotationY ?? 0 };
+    }
+  }
 
   const objX = transform ? transform.position[0] : (base.position?.[0] ?? 0);
   const objY = transform ? transform.position[1] : (base.position?.[1] ?? 0);
