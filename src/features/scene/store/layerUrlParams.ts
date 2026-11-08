@@ -45,7 +45,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Éclairage & ombres
   lights: false,
   lightsHD: false,
-  olaSpotlight: false,
   shadows: true,
   realSun: false,
   // Personnages

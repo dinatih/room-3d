@@ -96,7 +96,6 @@ export function LayersSection({
   return (
     <div className="d-flex flex-column bg-transparent">
       {layerBtn(iconLabel('bi-stars', 'Lumières HD'), 'lightsHD')}
-      {layerBtn(iconLabel('bi-lightbulb', 'Spotlight OLA (test temporaire)'), 'olaSpotlight')}
       <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
         <div className="form-check form-switch small mb-0">
           <input
