@@ -60,20 +60,20 @@ if (typeof window !== 'undefined') {
   window.addEventListener('popstate', () => useWeather.setState({ enabled: new URLSearchParams(window.location.search).get('weather') !== '0', automatic: new URLSearchParams(window.location.search).get('weatherAuto') !== '0' }));
 }
 // Artistic cycle: six simulated hours per condition, thirty-minute transitions.
-const PERIOD = 6 * 60;
+export const WEATHER_PERIOD = 6 * 60;
 const TRANSITION = 30;
 const CLOUD_DAY_COLOR = new Color('#edf1f5');
-const phases = [
-  { coverage: 0.05, rain: 0, snow: 0, windSpeed: 1, windDirection: 90 },
-  { coverage: 0.8, rain: 0, snow: 0, windSpeed: 4, windDirection: 120 },
-  { coverage: 1, rain: 0.8, snow: 0, windSpeed: 7, windDirection: 150 },
-  { coverage: 0.9, rain: 0, snow: 0.8, windSpeed: 2, windDirection: 90 },
+export const WEATHER_PHASES = [
+  { icon: 'bi-sun-fill', label: 'Beau temps', weather: { coverage: 0.05, rain: 0, snow: 0, windSpeed: 1, windDirection: 90 } },
+  { icon: 'bi-cloud-fill', label: 'Nuages', weather: { coverage: 0.8, rain: 0, snow: 0, windSpeed: 4, windDirection: 120 } },
+  { icon: 'bi-cloud-rain-fill', label: 'Pluie', weather: { coverage: 1, rain: 0.8, snow: 0, windSpeed: 7, windDirection: 150 } },
+  { icon: 'bi-snow', label: 'Neige', weather: { coverage: 0.9, rain: 0, snow: 0.8, windSpeed: 2, windDirection: 90 } },
 ];
 export function automaticWeather(minutes: number) {
   if (!Number.isFinite(minutes) || minutes < 0) throw new Error('Invalid weather time');
-  const phase = Math.floor(minutes / PERIOD) % phases.length;
-  const from = phases[(phase + phases.length - 1) % phases.length], to = phases[phase];
-  const blend = MathUtils.smoothstep(minutes % PERIOD, 0, TRANSITION);
+  const phase = Math.floor(minutes / WEATHER_PERIOD) % WEATHER_PHASES.length;
+  const from = WEATHER_PHASES[(phase + WEATHER_PHASES.length - 1) % WEATHER_PHASES.length].weather, to = WEATHER_PHASES[phase].weather;
+  const blend = MathUtils.smoothstep(minutes % WEATHER_PERIOD, 0, TRANSITION);
   return Object.fromEntries(Object.keys(to).map(key => [key, MathUtils.lerp(from[key as keyof typeof from], to[key as keyof typeof to], blend)])) as typeof to;
 }
 const settings = [

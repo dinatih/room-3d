@@ -3,7 +3,7 @@ import { useSceneStore, getRandomGrassType } from './store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { GroundType, LayerState } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
-import { WeatherControls } from './Weather';
+import { WeatherControls, useWeather, WEATHER_PERIOD, WEATHER_PHASES } from './Weather';
 import { solarPosition } from './SunLight';
 import { advanceToTime, useLaraLifeStore } from './ai/laraLifeStore';
 import { cameraState } from './cameraState';
@@ -22,6 +22,7 @@ const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
 
 export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const layers = useSceneStore(state => state.layers);
+  const automaticWeather = useWeather(state => state.enabled && state.automatic);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
@@ -120,6 +121,13 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             </button>
           </div>
 
+          {automaticWeather && <div className="position-relative py-2 small text-primary" aria-label="Horaires de la météo automatique">
+            {WEATHER_PHASES.map(({ icon, label }, index) => {
+              const hour = (8 + index * WEATHER_PERIOD / 60) % 24;
+              const description = `${label} à partir de ${hour} h (transition de 30 min simulées)`;
+              return <i key={label} className={`bi ${icon} position-absolute top-50 translate-middle`} style={{ left: `${hour / 24 * 100}%` }} role="img" aria-label={description} title={description} />;
+            })}
+          </div>}
           <input type="range" className="form-range day-time-range my-1" min={0} max={24 * 60} step={1}
             aria-label="Avancer l’heure de la journée" title="Avancer à cette heure ; une heure antérieure passe au lendemain"
             value={selectedMinute ?? Math.floor(hourFloat * 60)} onChange={event => setSelectedMinute(Number(event.target.value))}
