@@ -131,6 +131,19 @@
   --bs-btn-hover-border-color: #{palette.$red};
 }
 
+.view-control-bar__subject-picker:popover-open {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .popover-header { flex-shrink: 0; }
+  .popover-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+}
+
 .view-control-bar__npc-popover:not(:popover-open) {
   display: none;
 }

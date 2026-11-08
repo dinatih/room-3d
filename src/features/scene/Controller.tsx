@@ -218,18 +218,18 @@ export function Controller({ visible = false }: { visible?: boolean }) {
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
               <div className={`virtual-dpad ${!isCamera ? 'virtual-dpad--subject' : ''}`} role="group" aria-label={isCamera ? 'Déplacement de la caméra' : `Déplacement : ${piloting ? 'Hornet' : subject.label}`}>
                 {!isCamera && <div className="virtual-dpad__subject">
-                  <PanelPopover icon={subject.icon} title="Objet de position de la caméra" compactMode triggerClassName="virtual-dpad__button rounded-3" onOpen={popover => {
+                  <PanelPopover icon={subject.icon} title="Objet de position de la caméra" compactMode className="view-control-bar__subject-picker" triggerClassName="virtual-dpad__button rounded-3" onOpen={popover => {
                     refreshSubjects();
                     requestAnimationFrame(() => (popover.querySelector<HTMLButtonElement>('[aria-selected="true"]:not(:disabled)') ?? popover.querySelector<HTMLButtonElement>('[role="option"]:not(:disabled)'))?.focus());
                   }}>
-                    <button type="button" className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 w-100 mb-2"
+                    <button type="button" className="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 w-100 mb-2 flex-shrink-0 text-wrap"
                       onClick={event => {
                         const choices = subjects.filter(choice => choice.cameraSubject === 'character' || availableSubjects.includes(choice.id));
                         pickSubject(choices[Math.floor(Math.random() * choices.length)], event.currentTarget);
                       }}>
-                      <i className="bi bi-shuffle" aria-hidden="true" />Choisir un sujet aléatoire
+                      <i className="bi bi-shuffle" aria-hidden="true" />Choisir un sujet aléatoire (personnages, robots, animaux)
                     </button>
-                    <div role="listbox" aria-label="Position caméra" className="d-flex flex-column gap-1" onKeyDown={event => {
+                    <div role="listbox" aria-label="Position caméra" className="d-flex flex-column gap-1 overflow-y-auto" onKeyDown={event => {
                       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
                       event.preventDefault();
                       const options = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
@@ -238,7 +238,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
                       options[next].focus();
                     }}>
                       {subjects.map(choice => <button key={choice.id} type="button" role="option" aria-selected={choice.id === selectedSubjectId}
-                        className={`btn btn-sm d-flex align-items-center gap-2 text-start ${choice.id === selectedSubjectId ? 'btn-primary' : 'btn-outline-secondary border-0'}`}
+                        className={`btn btn-sm d-flex align-items-center gap-2 text-start flex-shrink-0 ${choice.id === selectedSubjectId ? 'btn-primary' : 'btn-outline-secondary border-0'}`}
                         disabled={choice.cameraSubject !== 'character' && !availableSubjects.includes(choice.id)}
                         onClick={event => pickSubject(choice, event.currentTarget)}>
                         <i className={`bi ${choice.icon}`} aria-hidden="true" /><span>{choice.label}</span>
