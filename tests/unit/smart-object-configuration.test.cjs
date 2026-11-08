@@ -30,6 +30,26 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
     return `import { BED_FRAME_WIDTH, BED_FRAME_LENGTH } from 'furniture'; const HUMAN_BODY_RADIUS = 20; export const beds = { ${source.slice(begin, end)} };`;
   });
   const sleepIds = getAnimationsByTags('sleep').map(animation => animation.id);
+  const furniture = require('../../src/features/scene/furniturePositions.ts');
+  const positionState = { 'bed-position': { idx: 0 }, 'bed-double': { idx: 1 } };
+  const fixtures = { ...furniture, positionState, HUMAN_BODY_RADIUS: 20, SMART_OBJECTS: beds,
+    getObjectTransform: () => { const p = furniture.BED_DOUBLE_CENTER_POSITIONS[positionState['bed-position'].idx]; return { position: [p.x, 0, p.z], rotationY: p.ry }; } };
+  const { getSmartObject } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures }, source =>
+    `import { positionState, HUMAN_BODY_RADIUS, BED_FRAME_WIDTH, BED_FRAME_LENGTH, DOUBLE_BED_POSITIONS, SMART_OBJECTS, getObjectTransform } from 'fixtures';\n${source.slice(source.indexOf('export function getSmartObject(objectId:'))}`);
+  for (const side of [0, 1]) {
+    positionState['bed-position'].idx = side;
+    const bed = furniture.DOUBLE_BED_POSITIONS[side];
+    const seats = getSmartObject('bed-double').slots.filter(slot => slot.slotId.startsWith('seat-'));
+    assert.equal(seats.length, 2);
+    assert.ok(seats[0].offset[2] < seats[1].offset[2]);
+    for (const seat of seats) {
+      const edge = side === 0 ? bed.east.x + furniture.BED_FRAME_WIDTH / 2 : bed.west.x - furniture.BED_FRAME_WIDTH / 2;
+      assert.ok(side === 0 ? seat.offset[0] > edge : seat.offset[0] < edge, 'Pieds hors du matelas');
+      assert.ok(side === 0 ? seat.approachOffset[0] > seat.offset[0] : seat.approachOffset[0] < seat.offset[0]);
+      assert.equal(seat.offset[1], 0);
+      assert.equal(seat.rotY, side === 0 ? Math.PI / 2 : 3 * Math.PI / 2);
+    }
+  }
   assert.ok(sleepIds.includes('laying-sleeping'));
   assert.ok(getAnimationsByTags('sleep').every(animation => !animation.tags.includes('transition')));
   assert.deepEqual(getAnimationsByTags('sleep-transition').map(animation => animation.id), ['lie-down-bed', 'get-up-bed']);
