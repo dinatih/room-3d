@@ -122,7 +122,8 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
     for (const definition of definitions) {
       const { id } = definition;
       const source = await read(`public/${definition.path}`);
-      assert(source.scene.userData.walkStrideBake, `${id}: source GLB must contain its baked repair`);
+      assert.equal(Boolean(source.scene.userData.authoredStride), ['goofy-running', 'running', 'miley-armature-catwalk-loop'].includes(id));
+      assert(source.scene.userData.walkStrideBake || source.scene.userData.authoredStride, `${id}: source GLB must declare its stride treatment`);
       assert.equal(source.scene.userData.animationSampling, 'source', `${id}: retain authored contact samples`);
       source.animations[0].name = id; // The worker receives the canonical animation ID.
       const clip = retargetClip(source.animations[0], scene, source.scene, definition.rootMotionSpace); clip.name = id;
@@ -146,7 +147,7 @@ it('vérifie toutes les marches calibrées sur chaque squelette humanoïde, sans
         }
         mixer.stopAllAction(); mixer.uncacheRoot(scene); scene.updateMatrixWorld(true);
       }
-      if (path.includes('/lara/')) {
+      if (path.includes('/lara/') && !source.scene.userData.authoredStride) {
         const feet = ['Left', 'Right'].map(side => scene.getObjectByName(resolveTargetBoneName(scene, side + 'ToeBase')));
         const mixer = new THREE.AnimationMixer(scene);
         mixer.clipAction(clip).setLoop(THREE.LoopOnce, 1).play().clampWhenFinished = true;

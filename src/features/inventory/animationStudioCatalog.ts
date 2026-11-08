@@ -2,6 +2,7 @@ import { ENHANCED_ANIM_OPTIONS, normalizeSearchStr, getAnimSources } from '@feat
 import { getAnimationDef } from '@features/scene/animations/animationResolver';
 import { DUO_ANIMATIONS, type DuoAnimationDef } from '@features/scene/animations/duoAnimations';
 import type { ItemAnnotation, AnnotationStatus } from './useItemAnnotations';
+import { ANIMATION_WALK_SPEEDS, NPC_WALK_ANIMATIONS } from '@features/scene/ai/agent/agentWalkAnimations';
 
 export interface StudioAnimation {
   id: string;
@@ -54,7 +55,9 @@ export function filterStudioAnimations(catalog: StudioAnimation[], filters: Stud
   const tokens = normalizeSearchStr(filters.search).trim().split(/\s+/).map(token => token.replace(/^#/, '')).filter(Boolean);
   const result = catalog.filter(a => {
     const annotation = annotations[a.annotationId];
-    if (filters.category && a.category !== filters.category) return false;
+    if (filters.category === 'npc-walk' ? !NPC_WALK_ANIMATIONS.includes(a.id)
+      : filters.category === 'walk' ? !Object.prototype.hasOwnProperty.call(ANIMATION_WALK_SPEEDS, a.id)
+      : filters.category && a.category !== filters.category) return false;
     if (filters.source && !a.sources.includes(filters.source)) return false;
     if (filters.status === 'unannotated' ? Boolean(annotation) : filters.status && annotation?.status !== filters.status) return false;
     if (filters.tag && !annotation?.tags.includes(filters.tag)) return false;

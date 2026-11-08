@@ -61,6 +61,7 @@ async function main() {
   for (const def of definitions) {
     const filename = 'public/' + def.path, bytes = fs.readFileSync(filename);
     const source = await parse(bytes);
+    assert(!source.scene.userData.authoredStride, `Keep authored stride: ${def.id}`);
     assert(!source.scene.userData.walkStrideBake, `Already baked: ${def.id}`);
     source.scene.userData.animationSampling = 'source';
     const raw = source.animations[0].clone(); raw.name = def.id;
