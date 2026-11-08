@@ -844,6 +844,7 @@ export function Character({
       }
       const idleId = resolveAnimationId('idle');
       if (actions[activeActionName.current] && (actions[activeActionName.current].loop === THREE.LoopOnce
+        || getAnimationDef(activeActionName.current)?.tags.includes('sleep')
         || (!isPreview && !characterGrid && getAgentStatus() === 'TRANSITIONING'))) {
         target = activeActionName.current;
       } else if (!isPreview && !characterGrid && actions[ANIMATION_LOADING_IDLE]) {
