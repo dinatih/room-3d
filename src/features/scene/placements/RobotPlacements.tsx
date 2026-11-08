@@ -13,23 +13,16 @@ import { RAPH_DRIVE_SPEED } from '../items/raphMotion';
 import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { getNavigationGraph, createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
-import { setAgentProfile, getAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
+import { randomReachableTarget, createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
+import { setAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import type { Point } from '../ai/navigation/geometry';
 import { cameraState } from '../cameraState';
 import { isAppIdle } from '../idleState';
 import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
 import { appLog } from '@features/ui/AppConsole';
-import { WALL_DEFS, WALL_THICKNESS } from '../wallData';
 import { SubjectDriver } from '../camera/subjectControls';
 
-// Extend patrols 2 metres beyond the studio's actual west/east exterior walls.
-const PATROL = {
-  minX: Math.min(...WALL_DEFS.map(wall => wall.axis === 'x' ? wall.x1 : wall.xc - (wall.t ?? WALL_THICKNESS) / 2)) - 200,
-  maxX: Math.max(...WALL_DEFS.map(wall => wall.axis === 'x' ? wall.x2 : wall.xc + (wall.t ?? WALL_THICKNESS) / 2)) + 200,
-  minZ: -620, maxZ: -420,
-};
 const ROBOTS = [
   { id: 'microduck', Component: Microduck, position: [320, 0, -440], walk: 'walk', speed: 9.917671587151622, pause: 4, radiusScale: 2 / 3 },
   { id: 'unitree-h2', Component: UnitreeH2, position: [120, 0, -520], walk: 'walking', speed: 147.4, pause: 2, radiusScale: 1 / 2 },
@@ -169,13 +162,10 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
           selectMotion('idle');
           if (id === 'unitree-h2' || ai.searching || navigationValue('robot-trip', () => Math.random()) < 2 / 3) {
             ai.searching = true;
-            const target = navigationValue('robot-target', () => ({
-              x: PATROL.minX + Math.random() * (PATROL.maxX - PATROL.minX),
-              z: PATROL.minZ + Math.random() * (PATROL.maxZ - PATROL.minZ),
-            }));
             const start = { x: root.position.x, z: root.position.z };
-            if (Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
-              && isAgentDestinationFree(id, target) && getNavigationGraph(getAgentProfile(id)).canReach(start, target)) {
+            const target = randomReachableTarget(id, start);
+            if (target && Math.hypot(start.x - target.x, start.z - target.z) >= profile.radius * 2
+              && isAgentDestinationFree(id, target)) {
               ai.target = target;
               ai.searching = false;
               reserveAgentDestination(id, target);
