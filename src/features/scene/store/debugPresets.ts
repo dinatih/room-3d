@@ -1,6 +1,10 @@
 import type { LayerState } from '../sidepanel/types';
 
 const DEBUG_PRESETS: Record<string, { layers: Partial<Record<keyof LayerState, boolean>>; perfGraph: boolean }> = {
+  'studio-only': {
+    layers: { character: false, animals: false, robots: false },
+    perfGraph: true,
+  },
   'characters-only': {
     layers: {
       wallStructure: false,
