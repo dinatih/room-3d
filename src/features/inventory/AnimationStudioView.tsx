@@ -320,6 +320,7 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
               </div>
               <span className="small text-muted text-nowrap">{activeIndex + 1} / {results.length}</span>
               <span className="small text-truncate" title={active?.label}>{active?.label ?? 'Aucune sélection'}</span>
+              {active && <code className="text-dark bg-light px-1 py-0.5 rounded border small user-select-all flex-shrink-0" title="Double-cliquer pour copier l’ID">{active.id}</code>}
             </div>
             {active && currentItem && <AnimFrameController key={mode} compact keyboardEnabled={false} showAnimationSelectors={false}
               animName={active.label} animKey={mode === 'solo' ? active.id : undefined} isHumanCharacter characterId={currentItem.id}
