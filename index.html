@@ -221,10 +221,9 @@
         from { opacity: 1; }
         to { opacity: 0.35; }
       }
-      #loading-item {
+      #loading-item, #loading-shaders {
         font-family: monospace; font-size: 11px;
-        color: #1f2937; font-weight: 600; margin-top: 8px;
-        margin-bottom: 14px;
+        color: #1f2937; font-weight: 600;
         width: 100%; max-width: 100%;
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         text-shadow: 0 1px 1px rgba(255, 255, 255, 0.95);
@@ -262,7 +261,8 @@
           <div id="loading-progress-section">
             <div id="loading-shiba" role="img" aria-label="Chargement de la scène 3D : chien et balle animés"></div>
             <div id="loading-track"><div id="loading-bar"></div></div>
-            <div id="loading-item" class="text-truncate w-100 px-3">Chargement des éléments…</div>
+            <div id="loading-item" class="text-truncate w-100 px-3 mt-2">Chargement des éléments…</div>
+            <div id="loading-shaders" class="text-truncate w-100 px-3 mb-2" aria-live="polite"></div>
 
           </div>
         </div>

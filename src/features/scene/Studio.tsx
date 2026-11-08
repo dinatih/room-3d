@@ -12,7 +12,7 @@ import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
-  PerspectiveCamera, OrthographicCamera, type LightShadow,
+  PerspectiveCamera, OrthographicCamera, type LightShadow, type Material,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -163,6 +163,10 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
     const prepare = async () => {
       const bar = document.getElementById('loading-bar');
       const itemEl = document.getElementById('loading-item');
+      const shaderEl = document.getElementById('loading-shaders');
+      const updateShaders = () => {
+        if (shaderEl) shaderEl.textContent = `Shaders GPU : ${gl.info.programs?.length ?? 0}`;
+      };
       const phase = (text: string) => {
         if (itemEl) {
           itemEl.textContent = text;
@@ -183,12 +187,30 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       await paint();
       if (cancelled) return;
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
-      const shadersPromise = gl.compileAsync(scene, camera);
-      const shaderCount = gl.info.programs?.length ?? 0;
-      phase(`⚡ Compilation : ${shaderCount} shaders GPU · animations…`);
-      await Promise.all([shadersPromise, animsPromise]);
+      const targets: Mesh[] = [];
+      const seen = new Set<Material>();
+      scene.traverse(object => {
+        const mesh = object as Mesh;
+        if (!mesh.material) return;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        if (materials.every(material => seen.has(material))) return;
+        materials.forEach(material => seen.add(material));
+        targets.push(mesh);
+      });
+      for (const [index, mesh] of targets.entries()) {
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        const name = materials.map(material => material.name || material.type).join(', ');
+        phase(`⚡ Préparation 3D ${index + 1}/${targets.length} : ${name}`);
+        updateShaders();
+        await gl.compileAsync(mesh, camera, scene);
+        if (cancelled) return;
+      }
+      // Compléter les variantes liées aux autres objets partageant un matériau.
+      phase('⚡ Finalisation des shaders et animations…');
+      await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
-      phase(`⚡ Rendu 3D · ${shaderCount} shaders GPU préparés`);
+      updateShaders();
+      phase('⚡ Initialisation du rendu 3D…');
       await paint();
       if (cancelled) return;
 
