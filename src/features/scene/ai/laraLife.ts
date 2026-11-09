@@ -266,7 +266,7 @@ export function lifeClock(elapsedSeconds: number) {
 }
 
 export function routineActivities(hour: number): LifeActivity[] {
-  if (hour < 6) return ['sleep'];
+  if (hour >= 22 || hour < 6) return ['sleep'];
   if (hour < 9) return ['shower', 'meal'];
   if (hour === 12 || hour === 13 || hour === 19 || hour === 20) return ['meal'];
   return hour < 18 ? ['work', ...LEISURE_ACTIVITIES] : LEISURE_ACTIVITIES;

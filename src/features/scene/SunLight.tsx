@@ -42,6 +42,7 @@ export function SunLight() {
 
   return (
     <directionalLight
+      name="SunLight"
       ref={lightRef}
       intensity={0}
       castShadow
