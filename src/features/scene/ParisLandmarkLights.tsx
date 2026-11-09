@@ -13,9 +13,40 @@ const LANDMARKS = [
   ] },
   // Corniche et deux piédroits ; l'ouverture centrale reste sombre.
   { name: 'ArcDeTriomphe', layer: 'arcLights', resolution: [7978, 3989], facades: [
-    [4964, 2033, 16, 2, 10, 2], [4964, 2035, 4, 11, 3, 7], [4976, 2035, 4, 11, 3, 7],
+    [5003, 2131, 14, 5, 9, 3], [5003, 2136, 4, 13, 3, 8], [5012, 2136, 5, 13, 3, 8],
+  ] },
+  { name: 'SeineBridges', layer: 'bridgeLights', resolution: [7978, 3989], paths: [
+    [[2300, 2380], [2430, 2320]], // Grenelle
+    [[2610, 2460], [2670, 2410], [2720, 2380], [2760, 2366]], // Rouelle
+    [[3310, 2345], [3505, 2420]], // Bir-Hakeim
+    [[3950, 2285], [4100, 2317]], // Iéna
+    [[4225, 2225], [4285, 2230]], // Debilly
+    [[4215, 2182], [4275, 2188]], // Alma
+    [[4165, 2140], [4202, 2145]], // Invalides
+    [[4145, 2130], [4185, 2133]], // Alexandre III
+  ] },
+  { name: 'ChampDeMars', layer: 'champDeMarsLights', resolution: [7978, 3989], paths: [
+    [[3490, 2182], [3587, 2210], [3675, 2233], [3760, 2250], [3800, 2257]],
+    [[3515, 2168], [3590, 2181], [3685, 2202], [3773, 2217], [3840, 2232]],
+    [[3490, 2182], [3515, 2168]], [[3800, 2257], [3840, 2232]],
+  ] },
+  { name: 'ParisAvenues', layer: 'avenueLights', resolution: [7978, 3989], paths: [
+    // Axes bordant le Champ-de-Mars.
+    [[3450, 2165], [3550, 2200], [3650, 2240], [3770, 2285]],
+    [[3520, 2148], [3630, 2170], [3750, 2200], [3880, 2240]],
+    // Perspective dégagée de l'Étoile vers le Trocadéro.
+    [[5008, 2150], [5010, 2170], [5020, 2195], [5027, 2220], [5035, 2260], [5040, 2300], [5042, 2350], [5035, 2400], [5025, 2480]],
+  ] },
+  { name: 'BoisDeBoulogne', layer: 'boisLights', resolution: [7978, 3989], spacing: 24, paths: [
+    // Lisières visibles : quatre fois moins de points que les avenues, sans traverser la couture du HDR.
+    [[5750, 2160], [6200, 2140], [6800, 2122], [7400, 2115], [7978, 2120]],
+    [[0, 2120], [300, 2130], [600, 2155], [850, 2187], [760, 2220], [650, 2250], [500, 2290], [350, 2330], [200, 2365], [0, 2400]],
+    [[7978, 2400], [7700, 2420], [7400, 2390], [7130, 2370], [6980, 2440], [6700, 2380], [6400, 2310], [6120, 2260], [5900, 2220], [5750, 2160]],
   ] },
 ] as const;
+
+// Un point tous les six pixels du HDR 8k donne des lampadaires distincts à l'échelle du panorama.
+const STREET_LAMP_SPACING_PX = 6;
 
 function panoramaPoint(x: number, y: number, width: number, height: number, radius: number) {
   const az = x / width * Math.PI * 2;
@@ -34,10 +65,20 @@ function LandmarkLights({ landmark, radius }: { landmark: typeof LANDMARKS[numbe
   const beacon = useRef<THREE.PointsMaterial>(null);
   const [facade, summit] = useMemo(() => {
     const positions: number[] = [];
-    for (const [x, y, width, height, columns, rows] of landmark.facades) {
+    const addPoint = (x: number, y: number) => positions.push(...panoramaPoint(x, y, landmark.resolution[0], landmark.resolution[1], radius));
+    if ('facades' in landmark) for (const [x, y, width, height, columns, rows] of landmark.facades) {
       for (let row = 0; row < rows; row++) for (let column = 0; column < columns; column++) {
-        positions.push(...panoramaPoint(x + column * width / (columns - 1), y + row * height / (rows - 1), landmark.resolution[0], landmark.resolution[1], radius));
+        addPoint(x + column * width / (columns - 1), y + row * height / (rows - 1));
       }
+    }
+    if ('paths' in landmark) for (const path of landmark.paths) {
+      for (let i = 1; i < path.length; i++) {
+        const [x, y] = path[i - 1], [endX, endY] = path[i];
+        const steps = Math.ceil(Math.hypot(endX - x, endY - y) / ('spacing' in landmark ? landmark.spacing : STREET_LAMP_SPACING_PX));
+        for (let step = 0; step < steps; step++) addPoint(x + (endX - x) * step / steps, y + (endY - y) * step / steps);
+      }
+      const last = path[path.length - 1];
+      addPoint(last[0], last[1]);
     }
     return [new Float32Array(positions), 'beacon' in landmark ? new Float32Array(panoramaPoint(landmark.beacon[0], landmark.beacon[1], landmark.resolution[0], landmark.resolution[1], radius)) : null];
   }, [landmark, radius]);

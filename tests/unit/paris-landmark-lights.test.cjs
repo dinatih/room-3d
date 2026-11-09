@@ -11,10 +11,10 @@ it('réserve les monuments au panorama Paris de nuit et respecte leurs calques',
       react: { useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
       '@react-three/fiber': { useFrame: fn => { frame = fn; } },
       './astronomy': { simulatedHour: () => 12, daylight: () => light },
-      './store/useSceneStore': { useSceneStore: select => select({ currentHdri, layers: { montparnasseLights: enabled, bnfLights: enabled, arcLights: enabled } }) },
+      './store/useSceneStore': { useSceneStore: select => select({ currentHdri, layers: { montparnasseLights: enabled, bnfLights: enabled, arcLights: enabled, bridgeLights: enabled, champDeMarsLights: enabled, avenueLights: enabled, boisLights: enabled } }) },
     });
     const monuments = ParisLandmarkLights({ skyRadius: 3600 });
-    assert.equal(monuments.length, 3);
+    assert.equal(monuments.length, 7);
     for (const monument of monuments) {
       refs = [];
       const tree = monument.type(monument.props);
@@ -34,7 +34,7 @@ it('réserve les monuments au panorama Paris de nuit et respecte leurs calques',
           const az = Math.atan2(positions[i + 2], -positions[i]);
           const x = az / (2 * Math.PI) * 7978 + 7978;
           const y = (0.5 - Math.asin(positions[i + 1] / radius) / Math.PI) * 3989;
-          assert(!(x > 4969 && x < 4975 && y > 2036), 'le passage de l’Arc reste ouvert');
+          assert(!(x > 5008 && x < 5011 && y > 2138), 'le passage de l’Arc reste ouvert');
         }
       }
       if (tree.props.name === 'MontparnasseLights') {

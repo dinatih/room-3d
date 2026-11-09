@@ -1,286 +1,126 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './astronomy';
 
-const AZ_SPIRE = 173.50;
-const STROBE_COUNT = 140;
+// Structure visible relevée dans le HDR 7978 × 3989, sans remplir les arches.
+const STRUCTURE = [
+  [[3847, 1974], [3847, 2006]],
+  [[3839, 2008], [3847, 2005], [3855, 2009], [3853, 2018], [3841, 2018], [3839, 2008]],
+  [[3841, 2018], [3841, 2050], [3838, 2090], [3833, 2130], [3827, 2161]],
+  [[3853, 2018], [3855, 2050], [3858, 2090], [3863, 2130], [3870, 2161]],
+  [[3842, 2024], [3856, 2055], [3838, 2090], [3862, 2125], [3828, 2160]],
+  [[3853, 2024], [3840, 2055], [3858, 2090], [3834, 2125], [3869, 2160]],
+  [[3825, 2162], [3870, 2165], [3868, 2171], [3826, 2169], [3825, 2162]],
+  [[3826, 2171], [3804, 2211], [3774, 2255]],
+  [[3837, 2171], [3820, 2214], [3790, 2255]],
+  [[3842, 2170], [3836, 2220], [3837, 2273]],
+  [[3852, 2170], [3853, 2220], [3852, 2273]],
+  [[3858, 2170], [3870, 2212], [3897, 2261]],
+  [[3868, 2170], [3885, 2210], [3912, 2263]],
+  [[3804, 2211], [3838, 2220], [3894, 2214], [3885, 2210]],
+  [[3804, 2216], [3838, 2225], [3894, 2219]],
+  [[3778, 2254], [3794, 2237], [3809, 2233], [3825, 2242], [3839, 2267]],
+  [[3852, 2268], [3863, 2242], [3880, 2235], [3895, 2243], [3909, 2262]],
+] as const;
 
-const UPPER_LEVELS = [
-  { elev: -6.86, l: 172.88, r: 174.38 }, // 1er étage
-  { elev: -4.22, l: 173.25, r: 173.95 }, // 2ème étage
-  { elev: -0.88, l: 173.39, r: 173.71 }, // 3ème étage / dôme
-  { elev: 0.53, l: 173.48, r: 173.52 },  // Sommet / antenne
-];
-
-const PILLARS: [number, number, number, number][] = [
-  [172.48, 172.85, 172.88, 173.25], // Pilier avant-gauche
-  [173.40, 173.95, 173.45, 173.80], // Pilier arrière (vue 3/4 dans l'arche)
-  [174.35, 174.75, 174.00, 174.38], // Pilier avant-droit
-];
-
-function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
-  const phi = (azimuthDeg * Math.PI) / 180;
-  const theta = ((90 - elevDeg) * Math.PI) / 180;
-  return [
-    -radius * Math.cos(phi) * Math.sin(theta),
-    radius * Math.cos(theta),
-    radius * Math.sin(phi) * Math.sin(theta),
-  ];
+function panoramaPoint(x: number, y: number, radius: number) {
+  const az = x / 7978 * Math.PI * 2, el = (0.5 - y / 3989) * Math.PI;
+  return new THREE.Vector3(-radius * Math.cos(az) * Math.cos(el), radius * Math.sin(el), radius * Math.sin(az) * Math.cos(el));
 }
 
 export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) {
-  const currentHdri = useSceneStore(state => state.currentHdri);
-  const enabled = useSceneStore(state => state.layers.eiffelSparkle ?? true);
-
+  const active = useSceneStore(state => state.currentHdri === 'default' && state.layers.eiffelSparkle);
   const groupRef = useRef<THREE.Group>(null);
   const beaconRef = useRef<THREE.Group>(null);
-  const beaconMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const lanternMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const glowMatRef = useRef<THREE.MeshBasicMaterial>(null);
-  const strobeMatRef = useRef<THREE.ShaderMaterial>(null);
   const eastWallLightRef = useRef<THREE.PointLight>(null);
-
-  const r = skyRadius * 0.988;
-
-  // 1. Silhouette dorée (corps supérieur + piliers évasés et arche)
-  const glowGeo = useMemo(() => {
-    const pos: number[] = [];
-    const idx: number[] = [];
-    for (let i = 0; i < UPPER_LEVELS.length; i++) {
-      const { elev, l, r: rAz } = UPPER_LEVELS[i];
-      pos.push(...toSpherical(l, elev, r * 0.999));
-      pos.push(...toSpherical(rAz, elev, r * 0.999));
-      if (i < UPPER_LEVELS.length - 1) {
-        const v = i * 2;
-        idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
-      }
+  const radius = skyRadius * 0.992;
+  const summit = useMemo(() => panoramaPoint(3847, 2008, radius), [radius]);
+  const [structure, lighting, beam, beamMaterial] = useMemo(() => {
+    const positions: number[] = [];
+    for (const path of STRUCTURE) for (let i = 1; i < path.length; i++) {
+      const [x, y] = path[i - 1], [endX, endY] = path[i];
+      // Deux pixels du HDR 8k entre les points gardent la structure fine.
+      const steps = Math.ceil(Math.hypot(endX - x, endY - y) / 2);
+      for (let step = 0; step < steps; step++) positions.push(...panoramaPoint(x + (endX - x) * step / steps, y + (endY - y) * step / steps, radius).toArray());
     }
-    // 3 piliers visibles sous le 1er étage (-9.32 à -6.86)
-    for (const [b0, b1, t0, t1] of PILLARS) {
-      const v = pos.length / 3;
-      pos.push(
-        ...toSpherical(b0, -9.32, r * 0.999),
-        ...toSpherical(b1, -9.32, r * 0.999),
-        ...toSpherical(t0, -6.86, r * 0.999),
-        ...toSpherical(t1, -6.86, r * 0.999),
-      );
-      idx.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    // L'angle d'or répartit les phases sans tirage aléatoire au remontage.
+    geometry.setAttribute('aPhase', new THREE.Float32BufferAttribute(Array.from({ length: positions.length / 3 }, (_, i) => i * Math.PI * (3 - Math.sqrt(5))), 1));
+    const material = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 } },
+      vertexShader: `
+        uniform float uTime;
+        attribute float aPhase;
+        varying float vFlash;
+        void main() {
+          vFlash = pow(max(0.0, sin(uTime * (0.9 + 0.5 * sin(aPhase)) + aPhase)), 48.0);
+          gl_PointSize = 2.2 + 2.8 * vFlash;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        uniform float uOpacity;
+        varying float vFlash;
+        void main() {
+          float halo = max(0.0, 1.0 - length(gl_PointCoord - 0.5) * 2.0);
+          vec3 color = mix(vec3(1.0, 0.72, 0.36), vec3(1.0), vFlash);
+          gl_FragColor = vec4(color, uOpacity * halo * (0.72 + 0.28 * vFlash));
+        }`,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+    });
+    const vertices: number[] = [], coordinates: number[] = [];
+    const length = 3900, halfWidth = 14, tilt = THREE.MathUtils.degToRad(2.2);
+    for (const direction of [-1, 1]) {
+      const x = direction * length * Math.cos(tilt), y = length * Math.sin(tilt);
+      vertices.push(0, 0, 0, x, y, -halfWidth, x, y, halfWidth,
+        0, 0, 0, x - direction * halfWidth * Math.sin(tilt), y + halfWidth * Math.cos(tilt), 0,
+        x + direction * halfWidth * Math.sin(tilt), y - halfWidth * Math.cos(tilt), 0);
+      coordinates.push(0, 0, -1, 1, 1, 1, 0, 0, -1, 1, 1, 1);
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.setIndex(idx);
-    return geo;
-  }, [r]);
+    const beamGeometry = new THREE.BufferGeometry();
+    beamGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    beamGeometry.setAttribute('aBeam', new THREE.Float32BufferAttribute(coordinates, 2));
+    const beamShader = new THREE.ShaderMaterial({
+      uniforms: { uOpacity: { value: 0 } },
+      vertexShader: `
+        attribute vec2 aBeam;
+        varying vec2 vBeam;
+        void main() { vBeam = aBeam; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        uniform float uOpacity;
+        varying vec2 vBeam;
+        void main() {
+          float fade = pow(1.0 - abs(vBeam.x), 2.0) * pow(1.0 - vBeam.y, 2.0);
+          gl_FragColor = vec4(0.72, 0.83, 1.0, uOpacity * fade);
+        }`,
+      side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+    });
+    return [geometry, material, beamGeometry, beamShader];
+  }, [radius]);
+  useEffect(() => () => { structure.dispose(); lighting.dispose(); beam.dispose(); beamMaterial.dispose(); }, [structure, lighting, beam, beamMaterial]);
 
-  // 2. Particules de scintillement (flashs xénon ultra-rapides)
-  const strobeGeo = useMemo(() => {
-    const pos = new Float32Array(STROBE_COUNT * 3);
-    const phases = new Float32Array(STROBE_COUNT);
-    const speeds = new Float32Array(STROBE_COUNT);
-    for (let i = 0; i < STROBE_COUNT; i++) {
-      const t = Math.pow(Math.random(), 0.82);
-      const elev = -9.32 + t * (0.53 - (-9.32));
-      let az: number;
-      if (elev < -6.86) {
-        const [b0, b1, t0, t1] = PILLARS[Math.floor(Math.random() * 3)];
-        const norm = (elev - (-9.32)) / (-6.86 - (-9.32));
-        const laz = b0 * (1 - norm) + t0 * norm;
-        const raz = b1 * (1 - norm) + t1 * norm;
-        az = laz + Math.random() * (raz - laz);
-      } else {
-        const seg = UPPER_LEVELS.findIndex((lv, idx) => idx > 0 && elev <= lv.elev) || 1;
-        const p0 = UPPER_LEVELS[seg - 1];
-        const p1 = UPPER_LEVELS[seg];
-        const t = (elev - p0.elev) / (p1.elev - p0.elev);
-        const laz = p0.l * (1 - t) + p1.l * t;
-        const raz = p0.r * (1 - t) + p1.r * t;
-        az = laz + Math.random() * (raz - laz);
-      }
-      const [x, y, z] = toSpherical(az, elev, r);
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = z;
-      phases[i] = Math.random() * Math.PI * 2;
-      speeds[i] = 12.0 + Math.random() * 16.0;
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
-    geo.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
-    return geo;
-  }, [r]);
-
-  // Shader de scintillement optimisé
-  const strobeMaterial = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uOpacity: { value: 0 },
-    },
-    vertexShader: `
-      uniform float uTime;
-      attribute float aPhase;
-      attribute float aSpeed;
-      varying float vFlash;
-      void main() {
-        float strobe = pow(max(0.0, sin(uTime * aSpeed + aPhase)), 22.0);
-        vFlash = strobe;
-        gl_PointSize = 3.2 + 5.0 * strobe;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform float uOpacity;
-      varying float vFlash;
-      void main() {
-        vec2 coord = gl_PointCoord - vec2(0.5);
-        if (length(coord) > 0.5) discard;
-        float falloff = 1.0 - length(coord) * 2.0;
-        vec3 col = mix(vec3(1.0, 0.88, 0.5), vec3(1.0, 1.0, 1.0), vFlash);
-        gl_FragColor = vec4(col, uOpacity * falloff * (0.35 + 0.65 * vFlash));
-      }
-    `,
-    transparent: true,
-    depthTest: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    toneMapped: false,
-  }), []);
-
-  // 3. Phare rotatif au sommet (axe vertical monde, inclinaison ascendante vers le ciel)
-  const summitPos = useMemo(() => new THREE.Vector3(...toSpherical(AZ_SPIRE, 0.53, r)), [r]);
-
-  const beaconGeo = useMemo(() => {
-    const len = 3900; // S'étend sur 39 m pour atteindre et traverser l'appartement (à ~34 m)
-    const tipR = 95;
-    const tilt = 2.2 * (Math.PI / 180); // +2.2° pour couper le mur Est pile à 1.63 m de haut
-    const cosT = Math.cos(tilt);
-    const sinT = Math.sin(tilt);
-    const verts: number[] = [];
-    const colors: number[] = [];
-
-    const addBeam = (dirX: number) => {
-      const ex = dirX * len * cosT;
-      const ey = len * sinT;
-      const nx = -sinT * dirX * tipR;
-      const ny = cosT * tipR;
-      // Plan 1 (horizontal en Z)
-      verts.push(0, 0, 0, ex, ey, -tipR, ex, ey, tipR);
-      // Plan 2 (perpendiculaire à l'axe du faisceau)
-      verts.push(0, 0, 0, ex + nx, ey + ny, 0, ex - nx, ey - ny, 0);
-      // Dégradé : blanc bleuté éclatant au sommet -> conserve une lueur visible jusqu'à l'appartement
-      const cApex = [1.0, 1.0, 1.0];
-      const cTip = [0.12, 0.20, 0.32];
-      for (let i = 0; i < 2; i++) colors.push(...cApex, ...cTip, ...cTip);
-    };
-
-    addBeam(1);
-    addBeam(-1);
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    return geo;
-  }, []);
-
-  useFrame(({ clock }, delta) => {
-    const light = daylight(simulatedHour());
-    const nightFade = THREE.MathUtils.clamp((0.45 - light) / 0.45, 0, 1);
-
-    if (groupRef.current) groupRef.current.visible = nightFade > 0.001;
-    if (nightFade <= 0.001) {
-      if (eastWallLightRef.current) eastWallLightRef.current.intensity = 0;
-      return;
-    }
-
-    if (strobeMatRef.current) {
-      strobeMatRef.current.uniforms.uTime.value = clock.elapsedTime;
-      strobeMatRef.current.uniforms.uOpacity.value = nightFade;
-    }
-    if (glowMatRef.current) glowMatRef.current.opacity = 0.32 * nightFade;
-    if (beaconMatRef.current) beaconMatRef.current.opacity = 0.35 * nightFade;
-    if (lanternMatRef.current) lanternMatRef.current.opacity = 0.9 * nightFade;
-    if (beaconRef.current) {
-      beaconRef.current.rotation.y += delta * 0.35;
-      // Balayage lumineux sur le mur Est : pic quand l'un des deux faisceaux traverse l'azimut de l'appartement
-      const sweep = Math.pow(Math.abs(Math.cos(beaconRef.current.rotation.y + 3.028)), 40.0);
-      if (eastWallLightRef.current) {
-        eastWallLightRef.current.intensity = sweep * 28.0 * nightFade;
-      }
-    }
+  useFrame(({ clock }) => {
+    const fade = active ? THREE.MathUtils.clamp((0.45 - daylight(simulatedHour())) / 0.45, 0, 1) : 0;
+    if (groupRef.current) groupRef.current.visible = fade > 0;
+    lighting.uniforms.uTime.value = clock.elapsedTime;
+    lighting.uniforms.uOpacity.value = fade;
+    beamMaterial.uniforms.uOpacity.value = fade * 0.12;
+    const angle = clock.elapsedTime * Math.PI * 2 / 60;
+    if (beaconRef.current) beaconRef.current.rotation.y = angle;
+    if (eastWallLightRef.current) eastWallLightRef.current.intensity = Math.pow(Math.abs(Math.cos(angle + 3.028)), 40) * 8 * fade;
   });
-
-  if (currentHdri !== 'default' || !enabled) return null;
 
   return (
     <>
-      {/* Balayage lumineux puissant du phare sur le mur Est de l'appartement */}
-      <pointLight
-        ref={eastWallLightRef}
-        position={[320, 160, 50]}
-        distance={900}
-        decay={1.2}
-        color="#eaf3ff"
-        intensity={0}
-      />
-
-    <group ref={groupRef} name="EiffelTowerLights">
-      {/* Illumination dorée de base */}
-      <mesh geometry={glowGeo} renderOrder={-970}>
-        <meshBasicMaterial
-          ref={glowMatRef}
-          color="#ffaa33"
-          side={THREE.DoubleSide}
-          transparent
-          opacity={0}
-          depthTest
-          depthWrite={false}
-          toneMapped={false}
-        />
-      </mesh>
-
-      {/* Flashs scintillants (strobe) */}
-      <points
-        geometry={strobeGeo}
-        material={strobeMaterial}
-        ref={(el) => { if (el) (strobeMatRef as React.MutableRefObject<THREE.ShaderMaterial>).current = el.material as THREE.ShaderMaterial; }}
-        renderOrder={-960}
-      />
-
-      {/* Phare rotatif au sommet (rotation horizontale, incliné vers le ciel) */}
-      <group position={summitPos}>
-        {/* Ampoule éclatante de la lanterne */}
-        <mesh renderOrder={-945}>
-          <sphereGeometry args={[10, 16, 12]} />
-          <meshBasicMaterial
-            ref={lanternMatRef}
-            color="#ffffff"
-            transparent
-            opacity={0}
-            depthTest
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
-        {/* Faisceaux volumétriques rotatifs */}
-        <group ref={beaconRef}>
-          <mesh geometry={beaconGeo} renderOrder={-950}>
-            <meshBasicMaterial
-              ref={beaconMatRef}
-              vertexColors
-              side={THREE.DoubleSide}
-              transparent
-              opacity={0}
-              depthTest
-              depthWrite={false}
-              blending={THREE.AdditiveBlending}
-              toneMapped={false}
-            />
-          </mesh>
+      <pointLight ref={eastWallLightRef} position={[320, 160, 50]} distance={900} decay={1.2} color="#eaf3ff" intensity={0} />
+      <group ref={groupRef} name="EiffelTowerLights" visible={false}>
+        <points geometry={structure} material={lighting} renderOrder={-960} />
+        <group position={summit}>
+          <group ref={beaconRef}><mesh geometry={beam} material={beamMaterial} renderOrder={-950} /></group>
         </group>
       </group>
-    </group>
     </>
   );
 }

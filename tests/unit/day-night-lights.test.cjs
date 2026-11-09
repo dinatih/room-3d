@@ -68,13 +68,16 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
   let frame;
   const { EiffelTowerLights } = load('src/features/scene/EiffelTowerLights.tsx', {
     three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
-    react: { useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
+    react: { useEffect() {}, useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; } },
     './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight: hour => hour === 8 ? 1 : 0 },
     './store/useSceneStore': { useSceneStore: select => select({ currentHdri: 'default', layers: { eiffelSparkle: true } }) },
   });
   const [light, visuals] = EiffelTowerLights({}).props.children;
   assert.equal(light.type, 'pointLight'); assert.equal(visuals.type, 'group');
+  const structure = visuals.props.children[0];
+  assert.equal(structure.type, 'points', 'la structure ne remplit pas la silhouette avec un maillage opaque');
+  for (const coordinate of structure.props.geometry.attributes.position.array) assert(Number.isFinite(coordinate));
   refs[0].current = new THREE.Group(); refs[1].current = new THREE.Group();
   light.props.ref.current = new THREE.PointLight();
   frame({ clock: { elapsedTime: 0 } }, 1 / 60);
@@ -83,6 +86,7 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
   assert.equal(refs[0].current.visible, true); assert(light.props.ref.current.intensity > 0);
   clock.minutes = 0; frame({ clock: { elapsedTime: 2 } }, 1 / 60);
   assert.equal(refs[0].current.visible, false); assert.equal(light.props.ref.current.intensity, 0);
+  assert.equal(structure.props.material.uniforms.uOpacity.value, 0);
   assert.equal(light.props.ref.current.visible, true);
 });
 

@@ -18,6 +18,10 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   montparnasseLights: true,
   bnfLights: true,
   arcLights: true,
+  bridgeLights: true,
+  champDeMarsLights: true,
+  avenueLights: true,
+  boisLights: true,
   seineBoats: true,
   seineDebugPath: false,
   doors: true,
@@ -94,7 +98,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
-  ...(['montparnasseLights', 'bnfLights', 'arcLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
+  ...(['montparnasseLights', 'bnfLights', 'arcLights', 'bridgeLights', 'champDeMarsLights', 'avenueLights', 'boisLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
     layerKey: key, canonicalParam: key, urlParams: [key.toLowerCase()],
   })),
   { layerKey: 'transparentWallsDoors', canonicalParam: 'transparentWallsDoors', urlParams: ['transparentwallsdoors'] },
