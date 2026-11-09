@@ -148,10 +148,12 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         const travel = config.speed * delta * Math.max(0, Math.cos(heading - root.rotation.y));
         const next = followRoute(route.current, id, before, ai.target, travel, (direction, remaining) => {
           const steer = computeSteeringVector(id, before.x, before.z, direction.x, direction.z, remaining);
-          root.rotation.y = computeRotYStep(root.rotation.y, Math.atan2(steer.steerX, steer.steerZ), Math.PI, delta);
           return { x: steer.steerX, z: steer.steerZ };
         });
         const moved = next.x !== before.x || next.z !== before.z;
+        // Detours and final steps can bypass steering; turning must still run at rest.
+        const facing = moved ? next : route.current.path[route.current.index] ?? ai.target;
+        root.rotation.y = computeRotYStep(root.rotation.y, Math.atan2(facing.x - before.x, facing.z - before.z), Math.PI, delta);
         root.position.x = next.x;
         root.position.z = next.z;
         selectMotion(moved ? config.walk : 'idle');
