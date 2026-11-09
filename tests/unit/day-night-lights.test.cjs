@@ -2,37 +2,44 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const THREE = require('three');
 const { load } = require('../support/load-ts.cjs');
+const fixedDate = new Date('2026-11-24T12:00:00Z');
+const astronomy = load('src/features/scene/astronomy.ts', {
+  three: THREE, suncalc: require('suncalc'), './ai/laraLifeStore': { simulationClock: { minutes: 0 } },
+}, source => source.replaceAll('import.meta.env', '({})'));
 
 it('allume les lampes la nuit sans modifier la qualité HD', () => {
   for (const lightsHD of [false, true]) {
-    const scene = new THREE.Scene(), clock = { minutes: 0 }, actions = [];
+    const scene = new THREE.Scene(), clock = { minutes: 60 }, actions = [];
     const layers = { lightsHD }, qualities = [];
     const nightState = { nightLighting: false };
     scene.add(new THREE.AmbientLight('white', 2));
     const moonSource = new THREE.DirectionalLight();
-    const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.ShaderMaterial({ uniforms: { opacity: { value: 0 } } })), moonSource];
+    const refs = [null, new THREE.Mesh(), new THREE.ShaderMaterial({ uniforms: { sunDirection: { value: new THREE.Vector3() }, opacity: { value: 0 } } }), new THREE.Points(new THREE.BufferGeometry(), new THREE.ShaderMaterial({ uniforms: { opacity: { value: 0 } } })), moonSource];
     let frame;
-    const { DayNight, daylight } = load('src/features/scene/DayNight.tsx', {
+    const daylight = hour => astronomy.daylight(hour, fixedDate);
+    const { DayNight } = load('src/features/scene/DayNight.tsx', {
       three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
       react: { useLayoutEffect() {}, useMemo: fn => fn(), useRef: value => ({ current: refs.shift() ?? value }) },
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },
-      './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 }, './ai/laraLifeStore': { simulationClock: clock },
+      './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 },
+      './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight,
+        celestialState: hour => astronomy.celestialState(hour, fixedDate) },
       './store/useSceneStore': { useSceneStore: { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
         toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
         triggerAction: (...action) => actions.push(action) }) } },
-    }, source => source.replace('import.meta.env.VITE_STUDIO_LAT', '48.828'));
+    });
     DayNight(); frame({ scene });
     assert.equal(moonSource.intensity, 0);
     assert.equal(layers.lightsHD, lightsHD);
-    assert.equal(scene.children[0].intensity, 2);
-    for (const hour of [9, 12, 15, 17]) {
+    assert(scene.children[0].intensity > 0);
+    for (const hour of [9, 12, 15]) {
       clock.minutes = (hour - 8) * 60; frame({ scene });
       assert.equal(layers.lightsHD, lightsHD);
       assert.equal(daylight(hour), 1);
       assert.equal(nightState.nightLighting, false);
     }
-    clock.minutes = 10.25 * 60; frame({ scene });
-    assert(daylight(18.25) > 0 && daylight(18.25) < 1);
+    clock.minutes = 9.25 * 60; frame({ scene });
+    assert(daylight(17.25) > 0 && daylight(17.25) < 1);
     assert.equal(nightState.nightLighting, true);
     clock.minutes = 16 * 60; frame({ scene }); frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
@@ -46,11 +53,11 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     assert.equal(daylight(5), 0);
     clock.minutes = 22 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
-    assert.equal(daylight(6), 1);
-    assert.equal(nightState.nightLighting, false);
-    clock.minutes = 24 * 60; frame({ scene });
+    assert.equal(daylight(6), 0);
+    assert.equal(nightState.nightLighting, true);
+    clock.minutes = 25 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
-    assert.equal(scene.children[0].intensity, 2);
+    assert(scene.children[0].intensity > 0);
     assert.deepEqual(actions, [['lamp-toggle', false], ['lamp-toggle', true], ['lamp-toggle', false]]);
     assert.deepEqual(qualities, []);
   }
@@ -63,7 +70,7 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
     three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
     react: { useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; } },
-    './DayNight': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight: hour => hour === 8 ? 1 : 0 },
+    './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight: hour => hour === 8 ? 1 : 0 },
     './store/useSceneStore': { useSceneStore: select => select({ currentHdri: 'default', layers: { eiffelSparkle: true } }) },
   });
   const [light, visuals] = EiffelTowerLights({}).props.children;

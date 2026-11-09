@@ -1,35 +1,13 @@
 import { useSceneStore } from './store/useSceneStore';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, MathUtils, Mesh, MeshBasicMaterial, DirectionalLight } from 'three';
+import { Color, Mesh, MeshBasicMaterial, DirectionalLight, Vector3 } from 'three';
 import { Points, ShaderMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
-import { simulationClock } from './ai/laraLifeStore';
-
-/** The sky follows the shared world clock. */
-export function simulatedHour() {
-  return (8 + simulationClock.minutes / 60) % 24;
-}
-
-export function solarElevation(hour: number) {
-  const latitude = Number(import.meta.env.VITE_STUDIO_LAT ?? 48.828) * Math.PI / 180;
-  return Math.asin(Math.cos(latitude) * Math.cos((hour - 12) * Math.PI / 12)) * 180 / Math.PI;
-}
-
-export function daylight(hour: number) {
-  if (!Number.isFinite(hour)) throw new Error('Invalid environment hour');
-  return MathUtils.smoothstep(solarElevation(hour), -6, 0);
-}
+import { celestialState, daylight, simulatedHour } from './astronomy';
 
 const nightColor = new Color('#17243e');
 const dayColor = new Color('white');
-
-// Même luminosité que le ciel, échantillonnée à chaque minute du curseur.
-export const dayTimeTrack = `linear-gradient(to right, ${Array.from({ length: 24 * 60 + 1 }, (_, minute) => {
-  const color = new Color('#234b80').lerp(new Color('#f4d78b'), daylight(minute / 60));
-  return `#${color.getHexString()} ${minute / (24 * 60) * 100}%`;
-}).join(', ')})`;
-
 
 export function DayNight() {
   const scene = useThree(state => state.scene);
@@ -52,9 +30,10 @@ export function DayNight() {
   }, [scene]);
   const previousNight = useRef<boolean | null>(null);
   const moon = useRef<Mesh>(null!);
-  const moonMaterial = useRef<MeshBasicMaterial>(null!);
+  const moonMaterial = useRef<ShaderMaterial>(null!);
   const stars = useRef<Points>(null!);
   const moonLight = useRef<DirectionalLight>(null!);
+  const moonUniforms = useMemo(() => ({ sunDirection: { value: new Vector3() }, opacity: { value: 0 } }), []);
   const starField = useMemo(() => {
     const count = 750;
     const positions = new Float32Array(count * 3);
@@ -79,8 +58,9 @@ export function DayNight() {
   }, []);
   useFrame(({ scene }) => {
     const hour = simulatedHour();
+    const sky = celestialState(hour);
     const light = daylight(hour);
-    const night = solarElevation(hour) < 0;
+    const night = sky.sun.elevation < 0;
     if (previousNight.current !== night) {
       previousNight.current = night;
       const store = useSceneStore.getState();
@@ -102,15 +82,14 @@ export function DayNight() {
     if (scene.userData.lastNightEnvironment !== scene.environmentIntensity) scene.userData.dayEnvironmentIntensity = scene.environmentIntensity;
     scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * (0.12 + 0.88 * light);
     scene.userData.lastNightEnvironment = scene.environmentIntensity;
-    const angle = ((hour + 6) % 24) / 24 * Math.PI * 2;
-    moon.current.position.set(Math.cos(angle) * SKY_RADIUS * 0.8, Math.sin(angle) * SKY_RADIUS * 0.8, 0);
-    moon.current.visible = light < 1 && moon.current.position.y > 0;
-    moonMaterial.current.opacity = 1 - light;
-    // Clair de lune doux : même direction que le disque, sans lumière sous l’horizon.
-    moonLight.current.position.copy(moon.current.position).multiplyScalar(2 / 0.8);
+    moon.current.position.copy(sky.moon.direction).multiplyScalar(SKY_RADIUS * 0.8);
+    moon.current.visible = sky.moon.elevation > 0;
+    moonMaterial.current.uniforms.sunDirection.value.copy(sky.sun.direction);
+    moonMaterial.current.uniforms.opacity.value = 0.3 + 0.7 * (1 - light);
+    moonLight.current.position.copy(sky.moon.direction).multiplyScalar(2 * SKY_RADIUS);
     moonLight.current.target.position.set(...SKY_CENTER);
     moonLight.current.target.updateMatrixWorld();
-    moonLight.current.intensity = 0.2 * (1 - light) * Math.max(0, Math.sin(angle));
+    moonLight.current.intensity = 0.2 * (1 - light) * Math.max(0, sky.moon.direction.y) * sky.illumination.fraction;
     (stars.current.material as ShaderMaterial).uniforms.opacity.value = 1 - light;
   });
   return <group position={SKY_CENTER}>
@@ -121,7 +100,24 @@ export function DayNight() {
       shadow-bias={-0.0002} shadow-normalBias={0.04} />
     <mesh ref={moon}>
       <sphereGeometry args={[65, 24, 16]} />
-      <meshBasicMaterial ref={moonMaterial} color="#dee7ff" transparent toneMapped={false} />
+      <shaderMaterial ref={moonMaterial} uniforms={moonUniforms} transparent toneMapped={false}
+        vertexShader={`
+          varying vec3 surfaceNormal;
+          void main() {
+            surfaceNormal = normalize(mat3(modelMatrix) * normal);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
+        fragmentShader={`
+          uniform vec3 sunDirection;
+          uniform float opacity;
+          varying vec3 surfaceNormal;
+          void main() {
+            float illumination = 0.015 + max(0.0, dot(normalize(surfaceNormal), sunDirection));
+            gl_FragColor = vec4(vec3(0.73, 0.8, 1.0) * illumination, opacity);
+            #include <colorspace_fragment>
+          }
+        `} />
     </mesh>
     <points ref={stars}>
       <bufferGeometry>

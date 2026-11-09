@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { dayTimeTrack, simulatedHour } from './DayNight';
+import { dayTimeTrack, simulatedHour, skyDate } from './astronomy';
 import { useSceneStore, getRandomGrassType } from './store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { GroundType, LayerState } from './sidepanel/types';
@@ -122,6 +122,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
               <LifeSpeedButton />
             </div>
 
+          <div className="small text-muted">Ciel du {skyDate(12).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })} · Paris</div>
           {automaticWeather && <div className="position-relative py-2 small text-primary" aria-label="Horaires de la météo automatique">
             {WEATHER_PHASES.map(({ icon, label }, index) => {
               const hour = (8 + index * WEATHER_PERIOD / 60) % 24;
@@ -130,7 +131,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             })}
           </div>}
           <input type="range" className="form-range day-time-range my-1" min={0} max={24 * 60} step={1}
-            style={{ '--day-time-track': dayTimeTrack } as CSSProperties}
+            style={{ '--day-time-track': dayTimeTrack() } as CSSProperties}
             aria-label="Avancer l’heure de la journée" title="Avancer à cette heure ; une heure antérieure passe au lendemain"
             value={selectedMinute ?? Math.floor(hourFloat * 60)} onChange={event => setSelectedMinute(Number(event.target.value))}
             onPointerUp={event => commitTime(Number(event.currentTarget.value))} onPointerCancel={() => setSelectedMinute(null)}

@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
-import { daylight, simulatedHour } from './DayNight';
+import { daylight, simulatedHour } from './astronomy';
 
 const AZ_SPIRE = 173.50;
 const STROBE_COUNT = 140;

@@ -11,7 +11,7 @@ import { CategoryLayerGroup } from './sceneLayer';
 import { LAYER_ENVIRONMENT } from '@config';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { simulationClock } from './ai/laraLifeStore';
-import { daylight, simulatedHour } from './DayNight';
+import { daylight, simulatedHour } from './astronomy';
 import { useSceneStore } from './store/useSceneStore';
 
 let saved: WeatherSave | undefined;

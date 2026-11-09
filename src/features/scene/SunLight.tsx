@@ -1,12 +1,10 @@
-import { simulatedHour, solarElevation } from './DayNight';
+import { celestialState } from './astronomy';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils } from 'three';
+import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils, Vector3 } from 'three';
 
-const LAT    = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
-
-const AZ_DEG = parseFloat(import.meta.env.VITE_STUDIO_AZ  ?? '90');
+const center = new Vector3(...SKY_CENTER);
 
 // ── Couleur et intensité selon l'élévation ────────────────────────────────────
 
@@ -25,16 +23,11 @@ export function SunLight() {
   useFrame(() => {
     lightRef.current.target.position.set(...SKY_CENTER);
     lightRef.current.target.updateMatrixWorld();
-    const hour = simulatedHour();
-    const elevation = solarElevation(hour);
-    const direction = sunDir(hour);
+    const { sun } = celestialState();
+    const elevation = sun.elevation;
     // Le volume d’ombres couvre la sphère du monde, dans toutes les directions.
     // La lumière reste en amont de ce volume, indépendamment du disque visible.
-    lightRef.current.position.set(
-      SKY_CENTER[0] + (direction.x - SKY_CENTER[0]) * (2 * SKY_RADIUS / SPHERE_D),
-      SKY_CENTER[1] + (direction.y - SKY_CENTER[1]) * (2 * SKY_RADIUS / SPHERE_D),
-      SKY_CENTER[2] + (direction.z - SKY_CENTER[2]) * (2 * SKY_RADIUS / SPHERE_D),
-    );
+    lightRef.current.position.copy(sun.direction).multiplyScalar(2 * SKY_RADIUS).add(center);
     const { color, intensity } = sunParams(elevation);
     lightRef.current.color.copy(color);
     lightRef.current.intensity = intensity;
@@ -64,29 +57,14 @@ export function SunLight() {
 const SPHERE_D = SKY_RADIUS * 0.8;
 const SPHERE_R = 65;
 
-function sunDir(hour: number) {
-  const angle = (hour - 12) * Math.PI / 12;
-  const latitude = LAT * Math.PI / 180;
-  const east = -Math.sin(angle);
-  const north = -Math.sin(latitude) * Math.cos(angle);
-  const up = Math.cos(latitude) * Math.cos(angle);
-  const orientation = AZ_DEG * Math.PI / 180;
-  return {
-    x: SKY_CENTER[0] + (Math.sin(orientation) * east + Math.cos(orientation) * north) * SPHERE_D,
-    y: SKY_CENTER[1] + up * SPHERE_D,
-    z: SKY_CENTER[2] + (Math.cos(orientation) * east - Math.sin(orientation) * north) * SPHERE_D,
-  };
-}
-
 export function SunSphere() {
   const meshRef = useRef<Mesh>(null!);
   const matRef  = useRef<MeshBasicMaterial>(null!);
   useFrame(() => {
-    const hour = simulatedHour();
-    const elevation = solarElevation(hour);
+    const { sun } = celestialState();
+    const elevation = sun.elevation;
     meshRef.current.visible = elevation > 0;
-    const { x, y, z } = sunDir(hour);
-    meshRef.current.position.set(x, y, z);
+    meshRef.current.position.copy(sun.direction).multiplyScalar(SPHERE_D).add(center);
     matRef.current.color.copy(sunParams(elevation).color);
   });
 

@@ -2,7 +2,7 @@ import { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
-import { daylight, simulatedHour } from './DayNight';
+import { daylight, simulatedHour } from './astronomy';
 
 // Centre du chenal relevé sur le HDR équirectangulaire 2048 × 1024.
 // La boucle aval revient vers des azimuts décroissants : ce n'est pas une sinusoïde.

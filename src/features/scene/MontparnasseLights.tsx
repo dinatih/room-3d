@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { daylight, simulatedHour } from './DayNight';
+import { daylight, simulatedHour } from './astronomy';
 import { useSceneStore } from './store/useSceneStore';
 
 // Mesure du HDR 2k : silhouette x=840..846, y=520..535 (origine en haut).
