@@ -24,6 +24,13 @@ export function daylight(hour: number) {
 const nightColor = new Color('#17243e');
 const dayColor = new Color('white');
 
+// Même luminosité que le ciel, échantillonnée à chaque minute du curseur.
+export const dayTimeTrack = `linear-gradient(to right, ${Array.from({ length: 24 * 60 + 1 }, (_, minute) => {
+  const color = new Color('#234b80').lerp(new Color('#f4d78b'), daylight(minute / 60));
+  return `#${color.getHexString()} ${minute / (24 * 60) * 100}%`;
+}).join(', ')})`;
+
+
 export function DayNight() {
   const scene = useThree(state => state.scene);
   useLayoutEffect(() => () => {

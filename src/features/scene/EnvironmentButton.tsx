@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { dayTimeTrack, simulatedHour } from './DayNight';
 import { useSceneStore, getRandomGrassType } from './store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { GroundType, LayerState } from './sidepanel/types';
@@ -43,7 +44,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const selectedCharacterId = isLifeCharacter(activeCharacterId) ? activeCharacterId : 'native';
   const character = characters[selectedCharacterId];
   const clock = lifeClock(character?.elapsedSeconds ?? 0);
-  const hourFloat = (8 + (character?.elapsedSeconds ?? 0) / 60) % 24;
+  const hourFloat = simulatedHour();
   const currentPhase = WEATHER_PHASES[Math.floor((character?.elapsedSeconds ?? 0) / WEATHER_PERIOD) % WEATHER_PHASES.length];
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
   const commitTime = (minute: number) => {
@@ -119,6 +120,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
             })}
           </div>}
           <input type="range" className="form-range day-time-range my-1" min={0} max={24 * 60} step={1}
+            style={{ '--day-time-track': dayTimeTrack } as CSSProperties}
             aria-label="Avancer l’heure de la journée" title="Avancer à cette heure ; une heure antérieure passe au lendemain"
             value={selectedMinute ?? Math.floor(hourFloat * 60)} onChange={event => setSelectedMinute(Number(event.target.value))}
             onPointerUp={event => commitTime(Number(event.currentTarget.value))} onPointerCancel={() => setSelectedMinute(null)}
