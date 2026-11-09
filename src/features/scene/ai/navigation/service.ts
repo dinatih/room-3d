@@ -93,7 +93,7 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const revision = getObstacleRevision();
   const angles = doorKeys.map(k => computeDoorAllowedAngle(DOOR_CONFIGS[k]));
   const shutterBlocked = glassShutterState.clearHeight < profile.height;
-  const doorAngles = `${angles.join(':')}:${shutterBlocked}`;
+  const doorAngles = `${angles.join(':')}:${shutterBlocked}:${architectureObstacles.length}`;
   const old = profileCache.get(key);
   if (old && old.doorAngles === doorAngles && (movingFurniture.size || old.revision === revision)) return old;
   const solid = [...architectureObstacles, ...furnitureObstacles.values()].filter(o => o.yMin < profile.height && o.yMax > 0 && (!excludeSet || !o.owner || !excludeSet.has(getInteractionOwner(o.owner))));

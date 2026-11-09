@@ -36,7 +36,7 @@ export function CollisionDebugHelper() {
     const routes = [...navigationDebug.entries()];
     const nativeProfile = furniture && hasAgentProfile('native') ? getAgentProfile('native') : null;
     const nativeGraph = nativeProfile ? getNavigationGraph(nativeProfile) : null;
-    const key = JSON.stringify([npc, furniture, nativeProfile, getObstacleRevision(), routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
+    const key = JSON.stringify([npc, furniture, nativeProfile, getObstacleRevision(), architectureObstacles.length, routes, doorKeys.map(k => doorCollisionState[k].angle), npc ? cameraState.positions : null]);
     if (signature.current === key && lastNativeGraph.current === nativeGraph) return;
     signature.current = key;
     lastNativeGraph.current = nativeGraph;

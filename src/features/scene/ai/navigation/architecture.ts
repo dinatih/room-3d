@@ -20,9 +20,13 @@ for (const [i, p] of GARDEN_PANEL_DEFS.entries()) local.push({ id: `fence-${i}`,
 // The fixed shower glass, beside its mobile leaf. The tray remains an interaction surface.
 local.push({ id: 'shower-fixed-glass', polygon: rectangle(BATH_WEST_WALL + 10, SHOWER_SOUTH_WALL - 71, 20, 2), yMin: 20, yMax: 220 });
 
-export const architectureObstacles = [{ x: 0, z: 0 }, ...NEIGHBOR_OFFSETS].flatMap((offset, i) => local.map(o => ({
+const allArchitectureObstacles = [{ x: 0, z: 0 }, ...NEIGHBOR_OFFSETS].flatMap((offset, i) => local.map(o => ({
   ...o, id: `${i}:${o.id}`, polygon: o.polygon.map(p => ({ x: p.x + offset.x, z: p.z + offset.z })),
 })));
+export let architectureObstacles = local;
+export function setNeighborArchitectureVisible(visible: boolean): void {
+  architectureObstacles = visible ? allArchitectureObstacles : local;
+}
 const { width, length } = EXTERIOR_CORRIDOR;
 const corridorCenter = DiagWall.p(DiagWall.len / 2, DiagWall.depth / 2 + width / 2);
 export const walkableSurfaces: Polygon[][] = union([

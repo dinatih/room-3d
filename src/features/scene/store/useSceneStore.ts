@@ -2,6 +2,7 @@ import { AIR_PERFORMER_CONTROLS, isAirPerformerAction } from '../../home-assista
 import { APPLIANCES, applianceValue } from '../../home-assistant/appliances';
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
+import { setNeighborArchitectureVisible } from '../ai/navigation/architecture';
 import { refuseUnsafeBedLayout } from '../ai/bedLayout';
 import { positionState } from '../positionState';
 import { DOUBLE_BED_POSITIONS } from '../furniturePositions';
@@ -856,6 +857,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
     });
   },
 }));
+
+setNeighborArchitectureVisible(useSceneStore.getState().layers.neighbors);
+useSceneStore.subscribe((state, previous) => {
+  if (state.layers.neighbors !== previous.layers.neighbors) setNeighborArchitectureVisible(state.layers.neighbors);
+});
 
 if (typeof window !== 'undefined') {
   (window as any).useSceneStore = useSceneStore;
