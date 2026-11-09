@@ -2,7 +2,7 @@ import { useSceneStore } from './store/useSceneStore';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { Color, MathUtils, Mesh, MeshBasicMaterial, DirectionalLight } from 'three';
-import { Points, PointsMaterial } from 'three';
+import { Points, ShaderMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { simulationClock } from './ai/laraLifeStore';
 
@@ -55,16 +55,27 @@ export function DayNight() {
   const moonMaterial = useRef<MeshBasicMaterial>(null!);
   const stars = useRef<Points>(null!);
   const moonLight = useRef<DirectionalLight>(null!);
-  const positions = useMemo(() => {
+  const starField = useMemo(() => {
     const count = 750;
-    const points = new Float32Array(count * 3);
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    // Tirages stables : pas de spirale régulière ni de changement au remontage.
+    const random = (seed: number) => {
+      const value = Math.sin(seed * 12.9898) * 43758.5453;
+      return value - Math.floor(value);
+    };
     for (let i = 0; i < count; i++) {
-      const y = (i + 0.5) / count;
-      const angle = i * Math.PI * (3 - Math.sqrt(5));
+      const y = random(i * 5 + 1);
+      const angle = random(i * 5 + 2) * Math.PI * 2;
       const radius = SKY_RADIUS * 0.9;
-      points.set([Math.cos(angle) * Math.sqrt(1 - y * y) * radius, y * radius, Math.sin(angle) * Math.sqrt(1 - y * y) * radius], i * 3);
+      positions.set([Math.cos(angle) * Math.sqrt(1 - y * y) * radius, y * radius, Math.sin(angle) * Math.sqrt(1 - y * y) * radius], i * 3);
+      const brightness = 0.2 + 0.8 * random(i * 5 + 3) ** 2;
+      const warmth = random(i * 5 + 4);
+      colors.set([brightness * (0.75 + 0.25 * warmth), brightness * 0.85, brightness * (1 - 0.25 * warmth)], i * 3);
+      sizes[i] = 1 + 2 * random(i * 5 + 5) ** 3;
     }
-    return points;
+    return { positions, colors, sizes, uniforms: { opacity: { value: 0 } } };
   }, []);
   useFrame(({ scene }) => {
     const hour = simulatedHour();
@@ -100,7 +111,7 @@ export function DayNight() {
     moonLight.current.target.position.set(...SKY_CENTER);
     moonLight.current.target.updateMatrixWorld();
     moonLight.current.intensity = 0.2 * (1 - light) * Math.max(0, Math.sin(angle));
-    (stars.current.material as PointsMaterial).opacity = 1 - light;
+    (stars.current.material as ShaderMaterial).uniforms.opacity.value = 1 - light;
   });
   return <group position={SKY_CENTER}>
     <directionalLight name="MoonLight" ref={moonLight} color="#b9ceff" intensity={0} castShadow
@@ -113,8 +124,31 @@ export function DayNight() {
       <meshBasicMaterial ref={moonMaterial} color="#dee7ff" transparent toneMapped={false} />
     </mesh>
     <points ref={stars}>
-      <bufferGeometry><bufferAttribute attach="attributes-position" args={[positions, 3]} /></bufferGeometry>
-      <pointsMaterial color="white" size={2} sizeAttenuation={false} transparent depthWrite={false} toneMapped={false} />
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[starField.positions, 3]} />
+        <bufferAttribute attach="attributes-starColor" args={[starField.colors, 3]} />
+        <bufferAttribute attach="attributes-starSize" args={[starField.sizes, 1]} />
+      </bufferGeometry>
+      <shaderMaterial uniforms={starField.uniforms} transparent depthWrite={false} toneMapped={false}
+        vertexShader={`
+          attribute vec3 starColor;
+          attribute float starSize;
+          varying vec3 tint;
+          void main() {
+            tint = starColor;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize = starSize;
+          }
+        `}
+        fragmentShader={`
+          uniform float opacity;
+          varying vec3 tint;
+          void main() {
+            float radius = length(gl_PointCoord - 0.5);
+            gl_FragColor = vec4(tint, opacity * (1.0 - smoothstep(0.15, 0.5, radius)));
+            #include <colorspace_fragment>
+          }
+        `} />
     </points>
   </group>;
 }

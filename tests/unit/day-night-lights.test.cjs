@@ -10,7 +10,7 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     const nightState = { nightLighting: false };
     scene.add(new THREE.AmbientLight('white', 2));
     const moonSource = new THREE.DirectionalLight();
-    const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial()), moonSource];
+    const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.ShaderMaterial({ uniforms: { opacity: { value: 0 } } })), moonSource];
     let frame;
     const { DayNight, daylight } = load('src/features/scene/DayNight.tsx', {
       three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
