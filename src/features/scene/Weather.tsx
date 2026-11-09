@@ -157,7 +157,8 @@ export function Weather() {
   });
   return <CategoryLayerGroup layer={LAYER_ENVIRONMENT} register={false}>
     <WeatherAudio />
-    <mesh position={SKY_CENTER} renderOrder={10} userData={{ isSky: true }}>
+    {/* Après le panorama, avant les vitrages qui n'écrivent pas la profondeur. */}
+    <mesh position={SKY_CENTER} renderOrder={-1} userData={{ isSky: true }}>
       <sphereGeometry args={[SKY_RADIUS * 0.75, 48, 32]} />
       <shaderMaterial ref={material} uniforms={uniforms} side={BackSide} transparent depthWrite={false}
         vertexShader={`varying vec3 direction; void main() { direction = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`}
