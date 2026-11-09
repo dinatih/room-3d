@@ -359,16 +359,19 @@ export interface ClothingAndAccessoriesOptions {
   showAccessories: boolean;
   laraPistols: boolean;
   equipment: { holster: boolean; pistols: boolean; backpack: boolean };
-  animationEquipment?: 'dual-pistols' | 'holstered';
+  animationEquipment?: 'dual-pistols' | 'holstered' | 'shower';
 }
 
 export function applyPistolVisibility(parts: CharacterParts, opts: Pick<ClothingAndAccessoriesOptions, 'showAccessories' | 'laraPistols' | 'equipment' | 'animationEquipment'>) {
   const dualPistols = opts.animationEquipment === 'dual-pistols';
-  setPartVisibility(parts.handPistols, dualPistols || (opts.animationEquipment !== 'holstered' && opts.showAccessories && opts.equipment.pistols && opts.laraPistols));
-  setPartVisibility(parts.holsterPistols, !dualPistols && opts.showAccessories && opts.equipment.pistols && (opts.animationEquipment === 'holstered' || !opts.laraPistols));
+  const equipped = opts.animationEquipment !== 'shower' && opts.showAccessories && opts.equipment.pistols;
+  setPartVisibility(parts.handPistols, dualPistols || (opts.animationEquipment !== 'holstered' && equipped && opts.laraPistols));
+  setPartVisibility(parts.holsterPistols, !dualPistols && equipped && (opts.animationEquipment === 'holstered' || !opts.laraPistols));
 }
 
 export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opts: ClothingAndAccessoriesOptions) {
+  const shower = opts.animationEquipment === 'shower';
+  opts = { ...opts, laraShoes: opts.laraShoes && !shower, laraGlasses: (opts.laraGlasses ?? true) && !shower, showAccessories: opts.showAccessories && !shower };
   const isTopNude = opts.laraTop !== 'native';
   const isBottomNude = opts.laraBottom !== 'native';
 

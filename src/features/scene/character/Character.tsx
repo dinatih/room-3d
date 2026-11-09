@@ -21,7 +21,6 @@ import { buildHairChain } from '../retargeting/index';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
-  applyPistolVisibility,
   applyRenderProperties,
   normalizeNonLaraCharacterMaterials,
   isHeadMesh,
@@ -243,7 +242,7 @@ export function Character({
     pistols: true,
     backpack: true,
   });
-  const animationEquipmentRef = useRef<'dual-pistols' | 'holstered' | undefined>(undefined);
+  const animationEquipmentRef = useRef<'dual-pistols' | 'holstered' | 'shower' | undefined>(undefined);
 
   const { invalidate } = useThree();
 
@@ -381,6 +380,7 @@ export function Character({
     getPostureAnimations,
     setPostureDistance,
     getStatus: getAgentStatus,
+    getInteractionEquipment,
     initialPos,
   } = useAgentController(
     renderId,
@@ -893,10 +893,13 @@ export function Character({
       animOriginRef.current.rotation.y = lerpAngle(animOriginRef.current.rotation.y, rotY, factor);
     }
 
-    const animationEquipment = isTPose ? undefined : getAnimationDef(target)?.equipment;
+    const animationEquipment = (!isPreview && !characterGrid ? getInteractionEquipment() : undefined)
+      ?? (isTPose ? undefined : getAnimationDef(target)?.equipment);
     if (isLara && animationEquipmentRef.current !== animationEquipment) {
       animationEquipmentRef.current = animationEquipment;
-      applyPistolVisibility(parts, { showAccessories, laraPistols, equipment, animationEquipment });
+      applyClothingAndAccessoriesVisibility(parts, { laraTop, laraBottom, laraShoes, laraGlasses, showAccessories, laraPistols, equipment, animationEquipment });
+      const cap = scene.getObjectByName('character_baseball_cap_attachment');
+      if (cap) cap.visible = animationEquipment !== 'shower';
     }
 
     if (isTPose) {

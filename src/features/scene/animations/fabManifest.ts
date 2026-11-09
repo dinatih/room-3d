@@ -4601,6 +4601,7 @@ export const FAB_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     "id": "fab-daily-life-eat-with-fork",
+    "equipment": "holstered",
     "path": "animations/fab/daily-life/eat-with-fork.glb",
     "label": "eat with fork · daily-life (10.0s)",
     "category": "interactions",
@@ -5013,6 +5014,7 @@ export const FAB_ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     "id": "fab-daily-life-wash-hands",
+    "equipment": "holstered",
     "path": "animations/fab/daily-life/wash-hands.glb",
     "label": "wash hands · daily-life (10.0s)",
     "category": "interactions",

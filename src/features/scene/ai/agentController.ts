@@ -2103,6 +2103,13 @@ export function createAgentController(
   };
 
   const getStatus = () => agentStatus;
+  const getInteractionEquipment = () => {
+    const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    if (agentStatus !== 'INTERACTING' && agentStatus !== 'TRANSITIONING') return undefined;
+    if (instruction?.smartObjectId === 'shower') return 'shower' as const;
+    if (instruction?.lifePhase === 'eat-meal' || instruction?.slotId === 'wash-hands') return 'holstered' as const;
+    return undefined;
+  };
   const getPostureAnimations = () => {
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     const object = instruction?.smartObjectId ? getSmartObject(instruction.smartObjectId) : undefined;
@@ -2130,7 +2137,7 @@ export function createAgentController(
       dynamicNavIndex = 0;
       agentStatus = 'IDLE';
     },
-    update, setPosition, setRotation, hasPendingDynamicTask, getStatus, getPostureAnimations, setPostureDistance, reportAnimationPlayback, connect,
+    update, setPosition, setRotation, hasPendingDynamicTask, getStatus, getInteractionEquipment, getPostureAnimations, setPostureDistance, reportAnimationPlayback, connect,
     get state() { return state; },
     get initialPos() { return startPos; },
     configure(next: { scenario: AgentInstruction[] | null; loop: boolean; onComplete?: () => void; landingAnim: string }) {

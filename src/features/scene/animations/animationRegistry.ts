@@ -41,7 +41,7 @@ export interface AnimationDefinition {
   defaultOffset?: [number, number, number]; // Décalage natif de position [x, y, z] (cm) pour corriger les animations hors norme
   duration: number;            // Durée en secondes (obligatoire)
   /** Equipment displayed only while this animation is active. */
-  equipment?: 'dual-pistols' | 'holstered';
+  equipment?: 'dual-pistols' | 'holstered' | 'shower';
   /** Explicit one-shot playback for imported transitions. */
   loop?: 'once';
   /** Natural forward speed measured from the source motion, in cm/s. */
@@ -9424,6 +9424,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'taking-shower',
+    equipment: 'shower',
     path: 'animations/npz/kit/anim_taking_shower.glb',
     category: 'interactions',
     label: 'Prendre sa douche',
@@ -9433,6 +9434,7 @@ export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   },
   {
     id: 'washing-body',
+    equipment: 'shower',
     path: 'animations/npz/kit/anim_washing_body.glb',
     category: 'interactions',
     label: 'Se laver',
