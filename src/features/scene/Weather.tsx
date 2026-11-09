@@ -62,6 +62,7 @@ if (typeof window !== 'undefined') {
 // Artistic cycle: six simulated hours per condition, thirty-minute transitions.
 export const WEATHER_PERIOD = 6 * 60;
 const TRANSITION = 30;
+const CLOUD_NIGHT_COLOR = new Color('#182338');
 const CLOUD_DAY_COLOR = new Color('#edf1f5');
 export const WEATHER_PHASES = [
   { icon: 'bi-sun-fill', label: 'Beau temps', weather: { coverage: 0.05, rain: 0, snow: 0, windSpeed: 1, windDirection: 90 } },
@@ -69,12 +70,14 @@ export const WEATHER_PHASES = [
   { icon: 'bi-cloud-rain-fill', label: 'Pluie', weather: { coverage: 1, rain: 0.8, snow: 0, windSpeed: 7, windDirection: 150 } },
   { icon: 'bi-snow', label: 'Neige', weather: { coverage: 0.9, rain: 0, snow: 0.8, windSpeed: 2, windDirection: 90 } },
 ];
+const weatherKeys = Object.keys(WEATHER_PHASES[0].weather) as (keyof typeof WEATHER_PHASES[number]['weather'])[];
 export function automaticWeather(minutes: number) {
   if (!Number.isFinite(minutes) || minutes < 0) throw new Error('Invalid weather time');
   const phase = Math.floor(minutes / WEATHER_PERIOD) % WEATHER_PHASES.length;
   const from = WEATHER_PHASES[(phase + WEATHER_PHASES.length - 1) % WEATHER_PHASES.length].weather, to = WEATHER_PHASES[phase].weather;
   const blend = MathUtils.smoothstep(minutes % WEATHER_PERIOD, 0, TRANSITION);
-  return Object.fromEntries(Object.keys(to).map(key => [key, MathUtils.lerp(from[key as keyof typeof from], to[key as keyof typeof to], blend)])) as typeof to;
+  if (blend === 1) return to;
+  return Object.fromEntries(weatherKeys.map(key => [key, MathUtils.lerp(from[key], to[key], blend)])) as typeof to;
 }
 const settings = [
   { key: 'snow', label: 'Neige', max: 1, step: 0.01, unit: '' },
@@ -91,9 +94,9 @@ export function WeatherControls() {
     <legend className="small fw-semibold mb-1">Météo</legend>
     <div className="form-check form-switch small">
       <input id="weather-enabled" type="checkbox" className="form-check-input" checked={weather.enabled} onChange={event => useWeather.setState({ enabled: event.target.checked })} />
-      <label htmlFor="weather-enabled" className="form-check-label">Activer la météo et le cycle jour/nuit</label>
+      <label htmlFor="weather-enabled" className="form-check-label">Activer les effets météo</label>
     </div>
-    {!weather.enabled && <p className="small text-muted mb-1">Éclairage fixe, effets et audio météo désactivés. L’horloge de Lara continue.</p>}
+    {!weather.enabled && <p className="small text-muted mb-1">Effets et audio météo désactivés. Le cycle jour/nuit et l’horloge continuent.</p>}
     <fieldset disabled={!weather.enabled}>
       <div className="form-check form-switch small">
         <input id="weather-auto" type="checkbox" className="form-check-input" checked={weather.automatic} onChange={event => useWeather.setState({ automatic: event.target.checked })} />
@@ -139,21 +142,22 @@ export function Weather() {
       const elapsed = Math.max(0, minutes - weatherRuntime.transition.at);
       const target = automaticWeather(minutes);
       const blend = MathUtils.smoothstep(elapsed, 0, TRANSITION);
-      const next = Object.fromEntries(Object.entries(target).map(([key, value]) => [key, MathUtils.lerp(weatherRuntime.transition!.weather[key as keyof typeof target], value, blend)]));
-      if (Object.entries(next).some(([key, value]) => state[key as keyof typeof target] !== value)) useWeather.setState(next);
+      const next = blend === 1 ? target : Object.fromEntries(weatherKeys.map(key => [key, MathUtils.lerp(weatherRuntime.transition!.weather[key], target[key], blend)])) as typeof target;
+      if (weatherKeys.some(key => state[key] !== next[key])) useWeather.setState(next);
     } else weatherRuntime.transition = null;
     const weather = useWeather.getState();
     Object.assign(weatherSurface, advanceWeatherSurface(weatherSurface, weather.rain, weather.snow, elapsed));
-    const { coverage, windSpeed, windDirection } = useWeather.getState();
+    const { coverage, windSpeed, windDirection } = weather;
     const direction = windDirection * Math.PI / 180;
     // m/s to scene centimetres; drift stays continuous when wind settings change.
     const active = material.current.uniforms;
     active.offset.value.x += Math.cos(direction) * windSpeed * 100 * delta;
     active.offset.value.y += Math.sin(direction) * windSpeed * 100 * delta;
-    weatherRuntime.offset = active.offset.value.toArray();
+    weatherRuntime.offset[0] = active.offset.value.x;
+    weatherRuntime.offset[1] = active.offset.value.y;
     material.current.visible = coverage > 0 && useSceneStore.getState().layers.environment !== false;
     active.coverage.value = coverage;
-    active.tint.value.set('#182338').lerp(CLOUD_DAY_COLOR, daylight(simulatedHour()));
+    active.tint.value.copy(CLOUD_NIGHT_COLOR).lerp(CLOUD_DAY_COLOR, daylight(simulatedHour()));
   });
   return <CategoryLayerGroup layer={LAYER_ENVIRONMENT} register={false}>
     <WeatherAudio />

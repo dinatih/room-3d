@@ -12,19 +12,32 @@ export function simulatedHour() {
   return (8 + simulationClock.minutes / 60) % 24;
 }
 
+// Les conversions civiles ne changent qu’aux heures de changement d’offset.
+// Préparer les 25 bornes horaires une seule fois par date réelle de Paris.
+let day: { start: number; end: number; hours: number[] } | undefined;
+function parisDay(now: Date | number) {
+  const instant = Number(now);
+  if (day && instant >= day.start && instant < day.end) return day;
+  const [year, month, date] = calendar.format(now).split('-').map(Number);
+  const midnight = Date.UTC(year, month - 1, date);
+  const hours = Array.from({ length: 25 }, (_, hour) => {
+    const wall = midnight + hour * 3600000;
+    let utc = wall;
+    for (let i = 0; i < 2; i++) {
+      const parts = Object.fromEntries(localTime.formatToParts(utc).map(part => [part.type, part.value]));
+      const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+      utc = wall - (local - utc);
+    }
+    return utc;
+  });
+  return day = { start: hours[0], end: hours[24], hours };
+}
+
 /** La date civile réelle de Paris se répète avec chaque journée accélérée du jeu. */
-export function skyDate(hour: number, now = new Date()) {
+export function skyDate(hour: number, now: Date | number = Date.now()) {
   if (!Number.isFinite(hour) || hour < 0 || hour > 24) throw new Error('Invalid environment hour');
-  const [year, month, day] = calendar.format(now).split('-').map(Number);
-  const wall = Date.UTC(year, month - 1, day) + hour * 3600000;
-  let instant = wall;
-  // Résolution de l’heure civile, y compris l’offset été/hiver à Paris.
-  for (let i = 0; i < 2; i++) {
-    const parts = Object.fromEntries(localTime.formatToParts(instant).map(part => [part.type, part.value]));
-    const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
-    instant = wall - (local - Math.floor(instant / 1000) * 1000);
-  }
-  return new Date(instant);
+  const wholeHour = Math.floor(hour);
+  return new Date(parisDay(now).hours[wholeHour] + (hour - wholeHour) * 3600000);
 }
 
 function body(position: Position) {
@@ -39,29 +52,32 @@ function body(position: Position) {
   };
 }
 
-let last: { key: string; value: ReturnType<typeof calculate> } | undefined;
+let last: { day: number; hour: number; value: ReturnType<typeof calculate> } | undefined;
 function calculate(date: Date) {
-  return { date, sun: body(getPosition(date, LAT, LNG)), moon: body(getMoonPosition(date, LAT, LNG)), illumination: getMoonIllumination(date) };
+  const sun = body(getPosition(date, LAT, LNG));
+  return { date, sun, daylight: MathUtils.smoothstep(sun.elevation, -6, 0), moon: body(getMoonPosition(date, LAT, LNG)), illumination: getMoonIllumination(date) };
 }
-export function celestialState(hour = simulatedHour(), now = new Date()) {
-  const key = `${calendar.format(now)}:${hour}`;
-  if (last?.key !== key) last = { key, value: calculate(skyDate(hour, now)) };
+export function celestialState(hour = simulatedHour(), now: Date | number = Date.now()) {
+  const date = parisDay(now);
+  if (last?.day !== date.start || last.hour !== hour) last = { day: date.start, hour, value: calculate(skyDate(hour, now)) };
   return last.value;
 }
 
-export function solarElevation(hour: number, now = new Date()) {
+export function solarElevation(hour: number, now: Date | number = Date.now()) {
   return celestialState(hour, now).sun.elevation;
 }
-export function daylight(hour: number, now = new Date()) {
-  return MathUtils.smoothstep(solarElevation(hour, now), -6, 0);
+export function daylight(hour: number, now: Date | number = Date.now()) {
+  return celestialState(hour, now).daylight;
 }
 
-let track: { day: string; value: string } | undefined;
-export function dayTimeTrack(now = new Date()) {
-  const day = calendar.format(now);
+let track: { day: number; value: string } | undefined;
+export function dayTimeTrack(now: Date | number = Date.now()) {
+  const day = parisDay(now).start;
   if (track?.day !== day) {
+    const nightColor = new Color('#234b80'), dayColor = new Color('#f4d78b'), color = new Color();
     const stops = Array.from({ length: 24 * 60 + 1 }, (_, minute) => {
-      const color = new Color('#234b80').lerp(new Color('#f4d78b'), daylight(minute / 60, now));
+      const elevation = getPosition(skyDate(minute / 60, now), LAT, LNG).altitude;
+      color.copy(nightColor).lerp(dayColor, MathUtils.smoothstep(elevation, -6, 0));
       return `#${color.getHexString()} ${minute / (24 * 60) * 100}%`;
     });
     track = { day, value: `linear-gradient(to right, ${stops.join(', ')})` };

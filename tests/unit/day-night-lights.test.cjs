@@ -23,13 +23,17 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },
       './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 },
       './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight,
-        celestialState: hour => astronomy.celestialState(hour, fixedDate) },
+        celestialState: () => astronomy.celestialState((8 + clock.minutes / 60) % 24, fixedDate) },
       './store/useSceneStore': { useSceneStore: { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
         toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
         triggerAction: (...action) => actions.push(action) }) } },
     });
     DayNight(); frame({ scene });
     assert.equal(moonSource.intensity, 0);
+    assert.equal(moonSource.shadow.autoUpdate, true);
+    moonSource.shadow.map = new THREE.WebGLRenderTarget(1, 1);
+    frame({ scene });
+    assert.equal(moonSource.shadow.autoUpdate, false);
     assert.equal(layers.lightsHD, lightsHD);
     assert(scene.children[0].intensity > 0);
     for (const hour of [9, 12, 15]) {
@@ -47,6 +51,7 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     assert.equal(nightState.nightLighting, true);
     assert.equal(daylight(0), 0);
     assert(moonSource.intensity > 0);
+    assert.equal(moonSource.shadow.autoUpdate, true);
     assert(moonSource.position.y > 0);
     clock.minutes = 21 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);

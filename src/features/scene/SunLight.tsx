@@ -8,12 +8,13 @@ const center = new Vector3(...SKY_CENTER);
 
 // ── Couleur et intensité selon l'élévation ────────────────────────────────────
 
-function sunParams(el: number): { color: Color; intensity: number } {
-  if (el <= 0)  return { color: new Color(0x001020), intensity: 0 };
-  if (el < 5)   return { color: new Color(0xff5500), intensity: 0.3 + (el / 5) * 0.5 };
-  if (el < 15)  return { color: new Color(0xff9940), intensity: 0.8 + ((el - 5)  / 10) * 0.4 };
-  if (el < 30)  return { color: new Color(0xffc070), intensity: 1.1 + ((el - 15) / 15) * 0.4 };
-  return { color: new Color(0xfff5e0), intensity: 1.4 + Math.sin(MathUtils.degToRad(el)) * 0.4 };
+function sunParams(el: number, color: Color): number {
+  if (el <= 0) { color.setHex(0x001020); return 0; }
+  if (el < 5) { color.setHex(0xff5500); return 0.3 + (el / 5) * 0.5; }
+  if (el < 15) { color.setHex(0xff9940); return 0.8 + ((el - 5) / 10) * 0.4; }
+  if (el < 30) { color.setHex(0xffc070); return 1.1 + ((el - 15) / 15) * 0.4; }
+  color.setHex(0xfff5e0);
+  return 1.4 + Math.sin(MathUtils.degToRad(el)) * 0.4;
 }
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -28,9 +29,10 @@ export function SunLight() {
     // Le volume d’ombres couvre la sphère du monde, dans toutes les directions.
     // La lumière reste en amont de ce volume, indépendamment du disque visible.
     lightRef.current.position.copy(sun.direction).multiplyScalar(2 * SKY_RADIUS).add(center);
-    const { color, intensity } = sunParams(elevation);
-    lightRef.current.color.copy(color);
-    lightRef.current.intensity = intensity;
+    lightRef.current.intensity = sunParams(elevation, lightRef.current.color);
+    // Initialiser la texture une fois : les shaders PCF l’échantillonnent même à intensité nulle.
+    lightRef.current.shadow.autoUpdate = lightRef.current.intensity > 0 || lightRef.current.shadow.map === null;
+    lightRef.current.shadow.needsUpdate = false;
   });
 
   return (
@@ -65,7 +67,7 @@ export function SunSphere() {
     const elevation = sun.elevation;
     meshRef.current.visible = elevation > 0;
     meshRef.current.position.copy(sun.direction).multiplyScalar(SPHERE_D).add(center);
-    matRef.current.color.copy(sunParams(elevation).color);
+    sunParams(elevation, matRef.current.color);
   });
 
   return (

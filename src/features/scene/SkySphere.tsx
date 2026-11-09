@@ -12,6 +12,10 @@ import { SeineRiverBoats } from './SeineRiverBoats';
 import { ParisLandmarkLights } from './ParisLandmarkLights';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { cameraState } from './cameraState';
+import { celestialState } from './astronomy';
+
+const nightColor = new THREE.Color('#17243e');
+const dayColor = new THREE.Color('white');
 
 const SKY_FADE_START = SKY_RADIUS * 0.82;
 const SKY_FADE_END = SKY_RADIUS * 1.04;
@@ -139,6 +143,8 @@ function CombinedSkyDome({ texture }: { texture: THREE.Texture }) {
     const wire = wireRef.current;
     if (!domeMat || !shell || !wire) return;
 
+    domeMat.color.copy(nightColor).lerp(dayColor, celestialState().daylight);
+    shellMaterial.color.copy(domeMat.color);
     const dist = camera.position.distanceTo(skyCenter);
     // Optimisation : ignorer le recalcul si la distance caméra n'a pas varié de plus de 5cm
     const contact = cameraState.mode === 'plane' && cameraState.planeSkyContact;

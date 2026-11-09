@@ -63,14 +63,50 @@ it('aligne le disque solaire, la lumière et les ombres sur la même position as
   SunLight(); SunSphere();
   for (const frame of frames) frame();
   assert(source.intensity > 0);
+  assert.equal(source.shadow.autoUpdate, true);
   assert.equal(disc.visible, true);
   assert(source.target.position.equals(center));
   const lightDirection = source.position.clone().sub(center).normalize();
   const discDirection = disc.position.clone().sub(center).normalize();
   assert(lightDirection.distanceTo(discDirection) < 1e-10);
   assert(Math.abs(source.position.distanceTo(center) - 2 * radius) < 1e-8);
+  source.shadow.map = new THREE.WebGLRenderTarget(1, 1);
   hour = 19;
   for (const frame of frames) frame();
   assert.equal(source.intensity, 0);
+  assert.equal(source.shadow.autoUpdate, false);
   assert.equal(disc.visible, false);
+});
+
+it('garde les heures civiles correctes les jours de changement d’heure', () => {
+  const spring = new Date('2026-03-29T12:00:00Z'), autumn = new Date('2026-10-25T12:00:00Z');
+  assert.equal(astronomy.skyDate(1.5, spring).toISOString(), '2026-03-29T00:30:00.000Z');
+  assert.equal(astronomy.skyDate(2.5, spring).toISOString(), '2026-03-29T01:30:00.000Z');
+  assert.equal(astronomy.skyDate(3.5, spring).toISOString(), '2026-03-29T01:30:00.000Z');
+  assert.equal(astronomy.skyDate(2.5, autumn).toISOString(), '2026-10-25T01:30:00.000Z');
+  assert.equal(astronomy.skyDate(3.5, autumn).toISOString(), '2026-10-25T02:30:00.000Z');
+});
+
+it('partage le calcul céleste entre consommateurs et ne calcule pas la lune pour la barre', () => {
+  let sunCalls = 0, moonCalls = 0;
+  const suncalc = require('suncalc');
+  const measured = load('src/features/scene/astronomy.ts', {
+    three: require('three'), './ai/laraLifeStore': { simulationClock: { minutes: 0 } },
+    suncalc: { ...suncalc,
+      getPosition: (...args) => { sunCalls++; return suncalc.getPosition(...args); },
+      getMoonPosition: (...args) => { moonCalls++; return suncalc.getMoonPosition(...args); } },
+  }, source => source.replaceAll('import.meta.env', '({})'));
+  const today = new Date('2026-11-09');
+  const sky = measured.celestialState(12, today);
+  measured.daylight(12, today);
+  measured.solarElevation(12, today);
+  assert.equal(measured.celestialState(12, today), sky);
+  assert.equal(sunCalls, 1);
+  assert.equal(moonCalls, 1);
+  measured.dayTimeTrack(today);
+  const callsAfterTrack = sunCalls;
+  assert.equal(moonCalls, 1);
+  measured.dayTimeTrack(today);
+  assert.equal(sunCalls, callsAfterTrack);
+  assert.equal(measured.celestialState(12, today), sky);
 });

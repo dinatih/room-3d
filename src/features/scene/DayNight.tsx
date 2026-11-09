@@ -1,21 +1,14 @@
 import { useSceneStore } from './store/useSceneStore';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, Mesh, MeshBasicMaterial, DirectionalLight, Vector3 } from 'three';
+import { Mesh, DirectionalLight, Vector3 } from 'three';
 import { Points, ShaderMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
-import { celestialState, daylight, simulatedHour } from './astronomy';
-
-const nightColor = new Color('#17243e');
-const dayColor = new Color('white');
+import { celestialState } from './astronomy';
 
 export function DayNight() {
   const scene = useThree(state => state.scene);
   useLayoutEffect(() => () => {
-    scene.getObjectByName('SkySphere')?.traverse(child => {
-      const material = (child as Mesh).material;
-      if (material instanceof MeshBasicMaterial && material.map) material.color.copy(dayColor);
-    });
     for (const object of scene.children) {
       const source = object as import('three').Light;
       if (source.userData.dayIntensity !== undefined) {
@@ -57,9 +50,8 @@ export function DayNight() {
     return { positions, colors, sizes, uniforms: { opacity: { value: 0 } } };
   }, []);
   useFrame(({ scene }) => {
-    const hour = simulatedHour();
-    const sky = celestialState(hour);
-    const light = daylight(hour);
+    const sky = celestialState();
+    const light = sky.daylight;
     const night = sky.sun.elevation < 0;
     if (previousNight.current !== night) {
       previousNight.current = night;
@@ -67,10 +59,6 @@ export function DayNight() {
       useSceneStore.setState({ nightLighting: night });
       store.triggerAction('lamp-toggle', night);
     }
-    scene.getObjectByName('SkySphere')?.traverse(child => {
-      const material = (child as Mesh).material;
-      if (material instanceof MeshBasicMaterial && material.map) material.color.copy(nightColor).lerp(dayColor, light);
-    });
     for (const object of scene.children) {
       if (object.type === 'AmbientLight') {
         const source = object as import('three').Light;
@@ -90,6 +78,9 @@ export function DayNight() {
     moonLight.current.target.position.set(...SKY_CENTER);
     moonLight.current.target.updateMatrixWorld();
     moonLight.current.intensity = 0.2 * (1 - light) * Math.max(0, sky.moon.direction.y) * sky.illumination.fraction;
+    moonLight.current.shadow.autoUpdate = moonLight.current.intensity > 0 || moonLight.current.shadow.map === null;
+    moonLight.current.shadow.needsUpdate = false;
+    stars.current.visible = light < 1;
     (stars.current.material as ShaderMaterial).uniforms.opacity.value = 1 - light;
   });
   return <group position={SKY_CENTER}>
