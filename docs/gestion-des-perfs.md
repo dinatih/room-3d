@@ -4,13 +4,15 @@
 
 Le scénario de suivi est la vue studio orbitale par défaut, caméra fixe, **9 personnages, preset Mid**, animaux et robots par défaut. Deux conditions indépendantes : midi et minuit, date astronomique fixée au 9 novembre 2026, beau temps, sol sec, profil navigateur neuf, graine 20261019, viewport 1362 × 810 et DPR 1. L’horloge mondiale est figée par une transformation Vite réservée aux tests ; les animations continuent. Aucun code de rendu de l’application n’est modifié par ce suivi.
 
-Après redémarrage, sur secteur, laisser la machine revenir à une température stable, fermer les onglets lourds et lancer :
+Après redémarrage, laisser la machine revenir à une température stable, fermer les onglets lourds et lancer sur secteur ou sur batterie :
 
 ```bash
 npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu
 ```
 
 Le test lance ses propres Vite et Chromium headless ; aucun serveur manuel n’est nécessaire. Trois chargements indépendants par scénario, chargement/préparation puis 15 secondes de chauffe et 60 secondes mesurées. La scène reste active grâce au mécanisme d’activité existant du test, sans forcer l’invalidation continue dans ces nouveaux scénarios. Les anciens cas 0/7/15 conservent leur fonctionnement historique et ne sont pas comparables à ces nouveaux cas.
+
+L’avancement est affiché par défaut, sans option supplémentaire : numéro du passage, démarrage Vite/Chromium, chargement et personnages prêts, puis chauffe et mesure avec un point toutes les cinq secondes (FPS récents, programmes GPU, mémoire disponible et alimentation). Les durées prévues de chaque phase et son résultat sont affichés. Les messages sont horodatés en UTC et écrits immédiatement dans le terminal et `runner.log`. Les warnings Sass et GPU restent visibles et conservés : le mode `verbose` de Sass n’est pas activé. Une commande déjà en cours conserve l’ancien affichage jusqu’à son prochain lancement.
 
 Les rapports JSON/Markdown, captures `scene.png`, erreurs et mesures partielles restent dans `test-results/<date>-perf/`. Les sources de vérité sont le commit, l’indicateur de modifications locales et les conditions enregistrées. Une capture s’ouvre avec `xdg-open '/chemin/absolu/scene.png'`.
 
@@ -21,7 +23,9 @@ npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu -
 npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu --reference=studio-mid-initial
 ```
 
-La première commande effectue une nouvelle campagne : elle ne convertit pas une ancienne exécution. Une référence existante n’est jamais écrasée. Les références utilisent désormais le schéma 2 ; les anciennes références doivent être remesurées. Le navigateur, GPU, OS, résolution, caméra, personnages, calques, graine et scénario doivent correspondre exactement.
+Le nom fourni est un nom de base : le test détecte l’alimentation et ajoute automatiquement `-ac` (secteur) ou `-battery` (batterie). Ainsi les commandes ci-dessus créent ou comparent `tests/references/studio-mid-initial-ac.json` sur secteur et `tests/references/studio-mid-initial-battery.json` sur batterie. Répéter la commande de création une fois dans chaque condition pour constituer les deux références. Les références ne contiennent aucun résultat fictif avant ces mesures. Si la référence de l’alimentation actuelle manque, la comparaison échoue explicitement ; aucun emprunt à l’autre alimentation n’est effectué.
+
+La première commande effectue une nouvelle campagne : elle ne convertit pas une ancienne exécution. Une référence existante n’est jamais écrasée. Les références utilisent désormais le schéma 3 ; les anciennes références doivent être remesurées. Le navigateur, GPU, OS, résolution, caméra, personnages, calques, graine, scénario et alimentation doivent correspondre exactement. Une alimentation inconnue ou modifiée pendant un passage ou entre les passages empêche la création/comparaison de référence ; les diagnostics restent conservés. Les alimentations secteur et USB prises en charge par Linux sont interrogées au début du passage, pendant les phases mesurées et à la fin. Un branchement/débranchement très bref entre deux relevés peut échapper à l’échantillonnage.
 
 ## Indicateurs et interprétation
 
@@ -34,7 +38,7 @@ La première commande effectue une nouvelle campagne : elle ne convertit pas une
 
 Les écarts absolus et relatifs apparaissent dans le rapport. Une alerte est émise si tous les passages se situent au-delà de la plage min/max de référence dans le mauvais sens (hausse des temps/coûts, baisse des FPS). C’est un signal descriptif sur trois passages, pas un test statistique ni un blocage automatique. Des plages qui se chevauchent demandent une nouvelle mesure si l’écart est préoccupant.
 
-Une hausse du swap ou un changement d’alimentation est signalé. Examiner aussi les températures et la charge : ne pas accepter une référence perturbée. L’absence de GPU matériel vérifié provoque un échec explicite ; SwiftShader/llvmpipe ne servent jamais de référence FPS.
+Une hausse du swap ou un changement d’alimentation est signalé. Examiner aussi les températures et la charge : ne pas accepter une référence perturbée. Les FPS ne sont pas corrigés selon l’alimentation ou la mémoire : ce sont deux références distinctes, pas une estimation de ce que donnerait la machine sur secteur. L’absence de GPU matériel vérifié provoque un échec explicite ; SwiftShader/llvmpipe ne servent jamais de référence FPS.
 
 ## Procédure pour chaque feature
 

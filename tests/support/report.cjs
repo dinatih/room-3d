@@ -9,6 +9,7 @@ exports.writeReport = (directory, report) => {
         let text = `### ${r.id}\n\nReproduction : \`${r.reproduction ?? ''}\`\n`;
         if (r.loaded)
             text += `\nNavigateur : ${r.browser}\n\nGPU : ${r.loaded.renderer}\n`;
+        if (r.conditions) text += `\nAlimentation : ${r.conditions.powerMode}\n`;
         if (r.disturbances) text += jsonBlock(r.disturbances);
         if (r.error)
             text += `\n${r.error}\n`;

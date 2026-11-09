@@ -19,6 +19,16 @@ exports.referenceId = value => {
     assert.match(value, /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/, 'Invalid reference identifier');
     return value;
 };
+exports.powerReferenceId = (id, mode) => {
+    exports.referenceId(id);
+    assert(['ac', 'battery'].includes(mode), 'Alimentation inconnue : impossible de créer ou comparer une référence secteur/batterie');
+    return `${id}-${mode}`;
+};
+exports.assertReferencePower = (result, expectedMode) => {
+    assert(['ac', 'battery'].includes(result.conditions.powerMode), 'Reference requires a known power source');
+    assert.equal(result.conditions.powerMode, expectedMode, 'Alimentation différente de celle détectée au lancement de la campagne');
+    assert.equal(result.disturbances.powerChanged, false, 'Alimentation modifiée pendant le test : référence/comparaison refusée');
+};
 exports.performanceMetrics = result => {
     const values = { startupMs: result.startupMs };
     for (const name of ['startup', 'stable', 'session']) {

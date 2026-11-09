@@ -5,6 +5,8 @@ const net = require('node:net');
 const assert = require('node:assert/strict');
 const { instrumentController } = require('./instrument-controller.cjs');
 const launch = require('../../scripts/browser-test-options.cjs');
+const { createProgress, PROGRESS_INTERVAL_MS } = require('./progress.cjs');
+const { hostMetrics } = require('./host-metrics.cjs');
 // Deadline runs in Node: a frozen page cannot prevent reporting or teardown.
 exports.deadline = async (work, ms, message) => {
     let timer;
@@ -35,13 +37,15 @@ exports.closeResources = async (browser, server) => {
     }
 };
 exports.withBrowser = async (fixture, exercise) => {
+    const progress = createProgress(fixture.id);
+    progress(`Passage ${fixture.campaignStep ?? 1}/${fixture.campaignTotal ?? 1} — ${fixture.behavior}`);
     const directory = path.join(process.env.ROOM_TEST_RESULTS, fixture.id);
     fs.mkdirSync(directory, { recursive: true });
     const result = { commit: process.env.ROOM_TEST_COMMIT, dirty: process.env.ROOM_TEST_DIRTY === 'true', id: fixture.id, configuration: fixture, status: 'running', errors: [], logs: [],
         environment: { platform: os.platform(), release: os.release(), arch: os.arch(), cpus: os.cpus(), memoryBytes: os.totalmem(), node: process.version },
         reproduction: fixture.reproduction ?? `npm run test:${process.env.ROOM_TEST_SUITE === 'perf' ? 'perf' : 'studio'} -- --case=${fixture.configurationId ?? fixture.id}${process.argv.includes('--hardware-gpu') ? ' --hardware-gpu' : ''}` };
     const save = () => fs.writeFileSync(path.join(directory, 'result.json'), JSON.stringify(result, null, 2));
-    let browser, server, heartbeat, cacheDir, debuggerSession, closing = false, lastHeartbeat = Date.now();
+    let browser, server, heartbeat, loadingProgress, cacheDir, debuggerSession, closing = false, lastHeartbeat = Date.now();
     const start = performance.now();
     let rejectBrowser;
     const browserFailure = new Promise((_, reject) => { rejectBrowser = reject; });
@@ -49,6 +53,8 @@ exports.withBrowser = async (fixture, exercise) => {
     browserFailure.catch(() => { });
     save();
     try {
+        if (process.env.ROOM_TEST_SUITE === 'perf') result.hostAtStart = await hostMetrics();
+        progress('Démarrage du serveur Vite…');
         const { createServer } = await import('vite');
         // Vite treats port 0 as its default port; ask the OS for a free port first.
         const probe = net.createServer();
@@ -76,6 +82,7 @@ exports.withBrowser = async (fixture, exercise) => {
         const gpuArgs = process.argv.includes('--hardware-gpu') || (process.platform === 'linux' && !fixture.softwareRendering)
             ? ['--enable-gpu', '--use-angle=vulkan', '--enable-features=Vulkan,VulkanFromANGLE', '--disable-vulkan-surface']
             : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+        progress('Lancement de Chromium headless et vérification du GPU…');
         browser = await launch({ args: ['--no-sandbox', ...gpuArgs], protocolTimeout: fixture.readinessTimeoutMs + fixture.timeoutMs });
         result.browser = await browser.version();
         browser.process().stderr?.on('data', chunk => fs.appendFileSync(path.join(directory, 'chromium.log'), chunk));
@@ -144,6 +151,11 @@ exports.withBrowser = async (fixture, exercise) => {
         }, fixture.seed);
         const work = (async () => {
             const startup = performance.now();
+            progress('Chargement des modèles, préparation GPU et attente des personnages…');
+            loadingProgress = setInterval(() => {
+                const ready = result.partial?.readiness;
+                progress(`Chargement en cours — personnages prêts : ${ready ? `${ready.filter(character => character.ready).length}/${fixture.count}` : `en attente/${fixture.count}`} ; frames navigateur : ${result.partial?.frames ?? 0}`);
+            }, PROGRESS_INTERVAL_MS);
             const query = new URLSearchParams({ characterCount: String(fixture.count), skipIntro: '1', preset: fixture.preset, mode: fixture.camera, ...fixture.query });
             await page.goto(`http://127.0.0.1:${address.port}/?${query}`, { waitUntil: 'domcontentloaded', timeout: fixture.readinessTimeoutMs });
             await page.waitForFunction(async (count) => {
@@ -163,6 +175,8 @@ exports.withBrowser = async (fixture, exercise) => {
                 return cameraState.isSceneLaunched && !cameraState.isIntroRunning && window.__THREE_GL__ && furnitureObstacles.size > 0 && window.__testReadiness.every(character => character.ready);
             }, { timeout: fixture.readinessTimeoutMs }, fixture.count);
             result.startupMs = performance.now() - startup;
+            clearInterval(loadingProgress);
+            progress(`Scène prête après ${(result.startupMs / 1000).toFixed(1)} s`);
             result.loaded = await page.evaluate(async (fixture) => {
                 const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
                 const { CHARACTERS, getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
@@ -188,6 +202,7 @@ exports.withBrowser = async (fixture, exercise) => {
                 return { models, renderer: extension ? ctx.getParameter(extension.UNMASKED_RENDERER_WEBGL) : ctx.getParameter(ctx.RENDERER), drawingBuffer: [ctx.drawingBufferWidth, ctx.drawingBufferHeight], layers: useSceneStore.getState().layers, camera: { mode: cameraState.mode, camX: cameraState.camX, camZ: cameraState.camZ, camRY: cameraState.camRY } };
             }, fixture);
             save();
+            progress(`GPU : ${result.loaded.renderer}`);
             await exports.deadline(exercise(page, result, system, browser), fixture.timeoutMs, `Scenario execution deadline: ${fixture.id}`);
             result.trace = await page.evaluate(() => window.__testTrace);
             assert.deepEqual(result.errors, [], 'Browser errors');
@@ -202,10 +217,12 @@ exports.withBrowser = async (fixture, exercise) => {
         }, 1000);
         await exports.deadline(Promise.race([work, browserFailure]), fixture.readinessTimeoutMs + fixture.timeoutMs, `Scenario deadline: ${fixture.id}`);
         result.status = 'passed';
+        progress('Passage réussi ; fermeture du navigateur et du serveur…');
     }
     catch (error) {
         result.status = 'failed';
         result.error = error.stack ?? String(error);
+        progress(`ÉCHEC : ${error.message ?? error}`);
         save();
         if (browser) {
             try {
@@ -221,6 +238,7 @@ exports.withBrowser = async (fixture, exercise) => {
     finally {
         closing = true;
         clearInterval(heartbeat);
+        clearInterval(loadingProgress);
         try {
             await exports.closeResources(browser, server);
         }

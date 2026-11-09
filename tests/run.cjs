@@ -4,7 +4,8 @@ const { execFileSync } = require('node:child_process');
 const { run } = require('node:test');
 const { spec } = require('node:test/reporters');
 const { writeReport } = require('./support/report.cjs');
-const { referenceId, assertCompatible, aggregatePerformance, compareMetric } = require('./support/statistics.cjs');
+const { referenceId, powerReferenceId, assertReferencePower, assertCompatible, aggregatePerformance, compareMetric } = require('./support/statistics.cjs');
+const { hostMetrics } = require('./support/host-metrics.cjs');
 const fixtures = require('./fixtures/cases.cjs');
 const rendering = require('./fixtures/rendering.cjs');
 async function main() {
@@ -40,15 +41,18 @@ async function main() {
         referenceId(options.reference);
     if (options['approve-reference'])
         referenceId(options['approve-reference']);
-    const reference = options.reference && JSON.parse(fs.readFileSync(path.resolve('tests/references', `${options.reference}.json`)));
+    const hostAtStart = suite === 'perf' ? await hostMetrics() : null;
+    options.powerMode = hostAtStart?.powerMode;
+    const referenceName = options.reference && powerReferenceId(options.reference, options.powerMode);
+    const reference = referenceName && JSON.parse(fs.readFileSync(path.resolve('tests/references', `${referenceName}.json`)));
     if (reference) {
-        if (reference.schema !== 2)
+        if (reference.schema !== 3)
             throw Error('Unsupported reference schema');
         if (JSON.stringify(reference.aggregates.map(a => a.id)) !== JSON.stringify(selected))
             throw Error('Incompatible reference case selection');
         options.referenceConditions = Object.fromEntries(reference.aggregates.map(a => [a.id, a.conditions]));
     }
-    const referencePath = options['approve-reference'] && path.resolve('tests/references', `${options['approve-reference']}.json`);
+    const referencePath = options['approve-reference'] && path.resolve('tests/references', `${powerReferenceId(options['approve-reference'], options.powerMode)}.json`);
     if (referencePath && fs.existsSync(referencePath))
         throw Error('Reference already exists; choose a new identifier');
     const directory = path.resolve('test-results', `${new Date().toISOString().replaceAll(':', '-')}-${suite}`);
@@ -57,7 +61,7 @@ async function main() {
     process.env.ROOM_TEST_RESULTS = directory;
     process.env.ROOM_TEST_OPTIONS = JSON.stringify(options);
     const report = { suite, commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
-        dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()), startedAt: new Date().toISOString(), options, results: [] };
+        dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()), startedAt: new Date().toISOString(), hostAtStart, options, results: [] };
     process.env.ROOM_TEST_COMMIT = report.commit;
     process.env.ROOM_TEST_DIRTY = String(report.dirty);
     const save = () => writeReport(directory, report);
@@ -68,6 +72,11 @@ async function main() {
     const capture = original => function (chunk, ...args) { fs.appendFileSync(logPath, chunk); return original.call(this, chunk, ...args); };
     process.stdout.write = capture(stdoutWrite);
     process.stderr.write = capture(stderrWrite);
+    if (suite === 'perf') {
+        console.log(`[perf] ${selected.length * 3} passages ; avancement toutes les 5 s. Alimentation : ${options.powerMode}. RAM disponible : ${(hostAtStart.availableBytes / 1024 ** 3).toFixed(2)} Gio ; swap utilisé : ${(hostAtStart.swapUsedBytes / 1024 ** 3).toFixed(2)} Gio.`);
+        console.log(`[perf] Rapports et logs : ${directory}`);
+        if (referenceName || referencePath) console.log(`[perf] Référence ${referenceName ? 'comparée' : 'à créer'} : ${referenceName ?? path.basename(referencePath, '.json')}`);
+    }
     const stream = run({ files, isolation: 'none', concurrency: 1, argv: process.argv.includes('--hardware-gpu') ? ['--hardware-gpu'] : [] });
     let failures = 0;
     stream.on('test:fail', () => { failures++; });
@@ -87,6 +96,7 @@ async function main() {
         if (failures || report.results.some(r => r.status !== 'passed'))
             throw Error('Test campaign failed');
         if (suite === 'perf') {
+            if (options.reference || referencePath) for (const result of report.results) assertReferencePower(result, options.powerMode);
             report.aggregates = selected.map(id => {
                 const results = report.results.filter(r => r.configuration.configurationId === id);
                 return aggregatePerformance(results);
@@ -99,7 +109,7 @@ async function main() {
                 });
             }
             if (referencePath)
-                fs.writeFileSync(referencePath, JSON.stringify({ schema: 2, commit: report.commit, approvedAt: new Date().toISOString(), aggregates: report.aggregates }, null, 2), { flag: 'wx' });
+                fs.writeFileSync(referencePath, JSON.stringify({ schema: 3, commit: report.commit, approvedAt: new Date().toISOString(), aggregates: report.aggregates }, null, 2), { flag: 'wx' });
         }
     }
     catch (error) {
