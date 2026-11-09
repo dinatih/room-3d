@@ -115,15 +115,15 @@ export function BnfSkyMarker({
       </mesh>
 
       {/* Libellé textuel au-dessus de l'anneau */}
-      <group ref={labelRef} position={[0, bnfRadius + 24, 0]}>
+      <group ref={labelRef} position={[0, bnfRadius + 40, 0]}>
         <Text
           color="#ffffff"
-          fontSize={24}
-          maxWidth={300}
+          fontSize={72}
+          maxWidth={900}
           textAlign="center"
           anchorX="center"
           anchorY="bottom"
-          outlineWidth={2}
+          outlineWidth={6}
           outlineColor="#b3001e"
           material-depthTest={true}
           renderOrder={-490}
