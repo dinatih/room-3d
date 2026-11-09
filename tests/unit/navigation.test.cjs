@@ -952,7 +952,7 @@ describe('Navigation et portes — géométrie isolée', () => {
     it('détecte la réintroduction du steering responsable de la rotation sans fin', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;
-        const sourceLine = 'const steered = step === remaining ? direction : steer?.(direction, remaining) ?? direction;';
+        const sourceLine = 'const steered = step === remaining || graph === route.crowd?.graph ? direction : steer?.(direction, remaining) ?? direction;';
         const broken = load('src/features/scene/ai/navigation/service.ts', navigationDependencies, source => {
             assert(source.includes(sourceLine), 'Mutation no longer matches the production source');
             return source.replace(sourceLine, 'const steered = steer?.(direction, remaining) ?? direction;').replace('const step = Math.min(travel, remaining);', 'const step = travel;');

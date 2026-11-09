@@ -20,6 +20,7 @@ import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroom
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
 import { TV_POSITION } from '../tvData';
+import { EXTERIOR_GROUND } from '../environmentData';
 
 import { HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 
@@ -674,19 +675,17 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     name: 'Entrée Bâtiment B (Couloir)',
     category: 'outdoor',
     exclusive: true,
-    position: [-350, 0, 1002],
+    position: [-350, 0, EXTERIOR_GROUND.z + EXTERIOR_GROUND.depth / 2 - HUMAN_BODY_RADIUS],
     slots: [
       {
         slotId: 'trash',
         name: 'Jeter les poubelles',
-        offset: [-350, 0, 1010],
         rotY: Math.PI / 2,
         animationsRandom: 'dance',
       },
       {
         slotId: 'visit',
         name: 'Consulter son téléphone',
-        offset: [-350, 0, 1000],
         rotY: Math.PI / 2,
         animation: 'texting-while-standing',
       }

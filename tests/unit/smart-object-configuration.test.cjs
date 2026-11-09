@@ -2,6 +2,23 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 
+it('garde les activités du bâtiment B à l’intérieur du sol, avec un dégagement pour le corps', () => {
+  const { EXTERIOR_GROUND } = require('../../src/features/scene/environmentData.ts');
+  const { object } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixture: { EXTERIOR_GROUND } }, source => {
+    const begin = source.indexOf("  'building-b-corridor': {");
+    const end = source.indexOf("  'building-b-garden':", begin);
+    return `import { EXTERIOR_GROUND } from 'fixture'; const HUMAN_BODY_RADIUS = 20;
+      export const object = ({${source.slice(begin, end)}})['building-b-corridor'];`;
+  });
+  for (const slot of object.slots) {
+    const [x, , z] = slot.offset ?? object.position;
+    assert(x > EXTERIOR_GROUND.x - EXTERIOR_GROUND.width / 2);
+    assert(x < EXTERIOR_GROUND.x + EXTERIOR_GROUND.width / 2);
+    assert(z > EXTERIOR_GROUND.z - EXTERIOR_GROUND.depth / 2);
+    assert(z <= EXTERIOR_GROUND.z + EXTERIOR_GROUND.depth / 2 - 20);
+  }
+});
+
 it('expose uniquement les lits présents dans la configuration active', () => {
   const positionState = {};
   const { getAllSmartObjectIds } = load('src/features/scene/ai/smartObjectRegistry.ts', { '../positionState': { positionState } }, source => {
