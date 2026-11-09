@@ -129,3 +129,40 @@ Dans un contexte Chrome visible isolé de la sauvegarde utilisateur, l'heure a �
 **Conséquence :** conserver les campagnes headless comme comparaisons relatives entre modifications sous conditions identiques, et vérifier séparément la fluidité visible. Ne plus présenter leur FPS absolu comme celui de l'onglet utilisateur. Le mode headless est désormais enregistré dans les conditions et annoncé dans le terminal ; les anciennes références sans ce champ doivent être remesurées.
 
 Le compteur de l'app utilisait une moyenne arithmétique des FPS instantanés arrondis. Il utilise maintenant les durées brutes des 80 dernières images actives : `1000 × nombre d'images / somme des durées`. Cela aligne la définition du FPS avec le benchmark, sans rendre identiques une fenêtre de 80 images et une session de 60 secondes. Exemple : une image de 20 ms et une de 100 ms donnent 16,67 FPS réels, pas la moyenne instantanée de 30 FPS. Cette correction améliore la mesure, pas la vitesse de l'application.
+
+## Mémoire des modèles de scène — 10 novembre 2026
+
+L'utilisateur a choisi de privilégier la mémoire en scène, en conservant les originaux haute définition dans les previews. Le manifeste `src/features/scene/scene-models.json` sélectionne 63 modèles d'objets effectivement présents dans la scène. Leurs variantes utilisent des textures de 512 px au maximum, avec le ratio d'origine ; les images entièrement uniformes deviennent des PNG de 1 × 1 pixel. Ce palier ne touche ni les personnages, ni leurs tatouages, ni le panorama, ni les textures procédurales du sol. Les géométries, matériaux, samplers, UV et animations des GLB sont inchangés. Les fichiers originaux restent intacts.
+
+La scène principale choisit ces variantes par contexte React. Les canevas de preview utilisent les originaux. Les préchargements des composants ont été alignés sur ce choix pour éviter de décoder aussi les grandes textures au démarrage. Une fois un GLTF chargé, le hook de clonage abandonne la référence au parseur et à ses buffers intermédiaires, qui ne sont consultés par aucun composant du projet. Les images et géométries encore utilisées restent disponibles.
+
+Les sources HD des modèles concernés sont retirées du cache et libérées après le démontage de leur dernier clone de preview. Les sources allégées de la scène restent partagées. Les références globales de diagnostic aux scènes et renderers démontés sont également supprimées afin de ne pas retenir un ancien canevas. Une preview HD peut temporairement consommer davantage de mémoire tant qu'elle est ouverte.
+
+### Résultats mesurés
+
+Campagne headless originale / allégée / allégée / originale, navigateurs neufs successifs, GPU Radeon 840M, studio à midi, neuf personnages, Mid, 1362 × 810, DPR 1, sur secteur. Après 15 secondes de chauffe et un GC explicite identique dans chaque cas, quatre relevés sont espacés de cinq secondes. Les originaux de contrôle conservent leurs parseurs, pour reproduire le comportement précédent. Les essais incluent donc le gain des textures et celui de la libération des parseurs.
+
+| Métrique | Originaux | Scène allégée |
+| --- | --- | --- |
+| Pic RSS du processus de rendu, deux passages | 3,92 / 3,93 Gio | 2,65 / 2,65 Gio |
+| Pic PSS de l'ensemble des processus du navigateur de test | 4,33 / 4,34 Gio | 3,06 / 3,07 Gio |
+| Pixels de base des textures de matériaux, estimation RGBA8 | 1733 / 1735 Mio | 669 / 664 Mio |
+
+Le processus de rendu économise environ **1,27 Gio (32 %)** : approximativement **4,21 Go vers 2,85 Go** en unités décimales. Le total du navigateur reste supérieur au seul processus de rendu : ne pas présenter ce résultat comme une garantie de moins de 3 Go pour tout Chrome. Le gestionnaire des tâches de Chrome peut utiliser un autre périmètre de comptage. La mesure des pixels de base exclut notamment mipmaps et render targets ; elle n'est pas une mesure de mémoire GPU totale. Aucun gain de FPS n'est déduit de cette campagne mémoire.
+
+Résultats détaillés et captures : `/tmp/room-memory-FeBqw1/`. Les états de scène intermédiaires à 1K et les premiers contrôles des parseurs restent dans `/tmp/room-memory-96PkPH/` et `/tmp/room-memory-xhMRCI/`. Le compteur RSS représente les pages résidentes d'un processus ; sommer les RSS compte plusieurs fois les pages partagées. La PSS répartit ces pages entre processus.
+
+### Reproduction et validation
+
+```bash
+python scripts/build-scene-models.py
+python tests/assets/test_scene_models.py
+node scripts/profile-scene-memory.cjs original scene scene original --hardware-gpu
+node scripts/test-scene-model-previews.cjs --hardware-gpu
+```
+
+Le générateur nécessite Pillow. Les tests Python vérifient les 63 modèles : données binaires hors images identiques, mêmes animations/matériaux/samplers, images inchangées sous le palier et redimensionnement attendu des autres images. Le contrôle navigateur ouvre et ferme deux fois la preview du DJI : elle charge bien ses textures originales 2K, puis la scène reprend sans conserver de clone HD monté. Ce contrôle autorise explicitement l'annulation `ERR_ABORTED` de la requête transitoire du drone pendant la sélection de l'inventaire ; il exige ensuite que le véritable modèle HD soit chargé. Les autres erreurs réseau restent bloquantes.
+
+Un plan très rapproché dans la scène peut montrer moins de détail sur ces objets ; l'inventaire conserve la résolution d'origine. Faire un rechargement complet après mise à jour pour mesurer proprement : HMR et les caches d'une ancienne session peuvent conserver des ressources déjà chargées. Les références précédentes doivent être remesurées : les conditions de performance enregistrent désormais le palier `sceneModels`.
+
+TypeScript, build, tests d'intégrité des GLB et 32 contrôles unitaires ciblés passent. La suite globale présente les échecs déjà observés avant ce travail (chargements de modules dans les mocks, warm-up, clips Miley, état partagé de navigation). Le seul échec ajouté pendant l'adaptation des mocks UTÅKER a été corrigé et son groupe ciblé repassé.
