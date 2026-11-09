@@ -1,4 +1,4 @@
-import { LIFE_SETTINGS, LIFE_EVENT_LABELS, closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_SPEEDS, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
+import { LIFE_SETTINGS, LIFE_EVENT_LABELS, closestLifeFriend, favoriteLifeActivity, getLifeMood, isLifeCharacter, lifeClock, LIFE_CHARACTER_LABELS, LIFE_INITIAL_PREFERENCES, LIFE_PERSONALITY, LIFE_LABELS, LIFE_NEED_LABELS, type LifeActivity, type LifeNeeds, type LifeCharacterId } from '../../ai/laraLife';
 import { useSceneStore } from '../../store/useSceneStore';
 import { findCharacter } from '../../characterConfig';
 import { resetLives, useLaraLifeStore } from '../../ai/laraLifeStore';
@@ -10,6 +10,7 @@ import { getSmartObject } from '../../ai/smartObjectRegistry';
 import { duoSessionManager } from '../../ai/duoSessionManager';
 import { getAnimationDef } from '../../animations/animationResolver';
 import { getDuoAnimationForClip } from '../../animations/duoAnimations';
+import { LifeSpeedButton } from '../../EnvironmentButton';
 
 const NEED_LABELS: Record<keyof LifeNeeds, string> = { rest: 'Repos', work: 'Stimulation', walk: 'Bouger', meal: 'Faim', hygiene: 'Hygiène', toilet: 'Toilettes', company: 'Compagnie', environment: 'Environnement' };
 const characterName = (id: string) => isLifeCharacter(id) ? LIFE_CHARACTER_LABELS[id] : findCharacter(id)!.name;
@@ -22,7 +23,7 @@ function InventoryShortcut({ label, target }: { label: string; target?: OpenInve
 }
 
 export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId } = {}) {
-  const { characters, speed, home, household, savedAt, saveError } = useLaraLifeStore();
+  const { characters, home, household, savedAt, saveError } = useLaraLifeStore();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectedCharacterId = characterId ?? activeCharacterId;
   if (!isLifeCharacter(selectedCharacterId)) return <section className="p-2 small">Ce personnage ne participe pas au système de vie.</section>;
@@ -59,11 +60,7 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
         onClick={() => openInventoryTarget({ type: 'object', object: { id: selectedCharacterId } })}>
         <i className="bi bi-box-seam" aria-hidden="true" />
       </button>}
-      {!characterId && <button type="button" className="btn btn-sm btn-outline-dark py-0 text-nowrap" aria-label="Vitesse de la colocation"
-        title="Accélérer la vie de la colocation : ×1, ×3, ×10"
-        onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}>
-        <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
-      </button>}
+      {!characterId && <LifeSpeedButton />}
     </div>
     <div id={characterId ? undefined : 'life-character-panel'}>
       {(Object.keys(needs) as (keyof LifeNeeds)[]).map(key => <label key={key} className="row align-items-center gx-2 mb-0">

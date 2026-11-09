@@ -9,6 +9,22 @@ import { advanceToTime, useLaraLifeStore } from './ai/laraLifeStore';
 import { cameraState } from './cameraState';
 import { isLifeCharacter, lifeClock, LIFE_SPEEDS } from './ai/laraLife';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from './ai/lifeHousekeeping';
+import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
+
+export function LifeSpeedButton({ className = 'btn btn-sm btn-outline-dark py-0 px-2 text-nowrap small' }: { className?: string }) {
+  const speed = useLaraLifeStore(state => state.speed);
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-label="Vitesse de la colocation"
+      title="Accélérer la vie de la colocation : ×1, ×3, ×10"
+      onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}
+    >
+      <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
+    </button>
+  );
+}
 
 const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
   { id: 'bermuda', label: 'Gazon Bermuda' },
@@ -39,7 +55,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const currentGroundType = layers.groundType ?? 'bermuda';
 
   // Système de vie : heure simulée & besoin environnement
-  const { characters, speed, home } = useLaraLifeStore();
+  const { characters, home } = useLaraLifeStore();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectedCharacterId = isLifeCharacter(activeCharacterId) ? activeCharacterId : 'native';
   const character = characters[selectedCharacterId];
@@ -86,31 +102,25 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   };
 
   return (
-    <PanelPopover
-      icon={weatherIcon ?? currentPhase.icon}
-      label={clock.time}
-      title="Environnement & Météo"
-      triggerStyle={{ width: '5rem', fontVariantNumeric: 'tabular-nums' }}
-      hideUI={hideUI}
-    >
-      <div className="d-flex flex-column bg-transparent">
-        {/* 1. Ligne de 24h & Accélérateur */}
-        <div className="p-2 border-bottom">
-          <div className="d-flex align-items-center justify-content-between mb-1">
-            <span className="fw-bold small text-dark d-flex align-items-center gap-1">
-              <i className="bi bi-clock-fill text-primary" aria-hidden="true" />
-              {clock.time}
-              <span className="text-muted fw-normal ms-1">· Jour {clock.day} ({clock.period})</span>
-            </span>
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-dark py-0 px-2 text-nowrap small"
-              title="Accélérer la vie de la colocation : ×1, ×3, ×10"
-              onClick={() => useLaraLifeStore.setState({ speed: LIFE_SPEEDS[(LIFE_SPEEDS.indexOf(speed) + 1) % LIFE_SPEEDS.length] })}
-            >
-              <i className="bi bi-fast-forward-fill me-1" aria-hidden="true" />×{speed}
-            </button>
-          </div>
+    <>
+      <PanelPopover
+        icon={weatherIcon ?? currentPhase.icon}
+        label={clock.time}
+        title="Environnement & Météo"
+        triggerStyle={{ width: '5rem', fontVariantNumeric: 'tabular-nums' }}
+        hideUI={hideUI}
+      >
+        <div className="d-flex flex-column bg-transparent">
+          {/* 1. Ligne de 24h & Accélérateur */}
+          <div className="p-2 border-bottom">
+            <div className="d-flex align-items-center justify-content-between mb-1">
+              <span className="fw-bold small text-dark d-flex align-items-center gap-1">
+                <i className="bi bi-clock-fill text-primary" aria-hidden="true" />
+                {clock.time}
+                <span className="text-muted fw-normal ms-1">· Jour {clock.day} ({clock.period})</span>
+              </span>
+              <LifeSpeedButton />
+            </div>
 
           {automaticWeather && <div className="position-relative py-2 small text-primary" aria-label="Horaires de la météo automatique">
             {WEATHER_PHASES.map(({ icon, label }, index) => {
@@ -257,5 +267,6 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
 
       </div>
     </PanelPopover>
-  );
+    {!hideUI && <LifeSpeedButton className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary text-nowrap`} />}
+  </>);
 }
