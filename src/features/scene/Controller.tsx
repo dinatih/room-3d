@@ -5,7 +5,7 @@ import { cameraState } from './cameraState';
 import { useDroneControlStore } from './droneControls';
 import { ORBIT_CAMERA_LERP } from './camera/cameraConstants';
 import { ALL_HAIR_COLORS } from './sidepanel/types';
-import { CAMERA_SUBJECTS, CHARACTER_CONTROL_ANIMATIONS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
+import { selectSceneSubject, CAMERA_SUBJECTS, CHARACTER_CONTROL_ANIMATIONS, isFlyingSubject, selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { getAnimationDef } from './animations/animationResolver';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { CHARACTERS, npcLabel } from './characterConfig';
@@ -137,8 +137,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
   const refreshSubjects = () => setAvailableSubjects(Object.keys(cameraState.animalViews));
   const pickSubject = (choice: typeof subjects[number], button: HTMLButtonElement) => {
     releaseAll();
-    if (choice.cameraSubject === 'character') useSceneStore.getState().setActiveCharacterId(choice.id);
-    document.dispatchEvent(new CustomEvent('camera-subject', { detail: choice.cameraSubject }));
+    selectSceneSubject(choice.id, choice.cameraSubject);
     (button.closest('[popover]') as HTMLDivElement).hidePopover();
   };
 

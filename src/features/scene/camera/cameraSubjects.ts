@@ -1,3 +1,4 @@
+import { useSceneStore } from '../store/useSceneStore';
 import type { CameraMode, CameraTarget } from './types';
 
 export const CHARACTER_CONTROL_ANIMATIONS = {
@@ -7,18 +8,18 @@ export const CHARACTER_CONTROL_ANIMATIONS = {
 
 /** IDs match the poses published by animals and RobotPlacements. */
 export const CAMERA_SUBJECTS = [
-  { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box' },
-  { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane' },
-  { id: 'dji-avata-2', target: 'dji-avata-2', label: 'Avata 2', icon: 'bi-airplane' },
-  { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart' },
-  { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart' },
-  { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter' },
-  { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot' },
-  { id: 'unitree-as2w', target: 'as2', label: 'As2', icon: 'bi-robot' },
-  { id: 'microduck', target: 'microduck', label: 'Microduck', icon: 'bi-robot' },
-  { id: 'raph-rover', target: 'raph', label: 'Raph', icon: 'bi-robot' },
-  { id: 'unitree-h2', target: 'h2', label: 'H2', icon: 'bi-robot' },
-  { id: 'jumper-robot', target: 'jumper', label: 'Jumper', icon: 'bi-robot' },
+  { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box', category: 'Personnages' },
+  { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane', category: 'Robots' },
+  { id: 'dji-avata-2', target: 'dji-avata-2', label: 'Avata 2', icon: 'bi-airplane', category: 'Robots' },
+  { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart', category: 'Animaux' },
+  { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart', category: 'Animaux' },
+  { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter', category: 'Animaux' },
+  { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot', category: 'Robots' },
+  { id: 'unitree-as2w', target: 'as2', label: 'As2', icon: 'bi-robot', category: 'Robots' },
+  { id: 'microduck', target: 'microduck', label: 'Microduck', icon: 'bi-robot', category: 'Robots' },
+  { id: 'raph-rover', target: 'raph', label: 'Raph', icon: 'bi-robot', category: 'Robots' },
+  { id: 'unitree-h2', target: 'h2', label: 'H2', icon: 'bi-robot', category: 'Robots' },
+  { id: 'jumper-robot', target: 'jumper', label: 'Jumper', icon: 'bi-robot', category: 'Robots' },
 ] as const;
 
 export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'cat';
@@ -38,4 +39,9 @@ export function selectAnimalCameraTarget({ cameraMode, cameraTarget }: { cameraM
   if (cameraMode !== 'follow' && cameraMode !== 'fpv') return null;
   const subject = resolveCameraSubject(cameraTarget);
   return subject && subject !== 'character' ? subject : null;
+}
+
+export function selectSceneSubject(id: string, cameraSubject: string) {
+  if (cameraSubject === 'character') useSceneStore.getState().setActiveCharacterId(id);
+  document.dispatchEvent(new CustomEvent('camera-subject', { detail: cameraSubject }));
 }
