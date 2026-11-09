@@ -235,7 +235,8 @@ export function BlackHornetDrone({
       droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(rotating('ArrowUp')) - Number(rotating('ArrowDown'))) * turn, -Math.PI / 6, Math.PI / 6);
       const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
       droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
-      model.position.addScaledVector(moveDirection.current, speed * delta);
+      moveDirection.current.multiplyScalar(speed * delta).add(model.position);
+      if (!tourRef.current!.space.blocker(model.position, moveDirection.current)) model.position.copy(moveDirection.current);
       model.rotation.set(-droneInput.pitch, droneInput.yaw, 0, 'YXZ');
       return;
     }

@@ -26,6 +26,7 @@ export function unregisterObstacle(id: string): void {
 export interface AgentProfile {
   radius: number;
   height: number;
+  excludeStudio?: boolean;
 }
 const profiles = new Map<string, AgentProfile>();
 export const agentProfileLifecycle = { onUsed: (_profile: AgentProfile): void => {}, onUnused: (_profile: AgentProfile): void => {} };
@@ -39,11 +40,11 @@ export function setAgentProfile(id: string, profile: AgentProfile): void {
     const integer = Math.round(value * scale);
     return (integer + (integer / scale < value ? 1 : 0)) / scale;
   };
-  profile = { radius: outward(profile.radius), height: outward(profile.height) };
+  profile = { ...profile, radius: outward(profile.radius), height: outward(profile.height) };
   // Equal bodies share graph caches, while removed/replaced bodies must not
   // keep every historical graph alive in a global string-keyed cache.
   const previous = profiles.get(id);
-  const shared = [...profiles.values()].find(p => p.radius === profile.radius && p.height === profile.height);
+  const shared = [...profiles.values()].find(p => p.radius === profile.radius && p.height === profile.height && p.excludeStudio === profile.excludeStudio);
   profiles.set(id, shared ?? { ...profile });
   if (profiles.get(id) !== previous) agentProfileLifecycle.onUsed(profiles.get(id)!);
   releaseUnusedProfile(previous);

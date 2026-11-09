@@ -49,24 +49,11 @@ afterEach(() => {
 it('place chaque observation hors des murs, linteaux et débattements, oscillations comprises', () => {
   const tour = makeTour();
   for (const o of tour.observations) assert(tour.space.safeStop(o.position, Math.sqrt(3) * HORNET_BOB_CM), o.label);
-  for (const id of ['north-east', 'north-west', 'south-east', 'south-west', 'under-tv', 'top']) assert(tour.observations.some(o => o.id === id));
+  for (const id of ['garden', 'terrace', 'feeder']) assert(tour.observations.some(o => o.id === id));
   assert.throws(() => new HornetSpace(NaN), /gabarit/);
 });
 
-it('stationne avant les Dröna du meuble haut cuisine, gabarit et oscillations compris', () => {
-  const drona = { id: 'hornet-test-cuisine-drona', polygon: geometry.rectangle(walls.KITCHEN_WEST_WALL + 50, walls.ROOM_D + 28, 100, 38), yMin: 194, yMax: 227 };
-  obstacles.registerObstacle(drona);
-  for (const size of [10, 20, 30]) {
-    const tour = new HornetTour(size, () => {});
-    const position = tour.observations.find(o => o.id === 'kitchen').position;
-    assert(position.z + size + Math.sqrt(3) * HORNET_BOB_CM < walls.ROOM_D);
-    assert(tour.space.hits(new Vector3(position.x, position.y, (walls.ROOM_D + walls.KITCHEN_SOUTH_WALL) / 2), new Vector3(position.x, position.y, (walls.ROOM_D + walls.KITCHEN_SOUTH_WALL) / 2), drona), 'Ancien arrêt dans les Dröna');
-    assert(tour.space.safeStop(position, Math.sqrt(3) * HORNET_BOB_CM));
-    assert(tour.route(start(tour), position), 'Nouvel arrêt accessible depuis le jardin');
-  }
-});
-
-it('parcourt tout le studio sans traverser de battant et libère les portes après passage', () => {
+it('parcourt le jardin sans traverser de battant et libère les portes après passage', () => {
   const tour = makeTour(), position = start(tour), quaternion = new Quaternion(), visited = new Set();
   let transitions = 0, requestsSeen = new Set();
   for (let frame = 0; frame < 60 * 700 && visited.size < tour.observations.length; frame++) {
@@ -86,19 +73,19 @@ it('parcourt tout le studio sans traverser de battant et libère les portes apr�
   }
   assert.deepEqual([...visited].sort(), tour.observations.map(o => o.id).sort(), messages.join('\n'));
   assert(transitions >= visited.size);
-  assert(requestsSeen.has('living') && requestsSeen.has('bath') && requestsSeen.has('glassRight'));
+  assert.equal(requestsSeen.size, 0);
 });
 
-it('visite tous les points de la pièce avant de les répéter et ne répète pas immédiatement', () => {
+it('visite tous les points du jardin avant de les répéter et ne répète pas immédiatement', () => {
   const tour = makeTour(), position = start(tour), quaternion = new Quaternion(), visits = [];
-  tour.reset('living');
-  const count = tour.observations.filter(o => o.room === 'living').length;
+  tour.reset('garden');
+  const count = tour.observations.filter(o => o.room === 'garden').length;
   for (let frame = 0; frame < 60 * 600 && visits.length < count * 2; frame++) {
     openRequested();
     const previous = tour.state;
     tour.tick(position, quaternion, 1 / 60);
     if (previous !== 'observing' && tour.state === 'observing') visits.push(tour.observation.id);
-    if (tour.observation) assert.equal(tour.observation.room, 'living');
+    if (tour.observation) assert.equal(tour.observation.room, 'garden');
   }
   assert.equal(visits.length, count * 2, messages.join('\n'));
   assert.equal(new Set(visits.slice(0, count)).size, count);
@@ -106,52 +93,7 @@ it('visite tous les points de la pièce avant de les répéter et ne répète pa
   assert.notEqual(visits[count - 1], visits[count]);
 });
 
-it('attend loin des portes fermées puis reprend la traversée après ouverture', () => {
-  const tour = makeTour(), position = start(tour), quaternion = new Quaternion();
-  tour.reset('living');
-  let waited = false;
-  for (let frame = 0; frame < 60 * 20; frame++) {
-    const before = position.clone();
-    tour.tick(position, quaternion, 1 / 60);
-    if (requests.doorRequested('glassRight')) {
-      assert(position.equals(before));
-      assert(tour.space.safeStop(position));
-      waited = true;
-      break;
-    }
-  }
-  assert(waited, messages.join('\n'));
-  for (let frame = 0; frame < 60 * 30 && tour.state !== 'observing'; frame++) { openRequested(); tour.tick(position, quaternion, 1 / 60); }
-  assert.equal(tour.state, 'observing', messages.join('\n'));
-});
-
-it('remonte au-dessus du battant séjour au lieu de le retenir à la position des logs', () => {
-  const id = 'dji-neo', tour = new HornetTour(10.99532, () => {}, () => .37, id);
-  const position = new Vector3(242.6, 182.00936, 371.26765), quaternion = new Quaternion();
-  const door = doors.DOOR_CONFIGS.living;
-  obstacles.setAgentProfile(id, { radius: tour.radius, height: tour.radius * 2 });
-  cameraState.positions[id] = position;
-  doors.doorCollisionState.living.angle = -.57064;
-  tour.observation = tour.observations.find(o => o.id === 'entry');
-  tour.path = tour.route(position, tour.observation.position);
-  tour.state = 'travelling';
-  try {
-    assert(tour.path);
-    assert(doors.computeDoorDynamics(door, -.57064).allowed < doors.computeDoorAllowedAngle(door));
-    for (let frame = 0; frame < 120 && !tour.space.safeStop(position); frame++) {
-      const before = position.clone();
-      tour.tick(position, quaternion, 1 / 60);
-      assert(position.y > before.y, 'A drone trapped in the swing must rise immediately');
-      assert(position.distanceTo(before) <= 100 / 60 + geometry.GEOMETRY_EPSILON, 'Recovery must fly without teleporting');
-      assert(!tour.space.blocker(before, position), 'Climbing must respect furniture, lintels and ceiling');
-    }
-    assert(tour.space.safeStop(position));
-    assert(position.y - tour.radius > door.yMax);
-    assert.equal(doors.computeDoorDynamics(door, -.57064).allowed, doors.computeDoorAllowedAngle(door));
-  } finally { tour.release(); delete cameraState.positions[id]; obstacles.removeAgentProfile(id); }
-});
-
-it('abandonne un passage durablement fermé et poursuit les observations accessibles', () => {
+it('reste dans le jardin même lorsque le volet du studio est fermé', () => {
   const tour = makeTour(), position = start(tour), quaternion = new Quaternion(), rooms = new Set();
   doors.glassShutterState.clearHeight = 20;
   for (let frame = 0; frame < 60 * 180; frame++) {
@@ -161,11 +103,11 @@ it('abandonne un passage durablement fermé et poursuit les observations accessi
     assert(position.z < 0, 'Volet fermé traversé');
   }
   assert.deepEqual([...rooms], ['garden']);
-  assert(messages.some(m => m.includes('volet')));
+  assert(tour.observations.every(o => o.room === 'garden'));
 });
 
 it('maintient une assiette réaliste lors des observations sans plongée verticale ni singularité', () => {
-  for (const id of ['north-east', 'north-60', 'top']) {
+  for (const id of ['garden', 'terrace', 'feeder']) {
     const tour = makeTour(), observation = tour.observations.find(o => o.id === id), position = observation.position.clone(), quaternion = new Quaternion();
     tour.observation = observation; tour.state = 'observing';
     for (let i = 0; i < 300; i++) tour.tick(position, quaternion, 1 / 60);
@@ -181,12 +123,12 @@ it('distingue les obstacles selon leur hauteur et bloque les segments ascendants
   assert(space.hits(new Vector3(50, 100, 100), new Vector3(150, 100, 100), box));
   assert(!space.hits(new Vector3(50, 160, 100), new Vector3(150, 160, 100), box));
   assert(space.hits(new Vector3(50, 50, 100), new Vector3(150, 150, 100), box));
-  assert(space.blocker(new Vector3(215, 230, -100), new Vector3(215, 230, 100))?.startsWith('linteau'));
+  assert.equal(space.blocker(new Vector3(215, 230, -100), new Vector3(215, 230, 100)), 'studio-interdit-robots');
 });
 
 it('recalcule le réseau après déplacement du mobilier et ne traverse jamais le nouvel obstacle', () => {
   const tour = makeTour(), position = start(tour), quaternion = new Quaternion();
-  tour.reset('living');
+  tour.reset('garden');
   tour.tick(position, quaternion, 1 / 60);
   const target = tour.observation;
   obstacles.registerObstacle({ id: 'hornet-test-moved', polygon: geometry.rectangle(target.position.x, target.position.z, 50, 50), yMin: 0, yMax: walls.WALL_H });
@@ -195,28 +137,11 @@ it('recalcule le réseau après déplacement du mobilier et ne traverse jamais l
   assert(messages.some(m => m.includes('hornet-test-moved')));
 });
 
-it('relie le couloir à la salle de bain par son ouverture réelle', () => {
-  const tour = makeTour(), entry = tour.observations.find(o => o.id === 'entry'), bath = tour.observations.find(o => o.id === 'bath-mirror');
-  assert(tour.route(entry.position, bath.position), 'Le passage salle de bain doit rester accessible avec la porte d’entrée voisine');
-});
-
-it('suit le bureau déplacé pendant le cadrage sans conserver son ancienne cible', () => {
-  const transforms = require('../../src/features/scene/furniturePositions.ts').currentFurnitureTransforms;
-  const previous = transforms['desk1-position'];
-  const tour = makeTour(), observation = tour.observations.find(o => o.id === 'desk');
-  const position = observation.position.clone(), quaternion = new Quaternion();
-  tour.observation = observation; tour.state = 'observing';
-  transforms['desk1-position'] = { x: walls.ROOM_W - 40, z: walls.ROOM_D - 80, ry: 0 };
-  try {
-    for (let i = 0; i < 300; i++) tour.tick(position, quaternion, 1 / 60);
-    const t = 5 / observation.seconds, progress = t * t * (3 - 2 * t);
-    const expected = new Vector3(transforms['desk1-position'].x, observation.target.y, transforms['desk1-position'].z).lerp(observation.sweep, progress).sub(position).normalize();
-    const forward = new Vector3(0, 0, 1).applyQuaternion(quaternion);
-    const forwardH = new Vector3(forward.x, 0, forward.z).normalize(), expectedH = new Vector3(expected.x, 0, expected.z).normalize();
-    assert(forwardH.dot(expectedH) > .999);
-    assert(Math.abs(forward.y) <= 0.12 + 1e-3);
-  } finally {
-    if (previous) transforms['desk1-position'] = previous;
-    else delete transforms['desk1-position'];
+it('interdit le studio aux drones même lorsque ses portes sont ouvertes', () => {
+  const tour = makeTour();
+  for (const key of Object.keys(doors.DOOR_CONFIGS)) doors.doorCollisionState[key].angle = doors.DOOR_CONFIGS[key].maxAngle;
+  for (const goal of [new Vector3(150, 150, 150), new Vector3(100, 150, 500), new Vector3(250, 150, 500)]) {
+    assert.equal(tour.route(start(tour), goal), null);
+    assert.equal(tour.space.blocker(start(tour), goal), 'studio-interdit-robots');
   }
 });

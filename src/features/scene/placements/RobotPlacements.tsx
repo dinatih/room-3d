@@ -1,3 +1,4 @@
+import { useRobotVisibility } from '../store/useRobotVisibility';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh, Object3D, Vector3 } from 'three';
@@ -67,7 +68,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     // Camera on the upper front edge of the measured body, clear of its own meshes.
     cameraMount.current.set(0, size.y, size.z / 2);
     cameraRadius.current = size.length() / 2;
-    const measured = { radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y };
+    const measured = { excludeStudio: true, radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y };
     setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
   }, [config.radiusScale]);
 
@@ -240,5 +241,6 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
 }
 
 export function RobotPlacements() {
-  return <>{ROBOTS.map(config => <Suspense key={config.id} fallback={null}><Robot config={config} /></Suspense>)}</>;
+  const visible = useRobotVisibility(state => state.visible);
+  return <>{ROBOTS.filter(config => visible.includes(config.id)).map(config => <Suspense key={config.id} fallback={null}><Robot config={config} /></Suspense>)}</>;
 }

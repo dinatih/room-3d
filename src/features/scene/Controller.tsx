@@ -1,4 +1,5 @@
 /** Commandes communes au clavier, à la souris et au tactile. */
+import { isRobotSubjectVisible, useRobotVisibility } from './store/useRobotVisibility';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useSceneStore } from './store/useSceneStore';
 import { cameraState } from './cameraState';
@@ -30,6 +31,7 @@ function fire(key: string, pressed: boolean) {
 }
 
 export function Controller({ visible = false }: { visible?: boolean }) {
+  const visibleRobots = useRobotVisibility(state => state.visible);
   const piloting = useDroneControlStore(state => state.piloting);
   const mode = useSceneStore(state => state.cameraMode);
   const target = useSceneStore(state => state.cameraTarget);
@@ -130,7 +132,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
   const subjectId = animal ?? (mode === 'follow' || mode === 'fpv' ? 'character' : '');
   const subjects = [
     ...CHARACTERS.map(character => ({ id: character.id, label: npcLabel(character), icon: 'bi-person-bounding-box', cameraSubject: 'character' })),
-    ...CAMERA_SUBJECTS.filter(choice => choice.id !== 'character').map(choice => ({ ...choice, cameraSubject: choice.id })),
+    ...CAMERA_SUBJECTS.filter(choice => choice.id !== 'character' && isRobotSubjectVisible(choice.id, visibleRobots)).map(choice => ({ ...choice, cameraSubject: choice.id })),
   ];
   const selectedSubjectId = subjectId === 'character' ? activeCharacterId : subjectId;
   const subject = subjects.find(choice => choice.id === (animal ?? activeCharacterId)) ?? CAMERA_SUBJECTS[0];

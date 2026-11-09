@@ -1,3 +1,4 @@
+import { isRobotSubjectVisible, useRobotVisibility } from './store/useRobotVisibility';
 import { CAMERA_SUBJECTS, selectAnimalCameraTarget, selectSceneSubject } from './camera/cameraSubjects';
 import { cameraState } from './cameraState';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -13,6 +14,7 @@ export function CharacterSelect({ hideUI = false, value, onChange, characters = 
   characters?: typeof CHARACTERS;
   label?: string;
 }) {
+  const visibleRobots = useRobotVisibility(state => state.visible);
   const sceneCharacterId = useSceneStore(state => state.activeCharacterId);
   const animalTarget = useSceneStore(selectAnimalCameraTarget);
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
@@ -21,7 +23,7 @@ export function CharacterSelect({ hideUI = false, value, onChange, characters = 
   const activeSubject = CAMERA_SUBJECTS.find(c => c.id === activeCharacterId);
   const groups = [
     { label: 'Personnages', choices: characters.map(c => ({ id: c.id, label: npcLabel(c), cameraSubject: 'character', available: true })) },
-    ...(onChange ? [] : ['Robots', 'Animaux'].map(category => ({ label: category, choices: CAMERA_SUBJECTS.filter(c => c.category === category).map(c => ({ ...c, label: c.label, cameraSubject: c.id, available: availableSubjects.includes(c.id) })) }))),
+    ...(onChange ? [] : ['Robots', 'Animaux'].map(category => ({ label: category, choices: CAMERA_SUBJECTS.filter(c => c.category === category && isRobotSubjectVisible(c.id, visibleRobots)).map(c => ({ ...c, label: c.label, cameraSubject: c.id, available: availableSubjects.includes(c.id) })) }))),
   ];
   const layers = useSceneStore(state => state.layers);
   const activeMainIds = useSceneStore(state => state.activeMainIds);

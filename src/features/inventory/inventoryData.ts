@@ -511,7 +511,7 @@ INVENTORY.push({
   glbPath: 'items/black-hornet/black-hornet.glb',
   photos: ['items/black-hornet/presentation-1.jpg', 'items/black-hornet/presentation-2.jpg'],
   url: 'https://defense.flir.com/defense-products/black-hornet-3-prs/',
-  notes: `Nano-drone Black Hornet autonome capable de survoler le jardin et toutes les pièces du studio.
+  notes: `Nano-drone Black Hornet autonome capable de survoler le jardin, hors du studio.
 
 Le Black Hornet (de type nano-drone à voilure tournante ressemblant à un mini-hélicoptère) présente plusieurs avantages tactiques majeurs par rapport à un quadcopter (drone multirotor classique).
 Sources : https://www.ouest-france.fr/europe/ukraine/que-sont-les-black-hornet-ces-mini-drones-qui-tiennent-dans-la-main-et-que-lukraine-va-utiliser-4c994d4a-2df7-11ed-9660-f2bdd620667f ; https://defense-zone.com/blogs/news/systemes-drones-armee-de-terre

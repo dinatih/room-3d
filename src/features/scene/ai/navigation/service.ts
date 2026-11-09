@@ -1,6 +1,6 @@
 import { positionState } from '../../positionState';
 import { movingFurniture } from '../../furniturePositions';
-import { architectureObstacles, walkableSurfaces } from './architecture';
+import { architectureObstacles, walkableSurfaces, studioRobotObstacle } from './architecture';
 import { furnitureObstacles, getObstacleRevision, furnitureClearance, furnitureFootprint, getAgentProfile, hasAgentProfile, navigationDebug, agentProfileLifecycle, NAVIGATION_RADIUS_CM, type AgentProfile } from './obstacles';
 import { inflate, rectangle, pointInRing, insideObstacle, segmentFree, distance, BOOLEAN_PRECISION, CLEARANCE_ERROR, type Point, type Polygon } from './geometry';
 import { DOOR_CONFIGS, computeDoorAllowedAngle, doorCollisionState, glassShutterState, glassDoorState, getDoorLimitDiagnostics, doorPolygon } from '../../doorObstacles';
@@ -102,6 +102,7 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
     definition.solids.push({ polygon, radius: NAVIGATION_RADIUS_CM, comfort: !excludeSet?.size });
   };
   solid.forEach(o => addObstacle(o.polygon));
+  if (profile.excludeStudio) addObstacle(studioRobotObstacle.polygon);
   doorKeys.forEach((k, i) => addObstacle(doorPolygon(k, angles[i])));
   if (shutterBlocked) for (const key of ['glassLeft', 'glassRight'] as const) addObstacle(doorPolygon(key, 0));
   // Surface boundaries are barriers, with the same body clearance as walls.
@@ -132,7 +133,7 @@ export function getNavigationGraph(profile: AgentProfile, excludeOwner?: string 
   const scope = getNavigationScope();
   // One asynchronous operation must finish against one immutable snapshot.
   // Other actors may replace the shared cache without cancelling this reader.
-  const entry = scope ? scope.value(`graph:${profile.radius}:${profile.height}:${owners.map(getInteractionOwner).sort().join('+')}`, () => {
+  const entry = scope ? scope.value(`graph:${profile.radius}:${profile.height}:${profile.excludeStudio}:${owners.map(getInteractionOwner).sort().join('+')}`, () => {
     const entry = getNavigationPreparation(profile, excludeOwner);
     return { entry, release: entry.preparation.retain() };
   }, snapshot => snapshot.release()).entry : getNavigationPreparation(profile, excludeOwner);

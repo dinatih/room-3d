@@ -1,3 +1,4 @@
+import { ROBOT_SUBJECTS, useRobotVisibility } from '@features/scene/store/useRobotVisibility';
 import { getObjectActionIds } from '@features/scene/objectActions';
 /**
  * Inventory.tsx — port de js/ui/inventory.js
@@ -87,6 +88,15 @@ const WIG_COLOR_OPTIONS = [
   { value: 'violet', label: 'Violet 💜' },
   { value: 'arc-en-ciel', label: 'Arc-en-ciel 🌈' },
 ];
+
+function RobotVisibility({ id }: { id: string }) {
+  const visible = useRobotVisibility(state => state.visible.includes(id));
+  const toggle = useRobotVisibility(state => state.toggle);
+  return <label className="form-check form-switch mb-3">
+    <input type="checkbox" className="form-check-input" checked={visible} onChange={() => toggle(id)} />
+    <span className="form-check-label">Afficher dans la scène</span>
+  </label>;
+}
 
 function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction }: { item: PreviewTarget; wigColor?: string; wigBustVariant?: string; initialSmartAction?: SmartActionPreviewRequest }) {
   if (!item) return null;
@@ -236,6 +246,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
       </div>
 
       <div className="p-3">
+        {item.id in ROBOT_SUBJECTS && <RobotVisibility id={item.id} />}
         <h3 className="fw-bold mb-1 text-dark fs-5">{(item as any).name}</h3>
         <p className="text-muted small mb-2">
           {!isStorage && (item as InventoryItem).brand ? `${(item as InventoryItem).brand} — ` : ''}

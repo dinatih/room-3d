@@ -1,3 +1,4 @@
+import { useRobotVisibility } from '../store/useRobotVisibility';
 import { WindPlant } from '../WindPlant';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
@@ -103,6 +104,7 @@ export function GardenDecor() {
 
 // Animaux autonomes (Robin Bird & Shiba Inu)
 export function GardenAnimals() {
+  const visible = useRobotVisibility(state => state.visible);
   return (
     <>
       <group position={BATHTUB.position} rotation={BATHTUB.rotation}
@@ -117,10 +119,10 @@ export function GardenAnimals() {
         <RobinBird />
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Drone Black Hornet Nano', hoverAction: { label: 'Black Hornet Nano Drone', actions: getObjectActionIds('black-hornet-drone') } }}>
-        <BlackHornetDrone />
+        {visible.includes('black-hornet-drone') && <BlackHornetDrone />}
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true }}>
-        <DjiAvata2Drone />
+        {visible.includes('dji-avata-2') && <DjiAvata2Drone />}
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Shiba Inu' }}>
         <ShibaInu />

@@ -1,4 +1,4 @@
-import { WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, WALL_H, DiagWall, GARDEN_PANEL_DEFS, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from '../../wallData';
+import { ROOM_EAST_WALL, ROOM_NORTH_WALL, WALL_DEFS, PILLAR_DEFS, WALL_THICKNESS, WALL_H, DiagWall, GARDEN_PANEL_DEFS, BATH_WEST_WALL, SHOWER_SOUTH_WALL } from '../../wallData';
 import { NEIGHBOR_OFFSETS, EXTERIOR_GROUND, EXTERIOR_CORRIDOR } from '../../environmentData';
 import { rectangle, union, type Polygon } from './geometry';
 import type { NavigationObstacleDef } from './obstacles';
@@ -33,3 +33,12 @@ export const walkableSurfaces: Polygon[][] = union([
   rectangle(EXTERIOR_GROUND.x, EXTERIOR_GROUND.z, EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth),
   rectangle(corridorCenter.x, corridorCenter.z, width, length, DiagWall.rotY),
 ]);
+
+export const studioRobotObstacle: NavigationObstacleDef = {
+  id: 'studio-interdit-robots', yMin: 0, yMax: WALL_H,
+  polygon: [
+    { x: BATH_WEST_WALL, z: ROOM_NORTH_WALL }, { x: ROOM_EAST_WALL, z: ROOM_NORTH_WALL },
+    { x: ROOM_EAST_WALL, z: DiagWall.A.z + (ROOM_EAST_WALL - DiagWall.A.x) * DiagWall.slope },
+    { x: BATH_WEST_WALL, z: DiagWall.A.z + (BATH_WEST_WALL - DiagWall.A.x) * DiagWall.slope },
+  ],
+};

@@ -1,16 +1,13 @@
 import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
-import { ROOM_W, ROOM_D, WALL_H, KITCHEN_WEST_WALL, KITCHEN_EAST_WALL, KITCHEN_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, BATH_SOUTH_WALL, CORRIDOR_WEST_WALL, CORRIDOR_EAST_WALL, CORRIDOR_NORTH_WALL } from './wallData';
-import { CARDINAL_ANGLES } from './camera/cameraViews';
-import { TV_H, TV_POSITION } from './tvData';
+import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { BATHTUB } from './bathtubData';
-import { currentFurnitureTransforms, DESK1_POSITIONS, SINGLE_BED_POSITIONS } from './furniturePositions';
-import { architectureObstacles } from './ai/navigation/architecture';
+import { architectureObstacles, studioRobotObstacle } from './ai/navigation/architecture';
 import { furnitureObstacles, getObstacleRevision, type NavigationObstacleDef } from './ai/navigation/obstacles';
 import { inflate, convexHull, segmentFree, GEOMETRY_EPSILON, CLEARANCE_ERROR, type Polygon } from './ai/navigation/geometry';
 import { DOOR_CONFIGS, doorPolygon, doorCollisionState, glassShutterState } from './doorObstacles';
 import { requestDoor, releaseAgentDoors, type DoorKey } from './ai/navigation/doorRequests';
 
-export type TourRoom = 'garden' | 'living' | 'kitchen' | 'bathroom' | 'corridor';
+export type TourRoom = 'garden';
 export interface HornetObservation {
   id: string;
   room: TourRoom;
@@ -27,41 +24,16 @@ const DOOR_WAIT_SECONDS = 8;
 const CRUISE_SPEED = 100; // cm/s : visite douce, distincte du pilotage manuel.
 const ACCELERATION = 80; // cm/s², également utilisée pour la distance de freinage.
 const TURN_SPEED = Math.PI / 3;
-const ROOMS: TourRoom[] = ['garden', 'living', 'kitchen', 'corridor', 'bathroom'];
+const ROOMS: TourRoom[] = ['garden'];
 const DOORS = Object.keys(DOOR_CONFIGS) as DoorKey[];
 const v = (x: number, y: number, z: number) => new Vector3(x, y, z);
 
 /** Physical viewpoints, never the distant positions of the global camera presets. */
-export function hornetObservations(radius: number): HornetObservation[] {
-  const high = WALL_H - 2 * radius - HORNET_BOB_CM;
+export function hornetObservations(): HornetObservation[] {
   const centre = v(ROOM_W / 2, 0, ROOM_D / 2);
-  const inset = ROOM_W / 4;
   const result: HornetObservation[] = [];
   const add = (id: string, room: TourRoom, label: string, position: Vector3, target: Vector3, sweep?: Vector3) =>
     result.push({ id, room, label, position, target, sweep, seconds: sweep ? SWEEP_SECONDS : OBSERVATION_SECONDS });
-  for (const key of ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west']) {
-    const angle = CARDINAL_ANGLES[key];
-    const dx = Math.sin(angle), dz = Math.cos(angle);
-    const scale = Math.max(Math.abs(dx), Math.abs(dz));
-    const position = v(centre.x + dx / scale * (ROOM_W / 2 - inset), high, centre.z + dz / scale * (ROOM_D / 2 - inset));
-    const distance = Math.hypot(position.x - centre.x, position.z - centre.z);
-    const target = centre.clone().setY(high - distance); // Plongée exacte de 45°.
-    const label = key.replace('north', 'nord').replace('south', 'sud').replace('east', 'est').replace('west', 'ouest');
-    add(key, 'living', `Séjour ${label} — plongée 45°`, position, target);
-  }
-  add('north-60', 'living', 'Séjour Nord — plongée 60°', v(centre.x, high, centre.z - high / Math.tan(Math.PI / 3)), centre.clone());
-  add('top', 'living', 'Séjour — vue verticale 90°', centre.clone().setY(high), centre.clone());
-  const underTV = new Vector3(...TV_POSITION).add(v(-radius, -TV_H / 2 - 2 * radius, 0));
-  add('under-tv', 'living', 'Sous la télévision — centre du séjour', underTV, centre.clone());
-  const desk = currentFurnitureTransforms['desk1-position'] ?? DESK1_POSITIONS[0];
-  add('desk', 'living', 'Bureau et écrans', v(centre.x, high, ROOM_D / 3), v(desk.x, 90, desk.z), centre.clone().setY(70));
-  const bed = currentFurnitureTransforms['bed-west-position'] ?? SINGLE_BED_POSITIONS.west;
-  add('alcove', 'living', 'Alcôve et canapé', v(centre.x, high, ROOM_D * 2 / 3), v(bed.x, 50, bed.z), v(ROOM_W / 4, 60, ROOM_D / 3));
-  const bathCentre = v((BATH_WEST_WALL + BATH_EAST_WALL) / 2, 80, (BATH_NORTH_WALL + BATH_SOUTH_WALL) / 2);
-  add('bath-mirror', 'bathroom', 'Salle de bain — miroir et vasque', v(bathCentre.x, high, BATH_NORTH_WALL + (BATH_SOUTH_WALL - BATH_NORTH_WALL) / 3), v(BATH_WEST_WALL, 120, bathCentre.z), bathCentre);
-  add('bath-shower', 'bathroom', 'Salle de bain — douche', v(bathCentre.x, high, BATH_SOUTH_WALL - radius * 2), v(BATH_WEST_WALL + radius * 2, 80, BATH_SOUTH_WALL + radius * 2));
-  add('kitchen', 'kitchen', 'Cuisine — plan de travail', v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, high, ROOM_D - radius * 2), v(KITCHEN_WEST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2), v(KITCHEN_EAST_WALL, 90, KITCHEN_SOUTH_WALL - radius * 2));
-  add('entry', 'corridor', 'Entrée — perspective du couloir', v((CORRIDOR_WEST_WALL + CORRIDOR_EAST_WALL) / 2, high, (CORRIDOR_NORTH_WALL + DOOR_CONFIGS.bath.pivot.z - DOOR_CONFIGS.bath.length) / 2 + radius * 2), bathCentre.clone().setX(CORRIDOR_EAST_WALL).setY(100));
   add('garden', 'garden', 'Jardin — panorama', v(ROOM_W / 2, 170, -ROOM_D / 2), new Vector3(...BATHTUB.position).setY(BATHTUB.waterHeight), v(ROOM_W / 2, 80, 0));
   add('terrace', 'garden', 'Terrasse — retour vers le studio', v(ROOM_W * 2 / 3, 175, -ROOM_D / 4), centre.clone().setY(100), v(ROOM_W / 4, 80, -ROOM_D / 4));
   add('feeder', 'garden', 'Jardin — mangeoire et végétation', v(ROOM_W / 3, 175, -ROOM_D * 2 / 3), v(95, 214, -165), new Vector3(...BATHTUB.position).setY(BATHTUB.waterHeight));
@@ -110,7 +82,7 @@ export class HornetSpace {
   }
   blocker(a: Vector3, b: Vector3, margin = 0): string | undefined {
     if (Math.min(a.y, b.y) - this.radius - margin <= 0 || Math.max(a.y, b.y) + this.radius + margin >= WALL_H) return 'sol ou plafond';
-    for (const obstacle of [...architectureObstacles, ...this.lintels, ...furnitureObstacles.values()]) if (this.hits(a, b, obstacle, margin)) return obstacle.id;
+    for (const obstacle of [studioRobotObstacle, ...architectureObstacles, ...this.lintels, ...furnitureObstacles.values()]) if (this.hits(a, b, obstacle, margin)) return obstacle.id;
   }
   doorHits(key: DoorKey, a: Vector3, b: Vector3, angle: number, yMin = DOOR_CONFIGS[key].yMin, yMax = DOOR_CONFIGS[key].yMax): boolean {
     if (angle === 0) return this.hits(a, b, { ...this.closed.get(key)!, yMin, yMax }, DOOR_CONFIGS[key].margin);
@@ -156,7 +128,7 @@ export class HornetTour {
 
   constructor(readonly radius: number, private log: (message: string) => void, private random = Math.random, private agentId = 'drone') {
     this.space = new HornetSpace(radius);
-    this.observations = hornetObservations(radius);
+    this.observations = hornetObservations();
   }
   reset(room: TourRoom | null = null): void {
     this.release();
@@ -175,15 +147,6 @@ export class HornetTour {
     if (this.revision === getObstacleRevision()) return;
     this.revision = getObstacleRevision();
     const points = this.observations.map(o => o.position);
-    for (const key of ['glassRight', 'living', 'bath'] as const) {
-      const d = DOOR_CONFIGS[key];
-      for (const sign of [-1, 1]) {
-        const distance = (sign > 0 ? d.length : d.thickness) + d.margin + this.radius * 2;
-        points.push(v(d.pivot.x + d.closedDir.x * d.length / 2 + sign * d.openNormal.x * distance, d.yMax - this.radius * 2, d.pivot.z + d.closedDir.z * d.length / 2 + sign * d.openNormal.z * distance));
-      }
-    }
-    points.push(v(ROOM_W / 2, 180, ROOM_D / 2), v((KITCHEN_WEST_WALL + KITCHEN_EAST_WALL) / 2, 180, ROOM_D - DOOR_CONFIGS.living.length - this.radius * 2));
-    points.push(this.observations.find(o => o.id === 'under-tv')!.position.clone().setZ(DOOR_CONFIGS.glassRight.length + this.radius * 4));
     this.nodes = points.filter(p => !this.space.blocker(p, p));
     this.edges = this.nodes.map(() => []);
     for (let i = 0; i < this.nodes.length; i++) for (let j = i + 1; j < this.nodes.length; j++) {
@@ -273,8 +236,6 @@ export class HornetTour {
       this.elapsed += delta;
       const progress = MathUtils.smoothstep(this.elapsed / observation.seconds, 0, 1);
       this.target.copy(observation.target);
-      const anchor = observation.id === 'desk' ? currentFurnitureTransforms['desk1-position'] : observation.id === 'alcove' ? currentFurnitureTransforms['bed-west-position'] : undefined;
-      if (anchor) this.target.set(anchor.x, observation.target.y, anchor.z);
       if (observation.sweep) this.target.lerp(observation.sweep, progress);
       const bob = Math.sin(Math.PI * progress); // Zero at arrival and departure.
       this.next.set(Math.sin(this.elapsed) * HORNET_BOB_CM * bob, Math.sin(this.elapsed * 1.3) * HORNET_BOB_CM * bob, Math.cos(this.elapsed) * HORNET_BOB_CM * bob).add(observation.position);
