@@ -52,3 +52,16 @@ exports.performance = Object.fromEntries([0, 7, 15].flatMap(count => ['low', 'mi
             behavior: `mesure ${count} personnages en ${preset}`, timeoutMs: 480000,
             stableMs: 15000, sessionMs: 300000 }];
 })));
+
+for (const [period, hour] of [['day', 12], ['night', 0]]) {
+    const id = `studio-9-mid-${period}`;
+    exports.performance[id] = { ...apartment, id, count: 9, preset: 'mid', camera: 'orbit',
+        activity: 'fixed-studio', behavior: `studio par défaut, 9 personnages, Mid, ${period}`,
+        viewport: { width: 1362, height: 810, deviceScaleFactor: 1 },
+        fixedEnvironment: { date: '2026-11-09T12:00:00Z', hour, weather: 'clear' },
+        query: { target: 'studio', weatherAuto: '0' }, stableMs: 15000, sessionMs: 60000, timeoutMs: 150000 };
+    for (const [suffix, overrides] of Object.entries({ 'no-shadows': { layers: { shadows: false } }, 'no-environment': { layers: { environment: false } }, 'no-characters': { count: 0 } })) {
+        const diagnosticId = `${id}-${suffix}`;
+        exports.performance[diagnosticId] = { ...exports.performance[id], ...overrides, id: diagnosticId, behavior: `${exports.performance[id].behavior}, diagnostic ${suffix}` };
+    }
+}

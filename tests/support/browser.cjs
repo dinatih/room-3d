@@ -60,7 +60,13 @@ exports.withBrowser = async (fixture, exercise) => {
             cacheDir,
             server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
-                        if (id.split('?')[0].endsWith('/src/features/scene/ai/agentController.ts'))
+                        if (fixture.fixedEnvironment && id.split('?')[0].endsWith('/src/features/scene/ai/laraLifeStore.ts')) {
+                            assert(source.includes('export function advanceSimulationClock(seconds: number) {') && source.includes('for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;'), 'Clock instrumentation no longer matches source');
+                            return { code: source.replace('export function advanceSimulationClock(seconds: number) {', 'export function advanceSimulationClock(seconds: number) { return;')
+                                .replace('for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;',
+                                    `simulationClock.minutes = ${(fixture.fixedEnvironment.hour - 8 + 24) % 24 * 60}; for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;`), map: null };
+                        }
+                        if (!fixture.fixedEnvironment && id.split('?')[0].endsWith('/src/features/scene/ai/agentController.ts'))
                             return { code: instrumentController(source), map: null };
                     } }],
         });
@@ -76,6 +82,8 @@ exports.withBrowser = async (fixture, exercise) => {
         browser.process().stdout?.on('data', chunk => fs.appendFileSync(path.join(directory, 'chromium.log'), chunk));
         const system = await browser.target().createCDPSession();
         result.gpu = await system.send('SystemInfo.getInfo');
+        if (fixture.fixedEnvironment && (!result.gpu.gpu.devices.length || /swiftshader|llvmpipe|software/i.test(JSON.stringify(result.gpu.gpu.devices))))
+            throw Error('Performance reference requires a verified hardware GPU; software rendering is not comparable');
         const page = await browser.newPage();
         if (fixture.captureFreezeStack) {
             debuggerSession = await page.createCDPSession();
@@ -105,6 +113,7 @@ exports.withBrowser = async (fixture, exercise) => {
             } else fail(message);
         });
         await page.exposeFunction('__testHeartbeat', state => { lastHeartbeat = Date.now(); result.partial = state; save(); });
+        if (fixture.fixedEnvironment) await page.evaluateOnNewDocument(date => { Date.now = () => Date.parse(date); }, fixture.fixedEnvironment.date);
         await page.evaluateOnNewDocument(seed => {
             let state = seed;
             Math.random = () => { state = (Math.imul(1664525, state) + 1013904223) >>> 0; return state / 4294967296; };
@@ -159,6 +168,10 @@ exports.withBrowser = async (fixture, exercise) => {
                 const { CHARACTERS, getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
                 const { cameraState } = await import('/src/features/scene/cameraState.ts');
                 useSceneStore.getState().setCameraMovement('fix');
+                if (fixture.fixedEnvironment) {
+                    const { useWeather, WEATHER_PHASES } = await import('/src/features/scene/Weather.tsx');
+                    useWeather.setState({ automatic: false, ...WEATHER_PHASES[0].weather });
+                }
                 useSceneStore.setState(s => ({ layers: { ...s.layers, npcCollisions: fixture.collisions, ...fixture.layers } }));
                 const ctx = window.__THREE_GL__.getContext(), extension = ctx.getExtension('WEBGL_debug_renderer_info');
                 const models = getDefaultSceneCharacterIds(fixture.count, useSceneStore.getState().activeCharacterId).map(id => {

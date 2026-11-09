@@ -4,7 +4,7 @@ const { execFileSync } = require('node:child_process');
 const { run } = require('node:test');
 const { spec } = require('node:test/reporters');
 const { writeReport } = require('./support/report.cjs');
-const { referenceId, assertCompatible, aggregatePerformance } = require('./support/statistics.cjs');
+const { referenceId, assertCompatible, aggregatePerformance, compareMetric } = require('./support/statistics.cjs');
 const fixtures = require('./fixtures/cases.cjs');
 const rendering = require('./fixtures/rendering.cjs');
 async function main() {
@@ -42,7 +42,7 @@ async function main() {
         referenceId(options['approve-reference']);
     const reference = options.reference && JSON.parse(fs.readFileSync(path.resolve('tests/references', `${options.reference}.json`)));
     if (reference) {
-        if (reference.schema !== 1)
+        if (reference.schema !== 2)
             throw Error('Unsupported reference schema');
         if (JSON.stringify(reference.aggregates.map(a => a.id)) !== JSON.stringify(selected))
             throw Error('Incompatible reference case selection');
@@ -95,11 +95,11 @@ async function main() {
                 report.comparison = report.aggregates.map((actual, i) => {
                     const expected = reference.aggregates[i];
                     assertCompatible(actual, expected);
-                    return { id: actual.id, informative: true, deltas: Object.fromEntries(Object.entries(actual.metrics).map(([key, metric]) => [key, { absolute: metric.median - expected.metrics[key].median, percent: expected.metrics[key].median === 0 ? null : (metric.median / expected.metrics[key].median - 1) * 100 }])) };
+                    return { id: actual.id, informative: true, deltas: Object.fromEntries(Object.entries(actual.metrics).map(([key, metric]) => [key, compareMetric(metric, expected.metrics[key], !key.endsWith('.fps'))])) };
                 });
             }
             if (referencePath)
-                fs.writeFileSync(referencePath, JSON.stringify({ schema: 1, commit: report.commit, approvedAt: new Date().toISOString(), aggregates: report.aggregates }, null, 2), { flag: 'wx' });
+                fs.writeFileSync(referencePath, JSON.stringify({ schema: 2, commit: report.commit, approvedAt: new Date().toISOString(), aggregates: report.aggregates }, null, 2), { flag: 'wx' });
         }
     }
     catch (error) {
@@ -116,6 +116,8 @@ async function main() {
         console.log(`Mémoire: pic RSS Chrome médian ${(m['session.chromeRssBytes.max'].median / 1024 ** 3).toFixed(2)} GiB (pages partagées comptées plusieurs fois); pic tas JS médian ${(m['session.jsHeapUsedBytes.max'].median / 1024 ** 2).toFixed(1)} MiB.`);
     }
     for (const comparison of report.comparison ?? []) {
+        const alerts = Object.entries(comparison.deltas).filter(([, delta]) => delta.alert).map(([key]) => key);
+        console.log(`${comparison.id}: alertes hors dispersion : ${alerts.join(', ') || 'aucune'}`);
         const keys = ['startupMs', 'session.frameMs.p95', 'session.frameMs.p99', 'session.chromeRssBytes.max'];
         console.log(`${comparison.id}, écarts informatifs: ${keys.map(key => `${key} ${comparison.deltas[key].percent === null ? 'référence nulle' : comparison.deltas[key].percent.toFixed(1) + '%'}`).join('; ')}`);
     }

@@ -25,6 +25,9 @@ exports.performanceMetrics = result => {
         const phase = result.measurements[name];
         for (const metric of ['median', 'p95', 'p99', 'max'])
             values[`${name}.frameMs.${metric}`] = phase.frameMs[metric];
+        if (phase.fps !== undefined) values[`${name}.fps`] = phase.fps;
+        for (const [key, measurement] of Object.entries(phase.rendering ?? {})) values[`${name}.${key}.median`] = measurement.median;
+        if (phase.gpu?.timeMs) values[`${name}.gpuMs.median`] = phase.gpu.timeMs.median;
         if (phase.memorySummary) {
             for (const [key, measurement] of Object.entries(phase.memorySummary)) {
                 values[`${name}.${key}.median`] = measurement.median;
@@ -46,6 +49,15 @@ exports.aggregatePerformance = results => {
         exports.assertCompatible(result, results[0]);
     }
     const runs = results.map(exports.performanceMetrics);
+    for (const run of runs) assert.deepEqual(Object.keys(run), Object.keys(runs[0]), 'Metric availability changed between runs; repeat the campaign');
     return { id: results[0].configuration.configurationId, conditions: results[0].conditions,
         metrics: Object.fromEntries(Object.keys(runs[0]).map(key => [key, exports.summary(runs.map(run => run[key]))])) };
 };
+
+// An alert requires the entire observed run range to move beyond the reference range.
+exports.compareMetric = (actual, expected, higherIsWorse = true) => ({
+    absolute: actual.median - expected.median,
+    percent: expected.median === 0 ? null : (actual.median / expected.median - 1) * 100,
+    alert: higherIsWorse ? actual.min > expected.max : actual.max < expected.min,
+    overlapsReference: actual.min <= expected.max && actual.max >= expected.min,
+});
