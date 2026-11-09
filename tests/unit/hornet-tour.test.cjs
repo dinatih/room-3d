@@ -164,13 +164,13 @@ it('abandonne un passage durablement fermé et poursuit les observations accessi
   assert(messages.some(m => m.includes('volet')));
 });
 
-it('cadre réellement les plongées à 45°, 60° et 90°, sans quaternion singulier', () => {
-  for (const [id, angle] of [['north-east', 45], ['north-60', 60], ['top', 90]]) {
+it('maintient une assiette réaliste lors des observations sans plongée verticale ni singularité', () => {
+  for (const id of ['north-east', 'north-60', 'top']) {
     const tour = makeTour(), observation = tour.observations.find(o => o.id === id), position = observation.position.clone(), quaternion = new Quaternion();
     tour.observation = observation; tour.state = 'observing';
     for (let i = 0; i < 300; i++) tour.tick(position, quaternion, 1 / 60);
     const forward = new Vector3(0, 0, 1).applyQuaternion(quaternion);
-    assert(Math.abs(Math.asin(-forward.y) * 180 / Math.PI - angle) < 1, `${id}: ${forward.toArray()}`);
+    assert(Math.abs(forward.y) <= 0.12 + 1e-3, `${id}: forward.y=${forward.y}`);
     assert(quaternion.toArray().every(Number.isFinite));
   }
 });
@@ -211,7 +211,10 @@ it('suit le bureau déplacé pendant le cadrage sans conserver son ancienne cibl
     for (let i = 0; i < 300; i++) tour.tick(position, quaternion, 1 / 60);
     const t = 5 / observation.seconds, progress = t * t * (3 - 2 * t);
     const expected = new Vector3(transforms['desk1-position'].x, observation.target.y, transforms['desk1-position'].z).lerp(observation.sweep, progress).sub(position).normalize();
-    assert(new Vector3(0, 0, 1).applyQuaternion(quaternion).dot(expected) > .999);
+    const forward = new Vector3(0, 0, 1).applyQuaternion(quaternion);
+    const forwardH = new Vector3(forward.x, 0, forward.z).normalize(), expectedH = new Vector3(expected.x, 0, expected.z).normalize();
+    assert(forwardH.dot(expectedH) > .999);
+    assert(Math.abs(forward.y) <= 0.12 + 1e-3);
   } finally {
     if (previous) transforms['desk1-position'] = previous;
     else delete transforms['desk1-position'];

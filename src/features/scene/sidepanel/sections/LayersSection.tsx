@@ -155,6 +155,7 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-transparency', 'Portes et murs à 30 % d’opacité'), 'transparentWallsDoors')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
+      {currentHdri === 'default' && layerBtn(iconLabel('bi-building', 'Lumières Tour Montparnasse'), 'montparnasseLights')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-water', 'Péniches Seine (Nuit) 🚢'), 'seineBoats')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-bezier2', 'Tracé Seine (Debug) 🌊'), 'seineDebugPath')}
       {layerBtn('Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}

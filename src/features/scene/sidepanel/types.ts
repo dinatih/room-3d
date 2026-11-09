@@ -90,6 +90,7 @@ export interface LayerState {
   environment: boolean;
   bnfMarker?: boolean;
   eiffelSparkle?: boolean;
+  montparnasseLights?: boolean;
   seineBoats?: boolean;
   seineDebugPath?: boolean;
   equipment: boolean;

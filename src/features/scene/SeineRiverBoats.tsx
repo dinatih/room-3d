@@ -4,23 +4,14 @@ import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './DayNight';
 
-// Coordonnées réelles de la Seine sur le panorama équirectangulaire HDR de Paris
-// az: azimut en degrés, el: élévation en degrés
+// Centre du chenal relevé sur le HDR équirectangulaire 2048 × 1024.
+// La boucle aval revient vers des azimuts décroissants : ce n'est pas une sinusoïde.
 const SEINE_WAYPOINTS = [
-  { az: 145.0, el: -16.8 }, // En amont vers BNF / Bercy
-  { az: 152.0, el: -16.5 }, // Pont de Bercy / Austerlitz
-  { az: 158.0, el: -15.1 }, // Gare d'Austerlitz
-  { az: 163.0, el: -14.8 }, // Île de la Cité / Pont de Sully
-  { az: 168.0, el: -14.6 }, // Pont Alexandre III / Invalides
-  { az: 173.5, el: -12.8 }, // Pont d'Iéna (au pied de la Tour Eiffel)
-  { az: 178.0, el: -11.4 }, // Pont de Bir-Hakeim
-  { az: 183.0, el: -13.8 }, // Île aux Cygnes (centre)
-  { az: 188.0, el: -15.3 }, // Pont de Grenelle / Maison de la Radio
-  { az: 194.0, el: -12.8 }, // Pont Mirabeau
-  { az: 200.0, el: -12.5 }, // Pont du Garigliano
-  { az: 207.0, el: -14.2 }, // Issy-les-Moulineaux
-  { az: 214.0, el: -16.5 }, // Aval vers Boulogne
-];
+  [650, 618], [700, 620], [750, 619], [800, 617], [850, 615],
+  [900, 611], [950, 606], [987, 600], // Au pied de la Tour Eiffel
+  [1020, 593], [1050, 585], [1075, 576], [1090, 568],
+  [1095, 560], [1087, 553], [1074, 547], [1066, 544],
+].map(([x, y]) => ({ az: x / 2048 * 360, el: 90 - y / 1024 * 180 }));
 
 function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
   const phi = (azimuthDeg * Math.PI) / 180;
@@ -60,7 +51,7 @@ const TOTAL_POINTS = BOATS.length * BOAT_LIGHTS.length * 2;
 export function SeineRiverBoats({ skyRadius = 3600 }: { skyRadius?: number }) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const enabled = useSceneStore(state => state.layers.seineBoats ?? true);
-  const showDebug = useSceneStore(state => state.layers.seineDebugPath ?? true);
+  const showDebug = useSceneStore(state => state.layers.seineDebugPath);
 
   const pointsRef = useRef<THREE.Points>(null);
   const posAttrRef = useRef<THREE.BufferAttribute>(null);

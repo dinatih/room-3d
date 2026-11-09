@@ -9,6 +9,7 @@ import { LAYER_ENVIRONMENT } from '@config';
 import { BnfSkyMarker } from './BnfSkyMarker';
 import { EiffelTowerLights } from './EiffelTowerLights';
 import { SeineRiverBoats } from './SeineRiverBoats';
+import { MontparnasseLights } from './MontparnasseLights';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { cameraState } from './cameraState';
 
@@ -96,6 +97,7 @@ export function SkySphere({ envOnly = false, showSpaceBackdrop = true }: { envOn
         {texture && <CombinedSkyDome texture={texture} />}
         <BnfSkyMarker skyRadius={SKY_RADIUS} />
         <EiffelTowerLights skyRadius={SKY_RADIUS} />
+        <MontparnasseLights skyRadius={SKY_RADIUS} />
         <SeineRiverBoats skyRadius={SKY_RADIUS} />
       </group>
     </CategoryLayerGroup>
