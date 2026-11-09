@@ -79,6 +79,7 @@ export function DevToolsCollector() {
 
   useEffect(() => {
     devState.fpsSamples = [];
+    devState.frameMsSamples = [];
     lastFrameTime.current = performance.now();
     (window as any).__DEV_STATE__ = devState;
     (window as any).__THREE_SCENE__ = scene;
@@ -237,7 +238,9 @@ export function DevToolsCollector() {
     lastFrameTime.current = now;
     const fps = Math.round(1000 / dt);
     devState.fpsSamples.push(fps);
+    devState.frameMsSamples.push(dt);
     if (devState.fpsSamples.length > FPS_SAMPLES) devState.fpsSamples.shift();
+    if (devState.frameMsSamples.length > FPS_SAMPLES) devState.frameMsSamples.shift();
 
     // Détection de chute de FPS (< 12 FPS persistant sur plusieurs frames)
     if (fps < 12) {

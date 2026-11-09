@@ -73,7 +73,7 @@ async function main() {
     process.stdout.write = capture(stdoutWrite);
     process.stderr.write = capture(stderrWrite);
     if (suite === 'perf') {
-        console.log(`[perf] ${selected.length * 3} passages ; avancement toutes les 5 s. Alimentation : ${options.powerMode}. RAM disponible : ${(hostAtStart.availableBytes / 1024 ** 3).toFixed(2)} Gio ; swap utilisé : ${(hostAtStart.swapUsedBytes / 1024 ** 3).toFixed(2)} Gio.`);
+        console.log(`[perf] ${selected.length * 3} passages headless ; avancement toutes les 5 s. Alimentation : ${options.powerMode}. RAM disponible : ${(hostAtStart.availableBytes / 1024 ** 3).toFixed(2)} Gio ; swap utilisé : ${(hostAtStart.swapUsedBytes / 1024 ** 3).toFixed(2)} Gio.`);
         console.log(`[perf] Rapports et logs : ${directory}`);
         if (referenceName || referencePath) console.log(`[perf] Référence ${referenceName ? 'comparée' : 'à créer'} : ${referenceName ?? path.basename(referencePath, '.json')}`);
     }

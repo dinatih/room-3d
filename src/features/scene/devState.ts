@@ -32,6 +32,7 @@ export interface DevState {
   programs: number;
   topMaterials: TopMaterialStat[];
   fpsSamples: number[];
+  frameMsSamples: number[];
   onUpdate: (() => void) | null;
   /** Enregistré par DevToolsCollector ; appeler pour recalculer les stats scène. */
   refreshScene: (() => void) | null;
@@ -63,9 +64,17 @@ export const devState: DevState = {
 
   // FPS — tableau glissant de samples (temps entre frames rendus)
   fpsSamples: [] as number[],
+  frameMsSamples: [] as number[],
 
   onUpdate:       null as (() => void) | null,
   refreshScene:   null as (() => void) | null,
   logDiagnostics: null as (() => void) | null,
   fpsCanvas:      null as HTMLCanvasElement | null,
 };
+
+/** Throughput over the observed window, including slow frames. */
+export function averageFps(frameMs: number[]): number {
+  if (!frameMs.length) return 0;
+  if (frameMs.some(ms => !Number.isFinite(ms) || ms <= 0)) throw new Error('Invalid frame duration');
+  return frameMs.length * 1000 / frameMs.reduce((sum, ms) => sum + ms, 0);
+}

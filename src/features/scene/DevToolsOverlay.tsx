@@ -3,7 +3,7 @@
  * Exporte DevToolsGroups.
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { devState } from './devState';
+import { devState, averageFps } from './devState';
 import { useAppIdle } from './idleState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ export function DevToolsGroups({ Group, compact = false, headerless = false }: {
   const valid    = samples.filter(v => v > 0);
   const fpsMin   = valid.length ? Math.min(...valid) : 0;
   const fpsMax   = valid.length ? Math.max(...valid) : 0;
-  const fpsAvg   = valid.length ? Math.round(valid.reduce((acc, v) => acc + v, 0) / valid.length) : 0;
+  const fpsAvg   = Math.round(averageFps(devState.frameMsSamples));
 
   const handleRefreshScene = useCallback(() => {
     devState.refreshScene?.();
