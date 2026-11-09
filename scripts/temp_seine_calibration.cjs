@@ -97,8 +97,6 @@ if (process.argv.includes('--locate')) {
     await capture('/tmp/room-bnf-night.png', 156.2);
     await capture('/tmp/room-arc-night.png', 226.2, -6.5);
     await capture('/tmp/room-city-night.png', 174, -13, 42);
-    await capture('/tmp/room-champ-night.png', 165, -10, 12);
-    await capture('/tmp/room-avenues-night.png', 227, -13, 15);
     await capture('/tmp/room-eiffel-night.png', 173.6, -5.8, 17);
     await capture('/tmp/room-bois-night.png', 325, -8, 65);
     assert.deepEqual(errors, []);
