@@ -284,14 +284,15 @@ export function createAgentController(
     const slot = object ? object.slots.find(slot => slot.slotId === instr.slotId) ?? object.slots[0] : undefined;
     const targetKey = object ? JSON.stringify([object.position, object.rotationY, slot?.offset, slot?.approachOffset, slot?.rotY]) : undefined;
     const coords = cachedCoords;
-    const obstructedTarget = coords && cachedCoordsRevision !== revision && hasAgentProfile(_characterId) && [...furnitureObstacles.values()]
+    const obstructedTarget = coords && cachedCoordsRevision !== revision && hasAgentProfile(_characterId) && (coords.entryAnimation || [...furnitureObstacles.values()]
       .some(o => (!coords.owner || !o.owner || getInteractionOwner(o.owner) !== getInteractionOwner(coords.owner)) && o.yMin < getAgentProfile(_characterId).height && o.yMax > 0
-        && pointInRing({ x: coords.tx, z: coords.tz }, inflate(o.polygon, furnitureClearance(getAgentProfile(_characterId)))));
+        && pointInRing({ x: coords.tx, z: coords.tz }, inflate(o.polygon, furnitureClearance(getAgentProfile(_characterId))))));
     if (obstructedTarget || cachedTargetKey !== targetKey || cachedCoordsInstruction !== instr || !cachedCoords) {
       beginActorBlockCheck(_characterId);
       try {
         const travel = slot?.entryAnimation ? postureDistances.get(resolveAnimationId(slot.entryAnimation)) : undefined;
-        cachedCoords = resolveInstructionCoords(instr, startPos, _characterId, state, route.owner, travel);
+        const exitTravel = slot?.exitAnimation ? postureDistances.get(resolveAnimationId(slot.exitAnimation)) : undefined;
+        cachedCoords = resolveInstructionCoords(instr, startPos, _characterId, state, route.owner, travel, exitTravel);
         cachedCoordsInstruction = instr;
         cachedTargetKey = targetKey;
       }

@@ -298,10 +298,12 @@ export function recoverDoorContact(route: RouteState, agentId: string, start: Po
 }
 
 /** Animation-driven furniture transition: keep its trajectory, wait if it becomes blocked. */
+export function isPostureTransitionFree(agentId: string, start: Point, target: Point, owner: string): boolean {
+  return segmentFree(start, target, getNavigationGraph(getAgentProfile(agentId), owner).obstacles);
+}
 export function movePostureTransition(route: RouteState, agentId: string, start: Point, target: Point, owner: string): Point {
-  const graph = getNavigationGraph(getAgentProfile(agentId), owner);
   route.waitReason = undefined;
-  if (!segmentFree(start, target, graph.obstacles)) {
+  if (!isPostureTransitionFree(agentId, start, target, owner)) {
     route.waitReason = `Sortie de posture bloquée par un obstacle (${owner})`;
     return start;
   }

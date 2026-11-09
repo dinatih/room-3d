@@ -1,6 +1,6 @@
 import type { ApproachRegion } from '../navigation/queries';
 import { AgentInstruction } from '../aiTypes';
-import { getObjectApproach, getDoorApproach, getContainingObjectOwner, NavigationBlockedError } from '../navigation/service';
+import { getObjectApproach, getDoorApproach, getContainingObjectOwner, isPostureTransitionFree, NavigationBlockedError } from '../navigation/service';
 import { getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from '../navigation/obstacles';
 import { protectDoor } from '../navigation/doorRequests';
 import { cameraState } from '../../cameraState';
@@ -16,6 +16,7 @@ export function resolveInstructionCoords(
   currentPosition?: { x: number; z: number },
   departureOwner?: string,
   postureDistance?: number,
+  exitDistance?: number,
 ): ResolvedInstructionCoords {
   // Resolve accessibility from the actual furniture exit, before planning the next activity.
   if (agentId && currentPosition && hasAgentProfile(agentId)) departureOwner = getContainingObjectOwner(agentId, currentPosition) ?? departureOwner;
@@ -93,6 +94,13 @@ export function resolveInstructionCoords(
     const flexible = slot?.arrival === 'approach' || Boolean(obj.approachDoor) || obj.category === 'storage' || obj.category === 'outdoor';
     const usesApproach = isMoveOnly || flexible;
     const owner = slot?.navigationOwner ?? obj.id;
+    if (!isMoveOnly && profileId && approachOffset && slot?.entryAnimation) {
+      const seat = { x: pos[0], z: pos[2] };
+      const entry = { x: approachOffset[0], z: approachOffset[2] };
+      const exit = { x: seat.x + Math.sin(finalRotY ?? 0) * (exitDistance ?? 0), z: seat.z + Math.cos(finalRotY ?? 0) * (exitDistance ?? 0) };
+      if (!isPostureTransitionFree(profileId, entry, seat, owner) || !isPostureTransitionFree(profileId, seat, exit, owner))
+        throw new NavigationBlockedError(`Entrée ou sortie de posture obstruée (${owner})`, seat);
+    }
     let region: ApproachRegion | undefined;
     if (slot?.arrival === 'front') {
       const width = slot.approachWidth;

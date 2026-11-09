@@ -630,6 +630,32 @@ describe('Navigation et portes — géométrie isolée', () => {
         }
     });
 
+    it('refuse une assise dont l’entrée ou le relèvement traverse le Mackapär', () => {
+        setup({}, 83);
+        architecture.architectureObstacles.length = 0;
+        const seat = { x: 96, z: 0 }, instruction = { type: 'USE_OBJECT', smartObjectId: 'chair-office', slotId: 'sit' };
+        const coords = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
+            '../navigation/service': nav, '../navigation/obstacles': obstacles, '../navigation/doorRequests': requests,
+            '../../cameraState': { cameraState }, '../navigation/destinations': {},
+            '../smartObjectRegistry': { getSmartObject: () => ({ id: 'chair-office', name: 'Chaise', category: 'seating',
+                slots: [{ slotId: 'sit', offset: [seat.x, 0, seat.z], approachOffset: [48, 0, 0], rotY: -Math.PI / 2,
+                    entryAnimation: 'stand-to-sit', exitAnimation: 'sit-to-stand' }] }) },
+            '../../animations/animationResolver': { resolveSlotAnimation: () => null },
+        });
+        obstacles.registerObstacle({ id: 'chair-fixture', owner: 'chair-office', polygon: g.rectangle(96, 0, 66, 51.742), yMin: 0, yMax: 108 });
+        obstacles.registerObstacle({ id: 'cabinet-fixture', owner: 'mackapar', polygon: g.rectangle(32, 0, 77.522, 32.068), yMin: 0, yMax: 200 });
+        try {
+            const resolve = (entry, exit) => coords.resolveInstructionCoords(instruction, null, 'walker', undefined, undefined, entry, exit);
+            assert.throws(() => resolve(-48, 10), nav.NavigationBlockedError, 'Entrée obstruée');
+            assert.throws(() => resolve(-10, 48), nav.NavigationBlockedError, 'Sortie obstruée malgré une entrée libre');
+            assert.equal(resolve(-10, 10).tx, seat.x, 'La chaise seule ne bloque pas sa propre transition');
+            obstacles.unregisterObstacle('cabinet-fixture');
+            assert.equal(resolve(-48, 48).tx, seat.x, 'La même transition devient accessible sans le meuble voisin');
+        } finally {
+            obstacles.unregisterObstacle('chair-fixture'); obstacles.unregisterObstacle('cabinet-fixture');
+        }
+    });
+
     it('résout une nouvelle activité et quitte un canapé sans propriétaire de départ mémorisé', () => {
         setup({}, 83);
         architecture.architectureObstacles.length = 0;

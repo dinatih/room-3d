@@ -36,7 +36,7 @@ it('conserve l’approche frontale du WC lors du passage à la pose assise', () 
       export const object = ({${source.slice(begin, end)}}).toilet;`;
   });
   const { resolveInstructionCoords } = load('src/features/scene/ai/agent/agentInstructionCoords.ts', {
-    '../navigation/service': { getContainingObjectOwner: () => undefined, getObjectApproach: (owner, goal) => goal },
+    '../navigation/service': { getContainingObjectOwner: () => undefined, getObjectApproach: (owner, goal) => goal, isPostureTransitionFree: () => true },
     '../navigation/obstacles': { hasAgentProfile: () => true },
     '../navigation/doorRequests': {}, '../../cameraState': {}, '../navigation/destinations': {},
     '../smartObjectRegistry': { getSmartObject: () => object },
