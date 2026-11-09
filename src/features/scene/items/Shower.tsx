@@ -10,9 +10,8 @@ import { getObjectActionIds } from '../objectActions';
  * - Porte procédurale : verre + cadre aluminium + poignée avec pivot d'ouverture
  */
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -345,6 +344,6 @@ export function Shower({ onSize, isPreview = false, actionState = {} }: Partial<
 }
 
 
-useGLTF.preload(GLB_TRAY);
-useGLTF.preload(GLB_BAR);
-useGLTF.preload(GLB_FAUCET);
+preloadSceneGLTF(GLB_TRAY);
+preloadSceneGLTF(GLB_BAR);
+preloadSceneGLTF(GLB_FAUCET);

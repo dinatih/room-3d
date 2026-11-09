@@ -4,8 +4,7 @@
  * Coordonnées locales : X/Z centrés, Y=0 = sol.
  */
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
@@ -33,4 +32,4 @@ export function PottedYucca({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('items/yucca10329308/Yucca10329308.glb');
+preloadSceneGLTF('items/yucca10329308/Yucca10329308.glb');

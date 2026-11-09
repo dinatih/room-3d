@@ -1,6 +1,5 @@
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
@@ -26,4 +25,4 @@ export function Tackan({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

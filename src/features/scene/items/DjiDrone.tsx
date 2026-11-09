@@ -1,8 +1,7 @@
 import { useRef, useLayoutEffect, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { useGLTF } from '@react-three/drei';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { updateClipPreview } from '@features/inventory/updateClipPreview';
@@ -240,5 +239,5 @@ export function DjiAvata2Drone(props: { isPreview?: boolean; previewAnim?: strin
   return <DjiDrone subjectId="dji-avata-2" startObservation="feeder" glbPath="/items/dji-avata-2/dji-avata-2.glb" targetMaxDimCm={21.2} itemName="Drone DJI Avata 2" {...props} />;
 }
 
-useGLTF.preload('/items/dji-neo/dji-neo.glb');
-useGLTF.preload('/items/dji-avata-2/dji-avata-2.glb');
+preloadSceneGLTF('/items/dji-neo/dji-neo.glb');
+preloadSceneGLTF('/items/dji-avata-2/dji-avata-2.glb');

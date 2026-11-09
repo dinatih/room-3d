@@ -1,3 +1,4 @@
+import { disposeModelResources } from '../scene/utils/disposeModelResources';
 import { enableWireframe } from '../scene/utils/wireframe';
 import { SmartActionPreview } from './SmartActionPreview';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
@@ -34,21 +35,6 @@ import { resolveCameraView } from '@features/scene/camera/cameraViews';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
-
-function disposePreviewScene(root: THREE.Object3D) {
-  root.traverse((node: any) => {
-    if (!node.isMesh) return;
-    node.geometry?.dispose();
-    const materials = Array.isArray(node.material) ? node.material : [node.material];
-    materials.forEach((material: THREE.Material | undefined) => {
-      if (!material) return;
-      Object.values(material).forEach((value: any) => {
-        if (value?.isTexture) value.dispose();
-      });
-      material.dispose();
-    });
-  });
-}
 
 export interface GlbDebugStats {
   fileSize?: number;
@@ -105,7 +91,7 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 
     loader.load(glbPath, gltf => {
       if (cancelled) {
-        disposePreviewScene(gltf.scene);
+        disposeModelResources(gltf.scene);
       } else {
         // Normaliser l'échelle si le modèle est en mètres (IKEA models < 5 unités de haut/large)
         const rawBox = new THREE.Box3().setFromObject(gltf.scene);
@@ -153,7 +139,7 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
       mixerRef.current?.stopAllAction();
       mixerRef.current = null;
       setScene(previous => {
-        if (previous) disposePreviewScene(previous);
+        if (previous) disposeModelResources(previous);
         return null;
       });
     };

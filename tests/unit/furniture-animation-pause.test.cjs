@@ -29,7 +29,7 @@ for (const [name, key, clipName, scale] of [
     '@react-three/drei': { useGLTF: { preload() {} } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate: () => invalidations++ }) },
     three: THREE,
-    '../useGLTFClone': { useGLTFClone: () => ({ scene, animations }) },
+    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene, animations }) },
     '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
     '../objectActions': { getObjectActionIds: () => [key] },
   };
@@ -79,7 +79,7 @@ test('Air Performer respects the selected arc, preview isolation and pause; dock
       '@react-three/drei': { useGLTF: { preload() {} } },
       '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate() {} }) },
       three: THREE,
-      '../useGLTFClone': { useGLTFClone: () => ({ scene }) },
+      '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
       '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 106, 1)) },
       '../objectActions': { getObjectActionIds: () => [] },
       '../utils/useFurnitureToggles': { useFurnitureToggles: () => ({ airPerformerOscillation: 0 }) },

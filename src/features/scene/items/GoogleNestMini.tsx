@@ -8,9 +8,8 @@ import { stopHouseMusic } from '../utils/houseMusic';
  * déclenchées par furniture-toggle { key: 'nestMini' }, one-shot ~3.5s.
  */
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -124,4 +123,4 @@ export function GoogleNestMini({ onSize, actionState = {}, isPreview = false }: 
   );
 }
 
-useGLTF.preload('items/google-nest/google-nest.glb');
+preloadSceneGLTF('items/google-nest/google-nest.glb');

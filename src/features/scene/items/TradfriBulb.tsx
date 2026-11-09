@@ -4,8 +4,7 @@
  * Le wrapper parent est roté [Math.PI, 0, 0] pour que le culot pointe vers le plafond.
  */
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -56,4 +55,4 @@ export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItem
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

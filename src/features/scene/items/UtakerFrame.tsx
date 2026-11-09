@@ -5,8 +5,8 @@
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF, RoundedBox } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { RoundedBox } from '@react-three/drei';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial, glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
@@ -116,5 +116,5 @@ export function UtakerFrame({ upper: isUpper = false, onSize, hasTopper: explici
   );
 }
 
-useGLTF.preload(BAS_GLB);
-useGLTF.preload(HAUT_GLB);
+preloadSceneGLTF(BAS_GLB);
+preloadSceneGLTF(HAUT_GLB);

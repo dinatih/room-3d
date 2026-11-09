@@ -1,6 +1,5 @@
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
@@ -33,4 +32,4 @@ export function OneBlade({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(ONEBLADE_GLB);
+preloadSceneGLTF(ONEBLADE_GLB);

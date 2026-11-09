@@ -1,8 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGLTFClone } from '../useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
@@ -11,7 +10,7 @@ import type { SceneItemProps } from '@shared/types';
 export function createAnimatedGlbItem(path: string, objectId: string, label: string, { clipNames = ['lid_open'], scale = 100 }: {
   clipNames?: readonly string[]; scale?: number;
 } = {}) {
-  useGLTF.preload(path);
+  preloadSceneGLTF(path);
   const actionIds = getObjectActionIds(objectId);
   const [actionId] = actionIds;
   if (!actionId) throw new Error('Missing animation action for ' + objectId);

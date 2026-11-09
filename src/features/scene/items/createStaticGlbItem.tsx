@@ -1,8 +1,7 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '../glbUtils';
-import { useGLTFClone } from '../useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import type { SceneModelProps } from '@shared/types';
 
 /** Official IKEA GLB exports (and derived variants), converted from metres to centimetres. */
@@ -10,7 +9,7 @@ export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY
   origin?: 'bottom' | 'top';
   rotationY?: number;
 } = {}) {
-  useGLTF.preload(path);
+  preloadSceneGLTF(path);
   return function StaticGlbItem({ onSize }: SceneModelProps) {
     const { scene } = useGLTFClone(path);
     useLayoutEffect(() => {

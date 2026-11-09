@@ -10,8 +10,7 @@
  * Coordonnées locales : centré X/Z, Y=0 = bas du cadre.
  */
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial, removeGlbBackFaces } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -126,8 +125,8 @@ function NissedalMirrorGlb({ glb, onSize }: { glb: string; onSize: SceneItemProp
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB_40x150);
-useGLTF.preload(GLB_65x65);
+preloadSceneGLTF(GLB_40x150);
+preloadSceneGLTF(GLB_65x65);
 
 export function NissedalMirror({ item, onSize }: SceneItemProps) {
   // mirror-nissedal-a   → GLB 40×150

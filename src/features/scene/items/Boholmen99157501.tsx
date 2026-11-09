@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { FaucetWater } from './FaucetWater';
 
 const GLB_SINK   = '/items/boholmen99157501/Boholmen99157501.glb';
@@ -59,5 +58,5 @@ export function Boholmen99157501({ onSize, isPreview }: SceneModelProps & { isPr
   );
 }
 
-useGLTF.preload(GLB_SINK);
-useGLTF.preload(GLB_FAUCET);
+preloadSceneGLTF(GLB_SINK);
+preloadSceneGLTF(GLB_FAUCET);

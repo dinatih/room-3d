@@ -1,12 +1,11 @@
 import { useDoorOpen } from './useDoorOpen';
 import { getObjectActionIds } from '../objectActions';
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { glbLocalBBox, optimizeMaterials, removeGlbLines } from '@features/scene/glbUtils';
 import { SceneItemProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 const ACTION_KEY = 'utdrag';
 const RETRACT_OFFSET = -0.16; // Course de 16 cm (en mètres dans l'espace local du GLB avant scale 100)
@@ -78,5 +77,5 @@ export function Utdrag10389142({ onSize, actionState = {}, isPreview = false }: 
   );
 }
 
-useGLTF.preload('/items/utdrag10389142/Utdrag10389142.glb');
+preloadSceneGLTF('/items/utdrag10389142/Utdrag10389142.glb');
 

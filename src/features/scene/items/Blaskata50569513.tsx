@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 /**
  * BLÅSKATA coussin, cylindrique/gris clair, 80 cm
@@ -58,4 +57,4 @@ export function Blaskata50569513({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('/items/blaskata50569513/Blaskata50569513.glb');
+preloadSceneGLTF('/items/blaskata50569513/Blaskata50569513.glb');

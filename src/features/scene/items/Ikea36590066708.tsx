@@ -1,8 +1,7 @@
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { glbLocalBBox } from '@features/scene/glbUtils';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import type { SceneModelProps } from '@shared/types';
 
 const GLB = '/items/ikea36590066708/Ikea36590066708.glb';
@@ -25,4 +24,4 @@ export function Ikea36590066708({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

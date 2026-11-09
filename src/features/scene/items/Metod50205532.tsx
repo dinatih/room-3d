@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 const shelfMaterial = new THREE.MeshStandardMaterial({ color: '#f0f0f0', roughness: 0.35, metalness: 0.05 });
 
@@ -61,4 +60,4 @@ export function Metod50205532({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('/items/metod50205532/Metod50205532.glb');
+preloadSceneGLTF('/items/metod50205532/Metod50205532.glb');

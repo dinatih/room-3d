@@ -1,8 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGLTFClone } from '../useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
@@ -76,4 +75,4 @@ export function AirPerformer({ onSize, actionState = {}, isPreview = false, remo
   </group>;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

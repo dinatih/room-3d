@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 /**
  * LAGERPOPPEL housse de coussin, fuchsia, 40x58 cm
@@ -47,4 +46,4 @@ export function Lagerpoppel00561816({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('/items/lagerpoppel00561816/Lagerpoppel00561816.glb');
+preloadSceneGLTF('/items/lagerpoppel00561816/Lagerpoppel00561816.glb');

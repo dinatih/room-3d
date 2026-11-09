@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 /**
  * NÄSFJÄLLET surmatelas, blanc, 80x200 cm
@@ -35,4 +34,4 @@ export function Nasfjallet10558045({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('/items/nasfjallet10558045/Nasfjallet10558045.glb');
+preloadSceneGLTF('/items/nasfjallet10558045/Nasfjallet10558045.glb');

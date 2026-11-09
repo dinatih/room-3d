@@ -10,9 +10,8 @@ import { getObjectActionIds } from '../objectActions';
  * Charnière -X local, openAngle = -π/2 → porte tourne vers +Z (vers la pièce). ✓
  */
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -109,6 +108,6 @@ export function KitchenCabinet({ actionState = {}, onSize, isPreview = false }: 
   );
 }
 
-useGLTF.preload(GLB);
-useGLTF.preload(DOOR_GLB);
-useGLTF.preload(HANDLE_GLB);
+preloadSceneGLTF(GLB);
+preloadSceneGLTF(DOOR_GLB);
+preloadSceneGLTF(HANDLE_GLB);

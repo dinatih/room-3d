@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 
 /**
  * LACK étagère murale, blanc, 110x26 cm
@@ -35,4 +34,4 @@ export function Lack90282180({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('/items/lack90282180/Lack90282180.glb');
+preloadSceneGLTF('/items/lack90282180/Lack90282180.glb');

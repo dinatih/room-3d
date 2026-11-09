@@ -2,9 +2,8 @@ import { getObjectActionIds } from '../objectActions';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 /** LAGAN: right-hand door, sliding crisper and automatic interior bulb. */
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
@@ -126,4 +125,4 @@ export function Fridge({ actionState = {}, onSize, isPreview = false }: Partial<
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

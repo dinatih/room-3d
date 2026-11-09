@@ -1,4 +1,5 @@
 import { SimulationClock } from './SimulationClock';
+import { SceneModelContext } from './useGLTFClone';
 import { WeatherSystem } from './WeatherSystem';
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
@@ -897,6 +898,7 @@ export function Studio() {
         <PresenceLightController />
         {/* Overlays React (non soumis aux layers Three.js) */}
         {layers.wireframe   && <WireframeLayer />}
+        <SceneModelContext.Provider value={true}>
         <Suspense fallback={null}>
           {layers.aiZones && <AiZonesHelper />}
           {(layers.debugNpcCollisions || layers.debugFurnitureCollisions) && <CollisionDebugHelper />}
@@ -1006,6 +1008,7 @@ export function Studio() {
 
         </group>
         </Suspense>
+        </SceneModelContext.Provider>
       </Canvas>
 
       {/* HTML overlays */}

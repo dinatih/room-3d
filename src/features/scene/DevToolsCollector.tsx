@@ -211,6 +211,8 @@ export function DevToolsCollector() {
       if (devState.logDiagnostics === logDiagnostics) devState.logDiagnostics = null;
       clearInterval(id);
       gl.info.autoReset = true;
+      if ((window as any).__THREE_SCENE__ === scene) delete (window as any).__THREE_SCENE__;
+      if ((window as any).__THREE_GL__ === gl) delete (window as any).__THREE_GL__;
     };
   }, [scene, gl]);
 

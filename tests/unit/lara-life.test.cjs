@@ -735,7 +735,7 @@ it('garde le téléviseur éteint même quand la vidéo du bureau est active', (
   const { TV } = load('src/features/scene/items/TV.tsx', {
     'react/jsx-runtime': require('react/jsx-runtime'), react: { useLayoutEffect: () => {}, useState: () => [0, () => {}] },
     '@react-three/drei': { useTexture: () => ({}), useGLTF: { preload: () => {} } },
-    '../useGLTFClone': { useGLTFClone: () => ({ scene: {} }) }, three: require('three'),
+    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene: {} }) }, three: require('three'),
     '@features/scene/glbUtils': {}, '@features/scene/utils/deskScreenVideo': { useDeskScreenVideo: () => ({ isVideoActive: true, texture: 'shared-video' }) },
     '../objectActions': { getObjectActionIds: () => [] }, '../tvData': { TV_W: 73, TV_H: 43 },
   });

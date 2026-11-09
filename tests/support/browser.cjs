@@ -66,6 +66,13 @@ exports.withBrowser = async (fixture, exercise) => {
             cacheDir,
             server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
+                        if (fixture.retainLoaderParser && id.split('?')[0].endsWith('/src/features/scene/useGLTFClone.ts')) {
+                            const cleanup = 'delete (gltf as { parser?: unknown }).parser;';
+                            assert(source.includes(cleanup), 'Parser retention diagnostic no longer matches source');
+                            return { code: source.replace(cleanup, ''), map: null };
+                        }
+                        if (fixture.sceneModels === 'original' && id.split('?')[0].endsWith('/src/features/scene/sceneModelPaths.ts'))
+                            return { code: 'export function sceneModelPath(path: string): string { return path; }', map: null };
                         if (fixture.fixedEnvironment && id.split('?')[0].endsWith('/src/features/scene/ai/laraLifeStore.ts')) {
                             assert(source.includes('export function advanceSimulationClock(seconds: number) {') && source.includes('for (const life of Object.values(characterLives)) life.elapsedSeconds = simulationClock.minutes;'), 'Clock instrumentation no longer matches source');
                             return { code: source.replace('export function advanceSimulationClock(seconds: number) {', 'export function advanceSimulationClock(seconds: number) { return;')
@@ -115,6 +122,10 @@ exports.withBrowser = async (fixture, exercise) => {
         page.on('requestfailed', request => {
             if (closing) return;
             const message = `${request.url()}: ${request.failure()?.errorText}`;
+            if (request.failure()?.errorText === 'net::ERR_ABORTED' && fixture.cancelledRequestPaths?.includes(new URL(request.url()).pathname)) {
+                result.logs.push({ type: 'expected-request-cancellation', text: message });
+                return;
+            }
             if (request.resourceType() === 'media' && request.failure()?.errorText === 'net::ERR_ABORTED') {
                 result.logs.push({ type: 'media-cancelled', text: message });
             } else fail(message);

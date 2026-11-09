@@ -95,7 +95,7 @@ it('mesure et recentre un GLB de façon stable après remontage sous un parent t
   const { createStaticGlbItem } = load('src/features/scene/items/createStaticGlbItem.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: callback => effects.push(callback) },
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },
-    '../useGLTFClone': { useGLTFClone: () => ({ scene }) }, '../glbUtils': utils,
+    '../useGLTFClone': { preloadSceneGLTF: path => preloads.push(path), useGLTFClone: () => ({ scene }) }, '../glbUtils': utils,
   });
   const Item = createStaticGlbItem('/example.glb');
   for (let i = 0; i < 2; i++) {
@@ -114,7 +114,7 @@ it('conserve le sommet et les accrochages Kallax après plusieurs mesures', asyn
   const { createStaticGlbItem } = load('src/features/scene/items/createStaticGlbItem.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: callback => effects.push(callback) },
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '../useGLTFClone': { useGLTFClone: () => ({ scene }) }, '../glbUtils': await glbUtils(),
+    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) }, '../glbUtils': await glbUtils(),
   });
   const Item = createStaticGlbItem('/kallax.glb', { origin: 'top', rotationY: Math.PI });
   let vertices;
@@ -219,7 +219,7 @@ it('isole les dalles ALTAPPEN et conserve leurs dimensions après une nouvelle m
   const { AltappenRug } = load('src/features/scene/items/AltappenRug.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: fn => effects.push(fn) },
     '@react-three/drei': { useGLTF: Object.assign(() => ({ scene: source }), { preload() {} }) },
-    '@features/scene/useGLTFClone': { useGLTFClone: () => ({ scene }) },
+    '@features/scene/useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
     '@features/scene/glbUtils': await glbUtils(),
   });
   const instances = [source.clone(true), source.clone(true)];
@@ -271,7 +271,7 @@ it('lit les actions Air Performer directement dans la preview et accepte un plac
     },
     '@react-three/drei': { useGLTF: { preload() {} } },
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
-    '../useGLTFClone': { useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene }; } },
+    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene }; } },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => [] },
     '../utils/useFurnitureToggles': { useFurnitureToggles: () => ({}) }, '../store/useSceneStore': {},
     '../../home-assistant/airPerformer': load('src/features/home-assistant/airPerformer.ts', {}),
@@ -298,7 +298,7 @@ it('les deux cadres UTÅKER conservent leur matelas et leur literie avec ou sans
     three: THREE, 'react/jsx-runtime': jsx,
     react: { useRef: () => ({ current: null }), useLayoutEffect() {} },
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '@features/scene/useGLTFClone': {}, '@features/scene/glbUtils': {},
+    '@features/scene/useGLTFClone': { preloadSceneGLTF() {} }, '@features/scene/glbUtils': {},
     './Anneland70481722': { Anneland70481722: Anneland },
     './Vestmarka90470195': { Vestmarka90470195: Vestmarka }, './Blaskata50569513': {},
   });
@@ -323,7 +323,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
     react: { useRef: value => refs[cursor++] ??= { current: value }, useLayoutEffect: fn => effects.push(fn) },
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
-    '../useGLTFClone': { useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene, animations }; } },
+    '../useGLTFClone': { preloadSceneGLTF: path => preloads.push(path), useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene, animations }; } },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => ['open'] },
   });
   const Item = createAnimatedGlbItem('/chest.glb', 'chest', 'Coffre');
@@ -365,7 +365,7 @@ it('TRÅDFRI et OLA conservent leur géométrie et leurs matériaux lors des nou
         },
       },
       '@react-three/drei': { useGLTF: { preload() {} } },
-      '@features/scene/useGLTFClone': { useGLTFClone: (_, ownMaterials) => {
+      '@features/scene/useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: (_, ownMaterials) => {
         if (ownMaterials && !clonedMaterials) { mesh.material = sourceMaterial.clone(); clonedMaterials = true; }
         return { scene };
       } },
@@ -433,7 +433,7 @@ it('les trois meubles METOD gardent leur géométrie et leurs dimensions après 
       react: { useRef: () => ({ current: pivot }), useLayoutEffect: fn => effects.push(fn) },
       '@react-three/drei': { useGLTF: { preload() {} } },
       '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
-      '@features/scene/useGLTFClone': { useGLTFClone: path => {
+      '@features/scene/useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: path => {
         if (!scenes.has(path)) {
           const scene = new THREE.Group();
           scene.add(new THREE.Mesh(new THREE.BoxGeometry(.4, .6, .2).translate(.07, .3, -.02), new THREE.MeshStandardMaterial()));

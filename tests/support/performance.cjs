@@ -26,6 +26,7 @@ exports.measure = async (page, result, system, fixture) => {
     const initialHost = await hostMetrics();
     result.conditions = {
         execution: 'headless',
+        sceneModels: fixture.sceneModels ?? 'scene-512',
         powerMode: initialHost.powerMode,
         scenario: fixture.activity, configuration: { count: fixture.count, preset: fixture.preset, seed: fixture.seed, collisions: fixture.collisions, stableMs: fixture.stableMs, sessionMs: fixture.sessionMs, environment: fixture.fixedEnvironment ?? null, frameSource: fixture.fixedEnvironment ? 'main-scene-render' : 'requestAnimationFrame' },
         viewport: fixture.viewport, drawingBuffer: result.loaded.drawingBuffer, models: result.loaded.models,

@@ -3,8 +3,8 @@
  * Scaled to TV_W=73 cm. Action 'tv-toggle' : écran ON/OFF.
  */
 import { useLayoutEffect, useState } from 'react';
-import { useGLTF, useTexture } from '@react-three/drei';
-import { useGLTFClone } from '../useGLTFClone';
+import { useTexture } from '@react-three/drei';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -65,4 +65,4 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
   );
 }
 
-useGLTF.preload('items/tv/tv.glb');
+preloadSceneGLTF('items/tv/tv.glb');

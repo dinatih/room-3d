@@ -10,9 +10,8 @@
  *  East (mirrorHandle=true)  : charnière +X, openAngle = +π/2 (porte vers +Z)
  */
 import { useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
@@ -120,9 +119,9 @@ function MetodCabinet({ actionState = {}, onSize, mirrorHandle = false, openKey,
   );
 }
 
-useGLTF.preload(GLB);
-useGLTF.preload(DOOR_GLB);
-useGLTF.preload(HANDLE_GLB);
+preloadSceneGLTF(GLB);
+preloadSceneGLTF(DOOR_GLB);
+preloadSceneGLTF(HANDLE_GLB);
 
 export function BathroomCabinetWest(props: Partial<Omit<SceneItemProps, 'item'>>) {
   return <MetodCabinet {...props} openKey="cbnWest" hoverLabel="Armoire SDB Ouest" hoverObjectId="bathroom-cabinet-west" />;

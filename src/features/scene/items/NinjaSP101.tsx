@@ -1,9 +1,8 @@
 import { useSceneStore } from '../store/useSceneStore';
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGLTFClone } from '../useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
@@ -121,4 +120,4 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB);
+preloadSceneGLTF(GLB);

@@ -1,8 +1,7 @@
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
-import { useGLTF } from '@react-three/drei';
 import { isAppIdle } from '@features/scene/idleState';
 import { glbLocalBBox } from '@features/scene/glbUtils';
 import { appLog } from '@features/ui/AppConsole';
@@ -289,4 +288,4 @@ export function BlackHornetDrone({
   );
 }
 
-useGLTF.preload(GLB_PATH);
+preloadSceneGLTF(GLB_PATH);

@@ -18,7 +18,7 @@ for (const name of ['DjiNeoDrone', 'DjiAvata2Drone']) it(`${name}: mesurer à no
       useLayoutEffect: (fn, deps) => { const index = effectIndex++, previous = effects[index]; if (!previous || deps.some((v, i) => v !== previous.deps[i])) { previous?.cleanup?.(); effects[index] = { deps, cleanup: fn() }; } },
     },
     '@react-three/fiber': { useThree: () => ({ invalidate }), useFrame: fn => { frames[frameIndex++] = fn; } },
-    '@features/scene/useGLTFClone': { useGLTFClone: () => ({ scene }) },
+    '@features/scene/useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
     '@react-three/drei': { useGLTF: { preload() {} } }, '@features/scene/idleState': { isAppIdle: () => false },
     '@features/scene/glbUtils': { glbLocalBBox: object => new THREE.Box3().setFromObject(object) },
     '@features/inventory/updateClipPreview': {},

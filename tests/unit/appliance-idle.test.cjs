@@ -27,7 +27,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
   const ref = { current: null }, actionState = {};
   const store = { furniture: { fridge: false, freezerOpen: false }, extraStates: {}, layers: { lightsHD: true } };
   const sceneStore = { useSceneStore: select => select(store) };
-  const clone = { useGLTFClone: () => ({ scene, animations }) };
+  const clone = { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene, animations }) };
   const utils = { removeGlbLines() {}, glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(10, 10, 10)) };
   const { [name]: Component } = load(`src/features/scene/items/${name}.tsx`, {
     three: { ...THREE, AnimationMixer: class extends THREE.AnimationMixer { update(delta) { updates++; return super.update(delta); } } },
@@ -118,7 +118,7 @@ it('WC: relancer la chasse remplace son délai et le démontage annule les rappe
     './useDoorOpen': { useDoorOpen: () => true },
     './toiletAnimation': { TOILET_HINGE_ANGLE: 1, TOILET_HINGE_SPEED: 1, TOILET_HINGE_TOLERANCE: .001 },
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '@features/scene/useGLTFClone': { useGLTFClone: () => ({ scene }) },
+    '@features/scene/useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate: () => invalidations++ }) },
     '@features/scene/glbUtils': { removeGlbLines() {}, glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
   });

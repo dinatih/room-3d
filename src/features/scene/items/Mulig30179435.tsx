@@ -1,9 +1,8 @@
-import { useGLTF } from '@react-three/drei';
 import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { SpruttigInstances } from './Spruttig20317079';
 
 // ── 6 cintres Spruttig sur la tringle Mulig ──────────────────────────────────
@@ -65,6 +64,6 @@ export function Mulig30179435({ onSize, noHangers }: SceneModelProps & { noHange
   );
 }
 
-useGLTF.preload('/items/mulig30179435/Mulig30179435.glb');
+preloadSceneGLTF('/items/mulig30179435/Mulig30179435.glb');
 
 

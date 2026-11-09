@@ -3,8 +3,7 @@
  * Coordonnées locales : X/Z centrés, Y=0 au sol de la mangeoire (ou suspendue).
  */
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
@@ -50,4 +49,4 @@ export function BirdFeeder({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload('/items/bird_feeder/bird_feeder.glb');
+preloadSceneGLTF('/items/bird_feeder/bird_feeder.glb');
