@@ -121,7 +121,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
   }, [releaseAll]);
 
   if (!visible) return null;
-  const moving = piloting || !animal && (mode === 'fpv' || control === 'character');
+  const moving = control === 'character';
   const orbiting = mode === 'orbit' || mode === 'follow' || Boolean(animal);
   const targets = [
     { target: 'character', label: 'Personnage', icon: 'bi-person' },
@@ -215,6 +215,10 @@ export function Controller({ visible = false }: { visible?: boolean }) {
           const buttons = [...DIRECTIONS, ...extras];
           return (
             <div key={inputControl} className="d-flex flex-column align-items-center gap-1">
+              <button type="button" className={`btn btn-sm ${control === inputControl ? 'btn-primary' : 'btn-outline-secondary'}`} aria-pressed={control === inputControl} title={isCamera ? 'Clavier : caméra' : 'Clavier : sujet'} aria-label={isCamera ? 'Clavier : caméra' : 'Clavier : sujet'} onClick={() => {
+                releaseAll();
+                useSceneStore.getState().setArrowControl(inputControl);
+              }}><i className={`bi ${isCamera ? 'bi-camera-video' : 'bi-controller'}`} aria-hidden="true" /></button>
               <div className={`virtual-dpad ${!isCamera ? 'virtual-dpad--subject' : ''}`} role="group" aria-label={isCamera ? 'Déplacement de la caméra' : `Déplacement : ${piloting ? 'Hornet' : subject.label}`}>
                 {!isCamera && <div className="virtual-dpad__subject">
                   <PanelPopover icon={subject.icon} title="Objet de position de la caméra" compactMode className="view-control-bar__subject-picker" triggerClassName="virtual-dpad__button rounded-3" onOpen={popover => {

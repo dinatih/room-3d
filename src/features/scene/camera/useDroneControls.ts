@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
+import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
-import { droneInput, useDroneControlStore } from '../droneControls';
+import { SUBJECT_KEY_DIRECTIONS, droneInput, useDroneControlStore } from '../droneControls';
 import { MOUSE_SENS } from './cameraConstants';
 import { recordSubjectCommand } from './subjectControls';
 
@@ -42,13 +43,16 @@ export function useDroneControls(preview: boolean) {
       event.preventDefault();
       event.stopImmediatePropagation();
       recordSubjectCommand('drone');
-      droneInput.keys.add(key);
+      const cameraControl = useSceneStore.getState().arrowControl === 'camera';
+      droneInput.keys.add(cameraControl ? `camera:${SUBJECT_KEY_DIRECTIONS[key] ?? key}` : key);
       droneInput.keys[event.altKey ? 'add' : 'delete']('Alt');
       publishKeys();
       invalidate();
     };
     const keyUp = (event: KeyboardEvent) => {
-      if (!droneInput.keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key)) return;
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      const released = droneInput.keys.delete(key);
+      if (!droneInput.keys.delete(`camera:${SUBJECT_KEY_DIRECTIONS[key] ?? key}`) && !released) return;
       recordSubjectCommand('drone');
       event.stopImmediatePropagation();
       publishKeys();

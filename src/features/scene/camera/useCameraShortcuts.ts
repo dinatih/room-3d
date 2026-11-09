@@ -6,7 +6,7 @@ import type { ArrowControl, CameraMode, CameraTarget, CameraMovement, OrbitMouse
 import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
-import { useDroneControlStore } from '../droneControls';
+import { SUBJECT_KEY_DIRECTIONS, droneInput, useDroneControlStore } from '../droneControls';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
@@ -115,7 +115,13 @@ export function useCameraShortcuts({
       document.dispatchEvent(new CustomEvent('camera-arrow-keys', { detail: allKeys }));
     };
     const chooseFollow = (x: number, z: number, mode: 'follow' | 'fpv' = 'follow') => {
-      useDroneControlStore.getState().setPiloting(false);
+      const pilot = cameraState.animalTarget === 'drone' && mode === 'fpv';
+      if (pilot) {
+        const view = cameraState.animalViews.drone;
+        droneInput.yaw = Math.atan2(view.forward.x, view.forward.z);
+        droneInput.pitch = Math.asin(view.forward.y);
+      }
+      useDroneControlStore.getState().setPiloting(pilot);
       useSceneStore.getState().setArrowControl(mode === 'fpv' ? 'character' : 'camera');
       enterFollow(x, z, mode);
     };
@@ -257,6 +263,13 @@ export function useCameraShortcuts({
 
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return;
+      }
+
+      const direction = SUBJECT_KEY_DIRECTIONS[e.key.toLowerCase()] ?? (e.key.startsWith('Arrow') ? e.key : undefined);
+      if (direction && !e.ctrlKey && !e.metaKey && (modeRef.current === 'follow' || modeRef.current === 'fpv')) {
+        e.preventDefault();
+        onDirectionInput(new CustomEvent('camera-direction-input', { detail: { key: `${e.altKey ? 'camera' : useSceneStore.getState().arrowControl}:${direction}`, pressed: true } }));
         return;
       }
 
@@ -529,6 +542,8 @@ export function useCameraShortcuts({
 
     const onUp = (e: KeyboardEvent) => {
       const k = e.key;
+      const direction = SUBJECT_KEY_DIRECTIONS[k.toLowerCase()] ?? (k.startsWith('Arrow') ? k : undefined);
+      if (direction) for (const control of ['character', 'camera']) onDirectionInput(new CustomEvent('camera-direction-input', { detail: { key: `${control}:${direction}`, pressed: false } }));
       keys.current.delete(k);
       keys.current.delete('Shift' + k);
       keys.current.delete('Ctrl' + k);

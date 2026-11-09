@@ -10,7 +10,6 @@ import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
-import { selectAnimalCameraTarget } from './camera/cameraSubjects';
 import { PresetButton } from './PresetButton';
 
 export interface ViewControlBarProps {
@@ -133,8 +132,6 @@ export function ViewControlBar({
   directionalControls,
   children,
 }: ViewControlBarProps) {
-  const animalCameraTarget = useSceneStore(selectAnimalCameraTarget);
-  const animalCameraActive = Boolean(animalCameraTarget && animalCameraTarget !== 'drone');
   const isMobile = useIsMobile();
   const cameraProjection = useSceneStore(s => s.cameraProjection);
   const cameraMode = useSceneStore(s => s.cameraMode);
@@ -331,8 +328,8 @@ export function ViewControlBar({
           {rotButton}
           {elevationGroup}
           {cardinalGroup}
-          {animalCameraActive && (
-            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('orbit')} title="Quitter la vue embarquée" aria-label="Quitter la vue embarquée">
+          {(cameraMode === 'follow' || cameraMode === 'fpv') && (
+            <button type="button" className={`${TOOLBAR_BUTTON_CLASS} btn-outline-danger`} onClick={() => dispatchCameraMode('reset-orbit')} title="Quitter la vue embarquée" aria-label="Quitter la vue embarquée">
               <i className="bi bi-box-arrow-right" aria-hidden="true" /><span className="fw-semibold">Quitter</span>
             </button>
           )}

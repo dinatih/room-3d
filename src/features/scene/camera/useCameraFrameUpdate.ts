@@ -109,7 +109,7 @@ export function useCameraFrameUpdate({
     }
     const store = useSceneStore.getState();
     const k = keys.current;
-    const movesCharacter = (modeRef.current === 'fpv' || store.arrowControl === 'character') && !store.layers.characterGrid && !cameraState.animalTarget;
+    const movesCharacter = (store.arrowControl === 'character') && !store.layers.characterGrid && !cameraState.animalTarget;
     const characterArrow = (key: string) => !store.layers.characterGrid && !cameraState.animalTarget && (k.has('character:' + key) || (movesCharacter && k.has(key)));
     const cameraArrow = (key: string) => k.has('camera:' + key) || (!movesCharacter && k.has(key));
     const hasCameraArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(cameraArrow);

@@ -35,3 +35,5 @@ export function droneMovement(keys: Set<string>, yaw: number, pitch: number, tar
   if (target.lengthSq() > 1) target.normalize();
   return target;
 }
+
+export const SUBJECT_KEY_DIRECTIONS: Record<string, string> = { z: 'ArrowUp', w: 'ArrowUp', s: 'ArrowDown', q: 'ArrowLeft', a: 'ArrowLeft', d: 'ArrowRight', ' ': 'Elevate', c: 'Descend' };

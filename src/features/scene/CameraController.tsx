@@ -620,7 +620,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     const handler = (event: Event) => {
       const subject = event.type === 'camera-subject' ? (event as CustomEvent<string>).detail : null;
       const key = subject ? '' : (event as CustomEvent<{ key: string }>).detail.key;
-      const pilot = key === 'drone-pilot' || key === 'drone-level';
+      const pilot = key === 'drone-pilot' || key === 'drone-level' || key === 'animal-drone-fpv' || subject === 'drone' && modeRef.current === 'fpv';
       const match = /^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.exec(pilot ? 'animal-drone-fpv' : key);
       if (!subject && !match) return;
       if (planeModeRef.current || cameraState.isXR || cameraState.isIntroRunning) return;
@@ -628,6 +628,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       pendingInitialSubject.current = null;
       const id = subject ? resolveCameraSubject(subject)! : match![1];
       const requestedMode = subject ? modeRef.current === 'fpv' ? 'fpv' : 'follow' : match![2] as 'fpv' | 'follow';
+      useSceneStore.getState().setArrowControl(requestedMode === 'fpv' ? 'character' : 'camera');
       if (id === 'character') {
         cameraState.animalTarget = null;
         useDroneControlStore.getState().setPiloting(false);
