@@ -96,7 +96,9 @@ export function useCameraFrameUpdate({
         if (keys.current.has('ArrowRight') || keys.current.has('camera:ArrowRight')) orbitYaw.current += 0.03 * dt;
         if (keys.current.has('ArrowUp') || keys.current.has('camera:ArrowUp')) orbitPitch.current = Math.min(1.45, orbitPitch.current + 0.03 * dt);
         if (keys.current.has('ArrowDown') || keys.current.has('camera:ArrowDown')) orbitPitch.current = Math.max(-0.6, orbitPitch.current - 0.03 * dt);
+        cameraState.isUserMovingCamera = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(a => keys.current.has(a) || keys.current.has('camera:' + a)) || keys.current.has('CtrlArrowUp') || keys.current.has('CtrlArrowDown');
       } else {
+        cameraState.isUserMovingCamera = false;
         if (keys.current.has('camera:ArrowLeft')) orbitYaw.current += 0.03 * dt;
         if (keys.current.has('camera:ArrowRight')) orbitYaw.current -= 0.03 * dt;
         if (keys.current.has('camera:ArrowUp')) followPitch.current = Math.min(1.4, followPitch.current + 0.02 * dt);
@@ -114,6 +116,10 @@ export function useCameraFrameUpdate({
     const cameraArrow = (key: string) => k.has('camera:' + key) || (!movesCharacter && k.has(key));
     const hasCameraArrow = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(cameraArrow);
     const manualMove = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(characterArrow);
+    cameraState.isUserMovingCamera = hasCameraArrow
+      || k.has('ShiftArrowLeft') || k.has('ShiftArrowRight') || k.has('ShiftArrowUp') || k.has('ShiftArrowDown')
+      || ((modeRef.current === 'top' || modeRef.current === 'iso') && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].some(a => k.has(a)))
+      || k.has('PageUp') || k.has('PageDown');
     if (cameraState.isAIControlled) {
       followPos.current.x = cameraState.characterX;
       followPos.current.z = cameraState.characterZ;

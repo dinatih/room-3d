@@ -671,6 +671,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     }
     dragging.current = false;
     cameraState.isDragging = false;
+    cameraState.isUserMovingCamera = false;
     keys.current.clear();
     const ctrl = ctrlRef.current;
     if (ctrl) {

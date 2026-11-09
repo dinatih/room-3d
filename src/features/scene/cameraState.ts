@@ -28,6 +28,7 @@ export const cameraState = {
   isMoving:  false as boolean,
   isInventoryOpen: false as boolean,
   isDragging: false as boolean,
+  isUserMovingCamera: false as boolean,
   isAIControlled: false as boolean,
   /** Timestamp de la dernière action manuelle utilisateur (flèches clavier, clic VR) */
   lastUserControlTime: 0 as number,

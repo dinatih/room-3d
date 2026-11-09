@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { MOUSE, Vector3, Quaternion, DoubleSide, RingGeometry, CircleGeometry, MeshBasicMaterial, LineDashedMaterial, type Group, type Mesh, type LineSegments } from 'three';
+import { MOUSE, DoubleSide, RingGeometry, CircleGeometry, MeshBasicMaterial, LineDashedMaterial, type Group, type Mesh, type LineSegments } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { cameraState } from '../cameraState';
 import type { CameraZoomDetail } from './types';
@@ -26,7 +26,6 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
     const lineRef = useRef<LineSegments>(null);
     const linePositions = useMemo(() => new Float32Array(6), []);
     const interacting = useRef(false);
-    const previousPose = useRef({ position: new Vector3(), target: new Vector3(), rotation: new Quaternion(), initialized: false });
     const attachRef = useCallback((value: OrbitControlsImpl | null) => {
       setControls(value);
       if (typeof forwardedRef === 'function') forwardedRef(value);
@@ -36,22 +35,7 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
     useFrame(({ camera, viewport, size }) => {
       const helperGroup = helper.current;
       if (!helperGroup || !controls) return;
-      const previous = previousPose.current;
-      const precision = Number.EPSILON * Math.max(1, camera.position.lengthSq(), controls.target.lengthSq());
-      const rotationDelta = (previous.rotation.x - camera.quaternion.x) ** 2 +
-        (previous.rotation.y - camera.quaternion.y) ** 2 +
-        (previous.rotation.z - camera.quaternion.z) ** 2 +
-        (previous.rotation.w - camera.quaternion.w) ** 2;
-      const moved = previous.initialized && (
-        previous.position.distanceToSquared(camera.position) > precision ||
-        previous.target.distanceToSquared(controls.target) > precision ||
-        rotationDelta > Number.EPSILON
-      );
-      previous.position.copy(camera.position);
-      previous.target.copy(controls.target);
-      previous.rotation.copy(camera.quaternion);
-      previous.initialized = true;
-      helperGroup.visible = (interacting.current || cameraState.isDragging || moved) &&
+      helperGroup.visible = (interacting.current || cameraState.isDragging || cameraState.isUserMovingCamera) &&
         !cameraState.isIntroRunning && !cameraState.isXR && cameraState.mode !== 'fpv' && cameraState.mode !== 'plane';
       if (!helperGroup.visible) return;
 
