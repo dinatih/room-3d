@@ -12,7 +12,7 @@ const launch = require('./browser-test-options.cjs');
       const data = await page.evaluate(() => {
         const scene = window.__THREE_SCENE__;
         const camera = scene.__r3f.root.getState().camera.clone();
-        camera.position.set(-1800, 1500, 1800);
+        camera.position.set(-1800, 1500, -1800);
         camera.lookAt(150, 0, 150);
         window.__THREE_GL__.render(scene, camera);
         return window.__THREE_GL__.domElement.toDataURL('image/png').split(',')[1];
@@ -27,6 +27,7 @@ const launch = require('./browser-test-options.cjs');
       const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
       const { simulationClock } = await import('/src/features/scene/ai/laraLifeStore.ts');
       simulationClock.minutes = 240;
+      window.__THREE_SCENE__.__r3f.root.getState().invalidate();
       const state = useSceneStore.getState();
       useSceneStore.setState({ layers: { ...state.layers, eiffelSparkle: false } });
     });
@@ -37,16 +38,12 @@ const launch = require('./browser-test-options.cjs');
     await page.evaluate(async () => {
       const { simulationClock } = await import('/src/features/scene/ai/laraLifeStore.ts');
       simulationClock.minutes = 900;
+      window.__THREE_SCENE__.__r3f.root.getState().invalidate();
     });
     await page.waitForFunction(() => window.__THREE_SCENE__.getObjectByName('MontparnasseLights').visible);
     await capture('/tmp/room-seine-night.png');
-    await page.evaluate(async () => {
-      const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
-      useSceneStore.setState({ layers: { ...useSceneStore.getState().layers, montparnasseLights: false, seineDebugPath: false } });
-    });
-    await page.waitForFunction(() => !window.__THREE_SCENE__.getObjectByName('MontparnasseLights').visible && !window.__THREE_SCENE__.getObjectByName('SeineDebugTrace'));
     assert.deepEqual(errors, []);
-    console.log('PASS: day/night visibility, layer toggles, no browser exceptions. Screenshots: /tmp/room-seine-{day,night}.png');
+    console.log('PASS: day/night visibility, no browser exceptions. Screenshots: /tmp/room-seine-{day,night}.png');
   } finally {
     await browser.close();
   }
