@@ -11,10 +11,10 @@ it('réserve les monuments au panorama Paris de nuit et respecte leurs calques',
       react: { useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
       '@react-three/fiber': { useFrame: fn => { frame = fn; } },
       './astronomy': { simulatedHour: () => 12, daylight: () => light },
-      './store/useSceneStore': { useSceneStore: select => select({ currentHdri, layers: { montparnasseLights: enabled, bnfLights: enabled, arcLights: enabled, bridgeLights: enabled, champDeMarsLights: enabled, avenueLights: enabled, boisLights: enabled } }) },
+      './store/useSceneStore': { useSceneStore: select => select({ currentHdri, layers: { montparnasseLights: enabled, bnfLights: enabled, arcLights: enabled, bridgeLights: enabled, bankLights: enabled, champDeMarsLights: enabled, avenueLights: enabled, boisLights: enabled } }) },
     });
     const monuments = ParisLandmarkLights({ skyRadius: 3600 });
-    assert.equal(monuments.length, 7);
+    assert.equal(monuments.length, 8);
     for (const monument of monuments) {
       refs = [];
       const tree = monument.type(monument.props);

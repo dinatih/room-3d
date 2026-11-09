@@ -94,6 +94,7 @@ export interface LayerState {
   bnfLights?: boolean;
   arcLights?: boolean;
   bridgeLights?: boolean;
+  bankLights?: boolean;
   champDeMarsLights?: boolean;
   avenueLights?: boolean;
   boisLights?: boolean;

@@ -3,6 +3,11 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './astronomy';
+import { SKY_CENTER } from './skyBounds';
+
+// Point visé dans le studio, converti dans le repère local du dôme.
+const STUDIO_BEACON_TARGET = new THREE.Vector3(300, 160, 50).sub(new THREE.Vector3(...SKY_CENTER));
+const BEACON_PERIOD_SECONDS = 24;
 
 // Structure visible relevée dans le HDR 7978 × 3989, sans remplir les arches.
 const STRUCTURE = [
@@ -41,8 +46,8 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     const positions: number[] = [];
     for (const path of STRUCTURE) for (let i = 1; i < path.length; i++) {
       const [x, y] = path[i - 1], [endX, endY] = path[i];
-      // Deux pixels du HDR 8k entre les points gardent la structure fine.
-      const steps = Math.ceil(Math.hypot(endX - x, endY - y) / 2);
+      // Espacement doublé : moitié moins de points sur les contours.
+      const steps = Math.ceil(Math.hypot(endX - x, endY - y) / 4);
       for (let step = 0; step < steps; step++) positions.push(...panoramaPoint(x + (endX - x) * step / steps, y + (endY - y) * step / steps, radius).toArray());
     }
     const geometry = new THREE.BufferGeometry();
@@ -56,8 +61,8 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         attribute float aPhase;
         varying float vFlash;
         void main() {
-          vFlash = pow(max(0.0, sin(uTime * (0.9 + 0.5 * sin(aPhase)) + aPhase)), 48.0);
-          gl_PointSize = 2.2 + 2.8 * vFlash;
+          vFlash = pow(max(0.0, sin(uTime * (0.9 + 0.5 * sin(aPhase)) + aPhase)), 96.0);
+          gl_PointSize = 2.2 + 7.8 * vFlash;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }`,
       fragmentShader: `
@@ -71,7 +76,9 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
     });
     const vertices: number[] = [], coordinates: number[] = [];
-    const length = 3900, halfWidth = 14, tilt = THREE.MathUtils.degToRad(2.2);
+    const toStudio = STUDIO_BEACON_TARGET.clone().sub(summit);
+    const length = toStudio.length() + 900, halfWidth = 40;
+    const tilt = Math.atan2(toStudio.y, Math.hypot(toStudio.x, toStudio.z));
     for (const direction of [-1, 1]) {
       const x = direction * length * Math.cos(tilt), y = length * Math.sin(tilt);
       vertices.push(0, 0, 0, x, y, -halfWidth, x, y, halfWidth,
@@ -92,13 +99,13 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
         uniform float uOpacity;
         varying vec2 vBeam;
         void main() {
-          float fade = pow(1.0 - abs(vBeam.x), 2.0) * pow(1.0 - vBeam.y, 2.0);
+          float fade = pow(1.0 - abs(vBeam.x), 2.0) * exp(-vBeam.y * 1.2) * (1.0 - smoothstep(0.92, 1.0, vBeam.y));
           gl_FragColor = vec4(0.72, 0.83, 1.0, uOpacity * fade);
         }`,
       side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
     });
     return [geometry, material, beamGeometry, beamShader];
-  }, [radius]);
+  }, [radius, summit]);
   useEffect(() => () => { structure.dispose(); lighting.dispose(); beam.dispose(); beamMaterial.dispose(); }, [structure, lighting, beam, beamMaterial]);
 
   useFrame(({ clock }) => {
@@ -106,15 +113,16 @@ export function EiffelTowerLights({ skyRadius = 3600 }: { skyRadius?: number }) 
     if (groupRef.current) groupRef.current.visible = fade > 0;
     lighting.uniforms.uTime.value = clock.elapsedTime;
     lighting.uniforms.uOpacity.value = fade;
-    beamMaterial.uniforms.uOpacity.value = fade * 0.12;
-    const angle = clock.elapsedTime * Math.PI * 2 / 60;
+    beamMaterial.uniforms.uOpacity.value = fade * 0.45;
+    const angle = clock.elapsedTime * Math.PI * 2 / BEACON_PERIOD_SECONDS;
     if (beaconRef.current) beaconRef.current.rotation.y = angle;
-    if (eastWallLightRef.current) eastWallLightRef.current.intensity = Math.pow(Math.abs(Math.cos(angle + 3.028)), 40) * 8 * fade;
+    const studioAngle = Math.atan2(summit.z - STUDIO_BEACON_TARGET.z, STUDIO_BEACON_TARGET.x - summit.x);
+    if (eastWallLightRef.current) eastWallLightRef.current.intensity = Math.pow(Math.abs(Math.cos(angle - studioAngle)), 40) * 28 * fade;
   });
 
   return (
     <>
-      <pointLight ref={eastWallLightRef} position={[320, 160, 50]} distance={900} decay={1.2} color="#eaf3ff" intensity={0} />
+      <pointLight ref={eastWallLightRef} position={STUDIO_BEACON_TARGET} distance={900} decay={1.2} color="#eaf3ff" intensity={0} />
       <group ref={groupRef} name="EiffelTowerLights" visible={false}>
         <points geometry={structure} material={lighting} renderOrder={-960} />
         <group position={summit}>

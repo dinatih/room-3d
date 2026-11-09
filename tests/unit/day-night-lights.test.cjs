@@ -70,6 +70,7 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
     three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
     react: { useEffect() {}, useMemo: fn => fn(), useRef: value => { const ref = { current: value }; refs.push(ref); return ref; } },
     '@react-three/fiber': { useFrame: fn => { frame = fn; } },
+    './skyBounds': { SKY_CENTER: [150, 0, 150] },
     './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight: hour => hour === 8 ? 1 : 0 },
     './store/useSceneStore': { useSceneStore: select => select({ currentHdri: 'default', layers: { eiffelSparkle: true } }) },
   });
@@ -84,6 +85,17 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
   assert.equal(refs[0].current.visible, false); assert.equal(light.props.ref.current.intensity, 0);
   clock.minutes = 12 * 60; frame({ clock: { elapsedTime: 1 } }, 1 / 60);
   assert.equal(refs[0].current.visible, true); assert(light.props.ref.current.intensity > 0);
+  const summit = visuals.props.children[1].props.position;
+  const toStudio = light.props.position.clone().sub(summit);
+  const aim = Math.atan2(-toStudio.z, toStudio.x);
+  frame({ clock: { elapsedTime: aim * 24 / (2 * Math.PI) } });
+  const beam = visuals.props.children[1].props.children.props.children.props.geometry.attributes.position;
+  const end = new THREE.Vector3().fromBufferAttribute(beam, 7).add(new THREE.Vector3().fromBufferAttribute(beam, 8)).multiplyScalar(0.5);
+  end.applyAxisAngle(new THREE.Vector3(0, 1, 0), refs[1].current.rotation.y).setLength(toStudio.length());
+  assert(end.distanceTo(toStudio) < 0.001, 'le centre du faisceau traverse réellement la cible dans le studio');
+  assert.equal(light.props.ref.current.intensity, 28);
+  frame({ clock: { elapsedTime: (aim + Math.PI / 2) * 24 / (2 * Math.PI) } });
+  assert(light.props.ref.current.intensity < 0.001, 'le balayage du mur suit le passage du faisceau');
   clock.minutes = 0; frame({ clock: { elapsedTime: 2 } }, 1 / 60);
   assert.equal(refs[0].current.visible, false); assert.equal(light.props.ref.current.intensity, 0);
   assert.equal(structure.props.material.uniforms.uOpacity.value, 0);
