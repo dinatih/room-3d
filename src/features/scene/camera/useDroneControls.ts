@@ -67,7 +67,7 @@ export function useDroneControls(preview: boolean) {
       if (event.pointerId !== pointer) return;
       recordSubjectCommand('drone');
       droneInput.yaw -= (event.clientX - lastX) * MOUSE_SENS;
-      droneInput.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, droneInput.pitch - (event.clientY - lastY) * MOUSE_SENS));
+      droneInput.pitch = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, droneInput.pitch - (event.clientY - lastY) * MOUSE_SENS));
       lastX = event.clientX;
       lastY = event.clientY;
       invalidate();

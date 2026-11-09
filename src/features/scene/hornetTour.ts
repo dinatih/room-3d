@@ -256,7 +256,9 @@ export class HornetTour {
     if (this.direction.lengthSq() === 0) return;
     // A vertical view retains its yaw, avoiding a singular lookAt/up-vector combination.
     const yaw = horizontal > GEOMETRY_EPSILON ? Math.atan2(this.direction.x, this.direction.z) : this.euler.setFromQuaternion(quaternion, 'YXZ').y;
-    this.rotation.setFromEuler(this.euler.set(Math.atan2(-this.direction.y, horizontal), yaw, 0));
+    const rawPitch = horizontal > GEOMETRY_EPSILON ? Math.atan2(-this.direction.y, horizontal) : 0;
+    const pitch = MathUtils.clamp(rawPitch, -0.12, 0.12);
+    this.rotation.setFromEuler(this.euler.set(pitch, yaw, 0));
     quaternion.rotateTowards(this.rotation, TURN_SPEED * delta);
   }
   tick(position: Vector3, quaternion: Quaternion, delta: number): void {

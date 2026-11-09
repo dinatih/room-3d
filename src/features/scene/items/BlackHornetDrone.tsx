@@ -232,7 +232,7 @@ export function BlackHornetDrone({
       const turn = Math.PI / 2 * delta; // 90°/s, indépendamment de la répétition clavier.
       const rotating = (key: string) => keys.has('camera:' + key) || keys.has('Alt') && keys.has(key);
       droneInput.yaw += (Number(rotating('ArrowLeft')) - Number(rotating('ArrowRight'))) * turn;
-      droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(rotating('ArrowUp')) - Number(rotating('ArrowDown'))) * turn, -Math.PI / 2, Math.PI / 2);
+      droneInput.pitch = THREE.MathUtils.clamp(droneInput.pitch + (Number(rotating('ArrowUp')) - Number(rotating('ArrowDown'))) * turn, -Math.PI / 6, Math.PI / 6);
       const speed = useDroneControlStore.getState().speed * (droneInput.keys.has('Shift') ? 3 : 1);
       droneMovement(droneInput.keys, droneInput.yaw, droneInput.pitch, moveDirection.current);
       model.position.addScaledVector(moveDirection.current, speed * delta);

@@ -641,7 +641,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       cameraState.animalTarget = id;
       if (pilot && !useDroneControlStore.getState().piloting) {
         droneInput.yaw = Math.atan2(view.forward.x, view.forward.z);
-        droneInput.pitch = Math.asin(view.forward.y);
+        droneInput.pitch = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, Math.asin(view.forward.y)));
       }
       if (key === 'drone-level') droneInput.pitch = 0;
       useDroneControlStore.getState().setPiloting(pilot);

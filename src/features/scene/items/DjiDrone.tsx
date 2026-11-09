@@ -33,10 +33,10 @@ function createDroneClips(nodeName = 'DronePivot'): THREE.AnimationClip[] {
   ]);
 
   const flyTimes = [0, 0.75, 1.5];
-  const flyPitch = -0.20;
-  const qFly0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, -0.03));
-  const qFly1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, 0.03));
-  const flyPos = [0, 0, 0.6, 0, 0.3, -0.6, 0, 0, 0.6];
+  const flyPitch = 0.10;
+  const qFly0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, -0.015));
+  const qFly1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(flyPitch, 0, 0.015));
+  const flyPos = [0, 0, 0.2, 0, 0.1, -0.2, 0, 0, 0.2];
   const flyRots = [
     qFly0.x, qFly0.y, qFly0.z, qFly0.w,
     qFly1.x, qFly1.y, qFly1.z, qFly1.w,
@@ -48,13 +48,18 @@ function createDroneClips(nodeName = 'DronePivot'): THREE.AnimationClip[] {
   ]);
 
   const scanTimes = [0, 1.0, 2.0, 3.0, 4.0];
-  const scanRots: number[] = [];
-  for (let i = 0; i <= 4; i++) {
-    const yaw = (i / 4) * Math.PI * 2;
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.08, yaw, 0));
-    scanRots.push(q.x, q.y, q.z, q.w);
-  }
-  const scanPos = [0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, -0.5, 0, 0, 0, 0];
+  const qScan0 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0));
+  const qScan1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.02, 0.15, 0));
+  const qScan2 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0));
+  const qScan3 = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.02, -0.15, 0));
+  const scanRots = [
+    qScan0.x, qScan0.y, qScan0.z, qScan0.w,
+    qScan1.x, qScan1.y, qScan1.z, qScan1.w,
+    qScan2.x, qScan2.y, qScan2.z, qScan2.w,
+    qScan3.x, qScan3.y, qScan3.z, qScan3.w,
+    qScan0.x, qScan0.y, qScan0.z, qScan0.w,
+  ];
+  const scanPos = [0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, -0.3, 0, 0, 0, 0];
   const scanClip = new THREE.AnimationClip('Drone_Scan', 4.0, [
     new THREE.VectorKeyframeTrack(`${nodeName}.position`, scanTimes, scanPos, THREE.InterpolateSmooth),
     new THREE.QuaternionKeyframeTrack(`${nodeName}.quaternion`, scanTimes, scanRots, THREE.InterpolateLinear),
