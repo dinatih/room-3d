@@ -97,9 +97,9 @@ export function BathroomEquipment() {
         <TradfriBulb actionState={{ on: !!as['lamp-bath-toggle'], lightColor: color, brightness }} />
         <pointLight
           position={[0, 20, 0]}
-          intensity={as['lamp-bath-toggle'] ? (fullLight ? 120 : 2.5) * brightness : 0}
-          distance={fullLight ? 0 : 280}
-          decay={fullLight ? 1.0 : 2.0}
+          intensity={as['lamp-bath-toggle'] ? (fullLight ? 20 : 2) * 100 ** 2 * brightness : 0}
+          distance={fullLight ? 0 : 350}
+          decay={2}
           color={color}
           castShadow={lightsHD}
           shadow-mapSize={[1024, 1024]}
