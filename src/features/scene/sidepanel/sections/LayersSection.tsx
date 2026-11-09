@@ -156,6 +156,8 @@ export function LayersSection({
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-building', 'Lumières Tour Montparnasse'), 'montparnasseLights')}
+      {currentHdri === 'default' && layerBtn(iconLabel('bi-buildings', 'Lumières BnF'), 'bnfLights')}
+      {currentHdri === 'default' && layerBtn(iconLabel('bi-bank', 'Lumières Arc de Triomphe'), 'arcLights')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-water', 'Péniches Seine (Nuit) 🚢'), 'seineBoats')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-bezier2', 'Tracé Seine (Debug) 🌊'), 'seineDebugPath')}
       {layerBtn('Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}

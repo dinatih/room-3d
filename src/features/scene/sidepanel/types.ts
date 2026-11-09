@@ -91,6 +91,8 @@ export interface LayerState {
   bnfMarker?: boolean;
   eiffelSparkle?: boolean;
   montparnasseLights?: boolean;
+  bnfLights?: boolean;
+  arcLights?: boolean;
   seineBoats?: boolean;
   seineDebugPath?: boolean;
   equipment: boolean;
