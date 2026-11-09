@@ -157,13 +157,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         rotY: Math.PI,
         animationsRandom: 'seated-front',
       },
-      // {
-      //   slotId: 'seat-south',
-      //   name: 'S\'asseoir (Sud)',
-      //   offset: [-70, 0, -15],
-      //   rotY: Math.PI,
-      //   animationsRandom: 'seated-front',
-      // },
+      {
+        slotId: 'seat-south',
+        name: 'S\'asseoir (Sud)',
+        offset: [-70, 0, -15],
+        approachOffset: [0, 0, -40 - HUMAN_BODY_RADIUS],
+        rotY: Math.PI,
+        animationsRandom: 'seated-front',
+      },
       {
         slotId: 'lie-down',
         excludes: ['seat-north', 'seat-middle'],

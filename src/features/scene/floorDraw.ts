@@ -28,7 +28,7 @@ import {
 const PAD = 20;
 export const PLAN_X_MIN = BATH_WEST_WALL - PAD;
 export const PLAN_X_MAX = ROOM_W + PAD;
-export const PLAN_Z_MIN = -450;
+export const PLAN_Z_MIN = -650;
 export const PLAN_Z_MAX = 770;
 export const PLAN_ASPECT = (PLAN_Z_MAX - PLAN_Z_MIN) / (PLAN_X_MAX - PLAN_X_MIN);
 

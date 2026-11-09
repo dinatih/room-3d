@@ -40,10 +40,10 @@ export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
 
 export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
   { x: 136, z: 18, ry: Math.PI     },
-  { x: EAST_DESK_X, z: EAST_DESK2_Z, ry: -Math.PI / 2 },
+  { x: EAST_DESK_X, z: EAST_DESK2_Z, ry: Math.PI / 2 },
   { x: 240, z: 120, ry: Math.PI     },
   { x: 73.5, z: 18, ry: Math.PI     },
-  { x: DIMPA_DESK_X, z: 155 + DESK_WIDTH, ry: Math.PI / 2 },
+  { x: DIMPA_DESK_X, z: 155 + DESK_WIDTH, ry: -Math.PI / 2 },
 ];
 
 export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
