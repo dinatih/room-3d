@@ -8,8 +8,6 @@ const LAT    = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
 
 const AZ_DEG = parseFloat(import.meta.env.VITE_STUDIO_AZ  ?? '90');
 
-// ── Calcul de la position solaire ─────────────────────────────────────────────
-
 // ── Couleur et intensité selon l'élévation ────────────────────────────────────
 
 function sunParams(el: number): { color: Color; intensity: number } {
@@ -30,7 +28,13 @@ export function SunLight() {
     const hour = simulatedHour();
     const elevation = solarElevation(hour);
     const direction = sunDir(hour);
-    lightRef.current.position.set(direction.x, direction.y, direction.z);
+    // Le volume d’ombres couvre la sphère du monde, dans toutes les directions.
+    // La lumière reste en amont de ce volume, indépendamment du disque visible.
+    lightRef.current.position.set(
+      SKY_CENTER[0] + (direction.x - SKY_CENTER[0]) * (2 * SKY_RADIUS / SPHERE_D),
+      SKY_CENTER[1] + (direction.y - SKY_CENTER[1]) * (2 * SKY_RADIUS / SPHERE_D),
+      SKY_CENTER[2] + (direction.z - SKY_CENTER[2]) * (2 * SKY_RADIUS / SPHERE_D),
+    );
     const { color, intensity } = sunParams(elevation);
     lightRef.current.color.copy(color);
     lightRef.current.intensity = intensity;
@@ -43,11 +47,11 @@ export function SunLight() {
       castShadow
       shadow-mapSize={[2048, 2048]}
       shadow-camera-near={1}
-      shadow-camera-far={3000}
-      shadow-camera-left={-1200}
-      shadow-camera-right={1200}
-      shadow-camera-top={1200}
-      shadow-camera-bottom={-1200}
+      shadow-camera-far={3 * SKY_RADIUS}
+      shadow-camera-left={-SKY_RADIUS}
+      shadow-camera-right={SKY_RADIUS}
+      shadow-camera-top={SKY_RADIUS}
+      shadow-camera-bottom={-SKY_RADIUS}
       shadow-bias={-0.0002}
       shadow-normalBias={0.04}
     />
