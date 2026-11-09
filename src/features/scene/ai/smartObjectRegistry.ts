@@ -15,7 +15,7 @@ import { DRONA_SE_ITEMS, KALLAX_SE_DRONA_POSITIONS } from '../items/kallaxSeDron
 import { DRONA_SPECIAL_ITEMS } from '../items/dronaStorage';
 import { getAnimationDef } from '../animations/animationResolver';
 import { positionState } from '../positionState';
-import { DOUBLE_BED_POSITIONS, BED_FRAME_WIDTH, BED_FRAME_LENGTH } from '../furniturePositions';
+import { DOUBLE_BED_POSITIONS, SINGLE_BED_POSITIONS, BED_FRAME_WIDTH, BED_FRAME_LENGTH } from '../furniturePositions';
 import { BATHROOM_STORAGE_ITEMS, BATHROOM_BOX_APPROACH } from '../items/bathroomStorage';
 import { KITCHEN_DRONA_ITEMS, KALLAX_CUISINE_DRONA_POSITIONS } from '../items/kallaxCuisineDrona';
 import { BATHTUB } from '../bathtubData';
@@ -69,6 +69,14 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       duoPool: ['conversation', 'interx-g022t008a029r019', 'interx-g041t009a029r008'], duoCount: 1 }],
   },
   // ── LITS ───────────────────────────────────────────────────────────────────
+  'bed-arrangement': {
+    id: 'bed-arrangement', name: 'Préparer les lits', category: 'storage', exclusive: true,
+    position: [ROOM_W / 2, 0, Math.max(SINGLE_BED_POSITIONS.west.z, SINGLE_BED_POSITIONS.east.z) + BED_FRAME_LENGTH / 2 + HUMAN_BODY_RADIUS * 2],
+    slots: [
+      { slotId: 'double', name: 'Préparer le lit double', animation: 'lifting', triggerEventKey: 'bed-double', triggerEventValue: true },
+      { slotId: 'single', name: 'Ranger en lits simples', animation: 'lifting', triggerEventKey: 'bed-double', triggerEventValue: false },
+    ],
+  },
   'bed-double': {
     id: 'bed-double',
     name: 'Lit Utåker Double',

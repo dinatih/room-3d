@@ -3,6 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { ReactNode } from 'react';
 import { currentFurnitureTransforms, movingFurniture } from '../furniturePositions';
+import { furnitureActorBlock } from '../ai/bedLayout';
+import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 
 const SPEED    = 0.09;  // lerp factor (ease-out)
 const SNAP_POS = 0.4;   // cm — seuil de snap
@@ -14,7 +16,7 @@ export function PositionTransition({
   z,
   ry = 0,
   arc = false,
-  furnitureKey,
+  furnitureKey: sourceFurnitureKey,
   children,
 }: {
   x: number;
@@ -25,6 +27,7 @@ export function PositionTransition({
   furnitureKey?: string;
   children: ReactNode;
 }) {
+  const furnitureKey = useNavigationEnabled() ? sourceFurnitureKey : undefined;
   const groupRef       = useRef<THREE.Group>(null!);
   const { invalidate } = useThree();
   const current        = useRef({ x, y, z, ry });
@@ -71,6 +74,11 @@ export function PositionTransition({
     let dry = targetRy - c.ry;
     while (dry > Math.PI) dry -= 2 * Math.PI;
     while (dry < -Math.PI) dry += 2 * Math.PI;
+
+    if (furnitureKey && isAnimating.current && furnitureActorBlock(furnitureKey, c, { x: c.x + dx * SPEED, y: c.y + dy * SPEED, z: c.z + dz * SPEED, ry: c.ry + dry * SPEED })) {
+      invalidate();
+      return;
+    }
 
     if (Math.abs(dx) > SNAP_POS || Math.abs(dy) > SNAP_POS || Math.abs(dz) > SNAP_POS || Math.abs(dry) > SNAP_ROT) {
       isAnimating.current = true;

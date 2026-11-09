@@ -8,15 +8,39 @@ function fixture() {
     const objects = { living: { id: 'living', position: [100, 0, 100], slots }, outside: { id: 'outside', position: [100, 0, -100], slots: [{ slotId: 'use', offset: [100, 0, -100] }] } };
     objects.corridor = { id: 'corridor', position: [250, 0, 550], slots: slots.map(slot => ({ ...slot, offset: [250, 0, 550] })) };
     for (const id of ['toilet', 'vasque-sdb', 'sdb-closet', 'shower', 'storage-box']) objects[id] = { id, position: [100, 0, 550], slots: [{ slotId: 'use', offset: [100, 0, 550], approachOffset: [250, 0, 550] }] };
-    const camera = { positions: {} }, store = { activeCharacterId: 'player', desk2ScreenActive: false, extraStates: { desk2Screen: false } };
+    const camera = { positions: {} }, store = { activeCharacterId: 'player', desk2ScreenActive: false, furniture: { bedDouble: false }, extraStates: { desk2Screen: false } };
+    const movingFurniture = new Set();
     const module = load('src/features/scene/ai/occupancyManager.ts', {
         './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: id => objects[id] },
         '../cameraState': { cameraState: camera }, '../characterConfig': { CHARACTERS: [...ids, 'player', 'ybot'].map(id => ({ id })) },
         '../store/useSceneStore': { useSceneStore: { getState: () => store } },
+        '../furniturePositions': { movingFurniture },
+        '../positionState': { positionState: {} },
         '../wallData': { BATH_WEST_WALL: -10, BATH_EAST_WALL: 195, BATH_NORTH_WALL: 465, ROOM_NORTH_WALL: 0, ROOM_SOUTH_WALL: 400, ROOM_EAST_WALL: 316, CORRIDOR_WEST_WALL: 200, CORRIDOR_EAST_WALL: 316, CORRIDOR_NORTH_WALL: 410, WALL_H: 250, DiagWall: { A: { x: 0, z: 700 }, slope: -0.2 } },
     });
-    return { ids, camera, store, objects, ...module, manager: module.OccupancyManager };
+    return { ids, camera, store, objects, movingFurniture, ...module, manager: module.OccupancyManager };
 }
+
+it('interdit de réserver lits bureaux et chaise pendant leur déplacement', () => {
+    const { manager, movingFurniture } = fixture();
+    for (const [key, ids] of [['bed-west-position', ['bed-west', 'bed-double']], ['bed-east-position', ['bed-east', 'bed-double']],
+        ['desk1-position', ['desk-bollsidan-1']], ['desk2-position', ['desk-bollsidan-2']], ['smorkull-position', ['chair-office']]]) {
+        movingFurniture.add(key);
+        for (const id of ids) assert.equal(manager.canUseObject(id, 'npc-0'), false);
+        assert(manager.canUseObject('outside', 'npc-0'));
+        movingFurniture.clear();
+        for (const id of ids) assert(manager.canUseObject(id, 'npc-0'));
+    }
+});
+
+it('bloque les nouvelles arrivées dès la commande, avant le premier rendu du nouveau lit', () => {
+    const { manager, store } = fixture();
+    store.furniture.bedDouble = true;
+    for (const id of ['bed-west', 'bed-east', 'bed-double', 'desk-bollsidan-2', 'chair-office']) {
+        assert.equal(manager.canUseObject(id, 'npc-0'), false);
+    }
+    assert(manager.canUseObject('outside', 'npc-0'));
+});
 
 it('rend la télé indisponible pendant l’utilisation automatique ou manuelle de l’ordinateur', () => {
     const { manager, store, objects } = fixture();

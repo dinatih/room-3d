@@ -2,35 +2,48 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 
-it('déploie une fois par nuit, respecte 2 h / 6 h et restaure le mobilier', () => {
+it('confie la préparation à un PNJ disponible, attend les occupants et range le matin', () => {
   const simulationClock = { minutes: 0 }, furniture = { bedDouble: false };
-  const positionState = { 'desk1-position': { idx: 2 }, 'desk2-position': { idx: 3 }, 'smorkull-position': { idx: 1 } };
-  let update, selected, selections = 0;
-  const events = [];
-  const fixtures = {
-    simulationClock, positionState,
-    lifeClock: require('../../src/features/scene/ai/laraLife.ts').lifeClock,
-    useLaraLifeStore: { subscribe: fn => { update = fn; return () => { update = undefined; }; } },
-    useSceneStore: { getState: () => ({ furniture, toggleFurniture: () => { furniture.bedDouble = !furniture.bedDouble; } }) },
-    setDoublePosIdx: index => { selected = index; selections++; },
-    document: { dispatchEvent: event => events.push(event.detail) },
-    CustomEvent: class { constructor(type, options) { this.detail = options.detail; } },
-  };
-  const { mount } = load('src/features/scene/placements/LivingRoomPlacements.tsx', { fixtures }, source => {
-    const start = source.indexOf('    let nightDay:');
-    const end = source.indexOf('\n  }, []);', start);
-    return `import { simulationClock, positionState, lifeClock, useLaraLifeStore, useSceneStore, setDoublePosIdx, document, CustomEvent } from 'fixtures';
-      export function mount() { ${source.slice(start, end)} }`;
+  let update, blocked;
+  const commands = [], reservations = [];
+  const life = require('../../src/features/scene/ai/laraLife.ts');
+  const cameraState = { isSceneLaunched: true, positions: { native: { x: 150, y: 0, z: 310 }, cha: { x: 100, y: 0, z: 310 } } };
+  const snapshot = { needs: { rest: 40, meal: 0, toilet: 0, hygiene: 0 }, current: { status: 'IDLE' } };
+  const previousDocument = global.document, previousEvent = global.CustomEvent;
+  global.document = { dispatchEvent: event => {
+    commands.push(event.detail);
+    update(); // Interrupting a life activity publishes synchronously, before reserving the task.
+    reservations.push({ slot: 'bed-arrangement:' + event.detail.slotId, characterId: event.detail.targetId });
+  } };
+  global.CustomEvent = class { constructor(type, options) { this.detail = options.detail; } };
+  const { mountBedRoutine } = load('src/features/scene/ai/bedRoutine.ts', {
+    './laraLifeStore': { simulationClock, useLaraLifeStore: {
+      subscribe: fn => { update = fn; return () => { update = undefined; }; }, getState: () => ({ characters: { native: snapshot, cha: snapshot } }),
+    } },
+    './laraLife': life, '../store/useSceneStore': { useSceneStore: { getState: () => ({ furniture, activeCharacterId: 'player' }) } },
+    '../cameraState': { cameraState }, './occupancyManager': { OccupancyManager: { getReservations: () => reservations }, isInRoom: () => true },
+    './bedLayout': { bedLayoutBlock: () => blocked }, './smartObjectRegistry': { getSmartObject: () => ({ id: 'bed-arrangement', position: [150, 0, 320] }) },
+    './navigation/geometry': require('../../src/features/scene/ai/navigation/geometry.ts'), '@/devLog': {}, '@features/ui/AppConsole': { appLog() {} },
   });
-  const stop = mount();
-  const seek = (hour, day = 2) => { simulationClock.minutes = (day - 1) * 1440 + hour * 60 - 480; update(); };
-  seek(1.99); assert.equal(furniture.bedDouble, false);
-  seek(2); assert.equal(furniture.bedDouble, true); assert.ok(selected === 0 || selected === 1);
-  seek(5.99); assert.equal(selections, 1);
-  seek(6); assert.equal(furniture.bedDouble, false);
-  assert.deepEqual(events, Object.entries(positionState).filter(([key]) => key !== 'smorkull-position').map(([key, state]) => ({ key, index: state.idx })));
-  seek(2, 3); assert.equal(selections, 2); assert.equal(furniture.bedDouble, true);
-  stop(); assert.equal(update, undefined);
+  const stop = mountBedRoutine();
+  const seek = hour => { simulationClock.minutes = hour * 60 - 480; update(); };
+  try {
+    seek(18); assert.equal(commands.length, 0);
+    blocked = 'Lit réservé'; seek(21); assert.equal(commands.length, 0);
+    blocked = undefined; snapshot.needs.rest = 0; seek(21.1); assert.equal(commands.length, 0);
+    snapshot.needs.rest = 40; seek(21.2);
+    assert.deepEqual(commands, [{ targetId: 'native', objectId: 'bed-arrangement', slotId: 'double' }]);
+    assert.equal(furniture.bedDouble, false, 'L’horloge seule ne doit jamais déplacer le lit');
+    seek(22); assert.equal(commands.length, 1, 'Ne pas répéter un ordre au même PNJ');
+    furniture.bedDouble = true;
+    reservations.length = 0;
+    blocked = 'Personnage encore couché'; seek(7); assert.equal(commands.length, 1);
+    blocked = undefined; snapshot.current.smartObjectId = 'toilet'; seek(8); assert.equal(commands.length, 1);
+    delete snapshot.current.smartObjectId; seek(8.1);
+    assert.equal(commands[1].slotId, 'single');
+    assert.equal(furniture.bedDouble, true, 'Le PNJ doit rejoindre le lit avant le rangement');
+    stop(); assert.equal(update, undefined);
+  } finally { global.document = previousDocument; global.CustomEvent = previousEvent; }
 });
 
 it('place les actions dans l’allée opposée au lit et rétablit les points simples', () => {

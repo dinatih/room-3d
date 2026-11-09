@@ -2,7 +2,7 @@ import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getDiyChairParking } from '../ai/diyChairClearance';
 import { getObjectActionIds } from '../objectActions';
 import { useLightAppearance } from '../../home-assistant/useLightAppearance';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
@@ -11,8 +11,9 @@ import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { PositionTransition } from '../utils/PositionTransition';
-import { simulationClock, useLaraLifeStore } from '../ai/laraLifeStore';
-import { lifeClock } from '../ai/laraLife';
+import { mountBedRoutine } from '../ai/bedRoutine';
+import { bedDaytimePositions, bedLayoutBlock } from '../ai/bedLayout';
+import { appLog } from '@features/ui/AppConsole';
 
 import { KallaxNE, KallaxNEDrona } from '../items/KallaxNE';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from '../items/kallaxNeDrona';
@@ -101,39 +102,21 @@ export function Beds() {
   const isDouble = !!toggles['bed-double'];
   const [doublePosIdx, setDoublePosIdx] = useState(0);
 
-  useEffect(() => {
-    let nightDay: number | undefined;
-    let daytimePositions: Record<string, number> = {};
-    const update = () => {
-      const { day, hour } = lifeClock(simulationClock.minutes);
-      const night = hour >= 2 && hour < 6;
-      if (night && nightDay !== day) {
-        nightDay = day;
-        daytimePositions = Object.fromEntries(['desk1-position', 'desk2-position'].map(key => [key, positionState[key]?.idx ?? 0]));
-        setDoublePosIdx(Math.random() < 0.5 ? 0 : 1);
-        if (!useSceneStore.getState().furniture.bedDouble) useSceneStore.getState().toggleFurniture('bedDouble');
-      } else if (!night && nightDay !== undefined) {
-        nightDay = undefined;
-        if (useSceneStore.getState().furniture.bedDouble) useSceneStore.getState().toggleFurniture('bedDouble');
-        for (const [key, index] of Object.entries(daytimePositions)) {
-          document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index } }));
-        }
-      }
-    };
-    update();
-    return useLaraLifeStore.subscribe(update);
-  }, []);
+  useEffect(mountBedRoutine, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const { key } = (e as CustomEvent).detail as { key: string };
       if (key === 'bed-position') {
-        setDoublePosIdx(i => (i + 1) % DOUBLE_BED_POSITIONS.length);
+        const next = (doublePosIdx + 1) % DOUBLE_BED_POSITIONS.length;
+        const reason = bedLayoutBlock(isDouble, next);
+        if (reason) appLog('system', `Réaménagement des lits différé : ${reason}`, { category: 'object', action: 'bed_layout_blocked', reason });
+        else setDoublePosIdx(next);
       }
     };
     document.addEventListener('furniture-toggle', handler);
     return () => document.removeEventListener('furniture-toggle', handler);
-  }, []);
+  }, [isDouble, doublePosIdx]);
 
   useEffect(() => {
     positionState['bed-position'] = { idx: doublePosIdx, total: DOUBLE_BED_POSITIONS.length };
@@ -143,13 +126,19 @@ export function Beds() {
     useSceneStore.setState(state => ({ extraStates: { ...state.extraStates, 'bed-position': doublePosIdx === 1 } }));
   }, [doublePosIdx, isDouble]);
 
+  const previousDouble = useRef(false);
   useEffect(() => {
-    const east = isDouble && doublePosIdx === 1;
-    const positions: Record<string, number> = { 'smorkull-position': east ? SMORKULL_POSITIONS.length - 1 : 0 };
-    if (isDouble) Object.assign(positions, {
+    const keys = ['desk1-position', 'desk2-position', 'smorkull-position'];
+    if (isDouble && !previousDouble.current) {
+      for (const key of keys) bedDaytimePositions[key] = positionState[key]?.idx ?? 0;
+    }
+    const east = doublePosIdx === 1;
+    const positions: Record<string, number> = isDouble ? {
+      'smorkull-position': east ? SMORKULL_POSITIONS.length - 1 : 0,
       'desk1-position': east ? DESK1_POSITIONS.length - 1 : 1,
       'desk2-position': east ? DESK2_POSITIONS.length - 1 : 1,
-    });
+    } : previousDouble.current ? { ...bedDaytimePositions } : {};
+    previousDouble.current = isDouble;
     for (const [key, index] of Object.entries(positions)) {
       document.dispatchEvent(new CustomEvent('furniture-position-set', { detail: { key, index } }));
     }

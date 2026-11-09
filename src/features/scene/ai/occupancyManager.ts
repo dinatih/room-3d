@@ -4,6 +4,8 @@ import { CHARACTERS } from '../characterConfig';
 import { useSceneStore } from '../store/useSceneStore';
 import { BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, ROOM_NORTH_WALL, ROOM_SOUTH_WALL, ROOM_EAST_WALL, CORRIDOR_WEST_WALL, CORRIDOR_EAST_WALL, CORRIDOR_NORTH_WALL, WALL_H, DiagWall } from '../wallData';
 import type { Polygon } from './navigation/geometry';
+import { movingFurniture } from '../furniturePositions';
+import { positionState } from '../positionState';
 
 /**
  * OccupancyManager — Système central de réservation et d'occupation des places assises et objets 3D.
@@ -30,6 +32,11 @@ export const ROOM_FOOTPRINTS: Record<LimitedRoom, Polygon> = {
     { x: CORRIDOR_EAST_WALL, z: diagonalZ(CORRIDOR_EAST_WALL) }, { x: CORRIDOR_WEST_WALL, z: diagonalZ(CORRIDOR_WEST_WALL) }],
 };
 const humanIds = new Set(CHARACTERS.map(character => character.id));
+const MOVING_OBJECT_KEYS: Record<string, string[]> = {
+  'bed-double': ['bed-west-position', 'bed-east-position'], 'bed-west': ['bed-west-position'], 'bed-east': ['bed-east-position'],
+  'desk-bollsidan-1': ['desk1-position'], 'desk-bollsidan-2': ['desk2-position'], 'chair-office': ['smorkull-position'],
+};
+const LAYOUT_KEYS = [...new Set(Object.values(MOVING_OBJECT_KEYS).flat())];
 
 /** Room interiors, independent of the visibility of their geometry. */
 export function isInRoom(room: LimitedRoom, { x, y = 0, z }: { x: number; y?: number; z: number }): boolean {
@@ -54,6 +61,9 @@ class SmartObjectOccupancyManager {
 
   canUseObject(objectId: string, characterId?: string): boolean {
     const state = useSceneStore.getState();
+    if (objectId in MOVING_OBJECT_KEYS && (LAYOUT_KEYS.some(key => movingFurniture.has(key))
+      || state.furniture.bedDouble !== (positionState['bed-double']?.idx === 1)
+      || Boolean(state.extraStates['bed-position']) !== (positionState['bed-position']?.idx === 1))) return false;
     if (objectId === 'tv-view' && (state.desk2ScreenActive || state.extraStates.desk2Screen)) return false;
     const owner = SMART_OBJECTS[objectId]?.ownerCharacterId;
     return !owner || owner === characterId;

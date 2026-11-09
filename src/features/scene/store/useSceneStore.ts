@@ -2,6 +2,9 @@ import { AIR_PERFORMER_CONTROLS, isAirPerformerAction } from '../../home-assista
 import { APPLIANCES, applianceValue } from '../../home-assistant/appliances';
 import { getNextActionValue, toggleObjectAction } from '../objectActionRegistry';
 import { create } from 'zustand';
+import { refuseUnsafeBedLayout } from '../ai/bedLayout';
+import { positionState } from '../positionState';
+import { DOUBLE_BED_POSITIONS } from '../furniturePositions';
 import { GRAPHICS_PRESETS } from './graphicsPresets';
 import { isHomeAssistantLinked, isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
@@ -539,6 +542,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   toggleFurniture: (key) => {
+    if (key === 'bedDouble' && refuseUnsafeBedLayout(!useSceneStore.getState().furniture.bedDouble)) return;
     if (isAirPerformerAction(key)) return useSceneStore.getState().triggerAction(key, undefined, 'user');
     if (isHomeAssistantAction(key) && isHomeAssistantLinked(useHomeAssistant.getState())) {
       const value = key === 'glassDoorV2ShutterPos' ? getNextActionValue(key, useSceneStore.getState().furniture[key]) : undefined;
@@ -740,6 +744,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   triggerAction: (key, targetState, source) => {
+    if (key === 'bed-position' && refuseUnsafeBedLayout(useSceneStore.getState().furniture.bedDouble, ((positionState['bed-position']?.idx ?? 0) + 1) % DOUBLE_BED_POSITIONS.length)) return;
     const lightKey = resolveStoreKey(key).name;
     if (isHomeAssistantAction(lightKey) && isHomeAssistantLinked(useHomeAssistant.getState())) {
       if (source === 'user') {
@@ -788,6 +793,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     const resolved = resolveStoreKey(key);
     if (resolved.type === 'furniture') {
       const fKey = resolved.name as keyof FurnitureState;
+      if (fKey === 'bedDouble' && refuseUnsafeBedLayout(targetState ?? !useSceneStore.getState().furniture.bedDouble)) return;
       set((state) => {
         let nextFurniture: FurnitureState;
         if (fKey === 'glassDoorV2ShutterPos') {

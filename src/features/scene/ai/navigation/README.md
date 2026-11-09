@@ -77,6 +77,14 @@ n'est jamais traversée avant son ouverture effective.
 
 ## Mobilier et actions
 
+Les lits ne changent plus de configuration à heure fixe. Le soir, lorsqu'une
+colocataire commence à fatiguer, une PNJ disponible rejoint le point de
+préparation et assemble le lit double. Le matin, une PNJ disponible sépare
+les lits et rétablit les positions précédentes des bureaux et de la chaise.
+Les réservations, les personnages présents et le trajet balayé par le mobilier
+peuvent reporter ces actions. Pendant le mouvement, le mobilier concerné
+refuse les nouvelles réservations et s'arrête si un acteur entre sur son passage.
+
 Les points duo libres vérifient l'ancre et les positions des deux participants
 pour toute la playlist avant de réserver les places. Un changement de clip ne
 doit pas laisser un participant dans un obstacle à la fin de la séquence.
