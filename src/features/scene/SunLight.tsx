@@ -1,54 +1,14 @@
-import { simulatedHour } from './DayNight';
-/**
- * SunLight.tsx — directional light calée sur la position réelle du soleil.
- *
- * Algorithme USNO simplifié (~1° de précision) :
- *   longitude écliptique → RA/déclinaison → angle horaire → alt/az.
- *
- * La direction ENU résultante est ensuite convertie dans le repère de la
- * scène via la même rotation enuToRoom que RealWorldLayer (VITE_STUDIO_AZ).
- */
-
-import { useRef, useEffect, useLayoutEffect } from 'react';
-import { useThree } from '@react-three/fiber';
+import { simulatedHour, solarElevation } from './DayNight';
+import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils } from 'three';
 
 const LAT    = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
-const LNG    = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
+
 const AZ_DEG = parseFloat(import.meta.env.VITE_STUDIO_AZ  ?? '90');
 
 // ── Calcul de la position solaire ─────────────────────────────────────────────
-
-export function solarPosition(lat: number, lng: number, date: Date) {
-  const JD = date.getTime() / 86400000 + 2440587.5;
-  const n  = JD - 2451545.0; // jours depuis J2000.0
-
-  const L  = ((280.460 + 0.9856474 * n) % 360 + 360) % 360;
-  const g  = MathUtils.degToRad(((357.528 + 0.9856003 * n) % 360 + 360) % 360);
-  const lam = MathUtils.degToRad(L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g));
-  const eps = MathUtils.degToRad(23.439 - 0.0000004 * n);
-
-  const dec = Math.asin(Math.sin(eps) * Math.sin(lam));
-  const RA  = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
-
-  const GMST = ((6.697375 + 0.0657098242 * n) % 24 + 24) % 24;
-  const utH  = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
-  const LST  = (GMST + utH * 1.00274) % 24 + lng / 15;
-  const HA   = MathUtils.degToRad(((LST * 15) - MathUtils.radToDeg(RA) + 360) % 360);
-
-  const phiR  = MathUtils.degToRad(lat);
-  const sinEl = Math.sin(phiR) * Math.sin(dec) + Math.cos(phiR) * Math.cos(dec) * Math.cos(HA);
-  const elRad = Math.asin(Math.max(-1, Math.min(1, sinEl)));
-
-  const cosAz = (Math.sin(dec) - Math.sin(elRad) * Math.sin(phiR)) / (Math.cos(elRad) * Math.cos(phiR));
-  let azRad = Math.acos(Math.max(-1, Math.min(1, cosAz)));
-  if (Math.sin(HA) > 0) azRad = 2 * Math.PI - azRad;
-
-  return {
-    elevation: MathUtils.radToDeg(elRad),  // °  au-dessus de l'horizon
-    azimuth:   MathUtils.radToDeg(azRad),  // °  depuis le Nord, sens horaire
-  };
-}
 
 // ── Couleur et intensité selon l'élévation ────────────────────────────────────
 
@@ -64,41 +24,17 @@ function sunParams(el: number): { color: Color; intensity: number } {
 
 export function SunLight() {
   const lightRef = useRef<DirectionalLight>(null!);
-  const { invalidate } = useThree();
-
-  useLayoutEffect(() => {
-    function update() {
-      if (!lightRef.current) return;
-      const { azimuth, elevation } = solarPosition(LAT, LNG, (() => { const date = new Date('2026-03-20T00:00:00Z'); date.setUTCHours(0, simulatedHour() * 60 - LNG * 4); return date; })());
-
-      // Direction ENU vers le soleil
-      const azR   = MathUtils.degToRad(azimuth);
-      const elR   = MathUtils.degToRad(Math.max(0, elevation));
-      const east  = Math.sin(azR) * Math.cos(elR);
-      const north = Math.cos(azR) * Math.cos(elR);
-      const up    = Math.sin(elR);
-
-      // Rotation ENU → scène (même matrice que RealWorldLayer.buildTileTransform)
-      const stAz  = MathUtils.degToRad(AZ_DEG);
-      const sinSt = Math.sin(stAz);
-      const cosSt = Math.cos(stAz);
-      const D = 2000;
-      lightRef.current.position.set(
-        (sinSt * east + cosSt * north) * D,
-        up * D,
-        (cosSt * east - sinSt * north) * D,
-      );
-
-      const { color, intensity } = sunParams(elevation);
-      lightRef.current.color.copy(color);
-      lightRef.current.intensity = intensity;
-      invalidate();
-    }
-
-    update();
-    const id = setInterval(update, 250);
-    return () => clearInterval(id);
-  }, [invalidate]);
+  useFrame(() => {
+    lightRef.current.target.position.set(...SKY_CENTER);
+    lightRef.current.target.updateMatrixWorld();
+    const hour = simulatedHour();
+    const elevation = solarElevation(hour);
+    const direction = sunDir(hour);
+    lightRef.current.position.set(direction.x, direction.y, direction.z);
+    const { color, intensity } = sunParams(elevation);
+    lightRef.current.color.copy(color);
+    lightRef.current.intensity = intensity;
+  });
 
   return (
     <directionalLight
@@ -120,52 +56,39 @@ export function SunLight() {
 
 // ── Disque solaire visible ────────────────────────────────────────────────────
 
-const SPHERE_D = 4000; // cm depuis le centre de la pièce
-const SPHERE_R = 130;  // rayon apparent
+const SPHERE_D = SKY_RADIUS * 0.8;
+const SPHERE_R = 65;
 
-function sunDir(azimuth: number, elevation: number) {
-  const azR  = MathUtils.degToRad(azimuth);
-  const elR  = MathUtils.degToRad(Math.max(0, elevation));
-  const east  = Math.sin(azR) * Math.cos(elR);
-  const north = Math.cos(azR) * Math.cos(elR);
-  const up    = Math.sin(elR);
-  const stAz  = MathUtils.degToRad(AZ_DEG);
-  const sinSt = Math.sin(stAz);
-  const cosSt = Math.cos(stAz);
+function sunDir(hour: number) {
+  const angle = (hour - 12) * Math.PI / 12;
+  const latitude = LAT * Math.PI / 180;
+  const east = -Math.sin(angle);
+  const north = -Math.sin(latitude) * Math.cos(angle);
+  const up = Math.cos(latitude) * Math.cos(angle);
+  const orientation = AZ_DEG * Math.PI / 180;
   return {
-    x: 150 + (sinSt * east + cosSt * north) * SPHERE_D,
-    y: up * SPHERE_D,
-    z: 200 + (cosSt * east - sinSt * north) * SPHERE_D,
+    x: SKY_CENTER[0] + (Math.sin(orientation) * east + Math.cos(orientation) * north) * SPHERE_D,
+    y: SKY_CENTER[1] + up * SPHERE_D,
+    z: SKY_CENTER[2] + (Math.cos(orientation) * east - Math.sin(orientation) * north) * SPHERE_D,
   };
 }
 
 export function SunSphere() {
   const meshRef = useRef<Mesh>(null!);
   const matRef  = useRef<MeshBasicMaterial>(null!);
-  const { invalidate } = useThree();
-
-  useEffect(() => {
-    function update() {
-      if (!meshRef.current || !matRef.current) return;
-      const { azimuth, elevation } = solarPosition(LAT, LNG, (() => { const date = new Date('2026-03-20T00:00:00Z'); date.setUTCHours(0, simulatedHour() * 60 - LNG * 4); return date; })());
-      meshRef.current.visible = elevation > 0;
-      if (elevation > 0) {
-        const { x, y, z } = sunDir(azimuth, elevation);
-        meshRef.current.position.set(x, y, z);
-        const { color } = sunParams(elevation);
-        matRef.current.color.copy(color);
-      }
-      invalidate();
-    }
-    update();
-    const id = setInterval(update, 250);
-    return () => clearInterval(id);
-  }, [invalidate]);
+  useFrame(() => {
+    const hour = simulatedHour();
+    const elevation = solarElevation(hour);
+    meshRef.current.visible = elevation > 0;
+    const { x, y, z } = sunDir(hour);
+    meshRef.current.position.set(x, y, z);
+    matRef.current.color.copy(sunParams(elevation).color);
+  });
 
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[SPHERE_R, 16, 8]} />
-      <meshBasicMaterial ref={matRef} />
+      <meshBasicMaterial ref={matRef} toneMapped={false} fog={false} />
     </mesh>
   );
 }

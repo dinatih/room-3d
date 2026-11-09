@@ -1,17 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSceneStore, getRandomGrassType } from './store/useSceneStore';
 import { HDRI_LIST, type HdriResolution } from '@features/scene/hdriConfig';
 import type { GroundType, LayerState } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { WeatherControls, useWeather, WEATHER_PERIOD, WEATHER_PHASES } from './Weather';
-import { solarPosition } from './SunLight';
 import { advanceToTime, useLaraLifeStore } from './ai/laraLifeStore';
 import { cameraState } from './cameraState';
 import { isLifeCharacter, lifeClock, LIFE_SPEEDS } from './ai/laraLife';
 import { HOME_ROOMS, HOME_TASKS, roomDirt, type HomeTask } from './ai/lifeHousekeeping';
-
-const SUN_LAT = parseFloat(import.meta.env.VITE_STUDIO_LAT ?? '48.828');
-const SUN_LNG = parseFloat(import.meta.env.VITE_STUDIO_LNG ?? '2.376');
 
 const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
   { id: 'bermuda', label: 'Gazon Bermuda' },
@@ -60,23 +56,6 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const cleanliness = `${HOME_ROOMS[character?.room ?? 'living']} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
     .filter(key => HOME_TASKS[key].room === (character?.room ?? 'living'))
     .map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
-
-  // Soleil réel
-  const [sunInfo, setSunInfo] = useState<{ time: string; el: number } | null>(null);
-  useEffect(() => {
-    if (!layers.realSun) { setSunInfo(null); return; }
-    const update = () => {
-      const now = new Date();
-      const { elevation } = solarPosition(SUN_LAT, SUN_LNG, now);
-      setSunInfo({
-        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-        el: Math.round(elevation),
-      });
-    };
-    update();
-    const id = setInterval(update, 30_000);
-    return () => clearInterval(id);
-  }, [layers.realSun]);
 
   const activeHdri = HDRI_LIST.find(h => h.id === currentHdri);
   const displayName = activeHdri?.name || '';
@@ -273,18 +252,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
           </div>
         )}
 
-        {/* 6. Soleil réel */}
-        {toggleRow(
-          <span className="d-inline-flex align-items-center gap-1">
-            <i className="bi bi-sun" aria-hidden="true" />Soleil réel
-          </span>,
-          'realSun'
-        )}
-        {sunInfo && (
-          <div className="p-2 border-bottom text-muted small bg-transparent">
-            <i className="bi bi-sun me-1" aria-hidden="true" />{sunInfo.time} · {sunInfo.el > 0 ? `élév. ${sunInfo.el}°` : `sous l'horizon ${-sunInfo.el}°`}
-          </div>
-        )}
+
       </div>
     </PanelPopover>
   );

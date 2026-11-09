@@ -46,7 +46,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   lights: false,
   lightsHD: false,
   shadows: true,
-  realSun: false,
   // Personnages
   character: true,
   extraCharacters: false,

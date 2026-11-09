@@ -118,7 +118,6 @@ export interface LayerState {
   lightsHD:     boolean;
   shadows:      boolean;
   pillarsOnly:    boolean;
-  realSun:      boolean;
   bermudaGrass: boolean;
   groundType?:  GroundType;
   character:    boolean;

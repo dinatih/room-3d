@@ -19,19 +19,19 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
       './store/useSceneStore': { useSceneStore: { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
         toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
         triggerAction: (...action) => actions.push(action) }) } },
-    });
+    }, source => source.replace('import.meta.env.VITE_STUDIO_LAT', '48.828'));
     DayNight(); frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert.equal(scene.children[0].intensity, 2);
-    for (const hour of [18, 20, 21, 22, 23]) {
+    for (const hour of [9, 12, 15, 17]) {
       clock.minutes = (hour - 8) * 60; frame({ scene });
       assert.equal(layers.lightsHD, lightsHD);
       assert.equal(daylight(hour), 1);
       assert.equal(nightState.nightLighting, false);
     }
-    clock.minutes = 15.5 * 60; frame({ scene });
-    assert(daylight(23.5) > 0 && daylight(23.5) < 1);
-    assert.equal(nightState.nightLighting, false);
+    clock.minutes = 10.25 * 60; frame({ scene });
+    assert(daylight(18.25) > 0 && daylight(18.25) < 1);
+    assert.equal(nightState.nightLighting, true);
     clock.minutes = 16 * 60; frame({ scene }); frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert(scene.children[0].intensity < 2);
@@ -42,7 +42,7 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     assert.equal(daylight(5), 0);
     clock.minutes = 22 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
-    assert.equal(daylight(6), 0);
+    assert.equal(daylight(6), 1);
     assert.equal(nightState.nightLighting, false);
     clock.minutes = 24 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);

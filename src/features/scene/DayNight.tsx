@@ -11,9 +11,14 @@ export function simulatedHour() {
   return (8 + simulationClock.minutes / 60) % 24;
 }
 
+export function solarElevation(hour: number) {
+  const latitude = Number(import.meta.env.VITE_STUDIO_LAT ?? 48.828) * Math.PI / 180;
+  return Math.asin(Math.cos(latitude) * Math.cos((hour - 12) * Math.PI / 12)) * 180 / Math.PI;
+}
+
 export function daylight(hour: number) {
   if (!Number.isFinite(hour)) throw new Error('Invalid environment hour');
-  return MathUtils.smoothstep(hour, 6, 8) * (1 - MathUtils.smoothstep(hour, 23, 24));
+  return MathUtils.smoothstep(solarElevation(hour), -6, 0);
 }
 
 const nightColor = new Color('#17243e');
@@ -56,7 +61,7 @@ export function DayNight() {
   useFrame(({ scene }) => {
     const hour = simulatedHour();
     const light = daylight(hour);
-    const night = hour < 6;
+    const night = solarElevation(hour) < 0;
     if (previousNight.current !== night) {
       previousNight.current = night;
       const store = useSceneStore.getState();
@@ -68,7 +73,7 @@ export function DayNight() {
       if (material instanceof MeshBasicMaterial && material.map) material.color.copy(nightColor).lerp(dayColor, light);
     });
     for (const object of scene.children) {
-      if (object.type === 'AmbientLight' || object.type === 'DirectionalLight') {
+      if (object.type === 'AmbientLight') {
         const source = object as import('three').Light;
         if (source.userData.lastNightIntensity !== source.intensity) source.userData.dayIntensity = source.intensity;
         source.intensity = source.userData.dayIntensity * (0.12 + 0.88 * light);

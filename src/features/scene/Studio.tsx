@@ -1,5 +1,4 @@
 import { SimulationClock } from './SimulationClock';
-import { useWeather } from './Weather';
 import { WeatherSystem } from './WeatherSystem';
 /**
  * Studio.tsx — racine R3F : Canvas, lumières, fog, env map, état UI global.
@@ -418,36 +417,9 @@ function SceneAmbientLight() {
   return <ambientLight color={color} intensity={intensity} />;
 }
 
-function SceneDirectionalLight() {
-  const currentHdri = useSceneStore(state => state.currentHdri);
-  const activeHdri = getHdriById(currentHdri);
-  const color = activeHdri.directionalColor ?? 0xfff5e0;
-  const intensity = activeHdri.directionalIntensity ?? 1.8;
-  const position = activeHdri.directionalPosition ?? [500, 700, 400];
-
-  return (
-    <directionalLight
-      color={color}
-      position={position}
-      intensity={intensity}
-      castShadow
-      shadow-mapSize={[1024, 1024]}
-      shadow-camera-near={1}
-      shadow-camera-far={3000}
-      shadow-camera-left={-1200}
-      shadow-camera-right={1200}
-      shadow-camera-top={1200}
-      shadow-camera-bottom={-1200}
-      shadow-bias={-0.0002}
-      shadow-normalBias={0.04}
-    />
-  );
-}
-
 export function Studio() {
   // ResizeObserver peut attendre une image visible avant de mesurer les Canvas.
   useEffect(() => { window.dispatchEvent(new Event('resize')); }, []);
-  const weatherEnabled = useWeather(state => state.enabled);
   const isMobile = useIsMobile();
   const layers = useSceneStore(state => state.layers);
   const measurementActive = useSceneStore(state => state.measurementActive);
@@ -889,15 +861,13 @@ export function Studio() {
         <SkySphere />
         <WeatherSystem />
         <SceneAmbientLight />
-        {weatherEnabled && layers.realSun ? (
+        {(
           <>
             <SunLight />
             <CategoryLayerGroup layer={LAYER_ENVIRONMENT}>
               <SunSphere />
             </CategoryLayerGroup>
           </>
-        ) : (
-          <SceneDirectionalLight />
         )}
 
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
