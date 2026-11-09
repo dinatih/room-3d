@@ -90,6 +90,7 @@ export interface LayerState {
   environment: boolean;
   bnfMarker?: boolean;
   eiffelSparkle?: boolean;
+  seineBoats?: boolean;
   equipment: boolean;
   furniture: boolean;
   furnishings: boolean;

@@ -15,6 +15,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   environment: true,
   bnfMarker: true,
   eiffelSparkle: true,
+  seineBoats: true,
   doors: true,
   transparentWallsDoors: true,
   ceiling: false,
