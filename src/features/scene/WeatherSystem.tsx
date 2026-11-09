@@ -4,5 +4,5 @@ import { Weather, useWeather } from './Weather';
 
 export function WeatherSystem() {
   const enabled = useWeather(state => state.enabled);
-  return enabled ? <><DayNight /><Weather /><Rain /><Rain snow /></> : null;
+  return <><DayNight />{enabled && <><Weather /><Rain /><Rain snow /></>}</>;
 }

@@ -1,7 +1,7 @@
 import { useSceneStore } from './store/useSceneStore';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Color, MathUtils, Mesh, MeshBasicMaterial } from 'three';
+import { Color, MathUtils, Mesh, MeshBasicMaterial, DirectionalLight } from 'three';
 import { Points, PointsMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { simulationClock } from './ai/laraLifeStore';
@@ -54,6 +54,7 @@ export function DayNight() {
   const moon = useRef<Mesh>(null!);
   const moonMaterial = useRef<MeshBasicMaterial>(null!);
   const stars = useRef<Points>(null!);
+  const moonLight = useRef<DirectionalLight>(null!);
   const positions = useMemo(() => {
     const count = 750;
     const points = new Float32Array(count * 3);
@@ -94,9 +95,19 @@ export function DayNight() {
     moon.current.position.set(Math.cos(angle) * SKY_RADIUS * 0.8, Math.sin(angle) * SKY_RADIUS * 0.8, 0);
     moon.current.visible = light < 1 && moon.current.position.y > 0;
     moonMaterial.current.opacity = 1 - light;
+    // Clair de lune doux : même direction que le disque, sans lumière sous l’horizon.
+    moonLight.current.position.copy(moon.current.position).multiplyScalar(2 / 0.8);
+    moonLight.current.target.position.set(...SKY_CENTER);
+    moonLight.current.target.updateMatrixWorld();
+    moonLight.current.intensity = 0.2 * (1 - light) * Math.max(0, Math.sin(angle));
     (stars.current.material as PointsMaterial).opacity = 1 - light;
   });
   return <group position={SKY_CENTER}>
+    <directionalLight name="MoonLight" ref={moonLight} color="#b9ceff" intensity={0} castShadow
+      shadow-mapSize={[2048, 2048]} shadow-camera-near={1} shadow-camera-far={3 * SKY_RADIUS}
+      shadow-camera-left={-SKY_RADIUS} shadow-camera-right={SKY_RADIUS}
+      shadow-camera-top={SKY_RADIUS} shadow-camera-bottom={-SKY_RADIUS}
+      shadow-bias={-0.0002} shadow-normalBias={0.04} />
     <mesh ref={moon}>
       <sphereGeometry args={[65, 24, 16]} />
       <meshBasicMaterial ref={moonMaterial} color="#dee7ff" transparent toneMapped={false} />

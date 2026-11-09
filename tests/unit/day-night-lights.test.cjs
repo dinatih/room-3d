@@ -9,7 +9,8 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     const layers = { lightsHD }, qualities = [];
     const nightState = { nightLighting: false };
     scene.add(new THREE.AmbientLight('white', 2));
-    const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial())];
+    const moonSource = new THREE.DirectionalLight();
+    const refs = [null, new THREE.Mesh(), new THREE.MeshBasicMaterial(), new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial()), moonSource];
     let frame;
     const { DayNight, daylight } = load('src/features/scene/DayNight.tsx', {
       three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
@@ -21,6 +22,7 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
         triggerAction: (...action) => actions.push(action) }) } },
     }, source => source.replace('import.meta.env.VITE_STUDIO_LAT', '48.828'));
     DayNight(); frame({ scene });
+    assert.equal(moonSource.intensity, 0);
     assert.equal(layers.lightsHD, lightsHD);
     assert.equal(scene.children[0].intensity, 2);
     for (const hour of [9, 12, 15, 17]) {
@@ -37,6 +39,8 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     assert(scene.children[0].intensity < 2);
     assert.equal(nightState.nightLighting, true);
     assert.equal(daylight(0), 0);
+    assert(moonSource.intensity > 0);
+    assert(moonSource.position.y > 0);
     clock.minutes = 21 * 60; frame({ scene });
     assert.equal(layers.lightsHD, lightsHD);
     assert.equal(daylight(5), 0);
