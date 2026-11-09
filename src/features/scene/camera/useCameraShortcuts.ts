@@ -6,7 +6,7 @@ import type { ArrowControl, CameraMode, CameraTarget, CameraMovement, OrbitMouse
 import { chooseRandomCharacter } from '../store/randomCharacter';
 import { useSceneStore } from '../store/useSceneStore';
 import { cameraState } from '../cameraState';
-import { SUBJECT_KEY_DIRECTIONS, droneInput, useDroneControlStore } from '../droneControls';
+import { droneInput, useDroneControlStore } from '../droneControls';
 import { appLog } from '@features/ui/AppConsole';
 import { CHARACTERS, isCharacterVisibleInMode } from '../characterConfig';
 import { frameCharacterGridOrtho, frameCharacterGridCamera, getCharacterGridCameraView } from '../character/characterGridUtils';
@@ -266,7 +266,7 @@ export function useCameraShortcuts({
         return;
       }
 
-      const direction = SUBJECT_KEY_DIRECTIONS[e.key.toLowerCase()] ?? (e.key.startsWith('Arrow') ? e.key : undefined);
+      const direction = e.key.startsWith('Arrow') ? e.key : e.key === ' ' ? 'Elevate' : e.key.toLowerCase() === 'c' ? 'Descend' : undefined;
       if (direction && !e.ctrlKey && !e.metaKey && (modeRef.current === 'follow' || modeRef.current === 'fpv')) {
         e.preventDefault();
         onDirectionInput(new CustomEvent('camera-direction-input', { detail: { key: `${e.altKey ? 'camera' : useSceneStore.getState().arrowControl}:${direction}`, pressed: true } }));
@@ -542,7 +542,7 @@ export function useCameraShortcuts({
 
     const onUp = (e: KeyboardEvent) => {
       const k = e.key;
-      const direction = SUBJECT_KEY_DIRECTIONS[k.toLowerCase()] ?? (k.startsWith('Arrow') ? k : undefined);
+      const direction = k.startsWith('Arrow') ? k : k === ' ' ? 'Elevate' : k.toLowerCase() === 'c' ? 'Descend' : undefined;
       if (direction) for (const control of ['character', 'camera']) onDirectionInput(new CustomEvent('camera-direction-input', { detail: { key: `${control}:${direction}`, pressed: false } }));
       keys.current.delete(k);
       keys.current.delete('Shift' + k);
