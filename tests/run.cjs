@@ -117,9 +117,12 @@ async function main() {
         process.exitCode = 1;
     }
     save();
-    console.log(`Rapports : ${directory}/report.{json,md}`);
+    console.log(`Rapport Markdown : ${directory}/report.md`);
+    console.log(`Ouvrir : zeditor '${directory}/report.md'`);
+    console.log(`Rapport JSON : ${directory}/report.json`);
     for (const aggregate of report.aggregates ?? []) {
         const m = aggregate.metrics;
+        if (m['session.fps']) console.log(`${aggregate.id}: FPS moyen par passage, médiane ${m['session.fps'].median.toFixed(2)} (min ${m['session.fps'].min.toFixed(2)}, max ${m['session.fps'].max.toFixed(2)}).`);
         const frames = ['median', 'p95', 'p99'].map(key => m[`session.frameMs.${key}`].median.toFixed(1)).join(' / ');
         const pause = m['session.frameMs.max'];
         console.log(`${aggregate.id}: démarrage médian ${(m.startupMs.median / 1000).toFixed(2)} s; images p50/p95/p99 ${frames} ms; interruption max médiane ${pause.median.toFixed(1)} ms (min ${pause.min.toFixed(1)}, max ${pause.max.toFixed(1)}, dispersion ${pause.dispersion.toFixed(1)}).`);

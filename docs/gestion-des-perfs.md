@@ -79,3 +79,13 @@ La tentative réelle de campagne matérielle a été refusée : aucun `/dev/dri`
 TypeScript et build de production passent. Les tests ciblés couvrent les alertes, l’incompatibilité des conditions et le comptage d’une seule image incluant une passe imbriquée. La suite globale a été lancée et présente des échecs dans les tests existants (notamment chargement de modules, clips Miley et état de navigation des robots) ; ils ne sont pas corrigés dans cette modification des outils de mesure. L’exécution complète sur GPU, les captures de référence et la validation des requêtes GPU réelles restent nécessaires.
 
 Références techniques : [compteurs WebGLRenderer](https://threejs.org/docs/pages/WebGLRenderer), [coût des ombres](https://threejs.org/manual/pages/shadows.html).
+
+## Première campagne complète : 9 novembre, 20:30 UTC
+
+Rapport : `test-results/2026-11-09T20-30-15.143Z-perf/report.md`. Six passages réussis, sur secteur, buffer réel **1362 × 810 pixels**, DPR 1. FPS moyens par passage : jour 11,81 / 11,75 / 11,40 ; nuit 13,62 / 12,45 / 13,99. Le chiffre 14 correspond au dernier passage nocturne, pas à la moyenne de toute la campagne.
+
+Le jour présente environ 2641–2743 appels et 10,65–11,73 millions de triangles par image (médianes), contre 1824–1897 appels et 6,27–7,84 millions la nuit. Temps CPU inclusif du renderer : 24–30 ms ; temps GPU médian : 33–40 ms. Ces durées ne se somment pas et ne couvrent pas tout le travail CPU. Elles orientent l'enquête vers les passes de rendu, sans prouver encore quelle passe est responsable.
+
+Le swap augmente de 60 à 616 Mio suivant le passage : cette campagne reste une observation initiale perturbée, pas une référence propre automatiquement approuvée. La capture utilisateur indique « En veille » ; la moyenne affichée dans cet état ne constitue pas une mesure d'activité comparable. La taille de la capture inclut les bordures du navigateur et ne donne ni le DPR ni la taille exacte du buffer.
+
+Le diagnostic dispose maintenant aussi du suffixe `-no-mirrors`. Comparer séparément le cas normal, `-no-shadows` et `-no-mirrors` avant de modifier les passes. L'environnement de l'agent ne dispose toujours pas de `/dev/dri` : aucune optimisation de rendu ni aucun gain n'est annoncé sur la seule base de cette lecture.
