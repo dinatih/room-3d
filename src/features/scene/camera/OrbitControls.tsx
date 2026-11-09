@@ -1,24 +1,16 @@
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import { OrbitControls as DreiOrbitControls } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { MOUSE, Vector3, Quaternion, DoubleSide, type Group, type LineSegments } from 'three';
+import { MOUSE, Vector3, Quaternion, DoubleSide, RingGeometry, CircleGeometry, MeshBasicMaterial, LineDashedMaterial, type Group, type Mesh, type LineSegments } from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { cameraState } from '../cameraState';
 import type { CameraZoomDetail } from './types';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import './OrbitControls.scss';
 
-function TargetDisc({ opacity = 0.2 }: { opacity?: number }) {
-  return <>
-    <mesh renderOrder={1000} raycast={() => {}}>
-      <ringGeometry args={[0.65, 1, 32]} />
-      <meshBasicMaterial color="#ff0000" transparent opacity={opacity} depthTest={false} depthWrite={false} toneMapped={false} side={DoubleSide} />
-    </mesh>
-    <mesh renderOrder={1000} raycast={() => {}}>
-      <circleGeometry args={[0.2, 16]} />
-      <meshBasicMaterial color="#ff0000" transparent opacity={opacity} depthTest={false} depthWrite={false} toneMapped={false} side={DoubleSide} />
-    </mesh>
-  </>;
-}
+const TARGET_GEOM = mergeGeometries([new RingGeometry(0.65, 1, 32), new CircleGeometry(0.2, 16)]);
+const TARGET_MAT = new MeshBasicMaterial({ color: '#ff0000', transparent: true, opacity: 0.25, depthTest: false, depthWrite: false, toneMapped: false, side: DoubleSide });
+const LINE_MAT = new LineDashedMaterial({ color: '#ff0000', dashSize: 4, gapSize: 3, transparent: true, opacity: 0.4, depthTest: false, depthWrite: false, toneMapped: false });
 
 /** Commandes partagées : le curseur indique l'action pendant un glisser souris. */
 export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof DreiOrbitControls> & {
@@ -27,9 +19,10 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
 }>(
   function OrbitControls({ zoomScope = 'preview', showTargetMarker = true, ...props }, forwardedRef) {
     const [controls, setControls] = useState<OrbitControlsImpl | null>(null);
-    const helperGroup = useRef<Group>(null);
-    const targetMarker = useRef<Group>(null);
-    const groundMarker = useRef<Group>(null);
+    const helper = useRef<Group>(null);
+    const groundGroup = useRef<Group>(null);
+    const airTarget = useRef<Mesh>(null);
+    const groundTarget = useRef<Mesh>(null);
     const lineRef = useRef<LineSegments>(null);
     const linePositions = useMemo(() => new Float32Array(6), []);
     const interacting = useRef(false);
@@ -41,8 +34,8 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
     }, [forwardedRef]);
 
     useFrame(({ camera, viewport, size }) => {
-      const helper = helperGroup.current;
-      if (!helper || !controls) return;
+      const helperGroup = helper.current;
+      if (!helperGroup || !controls) return;
       const previous = previousPose.current;
       const precision = Number.EPSILON * Math.max(1, camera.position.lengthSq(), controls.target.lengthSq());
       const rotationDelta = (previous.rotation.x - camera.quaternion.x) ** 2 +
@@ -58,38 +51,26 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
       previous.target.copy(controls.target);
       previous.rotation.copy(camera.quaternion);
       previous.initialized = true;
-      helper.visible = (interacting.current || cameraState.isDragging || moved) &&
+      helperGroup.visible = (interacting.current || cameraState.isDragging || moved) &&
         !cameraState.isIntroRunning && !cameraState.isXR && cameraState.mode !== 'fpv' && cameraState.mode !== 'plane';
-      if (!helper.visible) return;
+      if (!helperGroup.visible) return;
 
-      helper.position.set(controls.target.x, 0, controls.target.z);
+      helperGroup.position.set(controls.target.x, 0, controls.target.z);
       const targetY = controls.target.y;
+      const scale = 8 * viewport.getCurrentViewport(camera, controls.target).height / size.height;
+
+      for (const t of [airTarget.current, groundTarget.current]) t?.scale.setScalar(scale);
+      if (airTarget.current) {
+        airTarget.current.position.y = targetY;
+        airTarget.current.quaternion.copy(camera.quaternion);
+      }
+
       const hasHeight = Math.abs(targetY) >= 1;
-
-      if (targetMarker.current) {
-        targetMarker.current.position.y = targetY;
-        targetMarker.current.quaternion.copy(camera.quaternion);
-        // Rayon de 8 pixels, quelle que soit la projection ou la distance.
-        targetMarker.current.scale.setScalar(8 * viewport.getCurrentViewport(camera, controls.target).height / size.height);
-      }
-
-      if (groundMarker.current) {
-        groundMarker.current.visible = hasHeight;
-        if (hasHeight) {
-          groundMarker.current.scale.setScalar(8 * viewport.getCurrentViewport(camera, helper.position).height / size.height);
-        }
-      }
-
-      if (lineRef.current) {
-        lineRef.current.visible = hasHeight;
-        if (hasHeight) {
-          linePositions[4] = targetY;
-          const posAttr = lineRef.current.geometry.getAttribute('position');
-          if (posAttr) {
-            posAttr.needsUpdate = true;
-            lineRef.current.computeLineDistances();
-          }
-        }
+      if (groundGroup.current) groundGroup.current.visible = hasHeight;
+      if (hasHeight && lineRef.current) {
+        linePositions[4] = targetY;
+        lineRef.current.geometry.getAttribute('position').needsUpdate = true;
+        lineRef.current.computeLineDistances();
       }
     });
 
@@ -122,7 +103,7 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
         interacting.current = false;
         cursor = undefined;
         delete element.dataset.orbitDrag;
-        if (helperGroup.current) helperGroup.current.visible = false;
+        if (helper.current) helper.current.visible = false;
       };
       const onDown = (event: PointerEvent) => {
         cursor = undefined;
@@ -162,19 +143,14 @@ export const OrbitControls = forwardRef<OrbitControlsImpl, ComponentProps<typeof
 
     return <>
       <DreiOrbitControls {...props} ref={attachRef} />
-      {zoomScope === 'scene' && showTargetMarker && <group ref={helperGroup} name="orbit-target-helper" visible={false}>
-        <lineSegments ref={lineRef} renderOrder={1000} raycast={() => {}}>
-          <bufferGeometry>
-            <bufferAttribute attach="attributes-position" args={[linePositions, 3]} />
-          </bufferGeometry>
-          <lineDashedMaterial color="#ff0000" dashSize={4} gapSize={3} transparent opacity={0.4} depthTest={false} depthWrite={false} toneMapped={false} />
-        </lineSegments>
-        <group ref={groundMarker} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <TargetDisc opacity={0.25} />
+      {zoomScope === 'scene' && showTargetMarker && <group ref={helper} name="orbit-target-helper" visible={false}>
+        <group ref={groundGroup} visible={false}>
+          <lineSegments ref={lineRef} material={LINE_MAT} renderOrder={1000} raycast={() => {}}>
+            <bufferGeometry><bufferAttribute attach="attributes-position" args={[linePositions, 3]} /></bufferGeometry>
+          </lineSegments>
+          <mesh ref={groundTarget} geometry={TARGET_GEOM} material={TARGET_MAT} position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1000} raycast={() => {}} />
         </group>
-        <group ref={targetMarker}>
-          <TargetDisc opacity={0.2} />
-        </group>
+        <mesh ref={airTarget} geometry={TARGET_GEOM} material={TARGET_MAT} renderOrder={1000} raycast={() => {}} />
       </group>}
     </>;
   },
