@@ -1,3 +1,5 @@
+import type { SceneModelProps } from '@shared/types';
+import { FaucetWater } from './FaucetWater';
 import { createStaticGlbItem } from './createStaticGlbItem';
 
 /**
@@ -7,4 +9,11 @@ import { createStaticGlbItem } from './createStaticGlbItem';
  */
 export const HAVBACK_D = 49;
 
-export const Havback49514017 = createStaticGlbItem('/items/havback49514017/Havback49514017.glb');
+const HavbackModel = createStaticGlbItem('/items/havback49514017/Havback49514017.glb');
+
+export function Havback49514017(props: SceneModelProps & { isPreview?: boolean }) {
+  return <>
+    <HavbackModel {...props} />
+    <FaucetWater objectId="vasque-sdb" slotIds={['wash-hands', 'brush-teeth']} position={[0, 76, -7]} basinY={58} isPreview={props.isPreview} />
+  </>;
+}
