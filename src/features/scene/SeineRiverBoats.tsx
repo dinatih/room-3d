@@ -4,20 +4,22 @@ import * as THREE from 'three';
 import { useSceneStore } from './store/useSceneStore';
 import { daylight, simulatedHour } from './DayNight';
 
-// Coordonnées de la Seine sur le panorama équirectangulaire de Paris
+// Coordonnées réelles de la Seine sur le panorama équirectangulaire HDR de Paris
 // az: azimut en degrés, el: élévation en degrés
 const SEINE_WAYPOINTS = [
-  { az: 138.0, el: -12.5 },
-  { az: 144.0, el: -11.7 },
-  { az: 150.0, el: -10.6 },
-  { az: 156.0, el: -10.8 },
-  { az: 162.0, el: -10.0 },
-  { az: 168.0, el: -9.6 },
-  { az: 173.5, el: -9.9 }, // Au pied de la Tour Eiffel
-  { az: 179.0, el: -11.2 },
-  { az: 185.0, el: -12.2 },
-  { az: 192.0, el: -13.5 },
-  { az: 200.0, el: -14.1 },
+  { az: 145.0, el: -16.8 }, // En amont vers BNF / Bercy
+  { az: 152.0, el: -16.5 }, // Pont de Bercy / Austerlitz
+  { az: 158.0, el: -15.1 }, // Gare d'Austerlitz
+  { az: 163.0, el: -14.8 }, // Île de la Cité / Pont de Sully
+  { az: 168.0, el: -14.6 }, // Pont Alexandre III / Invalides
+  { az: 173.5, el: -12.8 }, // Pont d'Iéna (au pied de la Tour Eiffel)
+  { az: 178.0, el: -11.4 }, // Pont de Bir-Hakeim
+  { az: 183.0, el: -13.8 }, // Île aux Cygnes (centre)
+  { az: 188.0, el: -15.3 }, // Pont de Grenelle / Maison de la Radio
+  { az: 194.0, el: -12.8 }, // Pont Mirabeau
+  { az: 200.0, el: -12.5 }, // Pont du Garigliano
+  { az: 207.0, el: -14.2 }, // Issy-les-Moulineaux
+  { az: 214.0, el: -16.5 }, // Aval vers Boulogne
 ];
 
 function toSpherical(azimuthDeg: number, elevDeg: number, radius: number): [number, number, number] {
