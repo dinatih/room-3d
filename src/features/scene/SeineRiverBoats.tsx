@@ -40,26 +40,27 @@ interface BoatLightDef {
 }
 
 const BOAT_LIGHTS: BoatLightDef[] = [
-  { fwd: 9.0,  side: 0.0,  up: 0.6, color: [1.0, 0.98, 0.88] },  // Feu de proue blanc chaud
+  { fwd: 9.0,  side: 0.0,  up: 0.6, color: [1.0, 0.98, 0.88] },  // Proue blanc chaud
   { fwd: 7.0,  side: -1.8, up: 0.6, color: [1.0, 0.15, 0.15] },  // Bâbord (rouge)
   { fwd: 7.0,  side:  1.8, up: 0.6, color: [0.15, 1.0, 0.35] },  // Tribord (vert)
-  { fwd: 1.5,  side: 0.0,  up: 1.0, color: [1.0, 0.85, 0.45] },  // Cabine / guirlande dorée
-  { fwd: -3.5, side: 0.0,  up: 1.0, color: [1.0, 0.78, 0.38] },  // Cabine / guirlande ambrée
+  { fwd: 1.5,  side: 0.0,  up: 1.0, color: [1.0, 0.85, 0.45] },  // Guirlande dorée
+  { fwd: -3.5, side: 0.0,  up: 1.0, color: [1.0, 0.78, 0.38] },  // Guirlande ambrée
   { fwd: -9.0, side: 0.0,  up: 0.6, color: [1.0, 0.92, 0.82] },  // Poupe blanc chaud
 ];
 
 const BOATS = [
-  { speed: 0.012, phase: 0.08, upstream: false, lane: -1.2 }, // Aval (droite de navigation)
-  { speed: 0.009, phase: 0.58, upstream: false, lane: -1.0 }, // Aval
-  { speed: 0.011, phase: 0.32, upstream: true,  lane:  1.2 }, // Amont (droite de navigation)
-  { speed: 0.010, phase: 0.82, upstream: true,  lane:  1.0 }, // Amont
+  { speed: 0.010, phase: 0.08, upstream: false, lane: -1.0 }, // Aval
+  { speed: 0.008, phase: 0.58, upstream: false, lane: -0.8 }, // Aval
+  { speed: 0.009, phase: 0.32, upstream: true,  lane:  1.0 }, // Amont
+  { speed: 0.007, phase: 0.82, upstream: true,  lane:  0.8 }, // Amont
 ];
 
-const TOTAL_POINTS = BOATS.length * BOAT_LIGHTS.length * 2; // Lumières + reflets sur l'eau
+const TOTAL_POINTS = BOATS.length * BOAT_LIGHTS.length * 2;
 
 export function SeineRiverBoats({ skyRadius = 3600 }: { skyRadius?: number }) {
   const currentHdri = useSceneStore(state => state.currentHdri);
   const enabled = useSceneStore(state => state.layers.seineBoats ?? true);
+  const showDebug = useSceneStore(state => state.layers.seineDebugPath ?? true);
 
   const pointsRef = useRef<THREE.Points>(null);
   const posAttrRef = useRef<THREE.BufferAttribute>(null);
@@ -72,6 +73,83 @@ export function SeineRiverBoats({ skyRadius = 3600 }: { skyRadius?: number }) {
     const pts = SEINE_WAYPOINTS.map(w => new THREE.Vector3(...toSpherical(w.az, w.el, riverRadius)));
     return new THREE.CatmullRomCurve3(pts, false, 'centripetal');
   }, [riverRadius]);
+
+  // Tracé et contours du fleuve (ruban de surface, berges gauche/droite et waypoints)
+  const debugGeometries = useMemo(() => {
+    const SAMPLES = 90;
+    const HALF_WIDTH = 10;
+    const ribbonPos: number[] = [];
+    const ribbonIdx: number[] = [];
+    const bankL: number[] = [];
+    const bankR: number[] = [];
+    const center: number[] = [];
+
+    const up = new THREE.Vector3();
+    const fwd = new THREE.Vector3();
+    const side = new THREE.Vector3();
+    const pL = new THREE.Vector3();
+    const pR = new THREE.Vector3();
+
+    for (let i = 0; i <= SAMPLES; i++) {
+      const u = i / SAMPLES;
+      const pt = curve.getPointAt(u).normalize().multiplyScalar(riverRadius);
+      const tan = curve.getTangentAt(u).normalize();
+      up.copy(pt).normalize();
+      fwd.copy(tan);
+      side.crossVectors(fwd, up).normalize();
+
+      pL.copy(pt).addScaledVector(side, HALF_WIDTH).normalize().multiplyScalar(riverRadius);
+      pR.copy(pt).addScaledVector(side, -HALF_WIDTH).normalize().multiplyScalar(riverRadius);
+
+      ribbonPos.push(pL.x, pL.y, pL.z, pR.x, pR.y, pR.z);
+      bankL.push(pL.x, pL.y, pL.z);
+      bankR.push(pR.x, pR.y, pR.z);
+      center.push(pt.x, pt.y, pt.z);
+
+      if (i < SAMPLES) {
+        const base = i * 2;
+        ribbonIdx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
+      }
+    }
+
+    const lineIdx: number[] = [];
+    for (let i = 0; i < SAMPLES; i++) {
+      lineIdx.push(i, i + 1);
+    }
+
+    const ribbonGeo = new THREE.BufferGeometry();
+    ribbonGeo.setAttribute('position', new THREE.Float32BufferAttribute(ribbonPos, 3));
+    ribbonGeo.setIndex(ribbonIdx);
+
+    const bankLGeo = new THREE.BufferGeometry();
+    bankLGeo.setAttribute('position', new THREE.Float32BufferAttribute(bankL, 3));
+    bankLGeo.setIndex(lineIdx);
+
+    const bankRGeo = new THREE.BufferGeometry();
+    bankRGeo.setAttribute('position', new THREE.Float32BufferAttribute(bankR, 3));
+    bankRGeo.setIndex(lineIdx);
+
+    const centerGeo = new THREE.BufferGeometry();
+    centerGeo.setAttribute('position', new THREE.Float32BufferAttribute(center, 3));
+    centerGeo.setIndex(lineIdx);
+
+    const wpPos: number[] = [];
+    for (const w of SEINE_WAYPOINTS) {
+      wpPos.push(...toSpherical(w.az, w.el, riverRadius));
+    }
+    const wpGeo = new THREE.BufferGeometry();
+    wpGeo.setAttribute('position', new THREE.Float32BufferAttribute(wpPos, 3));
+
+    return { ribbonGeo, bankLGeo, bankRGeo, centerGeo, wpGeo };
+  }, [curve, riverRadius]);
+
+  useEffect(() => () => {
+    debugGeometries.ribbonGeo.dispose();
+    debugGeometries.bankLGeo.dispose();
+    debugGeometries.bankRGeo.dispose();
+    debugGeometries.centerGeo.dispose();
+    debugGeometries.wpGeo.dispose();
+  }, [debugGeometries]);
 
   const glowMap = useMemo(() => {
     if (typeof document === 'undefined') return null;
@@ -100,10 +178,12 @@ export function SeineRiverBoats({ skyRadius = 3600 }: { skyRadius?: number }) {
   }, []);
 
   useFrame(({ clock }) => {
+    if (currentHdri !== 'default') return;
+
     const light = daylight(simulatedHour());
     const nightFade = THREE.MathUtils.clamp((0.45 - light) / 0.45, 0, 1);
 
-    if (nightFade <= 0.001 || !enabled || currentHdri !== 'default') {
+    if (!enabled || nightFade <= 0.001) {
       if (pointsRef.current) pointsRef.current.visible = false;
       return;
     }
@@ -177,35 +257,76 @@ export function SeineRiverBoats({ skyRadius = 3600 }: { skyRadius?: number }) {
     colAttr.needsUpdate = true;
   });
 
-  if (currentHdri !== 'default' || !enabled) return null;
+  if (currentHdri !== 'default') return null;
 
   return (
-    <points ref={pointsRef} renderOrder={-960}>
-      <bufferGeometry>
-        <bufferAttribute
-          ref={posAttrRef}
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          ref={colAttrRef}
-          attach="attributes-color"
-          args={[colors, 3]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        ref={matRef}
-        size={4.8}
-        sizeAttenuation={false}
-        map={glowMap ?? undefined}
-        transparent
-        vertexColors
-        blending={THREE.AdditiveBlending}
-        depthTest
-        depthWrite={false}
-        toneMapped={false}
-        fog={false}
-      />
-    </points>
+    <>
+      {/* Visualisation du tracé et des berges de la Seine */}
+      {showDebug && (
+        <group name="SeineDebugTrace">
+          <mesh geometry={debugGeometries.ribbonGeo} renderOrder={-955}>
+            <meshBasicMaterial
+              color="#00e5ff"
+              transparent
+              opacity={0.35}
+              side={THREE.DoubleSide}
+              depthTest
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+          <lineSegments geometry={debugGeometries.bankLGeo} renderOrder={-954}>
+            <lineBasicMaterial color="#00ffcc" depthTest depthWrite={false} toneMapped={false} />
+          </lineSegments>
+          <lineSegments geometry={debugGeometries.bankRGeo} renderOrder={-954}>
+            <lineBasicMaterial color="#00ffcc" depthTest depthWrite={false} toneMapped={false} />
+          </lineSegments>
+          <lineSegments geometry={debugGeometries.centerGeo} renderOrder={-953}>
+            <lineBasicMaterial color="#ffee00" depthTest depthWrite={false} toneMapped={false} />
+          </lineSegments>
+          <points geometry={debugGeometries.wpGeo} renderOrder={-952}>
+            <pointsMaterial
+              size={9}
+              sizeAttenuation={false}
+              color="#ff3366"
+              depthTest
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </points>
+        </group>
+      )}
+
+      {/* Péniches lumineuses */}
+      {enabled && (
+        <points ref={pointsRef} renderOrder={-960}>
+          <bufferGeometry>
+            <bufferAttribute
+              ref={posAttrRef}
+              attach="attributes-position"
+              args={[positions, 3]}
+            />
+            <bufferAttribute
+              ref={colAttrRef}
+              attach="attributes-color"
+              args={[colors, 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial
+            ref={matRef}
+            size={4.8}
+            sizeAttenuation={false}
+            map={glowMap ?? undefined}
+            transparent
+            vertexColors
+            blending={THREE.AdditiveBlending}
+            depthTest
+            depthWrite={false}
+            toneMapped={false}
+            fog={false}
+          />
+        </points>
+      )}
+    </>
   );
 }
