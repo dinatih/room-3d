@@ -22,7 +22,17 @@ const GROUND_OPTIONS: { id: GroundType; label: string }[] = [
 
 export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const layers = useSceneStore(state => state.layers);
-  const automaticWeather = useWeather(state => state.enabled && state.automatic);
+  const weatherIcon = useWeather(state => {
+    if (!state.enabled) return 'bi-cloud-slash';
+    if (!state.automatic) {
+      if (state.snow > 0.3) return 'bi-snow';
+      if (state.rain > 0.3) return 'bi-cloud-rain-fill';
+      if (state.coverage > 0.4) return 'bi-cloud-fill';
+      return 'bi-sun-fill';
+    }
+    return null;
+  });
+  const automaticWeather = weatherIcon === null;
   const toggleLayer = useSceneStore(state => state.toggleLayer);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const setHdri = useSceneStore(state => state.setHdri);
@@ -38,6 +48,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const character = characters[selectedCharacterId];
   const clock = lifeClock(character?.elapsedSeconds ?? 0);
   const hourFloat = (8 + (character?.elapsedSeconds ?? 0) / 60) % 24;
+  const currentPhase = WEATHER_PHASES[Math.floor((character?.elapsedSeconds ?? 0) / WEATHER_PERIOD) % WEATHER_PHASES.length];
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
   const commitTime = (minute: number) => {
     advanceToTime(minute);
@@ -96,7 +107,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
 
   return (
     <PanelPopover
-      icon="bi-cloud-sun-fill"
+      icon={weatherIcon ?? currentPhase.icon}
       label={clock.time}
       title="Environnement & Météo"
       triggerStyle={{ width: '5rem', fontVariantNumeric: 'tabular-nums' }}
