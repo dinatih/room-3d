@@ -89,3 +89,29 @@ Le jour présente environ 2641–2743 appels et 10,65–11,73 millions de triang
 Le swap augmente de 60 à 616 Mio suivant le passage : cette campagne reste une observation initiale perturbée, pas une référence propre automatiquement approuvée. La capture utilisateur indique « En veille » ; la moyenne affichée dans cet état ne constitue pas une mesure d'activité comparable. La taille de la capture inclut les bordures du navigateur et ne donne ni le DPR ni la taille exacte du buffer.
 
 Le diagnostic dispose maintenant aussi du suffixe `-no-mirrors`. Comparer séparément le cas normal, `-no-shadows` et `-no-mirrors` avant de modifier les passes. L'environnement de l'agent ne dispose toujours pas de `/dev/dri` : aucune optimisation de rendu ni aucun gain n'est annoncé sur la seule base de cette lecture.
+
+## Isolation ombres/miroirs sur GPU — 9 novembre, 21:10 UTC
+
+L'accès matériel est confirmé hors du bac à sable : Radeon 840M, ANGLE/Vulkan. La campagne initiale a été arrêtée lorsqu'une autre fenêtre 3D ouverte a été signalée ; ses mesures ne sont pas utilisées. La campagne relancée après fermeture a terminé ses neuf passages sans erreur.
+
+| Scénario jour, 9 personnages, Mid | FPS moyens par passage | Médiane des passages |
+| --- | --- | --- |
+| Normal | 11,39 / 10,73 / 12,83 | 11,39 |
+| Sans ombres | 14,34 / 13,92 / 15,73 | 14,34 |
+| Sans miroirs | 10,99 / 11,98 / 11,63 | 11,63 |
+
+Sans ombres, les appels médians passent d'environ 2700 à 1760–1974, et les triangles de 10,9–11,7 à 6,8–8,0 millions. Le GPU médian passe de 36–41 à 29–34 ms. La hausse de FPS médiane est de 26 %, mais ce n'est pas un gain applicatif livré : elle provient de la désactivation diagnostique des ombres. Sans miroirs, les plages de FPS et coûts de rendu chevauchent le fonctionnement normal ; aucun gain significatif n'est démontré pour cette caméra. Le Reflector installé suspend déjà les mises à jour d'ombres pendant ses réflexions.
+
+Les cas ont été exécutés successivement, sans alternance ABBA. Le swap augmente sur plusieurs passages (jusqu'à environ 320 Mio pour un passage sans miroirs). Les chiffres orientent les travaux, mais ne constituent pas une référence parfaitement stable ni une attribution de la régression historique.
+
+Un profil CPU distinct de 20 secondes est conservé dans `/tmp/room-cpu-profile-EweKIw/cpu.json`. Pour reproduire :
+
+```bash
+node scripts/profile-studio-cpu.cjs --hardware-gpu
+```
+
+Le script utilise le même scénario, attend 15 secondes après son chargement puis profile 20 secondes ; il ferme navigateur et serveur et conserve le profil brut dans un répertoire temporaire indiqué dans sa sortie. Il ne mesure pas un gain FPS.
+
+Sur ce profil, environ 1,21 s inclusives concernent le runtime des personnages, dont 0,83 s pour l'animation et 0,37 s pour la simulation. La calibration de marche représente 0,39 s inclusives : vérifier les premières utilisations de nouveaux clips avant d'en déduire un coût permanent. Le rouge-gorge représente 0,49 s inclusives, dont 0,27 s de mesure d'appui. Les limites animées représentent environ 0,20 s sur un chemin du renderer. Ces durées inclusives se chevauchent et ne doivent pas être additionnées.
+
+Les plus gros coûts propres identifiés sont dans le renderer Three.js (paramètres/programmes de matériaux et soumission des maillages). La catégorie native `(program)` ne permet pas d'attribuer son temps à une fonction applicative ou au GPU. Prochaines investigations : compter les changements de programmes et de versions des matériaux, identifier les principaux émetteurs de draw calls et les géométries rendues dans la passe solaire ; comparer ensuite une correction ciblée en alternance avant/après. Aucune baisse de qualité ni optimisation non mesurée n'est appliquée à partir de ce seul profil.
