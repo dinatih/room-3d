@@ -280,6 +280,15 @@ export function useCameraShortcuts({
         return;
       }
 
+      // Raccourci ? : basculer le contrôle clavier (personnage vs caméra)
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key === '?') {
+        e.preventDefault();
+        if (e.repeat) return;
+        const store = useSceneStore.getState();
+        store.setArrowControl(store.arrowControl === 'character' ? 'camera' : 'character');
+        return;
+      }
+
       // Debug gabarits et trajets : activer ou désactiver les deux ensemble.
       if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'j') {
         e.preventDefault();

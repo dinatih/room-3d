@@ -123,6 +123,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
             <div>
               <Section title="Flèches — choix près de la croix" />
               <p className="small text-body-secondary mb-1">Les touches du clavier et la croix virtuelle utilisent le même contrôle. Le choix est conservé dans l’URL.</p>
+              <R label="Basculer contrôle clavier : personnage / caméra" keys={['?']} />
               <R label="Caméra · Studio / Caméra · PNJ : tourner et incliner" keys={['↑↓←→']} />
               <R label="Déplacer · PNJ : avancer / reculer" keys={['↑', '↓']} />
               <R label="Déplacer · PNJ : tourner le personnage" keys={['←', '→']} />
