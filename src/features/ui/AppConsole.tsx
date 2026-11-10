@@ -429,7 +429,7 @@ export function AppConsole({
           className={`d-flex ${open ? 'flex-wrap flex-shrink-0' : 'flex-nowrap flex-grow-1 flex-shrink-1'} align-items-center justify-content-between gap-1 mw-100 user-select-none`}
           style={{ cursor: 'pointer', minWidth: 0 }}
           onClick={handleToggle}
-          title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
+          title={open ? `Fermer la console (B) [${__COMMIT_HASH__}]` : `Ouvrir la console (B) [${__COMMIT_HASH__}]`}
         >
           {!open && latestLog && (
             <span className="small font-monospace text-truncate flex-grow-1" title={`[${latestLogTag}] ${latestLog.message}`}>
@@ -443,7 +443,7 @@ export function AppConsole({
               e.stopPropagation();
               handleToggle();
             }}
-            title={open ? 'Fermer la console (B)' : 'Ouvrir la console (B)'}
+            title={open ? `Fermer la console (B) [${__COMMIT_HASH__}]` : `Ouvrir la console (B) [${__COMMIT_HASH__}]`}
             aria-expanded={open}
           >
             <i className="bi bi-terminal" aria-hidden="true" />

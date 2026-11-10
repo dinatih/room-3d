@@ -20,4 +20,7 @@ console.warn = (...args: any[]) => {
 
 useGLTF.setDecoderPath('/draco/');
 
+console.info(`[Room-3D] v${__APP_VERSION__} (${__COMMIT_HASH__}) - ${__BUILD_TIME__}`);
+(window as any).__ROOM_3D_BUILD__ = { version: __APP_VERSION__, commit: __COMMIT_HASH__, buildTime: __BUILD_TIME__ };
+
 createRoot(document.getElementById('root')!).render(<><HomeAssistantSync /><Studio /></>);

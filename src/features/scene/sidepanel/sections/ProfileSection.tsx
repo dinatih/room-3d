@@ -103,6 +103,20 @@ export function ProfileSection({ isMobile: _isMobile, onOpenCv, onOpenContact }:
           <span className="fw-semibold">LinkedIn</span>
         </a>
       </div>
+
+      {/* Version & Build */}
+      <div className="d-flex justify-content-between text-muted border-top border-light-subtle pt-1 font-monospace small">
+        <a
+          href={`https://github.com/dinatih/room-3d/commit/${__COMMIT_HASH__}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-decoration-none text-muted"
+          title="Voir le commit sur GitHub"
+        >
+          v{__APP_VERSION__} · {__COMMIT_HASH__}
+        </a>
+        <span>{__BUILD_TIME__}</span>
+      </div>
     </div>
   );
 }
