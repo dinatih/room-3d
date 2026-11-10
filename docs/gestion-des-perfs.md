@@ -179,15 +179,15 @@ Trois petits objets activent cette passe dans la vue studio par défaut :
 - Mini-four Ninja : matériau `Material.002` de la porte, transmission 1 et masque texturé.
 - Télécommande Air Performer, intégrée ou indépendante : matériau `ASSET_MAT_MR.001`, transmission 1 et masque texturé.
 
-La correction est réservée à ces composants. En Mid/Low, `useSceneGlass` remplace leurs matériaux transmissifs par des clones transparents sans réfraction. Le rouge du masque de transmission devient un masque d'opacité, en conservant les régions opaques, les UV et les paramètres d'échantillonnage. La réflectance à incidence normale, calculée depuis l'IOR, garde une faible opacité au verre clair. Couleurs, normales, rugosité, géométrie et animations sont conservées. Il n'y a pas de travail supplémentaire par image : le masque est calculé au montage/changement de qualité, puis réutilisé.
+La correction est réservée à ces composants. Dans tous les presets, High compris, `useSceneGlass` remplace leurs matériaux transmissifs par des clones transparents sans réfraction. Le rouge du masque de transmission devient un masque d'opacité, en conservant les régions opaques, les UV et les paramètres d'échantillonnage. La réflectance à incidence normale, calculée depuis l'IOR, garde une faible opacité au verre clair. Couleurs, normales, rugosité, géométrie et animations sont conservées. Il n'y a pas de travail supplémentaire par image : le masque est calculé au montage ou à la bascule de comparaison, puis réutilisé.
 
-**Compromis visuel explicite :** l'approximation ne déforme plus ce qui est derrière le verre et ne reproduit pas exactement sa réponse selon l'angle. Le preset High et les previews conservent la réfraction et les matériaux d'origine. Les matériaux et masques créés sont libérés au démontage ou au retour en High ; les images sources partagées restent intactes. Les deux matériaux transmissifs des surcouches anatomiques masquées ne sont pas modifiés : activer ces surcouches peut réintroduire une passe de transmission.
+**Compromis visuel explicite :** l'approximation ne déforme plus ce qui est derrière le verre et ne reproduit pas exactement sa réponse selon l'angle. Les previews affichent les matériaux d'origine par défaut. Le bouton « Vitrage optimisé », réservé aux objets concernés, permet de comparer les deux rendus sans changer les textures HD ni les matériaux de la scène principale. Ce choix reste local à chaque preview. Les matériaux et masques créés sont libérés au démontage ou au retour à l'original ; les images sources partagées restent intactes. Les deux matériaux transmissifs des surcouches anatomiques masquées ne sont pas modifiés : activer ces surcouches peut réintroduire une passe de transmission.
 
 ### Reproduire la comparaison
 
 ```bash
-node scripts/profile-studio-glass.cjs --hardware-gpu
-node scripts/profile-studio-glass.cjs original scene --night --hardware-gpu
+node scripts/profile-studio-rendering.cjs --hardware-gpu
+node scripts/profile-studio-rendering.cjs original scene --night --hardware-gpu
 node scripts/test-scene-glass-previews.cjs --hardware-gpu
 ```
 
@@ -231,6 +231,53 @@ Le contrôle retrouve le gain de nuit, sans hausse de swap ni changement d'alime
 
 ### Contrôles de non-régression
 
-Les 13 tests unitaires ciblés (`scene-glass`, `appliance-idle`, `performance-tracking`) passent. Ils vérifient notamment le masque d'opacité, les UV/samplers, les références d'images partagées, la libération des seules ressources créées, les modes High/preview et le fonctionnement des appareils au repos/en animation. Le contrôle navigateur `test-scene-glass-previews.cjs` vérifie les matériaux simplifiés dans le studio, la restauration High → Mid, puis les previews du four, de l'Air Performer (avec sa télécommande) et du téléphone : leurs transmissions d'origine 1 / 1 / 0,5 sont conservées. Captures de ce contrôle : `/tmp/room-glass-previews-NWD7ts/`.
+Le contrôle navigateur `test-scene-glass-previews.cjs` vérifie le vitrage optimisé en High et Mid après rendu effectif, puis les bascules original → optimisé → original dans les previews du four, de l'Air Performer et du téléphone. Le rendu d'origine est sélectionné par défaut dans les previews ; changer ce choix ne modifie pas le studio. Les tests unitaires vérifient aussi la conservation des UV/samplers, des images partagées et la libération des ressources créées.
 
 Validation finale du changement : `npx tsc --noEmit` et `npm run build` réussissent ; les six passages GPU isolés (quatre de jour, deux de nuit) et le contrôle navigateur des previews réussissent. Les warnings de dépendances Sass et de taille de bundle restent présents.
+
+
+## Éclairage sans contribution — recherche suivante du 10 novembre
+
+Le profil après optimisation du verre (`/tmp/room-cpu-profile-UcN4El/cpu.json`) ne montre plus le même coût de sélection de programmes : environ 128 ms de `getParameters` sur 20 secondes, contre 806 ms dans le profil précédent. Les transformations des hiérarchies et les animations restent des pistes CPU ; aucune modification arbitraire de leur cadence n'est appliquée.
+
+Dans la vue standard de jour, 10 des 14 lumières ont une intensité nulle. Les cacher améliore les FPS, mais change le nombre de sources et donc les variantes de shaders. **Cette approche est rejetée** : le premier allumage du frigo a produit 3464 ms de rendu CPU et un cache montant à 385 programmes, contre environ 19 ms et 134 programmes avec les lumières conservées. Rapports d'interactions : `test-results/light-switches-scene-KEPiIX/switches.json` et `test-results/light-switches-original-CzGSNT/switches.json`. Ces observations expliquent le choix final ; le code qui cachait les sources n'est pas conservé.
+
+### Variante retenue : garder les sources et ignorer leur travail inutile
+
+`zeroEnergyLights.ts` conserve les sources, les uniformes et les clés de cache. Il entoure les cinq boucles d'éclairage direct de Three.js d'un test RGB exactement nul, puis évite le BRDF lorsque Three.js indique déjà `directLight.visible === false` (atténuation nulle ou hors du cône). Aucun seuil de luminosité ou de distance n'est ajouté. Couleurs, intensités, ombres, cadence, résolution et géométrie restent inchangées.
+
+Le module est installé avant la compilation des canevas studio et preview. Son adaptation au chunk GLSL installé est vérifiée explicitement : cinq boucles et quatre appels directs doivent être présents, sinon l'application échoue avec un message de dépendance inattendue. Une modification de ce module en HMR restaure le chunk puis recharge la page pour éviter des programmes déjà compilés avec l'ancienne source.
+
+### Mesure alternée et limites
+
+Comparaison exploratoire A/B/B/A dans la même scène headless, 1362 × 810, DPR 1, neuf personnages, Mid, midi, secteur ; 15 secondes de chauffe après chaque bascule et 20 secondes mesurées. Le diagnostic utilise `onBeforeCompile` et une clé de cache distincte pour la variante témoin, sans modifier les lumières. Les matériaux de la variante optimisée réutilisent leurs programmes. Les programmes supplémentaires du diagnostic ne sont pas créés en fonctionnement normal.
+
+| Passage | Shader | FPS | GPU médian | Appels médians |
+| --- | --- | ---: | ---: | ---: |
+| A1 | Original | 19,38 | 19,83 ms | 1846 |
+| B1 | Optimisé | 21,27 | 17,12 ms | 1804 |
+| B2 | Optimisé | 21,99 | 19,08 ms | 1889 |
+| A2 | Original | 19,02 | 20,40 ms | 1841 |
+
+Moyennes par variante : environ **+13 % de FPS** et **−10 % de temps GPU médian**. Les positions des PNJ continuent d'évoluer, ce qui explique une partie de la dispersion des appels et triangles. Le swap varie de moins de 1 Mio pendant les trois premiers passages et augmente de 14 Mio au dernier ; cette enquête n'est pas une référence approuvée. Les valeurs absolues du Chrome interactif ne se déduisent pas de ce test headless. Résultats conservés dans `test-results/lights-shader-abba/abba.json`.
+
+Une comparaison antérieure en navigateurs neufs, limitée au test RGB nul avant ajout de la garde d'atténuation, est dans `test-results/lights-day-XUCctb/report.md` : GPU 20,70 → 16,68 ms, FPS 17,28 → 18,37. La hausse de swap (398 puis 72 Mio) rend cette campagne impropre à l'approbation d'une référence.
+
+### Validation visuelle et interactions
+
+La comparaison GPU de quatre matériaux (Standard, Physical avec clearcoat, Phong, Lambert), avec trois états de lumières directionnelles/ponctuelles/spot et des ombres PCF, donne **zéro différence d'octet dans les 12 cas**. Les contextes de comparaison possèdent chacun leurs cibles d'ombres. Résultat : `test-results/lights-shader-pixels/pixels.json`.
+
+Le contrôle de nuit sur la vraie scène à neuf personnages effectue deux cycles d'allumage/extinction du séjour, du four et du frigo : **123 programmes restent présents pendant les 12 bascules**. Le maximum CPU de rendu observé est de 23,1 ms ; aucune pause de compilation de plusieurs secondes n'est retrouvée. Après collecte explicite du tas au début et à la fin, le RSS cumulé des renderers passe de 2,960 à 2,967 Go ; la PSS du navigateur complet termine à 3,096 Go. Le total Chrome dépasse donc encore 3 Go, même si le RSS renderer reste sous ce seuil après GC. Rapport : `test-results/light-switches-scene-0zPegP/switches.json`.
+
+### Reproduire
+
+```bash
+node scripts/profile-studio-rendering.cjs --lights --hardware-gpu
+node scripts/test-zero-light-shader.cjs --hardware-gpu
+node scripts/test-light-switches.cjs --night --hardware-gpu
+npm run test:perf -- --case=studio-9-mid-day-original-light-shader,studio-9-mid-day --hardware-gpu
+```
+
+Le profilage permanent conserve quatre navigateurs indépendants et 30 secondes mesurées par passage ; il complète l'enquête sur une même session. `--night` choisit minuit. La variante de diagnostic `-original-light-shader` neutralise seulement l'installation du chunk optimisé. Le mode apparaît dans la configuration du passage, sans devenir un critère d'incompatibilité d'une référence : le rendu visuel est identique. Le suivi standard continue donc à pouvoir comparer les implémentations à conditions égales.
+
+Validation finale : 28 tests unitaires ciblés passent (shaders, vitrage, astronomie/jour-nuit, appareils, métriques, ombres de preview et boucle VR), ainsi que le contrôle Air Performer ciblé. TypeScript et le build de production réussissent. Le dernier contrôle High/Mid et les neuf bascules dans les trois previews réussissent ; captures dans `/tmp/room-glass-previews-7IFWwF/`. Les avertissements Sass et de taille de bundle préexistants restent présents.

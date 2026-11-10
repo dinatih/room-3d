@@ -1,3 +1,4 @@
+import './utils/zeroEnergyLights';
 import { SimulationClock } from './SimulationClock';
 import { SceneModelContext } from './useGLTFClone';
 import { WeatherSystem } from './WeatherSystem';

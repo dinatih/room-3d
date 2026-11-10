@@ -30,7 +30,7 @@ export function SunLight() {
     // La lumière reste en amont de ce volume, indépendamment du disque visible.
     lightRef.current.position.copy(sun.direction).multiplyScalar(2 * SKY_RADIUS).add(center);
     lightRef.current.intensity = sunParams(elevation, lightRef.current.color);
-    // Initialiser la texture une fois : les shaders PCF l’échantillonnent même à intensité nulle.
+    // Garder les textures disponibles pour les configurations de shaders en cache.
     lightRef.current.shadow.autoUpdate = lightRef.current.intensity > 0 || lightRef.current.shadow.map === null;
     lightRef.current.shadow.needsUpdate = false;
   });

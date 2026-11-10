@@ -274,6 +274,7 @@ it('lit les actions Air Performer directement dans la preview et accepte un plac
     '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene }; } },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => [] },
     '../utils/useFurnitureToggles': { useFurnitureToggles: () => ({}) }, '../store/useSceneStore': {},
+    '../utils/useSceneGlass': { useSceneGlass() {} },
     '../../home-assistant/airPerformer': load('src/features/home-assistant/airPerformer.ts', {}),
     '../../home-assistant/appliances': {},
     '../../home-assistant/connection': { isHomeAssistantLinked: () => false, useHomeAssistant: () => ({ entities: {} }) },

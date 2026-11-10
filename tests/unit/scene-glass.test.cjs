@@ -33,15 +33,14 @@ it('approximates untextured glass without mutating a shared preview material',()
  assert.ok(Math.abs(mesh.material.opacity-.208)<1e-12);assert.equal(source.opacity,.4);assert.equal(source.transmission,.5);cleanup();assert.equal(mesh.material,source);
 });
 
-it('applies the approximation only in the main scene, leaving detailed previews untouched',()=>{
- const context={};
- for(const [inScene, graphicsQualityPreset] of [[false,'mid'],[true,'mid'],[true,'high']]){
+it('optimizes every scene preset and lets each preview override glass independently',()=>{
+ const context={},overrideContext={};
+ for(const [inScene, override] of [[false,undefined],[true,undefined],[false,true],[false,false],[true,false]]){
   const root=new THREE.Group(),events=[];
   const {useSceneGlass}=load('src/features/scene/utils/useSceneGlass.ts',{
-   react:{useContext:value=>{assert.equal(value,context);return inScene},useLayoutEffect:fn=>{const cleanup=fn();if(cleanup)cleanup()}},
+   react:{createContext:()=>overrideContext,useContext:value=>value===context?inScene:override,useLayoutEffect:fn=>{const cleanup=fn();if(cleanup)cleanup()}},
    '../useGLTFClone':{SceneModelContext:context},'./sceneGlass':{simplifySceneGlass:value=>{assert.equal(value,root);events.push('apply');return()=>events.push('release')}},
-   '../store/useSceneStore':{useSceneStore:select=>select({graphicsQualityPreset})}
   });
-  useSceneGlass(root);assert.deepEqual(events,inScene&&graphicsQualityPreset!=='high'?['apply','release']:[]);
+  useSceneGlass(root);assert.deepEqual(events,(override??inScene)?['apply','release']:[]);
  }
 });

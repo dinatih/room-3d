@@ -66,9 +66,15 @@ exports.withBrowser = async (fixture, exercise) => {
             cacheDir,
             server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
+                        if (fixture.originalLightShader && id.split('?')[0].endsWith('/src/features/scene/utils/zeroEnergyLights.ts')) {
+                            const install = 'ShaderChunk.lights_fragment_begin = optimizeDirectLightShader(originalDirectLightShader);';
+                            assert(source.includes(install), 'Zero-energy shader diagnostic no longer matches source');
+                            return { code: source.replace(install, ''), map: null };
+                        }
                         if (fixture.originalSceneGlass && id.split('?')[0].endsWith('/src/features/scene/utils/useSceneGlass.ts')) {
-                            assert(source.includes('export function useSceneGlass(root: Object3D): void'), 'Scene glass diagnostic no longer matches source');
-                            return { code: 'export function useSceneGlass() {}', map: null };
+                            const effect = 'optimized ? simplifySceneGlass(root) : undefined';
+                            assert(source.includes(effect), 'Scene glass diagnostic no longer matches source');
+                            return { code: source.replace(effect, 'undefined'), map: null };
                         }
                         if (fixture.retainLoaderParser && id.split('?')[0].endsWith('/src/features/scene/useGLTFClone.ts')) {
                             const cleanup = 'delete (gltf as { parser?: unknown }).parser;';

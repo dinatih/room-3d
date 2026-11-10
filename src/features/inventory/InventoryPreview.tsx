@@ -1,5 +1,7 @@
+import '../scene/utils/zeroEnergyLights';
 import { disposeModelResources } from '../scene/utils/disposeModelResources';
 import { enableWireframe } from '../scene/utils/wireframe';
+import { OptimizedGlassContext, SCENE_GLASS_ITEM_IDS } from '../scene/utils/useSceneGlass';
 import { SmartActionPreview } from './SmartActionPreview';
 import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import type { SceneItemProps } from '@shared/types';
@@ -918,6 +920,7 @@ export function InventoryPreview({
     setBoundsRadius(next);
   }, [preserveStateOnItemChange]);
   const [showGrid, setShowGrid] = useState(defaultShowGrid);
+  const [optimizedGlass, setOptimizedGlass] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
   const handleResetPreviewView = useCallback(() => {
@@ -1268,7 +1271,9 @@ export function InventoryPreview({
               )}
               <PreviewCameraKeyboardController onResetView={handleResetPreviewView} onUserInteraction={() => setAutoRotate(false)} />
               {walkDebug ? <WalkDebugGround /> : showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />}
-              <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={handleTargetChange} onBoundsChange={handleBoundsChange} onStats={onGlbStats} /></Suspense>
+              <OptimizedGlassContext.Provider value={optimizedGlass}>
+                <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={handleTargetChange} onBoundsChange={handleBoundsChange} onStats={onGlbStats} /></Suspense>
+              </OptimizedGlassContext.Provider>
               <GlobalSkeletonHelpers
                 show={actionStates.showBones}
                 selectedBoneName={selectedBoneName}
@@ -1466,6 +1471,13 @@ export function InventoryPreview({
         </>
       )} toolbarActions={showing3D && (
         <>
+        {SCENE_GLASS_ITEM_IDS.includes(item.id) && (
+          <button type="button" className={`${TOOLBAR_BUTTON_CLASS} ${optimizedGlass ? 'btn-primary' : 'btn-outline-secondary'}`}
+            onClick={() => setOptimizedGlass(value => !value)} aria-label="Vitrage optimisé" aria-pressed={optimizedGlass}
+            title="Comparer le vitrage optimisé au vitrage d’origine">
+            <i className="bi bi-window" aria-hidden="true" /> Vitrage optimisé
+          </button>
+        )}
         <button
           type="button"
           className={`${TOOLBAR_BUTTON_CLASS} ${showMiniPerf ? 'btn-primary' : 'btn-outline-secondary'}`}
