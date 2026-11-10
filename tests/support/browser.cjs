@@ -66,6 +66,10 @@ exports.withBrowser = async (fixture, exercise) => {
             cacheDir,
             server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
+                        if (fixture.originalSceneGlass && id.split('?')[0].endsWith('/src/features/scene/utils/useSceneGlass.ts')) {
+                            assert(source.includes('export function useSceneGlass(root: Object3D): void'), 'Scene glass diagnostic no longer matches source');
+                            return { code: 'export function useSceneGlass() {}', map: null };
+                        }
                         if (fixture.retainLoaderParser && id.split('?')[0].endsWith('/src/features/scene/useGLTFClone.ts')) {
                             const cleanup = 'delete (gltf as { parser?: unknown }).parser;';
                             assert(source.includes(cleanup), 'Parser retention diagnostic no longer matches source');

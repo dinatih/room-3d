@@ -45,7 +45,7 @@ Une hausse du swap ou un changement d’alimentation est signalé. Examiner auss
 1. Mesurer avant/après avec les mêmes conditions et alterner les versions (A/B/B/A pour une enquête). Garder une seule instance du navigateur de test à la fois.
 2. Lire les écarts de temps d’image, CPU/GPU, appels, triangles, matériaux et programmes ; examiner mémoire, erreurs et captures jour/nuit.
 3. Documenter le coût dans la description de la modification. En cas d’alerte, isoler la cause et répéter avant de changer la référence.
-4. Optimiser un coût confirmé à la fois, sans diminuer la qualité visuelle. Vérifier aussi le cycle normal météo/jour/nuit après toute modification du rendu.
+4. Optimiser un coût confirmé à la fois. Préserver le rendu ; si une approximation est retenue, documenter son effet visuel et le mode qui garde le rendu détaillé. Vérifier aussi le cycle normal météo/jour/nuit après toute modification du rendu.
 
 Pour isoler une famille de coûts, chaque cas jour/nuit possède les suffixes `-no-shadows`, `-no-environment` et `-no-characters`. Exemple :
 
@@ -166,3 +166,71 @@ Le générateur nécessite Pillow. Les tests Python vérifient les 63 modèles :
 Un plan très rapproché dans la scène peut montrer moins de détail sur ces objets ; l'inventaire conserve la résolution d'origine. Faire un rechargement complet après mise à jour pour mesurer proprement : HMR et les caches d'une ancienne session peuvent conserver des ressources déjà chargées. Les références précédentes doivent être remesurées : les conditions de performance enregistrent désormais le palier `sceneModels`.
 
 TypeScript, build, tests d'intégrité des GLB et 32 contrôles unitaires ciblés passent. La suite globale présente les échecs déjà observés avant ce travail (chargements de modules dans les mocks, warm-up, clips Miley, état partagé de navigation). Le seul échec ajouté pendant l'adaptation des mocks UTÅKER a été corrigé et son groupe ciblé repassé.
+
+## Réfraction des petits objets — 10 novembre 2026
+
+Le profil CPU de la scène aux textures 512 px montre encore un coût important dans `getParameters` et `getProgram`. Le comptage des soumissions révèle de nombreux changements de programmes pour les mêmes matériaux entre la passe de transmission et l'image finale. Dans Three.js r186, un objet visible avec `MeshPhysicalMaterial.transmission > 0` déclenche une passe qui redessine les objets opaques dans une texture, sans tone mapping, avant le rendu final. Le coût dépasse donc largement celui du verre lui-même.
+
+Ces changements ne signifient pas que tous les shaders sont recompilés à chaque image : les programmes sont en cache. Le coût vient du rendu supplémentaire et du travail de sélection/configuration des variantes.
+
+Trois petits objets activent cette passe dans la vue studio par défaut :
+
+- Téléphone Xiaomi : vitre, transmission 0,5.
+- Mini-four Ninja : matériau `Material.002` de la porte, transmission 1 et masque texturé.
+- Télécommande Air Performer, intégrée ou indépendante : matériau `ASSET_MAT_MR.001`, transmission 1 et masque texturé.
+
+La correction est réservée à ces composants. En Mid/Low, `useSceneGlass` remplace leurs matériaux transmissifs par des clones transparents sans réfraction. Le rouge du masque de transmission devient un masque d'opacité, en conservant les régions opaques, les UV et les paramètres d'échantillonnage. La réflectance à incidence normale, calculée depuis l'IOR, garde une faible opacité au verre clair. Couleurs, normales, rugosité, géométrie et animations sont conservées. Il n'y a pas de travail supplémentaire par image : le masque est calculé au montage/changement de qualité, puis réutilisé.
+
+**Compromis visuel explicite :** l'approximation ne déforme plus ce qui est derrière le verre et ne reproduit pas exactement sa réponse selon l'angle. Le preset High et les previews conservent la réfraction et les matériaux d'origine. Les matériaux et masques créés sont libérés au démontage ou au retour en High ; les images sources partagées restent intactes. Les deux matériaux transmissifs des surcouches anatomiques masquées ne sont pas modifiés : activer ces surcouches peut réintroduire une passe de transmission.
+
+### Reproduire la comparaison
+
+```bash
+node scripts/profile-studio-glass.cjs --hardware-gpu
+node scripts/profile-studio-glass.cjs original scene --night --hardware-gpu
+node scripts/test-scene-glass-previews.cjs --hardware-gpu
+```
+
+Le premier script alterne original/scène/scène/original dans quatre navigateurs headless neufs, avec la scène standard, 15 secondes de chauffe et 30 secondes mesurées par passage. L'option `--night` choisit minuit. Il utilise les mêmes collecteurs CPU/GPU/mémoire et les mêmes diagnostics d'alimentation/swap que la campagne habituelle ; ses rapports sont dans `test-results/glass-<day|night>-*/report.md`. Il s'agit d'une enquête, pas d'une référence approuvée.
+
+Le suffixe `-refractive-glass` permet aussi une campagne complète de trois passages de 60 secondes avec les matériaux précédents, en gardant les textures 512 px :
+
+```bash
+npm run test:perf -- --case=studio-9-mid-day-refractive-glass,studio-9-mid-day --hardware-gpu
+```
+
+Cette variante neutralise uniquement le hook de simplification, par une transformation Vite réservée au diagnostic. Les conditions des rapports indiquent désormais `sceneGlass` ; les anciennes références doivent être recréées après examen d'une campagne saine. Les scénarios standard continuent à mesurer le rendu normal de l'application.
+
+L'essai exploratoire sur une même page, en désactivant la transmission, donne 11,28 / 12,87 FPS avant contre 20,21 / 21,25 FPS sans cette passe. Il sert à identifier le coût, pas à valider le rendu de l'approximation ni une référence. Une séparation expérimentale des matériaux d'ombres n'a pas amélioré les FPS ; elle n'est pas intégrée au code de l'application.
+
+### Validation isolée de jour
+
+Campagne A/B/B/A dans `test-results/glass-day-QBZAWm/report.md`, AMD Radeon 840M via ANGLE/Vulkan, secteur, 1362 × 810, DPR 1, neuf personnages en Mid. Chaque ligne est un navigateur neuf ; la simulation autonome continue, les positions peuvent donc diverger entre passages.
+
+| Passage | Verre | FPS | Image p95 | CPU rendu médian | GPU médian | Appels médians | Triangles médians |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| A1 | Réfraction d'origine | 12,41 | 96,6 ms | 28,8 ms | 37,80 ms | 2723 | 11,38 M |
+| B1 | Approximation Mid | 19,54 | 64,6 ms | 15,1 ms | 20,72 ms | 1874 | 7,69 M |
+| B2 | Approximation Mid | 19,11 | 62,7 ms | 15,3 ms | 21,19 ms | 1856 | 7,70 M |
+| A2 | Réfraction d'origine | 12,91 | 95,5 ms | 31,2 ms | 41,24 ms | 2782 | 11,53 M |
+
+Sur les moyennes des deux passages par version : environ **+53 % de FPS**, **−49 % de temps CPU de rendu** et **−47 % de temps GPU**. Les appels et triangles baissent d'environ un tiers, parce qu'une passe disparaît, sans suppression de géométrie. Ce gain headless ne prédit pas une valeur absolue dans le Chrome interactif de l'utilisateur.
+
+Le swap augmente de 72,5 Mio pendant A1, puis diminue légèrement sur les trois autres passages ; l'alimentation reste sur secteur. La campagne reste donc une enquête, pas une nouvelle référence approuvée. Refaire les scénarios standard de trois passages de 60 secondes dans des conditions stables avant de créer la référence.
+
+### Contrôle nocturne
+
+Deux passages isolés supplémentaires, 15 secondes de chauffe puis 30 secondes mesurées, secteur, même GPU et même scénario à minuit. Rapport : `test-results/glass-night-xb7WUC/report.md`.
+
+| Verre | FPS | Image p95 | CPU rendu médian | GPU médian | Appels médians | Triangles médians |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Réfraction d'origine | 12,94 | 92,1 ms | 25,1 ms | 31,96 ms | 1871 | 6,57 M |
+| Approximation Mid | 21,83 | 57,5 ms | 12,5 ms | 17,25 ms | 1039 | 3,80 M |
+
+Le contrôle retrouve le gain de nuit, sans hausse de swap ni changement d'alimentation. Il ne comporte qu'un passage par version et ne remplace pas les trois répétitions de la campagne standard.
+
+### Contrôles de non-régression
+
+Les 13 tests unitaires ciblés (`scene-glass`, `appliance-idle`, `performance-tracking`) passent. Ils vérifient notamment le masque d'opacité, les UV/samplers, les références d'images partagées, la libération des seules ressources créées, les modes High/preview et le fonctionnement des appareils au repos/en animation. Le contrôle navigateur `test-scene-glass-previews.cjs` vérifie les matériaux simplifiés dans le studio, la restauration High → Mid, puis les previews du four, de l'Air Performer (avec sa télécommande) et du téléphone : leurs transmissions d'origine 1 / 1 / 0,5 sont conservées. Captures de ce contrôle : `/tmp/room-glass-previews-NWD7ts/`.
+
+Validation finale du changement : `npx tsc --noEmit` et `npm run build` réussissent ; les six passages GPU isolés (quatre de jour, deux de nuit) et le contrôle navigateur des previews réussissent. Les warnings de dépendances Sass et de taille de bundle restent présents.

@@ -10,6 +10,7 @@ import { isHomeAssistantLinked, useHomeAssistant } from '../../home-assistant/co
 import { applianceValue } from '../../home-assistant/appliances';
 import { AIR_PERFORMER_ACTION_IDS, AIR_PERFORMER_CONTROLS } from '../../home-assistant/airPerformer';
 import type { SceneItemProps } from '@shared/types';
+import { useSceneGlass } from '../utils/useSceneGlass';
 
 const GLB = 'items/philips-amf870/philips-amf870.glb';
 // Visual sweep rate, independent of ventilation speed. HA reports the arc, not motor position.
@@ -17,6 +18,7 @@ const SWEEP_RADIANS_PER_SECOND = Math.PI / 12;
 
 export function AirPerformer({ onSize, actionState = {}, isPreview = false, remoteDocked = true }: Partial<Omit<SceneItemProps, 'item'>> & { remoteDocked?: boolean }) {
   const { scene } = useGLTFClone(GLB);
+  useSceneGlass(scene);
   const { invalidate } = useThree();
   const local = useFurnitureToggles(AIR_PERFORMER_ACTION_IDS);
   const ha = useHomeAssistant();

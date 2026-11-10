@@ -27,6 +27,7 @@ exports.measure = async (page, result, system, fixture) => {
     result.conditions = {
         execution: 'headless',
         sceneModels: fixture.sceneModels ?? 'scene-512',
+        sceneGlass: fixture.originalSceneGlass || fixture.preset === 'high' ? 'refractive' : 'alpha-mask',
         powerMode: initialHost.powerMode,
         scenario: fixture.activity, configuration: { count: fixture.count, preset: fixture.preset, seed: fixture.seed, collisions: fixture.collisions, stableMs: fixture.stableMs, sessionMs: fixture.sessionMs, environment: fixture.fixedEnvironment ?? null, frameSource: fixture.fixedEnvironment ? 'main-scene-render' : 'requestAnimationFrame' },
         viewport: fixture.viewport, drawingBuffer: result.loaded.drawingBuffer, models: result.loaded.models,

@@ -44,6 +44,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     '@features/scene/glbUtils': utils, '../glbUtils': utils,
     '@features/scene/store/useSceneStore': sceneStore, '../store/useSceneStore': sceneStore,
     '../objectActions': { getObjectActionIds: () => [primaryKey] }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { fridge: { slots: [] } } },
+    '../utils/useSceneGlass': { useSceneGlass() {} },
   });
   const render = (isPreview = true) => { effectIndex = 0; Component({ actionState, isPreview, onSize: size => sizes.push(size.toArray()) }); };
   render();

@@ -6,6 +6,7 @@ import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { glbLocalBBox } from '../glbUtils';
 import { getObjectActionIds } from '../objectActions';
 import type { SceneItemProps } from '@shared/types';
+import { useSceneGlass } from '../utils/useSceneGlass';
 
 const GLB = 'items/ninja-sp101/ninja-sp101-animated.glb';
 export const NINJA_DOOR_DURATION = 0.8;
@@ -93,6 +94,8 @@ export function NinjaSP101({ actionState = {}, onSize, isPreview = false }: Part
   }, [scene, animations, onSize]);
 
   useLayoutEffect(() => { runtime.current!.light.castShadow = lightsHD; }, [scene, animations, isPreview, invalidate, lightsHD]);
+
+  useSceneGlass(scene);
 
   useEffect(() => { invalidate(); }, [wantDoor, wantRack, lightOn, paused, invalidate]);
 

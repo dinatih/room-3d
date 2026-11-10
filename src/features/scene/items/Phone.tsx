@@ -7,6 +7,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
+import { useSceneGlass } from '../utils/useSceneGlass';
 
 const TARGET_D = 16.2; // longueur du téléphone (cm)
 
@@ -58,6 +59,8 @@ export function Phone({ onSize }: SceneModelProps) {
     );
     onSize?.(size);
   }, [scene]);
+
+  useSceneGlass(scene);
 
   return (
     <group userData={{ hoverAction: { label: 'Xiaomi 17 Pro Max' } }}>
