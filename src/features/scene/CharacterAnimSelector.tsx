@@ -10,7 +10,7 @@ import type { AnimationCategory } from './animations/animationRegistry';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 
-type AnimationSource = 'custom' | 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'behave' | 'kit' | 'accad' | 'cmu' | 'dancedb' | 'moyo' | 'ssm';
+type AnimationSource = 'custom' | 'miley' | 'mixamo' | 'npz' | 'others' | 'fab' | 'interx' | 'kit' | 'accad' | 'cmu' | 'dancedb' | 'moyo' | 'ssm';
 
 export const ANIM_CATEGORIES = [
   { key: 'combat', label: 'Combat', icon: 'bi-shield-shaded' },
@@ -28,7 +28,6 @@ export const ANIM_CATEGORIES = [
   { key: 'others', label: 'Others', icon: 'bi-folder' },
   { key: 'fab', label: 'Fab / ActorCore', icon: 'bi-folder' },
   { key: 'interx', label: 'Inter-X', icon: 'bi-folder' },
-  { key: 'behave', label: 'BEHAVE', icon: 'bi-folder' },
   { key: 'kit', label: 'KIT', icon: 'bi-folder' },
   { key: 'accad', label: 'ACCAD', icon: 'bi-folder' },
   { key: 'cmu', label: 'CMU', icon: 'bi-folder' },

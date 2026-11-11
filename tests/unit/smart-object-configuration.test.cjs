@@ -36,7 +36,7 @@ it('expose uniquement les lits présents dans la configuration active', () => {
 });
 
 it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans Gunplay', () => {
-  const manifests = Object.fromEntries(['interx', 'fab', 'behave', 'kit', 'accad'].map(name => [`./${name}Manifest`, { [`${name.toUpperCase()}_ANIMATION_DEFINITIONS`]: [] }]));
+  const manifests = Object.fromEntries(['interx', 'fab', 'kit', 'accad'].map(name => [`./${name}Manifest`, { [`${name.toUpperCase()}_ANIMATION_DEFINITIONS`]: [] }]));
   const registry = load('src/features/scene/animations/animationRegistry.ts', manifests);
   const { getAnimationsByTags, resolveSlotAnimationInfo } = load('src/features/scene/animations/animationResolver.ts', {
     './animationRegistry': registry, './duoAnimations': {},

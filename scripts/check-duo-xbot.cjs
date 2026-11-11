@@ -29,7 +29,6 @@ const interx = load('src/features/scene/animations/interxManifest.ts', {
 const registry = load('src/features/scene/animations/animationRegistry.ts', {
   './interxManifest': interx,
   './fabManifest': load('src/features/scene/animations/fabManifest.ts', {}),
-  './behaveManifest': load('src/features/scene/animations/behaveManifest.ts', {}),
   './kitManifest': load('src/features/scene/animations/kitManifest.ts', {}),
 });
 const duo = load('src/features/scene/animations/duoAnimations.ts', { './animationRegistry': registry, './interxManifest': interx });

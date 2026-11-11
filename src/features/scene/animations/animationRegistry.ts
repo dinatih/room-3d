@@ -7,7 +7,6 @@
 
 import { INTERX_ANIMATION_DEFINITIONS } from './interxManifest';
 import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
-import { BEHAVE_ANIMATION_DEFINITIONS } from './behaveManifest';
 import { KIT_ANIMATION_DEFINITIONS } from './kitManifest';
 import { ACCAD_ANIMATION_DEFINITIONS } from './accadManifest';
 
@@ -58,7 +57,6 @@ export interface AnimationDefinition {
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
   ...INTERX_ANIMATION_DEFINITIONS,
   ...FAB_ANIMATION_DEFINITIONS,
-  ...BEHAVE_ANIMATION_DEFINITIONS,
   ...KIT_ANIMATION_DEFINITIONS,
   ...ACCAD_ANIMATION_DEFINITIONS,
   // ── ANIMATIONS SIGNATURES DES PERSONNAGES ───────────────────────────────────
