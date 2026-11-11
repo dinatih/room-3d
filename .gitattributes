@@ -1,8 +1,7 @@
-*.hdr binary -diff -merge -text
-*.HDR binary -diff -merge -text
-*.glb binary -diff -merge -text
-*.blend binary -diff -merge -text
-*.blend1 binary -diff -merge -text
-*.fbx binary -diff -merge -text
-*.obj binary -diff -merge -text
-*.zip binary -diff -merge -text
+*.hdr binary
+*.glb binary
+*.blend binary
+*.blend1 binary
+*.fbx binary
+*.obj binary
+*.zip binary
