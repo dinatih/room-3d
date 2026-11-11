@@ -1,3 +1,16 @@
 {
-  "format_on_save": "off"
+  "format_on_save": "off",
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/*.hdr",
+    "**/*.glb",
+    "**/*.blend*",
+    "**/*.fbx",
+    "**/*.obj"
+  ]
 }
