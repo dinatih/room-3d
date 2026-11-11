@@ -47,7 +47,6 @@ jobs:
       - name: Prune non-production assets
         run: |
           find dist -type f \( -name "*.blend*" -o -name "*.obj" \) -delete
-          rm -f dist/environment/AdobeStock_585513182.jpg
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
