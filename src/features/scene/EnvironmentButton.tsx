@@ -215,8 +215,7 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
               onChange={(e) => setHdriResolution(e.target.value as HdriResolution)}
             >
               <option value="2k">2K — Léger</option>
-              <option value="4k">4K — Équilibré</option>
-              <option value="8k">8K — Détaillé</option>
+              <option value="4k">4K — Haute Définition</option>
             </select>
           </div>
           {fileName ? (

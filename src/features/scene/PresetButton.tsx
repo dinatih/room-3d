@@ -26,7 +26,7 @@ const qualityPresets: { id: GraphicsPreset; label: string; desc: string; badge: 
   {
     id: 'high',
     label: 'High (Haute qualité)',
-    desc: 'Miroir 512px plein détail, Vidéos HD, Ciel 8K',
+    desc: 'Miroir 512px plein détail, Vidéos HD, Ciel 4K',
     badge: 'High',
   },
 ];

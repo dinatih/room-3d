@@ -12,5 +12,5 @@ export const GRAPHICS_PRESETS: Record<GraphicsPreset, {
   low: { hdriResolution: '2k', screenVideosEnabled: false, mirrorQuality: 'mid-low', layers: { mirrors: false, mirrorsHD: false } },
   'mid-low': { hdriResolution: '2k', screenVideosEnabled: true, screenVideoQuality: 'ld', mirrorQuality: 'mid-low', layers: { mirrors: true, mirrorsHD: false } },
   mid: { hdriResolution: '4k', screenVideosEnabled: true, screenVideoQuality: 'hd', mirrorQuality: 'mid', layers: { mirrors: true, mirrorsHD: false } },
-  high: { hdriResolution: '8k', screenVideosEnabled: true, screenVideoQuality: 'hd', mirrorQuality: 'mid', layers: { mirrors: true, mirrorsHD: true } },
+  high: { hdriResolution: '4k', screenVideosEnabled: true, screenVideoQuality: 'hd', mirrorQuality: 'mid', layers: { mirrors: true, mirrorsHD: true } },
 };
