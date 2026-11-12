@@ -112,8 +112,9 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       lightRef.current.color.copy(_tempColor);
     }
     for (let i = 0; i < emissiveMatsRef.current.length; i++) {
+      emissiveMatsRef.current[i].color.copy(_tempColor);
       emissiveMatsRef.current[i].emissive.copy(_tempColor);
-      emissiveMatsRef.current[i].emissiveIntensity = 2 * brightness;
+      emissiveMatsRef.current[i].emissiveIntensity = 1.2 * brightness;
     }
 
     if (!remote) state.invalidate();
