@@ -40,7 +40,7 @@ export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItem
           if ('emissive' in m) {
             const stdMat = m as THREE.MeshStandardMaterial;
             if (isOn) {
-              stdMat.emissive.set(actionState?.lightColor ?? 0xfff2d6);
+              stdMat.emissive.set(actionState?.lightColor ?? 0xffc266);
               stdMat.emissiveIntensity = 2.0 * (actionState?.brightness ?? 1);
             } else {
               stdMat.emissive.set(0x000000);

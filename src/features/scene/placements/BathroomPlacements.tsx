@@ -57,7 +57,7 @@ function SinkLight() {
 }
 
 export function BathroomEquipment() {
-  const { name, color, brightness } = useLightAppearance('lampBath', 0xfff5e6);
+  const { name, color, brightness } = useLightAppearance('lampBath', 0xffc266);
   const as = useFurnitureToggles([
     'lamp-bath-toggle',
     'sdbClosetL',

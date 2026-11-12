@@ -201,7 +201,7 @@ export function LampOla({ actionState = {}, onSize }: Partial<Omit<SceneItemProp
   useLayoutEffect(() => {
     if (diffuserMatRef.current) {
       if (isOn) {
-        diffuserMatRef.current.emissive.set(actionState?.lightColor ?? 0xfff2d6);
+        diffuserMatRef.current.emissive.set(actionState?.lightColor ?? 0xffc266);
         diffuserMatRef.current.emissiveIntensity = 2.5 * (actionState?.brightness ?? 1);
       } else {
         diffuserMatRef.current.emissive.set(0x000000);

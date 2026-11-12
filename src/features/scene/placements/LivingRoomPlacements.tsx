@@ -424,7 +424,7 @@ function AirPerformerPlacement() {
 }
 
 function LampOla_() {
-  const { name, color, brightness } = useLightAppearance('lampOn', 0xfff2dc);
+  const { name, color, brightness } = useLightAppearance('lampOn', 0xffc266);
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
   const [lampSize, setLampSize] = useState<THREE.Vector3>();
