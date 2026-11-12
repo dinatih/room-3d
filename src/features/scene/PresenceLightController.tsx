@@ -7,11 +7,14 @@ import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen, SpatialZoneMana
 
 const SHUTOFF_DELAY_MS = 4000;
 
+const isAgentInGarden = (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos);
+
 const LIGHT_ZONES = [
   { key: 'lampBath', check: isAgentInBathroom },
   { key: 'lampCorridor', check: isAgentInCorridor },
   { key: 'lampKitchen', check: isAgentInKitchen },
-  { key: 'lampGardenStrip', check: (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos) },
+  { key: 'socketGarden', check: isAgentInGarden },
+  { key: 'lampWindow', check: isAgentInGarden },
 ] as const;
 
 function getActivePositions() {
