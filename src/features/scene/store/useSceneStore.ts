@@ -95,7 +95,6 @@ export function updateUrlCharacterCount(count: LaraCountMode | 0) {
 }
 
 import { DEFAULT_HDRI_ID, type HdriResolution } from '@features/scene/hdriConfig';
-import { isMobileViewport } from '../../../hooks/useIsMobile';
 import type { ScreenVideoQuality } from '../screenVideoConfig';
 import { DEFAULT_BNF_COORDS } from '../bnfMarkerConfig';
 
@@ -123,7 +122,6 @@ interface SceneStore {
   screenVideosEnabled: boolean;
   screenVideoQuality: ScreenVideoQuality;
   graphicsQualityPreset: GraphicsPreset;
-  mirrorQuality: 'mid-low' | 'mid';
   setScreenVideosEnabled: (enabled: boolean) => void;
   setScreenVideoQuality: (quality: ScreenVideoQuality) => void;
   setHdriResolution: (resolution: HdriResolution) => void;
@@ -392,9 +390,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
   currentHdri: DEFAULT_HDRI_ID,
   hdriResolution: initialGraphics.hdriResolution,
   screenVideosEnabled: initialGraphics.screenVideosEnabled,
-  screenVideoQuality: initialPreset === 'mid-low' ? 'ld' : (isMobileViewport() ? 'ld' : 'hd'),
+  screenVideoQuality: initialGraphics.screenVideoQuality,
   graphicsQualityPreset: initialPreset,
-  mirrorQuality: initialGraphics.mirrorQuality,
   setScreenVideosEnabled: (enabled) => {
     set({ screenVideosEnabled: enabled });
     cameraState.invalidate?.();
@@ -624,7 +621,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       const nextPreset: GraphicsPreset = nextLayers.mirrorsHD
         ? 'high'
         : nextLayers.mirrors
-          ? (state.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid')
+          ? 'mid'
           : 'low';
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;

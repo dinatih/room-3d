@@ -163,7 +163,7 @@ it('restaure les échelles originales après transition, interruption et démont
 });
 
 it('partage le rendu miroir et restaure la scène même quand une réflexion échoue', async () => {
-  const cleanups = [], state = { mirrorQuality: 'mid', layers: { mirrorsHD: false } }, reflectionCamera = new THREE.PerspectiveCamera();
+  const cleanups = [], state = { layers: { mirrorsHD: false } }, reflectionCamera = new THREE.PerspectiveCamera();
   let fail = true, renders = 0;
   class Reflector extends THREE.Mesh {
     constructor(geometry) {
@@ -187,7 +187,7 @@ it('partage le rendu miroir et restaure la scène même quand une réflexion éc
     '../items/NissedalMirror': {}, './MergedStaticGroup': {}, '../wallData': {}, '@config': {},
   }, source => source + '\nexport { MirrorSurface, mirrorPlanesGeometry, getMirrorTargetConfig };');
   const { GRAPHICS_PRESETS } = load('src/features/scene/store/graphicsPresets.ts', {});
-  for (const [preset, resolution] of [['low', 128], ['mid-low', 128], ['mid', 256], ['high', 512]]) {
+  for (const [preset, resolution] of [['mid', 256], ['high', 512]]) {
     Object.assign(state, GRAPHICS_PRESETS[preset]);
     assert.equal(getMirrorTargetConfig().res, resolution);
   }

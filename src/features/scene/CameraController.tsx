@@ -289,7 +289,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
       useSceneStore.setState(state => ({
         layers: { ...state.layers, mirrorsHD: false },
-        graphicsQualityPreset: currentPreset === 'low' ? 'low' : (state.layers.mirrors ? (state.mirrorQuality === 'mid-low' ? 'mid-low' : 'mid') : 'low'),
+        graphicsQualityPreset: currentPreset === 'low' || !state.layers.mirrors ? 'low' : 'mid',
       }));
     }
 

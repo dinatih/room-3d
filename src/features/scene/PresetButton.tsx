@@ -8,14 +8,8 @@ const qualityPresets: { id: GraphicsPreset; label: string; desc: string; badge: 
   {
     id: 'low',
     label: 'Low (Éco / Perfs maximales)',
-    desc: 'Miroirs désactivés (reflet ciel passif), vidéos en image fixe, ciel 2K',
+    desc: 'Miroirs désactivés (reflet ciel passif), vidéos LD, ciel 2K',
     badge: 'Low',
-  },
-  {
-    id: 'mid-low',
-    label: 'Mid- (Moyenne basse)',
-    desc: 'Miroir 128px (murs/sols sans perso), Vidéo LD, Ciel 2K',
-    badge: 'Mid-',
   },
   {
     id: 'mid',
@@ -77,7 +71,7 @@ export function PresetButton({ hideUI = false }: { hideUI?: boolean }) {
       <button
         ref={qualityTriggerRef}
         type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'high' ? 'btn-danger' : graphicsQualityPreset === 'mid' ? 'btn-warning text-dark' : graphicsQualityPreset === 'mid-low' ? 'btn-info text-dark' : 'btn-outline-secondary'}`}
+        className={`${TOOLBAR_BUTTON_CLASS} ${qualityPopoverOpen ? 'btn-danger text-white' : graphicsQualityPreset === 'high' ? 'btn-danger' : graphicsQualityPreset === 'mid' ? 'btn-warning text-dark' : 'btn-outline-secondary'}`}
         popoverTarget={qualityPopoverId}
         onClick={(e) => {
           e.stopPropagation();

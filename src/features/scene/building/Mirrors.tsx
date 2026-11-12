@@ -23,19 +23,15 @@ import {
 
 const kallaxW1 = 40.5;
 
-// Mid-low : Miroir basse qualité (128px) : calques mur, structure, sol, portes, herbe seulement (sans perso, sans mobilier)
-export const MIRROR_MID_LOW_MASK =
+// Mid : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
+export const MIRROR_BASE_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_WALL_STRUCTURE) |
   (1 << LAYER_FLOOR_COVERINGS) |
   (1 << LAYER_DOORS) |
   (1 << LAYER_GRASS) |
   (1 << LAYER_ENVIRONMENT) |
-  (1 << LAYER_AIRCRAFT);
-
-// Mid : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
-export const MIRROR_BASE_MASK =
-  MIRROR_MID_LOW_MASK |
+  (1 << LAYER_AIRCRAFT) |
   (1 << LAYER_EQUIPMENT) |
   (1 << LAYER_FURNITURE) |
   (1 << LAYER_WALKER_DETAIL) |
@@ -52,12 +48,9 @@ export const MIRROR_HD_MASK =
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 function getMirrorTargetConfig(): { res: number; mask: number } {
-  const { layers, mirrorQuality } = useSceneStore.getState();
+  const { layers } = useSceneStore.getState();
   if (layers.mirrorsHD) {
     return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
-  }
-  if (mirrorQuality === 'mid-low') {
-    return { res: 128, mask: MIRROR_MID_LOW_MASK & ~MIRROR_EXCLUDED_MASK };
   }
   return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
 }

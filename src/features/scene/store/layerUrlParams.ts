@@ -242,14 +242,13 @@ function parseBooleanParam(val: string | null): boolean | undefined {
   return undefined;
 }
 
-export type GraphicsPreset = 'low' | 'mid-low' | 'mid' | 'high';
+export type GraphicsPreset = 'low' | 'mid' | 'high';
 
 /**
  * Analyse l'URL pour détecter le preset de performances demandé.
  * Paramètres supportés : ?preset=..., ?quality=...
  * Valeurs acceptées :
  * - low : 'low', 'sd', 'basse', 'eco', '0'
- * - mid-low : 'mid-low', 'midlow', 'mid-', 'med-low', 'medlow', 'med-', 'md-low', 'mdlow', 'md-'
  * - mid : 'mid', 'medium', 'med', 'moyenne', 'md', '1'
  * - high : 'high', 'hd', 'haute', 'max', 'ultra', '2'
  */
@@ -265,7 +264,6 @@ export function parseUrlPreset(): GraphicsPreset | null {
     if (raw !== null) {
       const lower = raw.trim().toLowerCase();
       if (['low', 'sd', 'ld', 'basse', 'eco', 'min', '0'].includes(lower)) return 'low';
-      if (['mid-low', 'midlow', 'mid-', 'med-low', 'medlow', 'med-', 'md-low', 'mdlow', 'md-'].includes(lower)) return 'mid-low';
       if (['mid', 'medium', 'med', 'moyenne', 'md', '1'].includes(lower)) return 'mid';
       if (['high', 'hd', 'haute', 'max', 'ultra', '2'].includes(lower)) return 'high';
     }
