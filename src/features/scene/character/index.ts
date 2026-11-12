@@ -1,5 +1,6 @@
 export * from './characterTypes';
 export * from './characterLayers';
+export * from './CharacterShadow';
 export * from './GroundPoint';
 export * from './HeartParachute';
 export * from './useCharacterAnimations';

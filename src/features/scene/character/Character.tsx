@@ -43,6 +43,7 @@ import { createPostureMotion, fitPostureTransition } from '../animations/posture
 
 import type { CharacterProps } from './characterTypes';
 import { updateCharacterLayers } from './characterLayers';
+import { CharacterShadow } from './CharacterShadow';
 import { GroundPoint } from './GroundPoint';
 import { HeartParachute, type HeartParachuteHandle } from './HeartParachute';
 import { useCharacterFrame } from './CharacterRuntimeProvider';
@@ -1370,6 +1371,10 @@ export function Character({
         attachTo={parts.bones.spine2 ?? parts.bones.spine ?? parts.bones.hips}
         paused={isPaused}
       />}
+      <CharacterShadow
+        hipsBone={parts.bones.hips}
+        visible={characterShadows}
+      />
       <GroundPoint
         color={(isPreview ? !isDuoRoleB : isActive) ? '#0058a3' : '#ff2222'}
         hipsBone={parts.bones.hips}
