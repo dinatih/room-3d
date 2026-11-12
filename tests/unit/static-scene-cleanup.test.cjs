@@ -8,7 +8,7 @@ const glbUtils = async (overrides = {}) => load('src/features/scene/glbUtils.ts'
   three: THREE, 'three/addons/utils/BufferGeometryUtils.js': { ...await geometryUtils, ...overrides },
 });
 
-async function staticGroup(source, merger = {}) {
+async function staticGroup(source, merger = {}, props = {}) {
   const target = new THREE.Group(), refs = [source, target];
   let effect;
   const { MergedStaticGroup } = load('src/features/scene/building/MergedStaticGroup.tsx', {
@@ -17,9 +17,26 @@ async function staticGroup(source, merger = {}) {
     '../sceneLayer': { CategoryLayerContext: { Provider: () => null } }, '../glbUtils': await glbUtils(),
     'three/addons/utils/BufferGeometryUtils.js': { ...await geometryUtils, ...merger },
   });
-  MergedStaticGroup({ children: null });
+  MergedStaticGroup({ children: null, ...props });
   return { target, run: () => effect() };
 }
+
+it('le regroupement conserve le raycasting et le choix de réception des ombres, même après remontage', async () => {
+  const source = new THREE.Group(), material = new THREE.MeshStandardMaterial();
+  source.add(new THREE.Mesh(new THREE.BoxGeometry(), material), new THREE.Mesh(new THREE.BoxGeometry(), material));
+  const batch = await staticGroup(source, {}, { receiveShadow: false, enableRaycast: true });
+  for (let mount = 0; mount < 2; mount++) {
+    const cleanup = batch.run();
+    assert.equal(batch.target.children.length, 1);
+    const mesh = batch.target.children[0];
+    assert.equal(mesh.receiveShadow, false); assert.equal(mesh.castShadow, true);
+    assert.equal(mesh.raycast, THREE.Mesh.prototype.raycast);
+    assert(source.children.every(mesh => !mesh.visible));
+    let disposed = false; mesh.geometry.addEventListener('dispose', () => { disposed = true; });
+    cleanup(); assert(disposed); assert.equal(batch.target.children.length, 0);
+    assert(source.children.every(mesh => mesh.visible));
+  }
+});
 
 it('conserve les couleurs, UV et types d’attributs incompatibles lors des deux fusions', async () => {
   for (const staticBatch of [false, true]) {

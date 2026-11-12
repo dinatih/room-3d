@@ -7,7 +7,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CategoryLayerContext } from '../sceneLayer';
 import { geometryLayoutKey } from '../glbUtils';
 
-export function MergedStaticGroup({ children, name = 'merged-static', userData, materialOverride }: { children: React.ReactNode; name?: string; userData?: Record<string, any>; materialOverride?: THREE.Material }) {
+export function MergedStaticGroup({ children, name = 'merged-static', userData, materialOverride, receiveShadow = true, enableRaycast = false }: { children: React.ReactNode; name?: string; userData?: Record<string, any>; materialOverride?: THREE.Material; receiveShadow?: boolean; enableRaycast?: boolean }) {
   const categoryLayer = useContext(CategoryLayerContext);
   const sourceRef = useRef<THREE.Group>(null!);
   const mergedRef = useRef<THREE.Group>(null!);
@@ -86,9 +86,9 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
       m.name = name;
       m.renderOrder = renderOrder;
       m.castShadow = !mat.transparent;
-      m.receiveShadow = true;
+      m.receiveShadow = receiveShadow;
       m.userData = { ...userData, isMergedStatic: true };
-      if (name !== 'merged-walls') {
+      if (!enableRaycast && name !== 'merged-walls') {
         m.raycast = () => {}; // OPTIMISATION : Désactive le raycasting sur les gros meshes statiques pour ne pas plomber les perfs au survol (sauf les murs pour l'occlusion)
       }
 
@@ -119,7 +119,7 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
       dst.traverse(obj => { if (obj instanceof THREE.Mesh) obj.geometry.dispose(); });
       dst.clear();
     };
-  }, [categoryLayer, materialOverride]);
+  }, [categoryLayer, materialOverride, receiveShadow, enableRaycast]);
 
   return (
     <group userData={userData}>

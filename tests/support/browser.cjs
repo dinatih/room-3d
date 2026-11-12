@@ -109,6 +109,17 @@ exports.withBrowser = async (fixture, exercise) => {
         if (fixture.fixedEnvironment && (!result.gpu.gpu.devices.length || /swiftshader|llvmpipe|software/i.test(JSON.stringify(result.gpu.gpu.devices))))
             throw Error('Performance reference requires a verified hardware GPU; software rendering is not comparable');
         const page = await browser.newPage();
+        if (fixture.captureReadPixels) await page.evaluateOnNewDocument(() => {
+            window.__testReadPixels = [];
+            for (const Type of [WebGLRenderingContext, WebGL2RenderingContext]) {
+                const read = Type.prototype.readPixels;
+                Type.prototype.readPixels = function (...args) {
+                    const entry = { at: performance.now(), width: args[2], height: args[3], stack: new Error().stack };
+                    try { return read.apply(this, args); }
+                    finally { entry.durationMs = performance.now() - entry.at; window.__testReadPixels.push(entry); }
+                };
+            }
+        });
         if (fixture.captureFreezeStack) {
             debuggerSession = await page.createCDPSession();
             const scripts = new Map();

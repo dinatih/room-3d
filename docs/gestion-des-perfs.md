@@ -349,3 +349,58 @@ node scripts/profile-studio-draws.cjs --night --hardware-gpu
 Ce diagnostic réutilise le lanceur headless, le cas standard et les noms d'objets du panneau de diagnostic. Après la chauffe, il compte les dessins et triangles effectivement soumis pendant 60 images, par objet et par passe (image principale, ombres, miroirs), ainsi que les matériaux utilisés. Il conserve la scène et les PNJ actifs. Il ne place aucune requête GPU autour des dessins individuels et ne prétend pas mesurer des millisecondes GPU par objet. Les rapports Markdown et JSON sont dans `test-results/draw-submissions-*/`, avec le contexte du navigateur dans `draw-submissions/result.json`. Il complète les campagnes FPS et aide à choisir la prochaine cible sans confondre le nombre de meshes chargés avec le coût de leurs différentes passes.
 
 Premier contrôle GPU du nouveau diagnostic : `test-results/draw-submissions-QAe7sS/report.md`. Il retrouve six dessins du congélateur dans l'image principale et six dans les ombres. Le bloc nommé `Kallax SE` atteint 56 dessins dans chaque passe pour 1712 triangles et deux matériaux principaux : c'est une prochaine cible de regroupement à examiner, distincte du congélateur désormais compté séparément.
+
+## Porte-chaussures et télémètre — 12 novembre 2026
+
+Le bloc précédemment nommé « Kallax SE » dans le relevé à 56 dessins correspond au porte-chaussures tubulaire : 52 tubes métalliques et quatre tablettes. Deux groupes statiques réutilisent le mécanisme de fusion existant. Les tubes conservent leur absence de réception des ombres, les tablettes continuent à les recevoir, et le raycasting reste actif. Les casquettes restent à l'extérieur des groupes fusionnés pour conserver leur visibilité indépendante. Les autres utilisations de `MergedStaticGroup` gardent leurs réglages précédents.
+
+Les dix nervures identiques du télémètre deviennent un `InstancedMesh` : mêmes positions, géométrie et matériau visuel, avec une seule géométrie et un seul matériau partagés. Leurs indicateurs d'ombres restent désactivés comme auparavant. Le raycasting conserve l'identifiant de chaque instance.
+
+| Objet | Image principale avant → après | Ombres de jour avant → après | Triangles par image principale |
+| --- | ---: | ---: | ---: |
+| Porte-chaussures / Kallax SE | 56 → 2 | 56 → 2 | 1712, identiques |
+| Télémètre Laserliner | 30 → 21 | 9 → 9 | 1410, identiques |
+
+Relevés complets : `test-results/draw-submissions-fBpAh7/` avant et `test-results/draw-submissions-NBWWjY/` après. Leurs tableaux contiennent tous les objets effectivement soumis par passe, sans se limiter aux premières lignes. Les objets hors caméra et les états d'interaction supplémentaires demandent d'autres points de vue avant d'être déclarés audités.
+
+### Contrôles à pose identique, jour et nuit
+
+Rapports durables : `test-results/static-batches-vXNimq/day/comparison.json` et `test-results/static-batches-vXNimq/night/comparison.json`. GPU Radeon 840M, headless, 1362 × 810, DPR 1, neuf personnages, Mid, alimentation `battery` au début et à la fin des deux passages. Chaque image est rendue avant et après, avec ordre alterné ; 79 paires sont retenues après exclusion de celle utilisée pour lire les pixels.
+
+| Cas | Dessins médians avant → après | Triangles médians, identiques par paire | CPU rendu médian avant → après | GPU médian avant → après |
+| --- | ---: | ---: | ---: | ---: |
+| Jour | 1730 → 1613 | 6792568 | 18,4 → 18,0 ms | 22,78 → 22,81 ms |
+| Nuit | 943 → 880 | 3228806 | 16,2 → 16,2 ms | 20,08 → 20,13 ms |
+
+Les différences de compteurs sont exactement de **117 soumissions le jour et 63 la nuit** dans chaque paire, avec zéro différence de triangles. Le support ne produit pas la soumission d'ombres supplémentaire dans le cas nocturne testé. Le contrôle du framebuffer trouve respectivement 11 et six composantes différentes sur 4412880 octets, avec un écart maximal d'une unité sur 255. Les variations de temps restent trop faibles et bruitées pour conclure à une hausse globale de FPS ; ces comparaisons doubles ne mesurent pas la cadence normale de l'application.
+
+Six tests ciblés passent (fusion, transformations et attributs, échec explicite, raycasting, remontage/libération, positions des nervures et congélateur). TypeScript et build de production réussissent. Les deux diagnostics par objet et les contrôles GPU jour/nuit réussissent.
+
+### Registre des prochaines cibles
+
+Ces chiffres proviennent du relevé de jour, caméra standard ; ils décrivent ce point de vue, sans promettre qu'un regroupement sera bénéfique dans tous les états.
+
+| Cible | Observation | Suite de l'audit |
+| --- | --- | --- |
+| Congélateur CHIQ | 6 dessins dans chaque passe après regroupement | Traité, animation et géométrie vérifiées |
+| Porte-chaussures | 2 dessins dans chaque passe après regroupement | Traité, ombres et sélection conservées |
+| Télémètre | 21 dessins principaux, neuf d'ombres | Nervures traitées ; les 16 matériaux restants demandent un examen des textures et transparences |
+| Microduck | 38 dessins, environ 198000 triangles dans chaque passe | Examiner le regroupement des pièces mobiles et la géométrie |
+| Unitree G1 | 35 dessins et 393252 triangles dans chaque passe, deux matériaux principaux | Examiner un regroupement qui conserve les articulations |
+| Jumper | 34 dessins et 430915 triangles dans les ombres, sans soumission principale dans ce relevé | Examiner le coût des ombres hors caméra et la géométrie ; conserver les articulations et les ombres utiles |
+| Personnages | Environ 34–42 dessins principaux par acteur, avec de nombreux matériaux | Examiner séparément vêtements, squelette partagé, textures et passes ; conserver les masquages et animations |
+| Mobilier cuisine déjà fusionné | 18 dessins principaux pour 18 matériaux | Examiner les matériaux avant d'ajouter une nouvelle fusion de géométrie |
+
+## Comprendre « GPU stall due to ReadPixels »
+
+`readPixels` lit des pixels du framebuffer vers le CPU. Cette lecture peut devoir attendre des travaux GPU en cours. Le message est un diagnostic de performance du pilote, transmis par le journal Chromium ; le préfixe `ERROR` ne suffit pas à en faire une erreur WebGL ni une perte de contexte. Chromium distingue explicitement les types `GL_DEBUG_TYPE_PERFORMANCE` et `GL_DEBUG_TYPE_ERROR` dans [son traitement des messages GL](https://github.com/chromium/chromium/blob/main/gpu/command_buffer/service/gl_utils.cc).
+
+Une origine applicative est confirmée par une pile réelle : `warmUpSDFCanvas` → `webgl.isSupported` → génération d'un test SDF → lecture de 4 × 4 pixels, dans Troika, la bibliothèque des textes 3D utilisée via Drei. [Troika prépare son canvas SDF](https://github.com/protectwise/troika/blob/main/packages/troika-three-text/src/SDFGenerator.js), et [le générateur teste le support et lit les pixels](https://github.com/lojjic/webgl-sdf-generator/blob/main/src/webgl.js). Le premier diagnostic trouve cet appel à 4,39 s après le chargement, avec une durée instrumentée de 9,5 ms. La vérification suivante retrouve un appel total dans la page et zéro pendant les 60 images capturées.
+
+Cela explique une lecture ponctuelle de préparation qui revient avec les nouveaux contextes des navigateurs isolés. L'audit des prototypes JavaScript de la page n'attribue pas individuellement tous les messages provenant des différents contextes du pilote ; il n'instrumente pas les workers ni les lectures internes du navigateur. La phrase « this message will no longer repeat » décrit la limitation du journal, pas la disparition prouvée de l'opération. Une répétition des lectures pendant la mesure demanderait une autre investigation.
+
+```bash
+node scripts/profile-studio-draws.cjs --hardware-gpu --read-pixels
+```
+
+Cette option de diagnostic, désactivée par défaut, conserve dimensions, horodatage, durée et pile JavaScript dans `submissions.json`, puis affiche le nombre d'appels tracés dans la page et pendant la capture. Le lanceur continue à conserver les messages Chromium ; ils ne sont pas masqués.

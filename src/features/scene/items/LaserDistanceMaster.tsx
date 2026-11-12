@@ -6,7 +6,7 @@
  * (DIST / MIN-MAX) + 3 boutons blancs (mode, mesure, C/OFF). Lentilles
  * laser/récepteur au sommet.
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
 
@@ -30,6 +30,9 @@ const lensRed   = new THREE.MeshStandardMaterial({
   roughness: 0.25, metalness: 0.3,
 });
 const lensBlk   = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.35, metalness: 0.5 });
+const ribMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
+const RIB_POSITIONS = [-1, 1].flatMap(side => [-1.6, -0.8, 0, 0.8, 1.6].map(dy =>
+  new THREE.Vector3(side * (W / 2 + 0.1), H / 2 + dy, 0)));
 
 function makeBody(): THREE.BufferGeometry {
   const shape = new THREE.Shape();
@@ -235,6 +238,7 @@ function drawCOffIcon(ctx: CanvasRenderingContext2D) {
 }
 
 export function LaserDistanceMaster({ onSize }: SceneModelProps) {
+  const ribs = useRef<THREE.InstancedMesh>(null!);
   const bodyGeo  = useMemo(makeBody, []);
   const lcdTex   = useMemo(makeLcdTexture, []);
   const logoTex  = useMemo(makeLogoTexture, []);
@@ -258,6 +262,10 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
   const cOffIconMat  = useMemo(() => new THREE.MeshStandardMaterial({ map: cOffTex,  transparent: true, roughness: 0.5 }), [cOffTex]);
 
   useLayoutEffect(() => {
+    const matrix = new THREE.Matrix4();
+    RIB_POSITIONS.forEach((position, index) => ribs.current.setMatrixAt(index, matrix.makeTranslation(...position.toArray())));
+    ribs.current.instanceMatrix.needsUpdate = true;
+    ribs.current.computeBoundingSphere();
     onSize?.(new THREE.Vector3(W, H, D));
   }, []);
 
@@ -302,16 +310,12 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
               <boxGeometry args={[0.45, H * 0.78, D + 0.18]} />
               <primitive object={gripMat} attach="material" />
             </mesh>
-            {/* Nervures horizontales (5 lignes en relief) */}
-            {[-1.6, -0.8, 0, 0.8, 1.6].map((dy, i) => (
-              <mesh key={i} position={[side === 'left' ? -0.15 : 0.15, dy, 0]}>
-                <boxGeometry args={[0.18, 0.16, D + 0.22]} />
-                <meshStandardMaterial color={0x0a0a0a} roughness={0.9} />
-              </mesh>
-            ))}
           </group>
         );
       })}
+      <instancedMesh ref={ribs} name="laserliner-grip-ribs" args={[undefined, undefined, RIB_POSITIONS.length]} material={ribMat}>
+        <boxGeometry args={[0.18, 0.16, D + 0.22]} />
+      </instancedMesh>
 
       {/* Sommet noir (cap) */}
       <mesh position={[0, topCapY, 0]} castShadow>

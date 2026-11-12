@@ -10,6 +10,7 @@ fs.mkdirSync('test-results', { recursive: true });
 const directory = fs.mkdtempSync(path.resolve('test-results/draw-submissions-'));
 process.env.ROOM_TEST_RESULTS = directory;
 const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-mid-${process.argv.includes('--night') ? 'night' : 'day'}`], id: 'draw-submissions' };
+fixture.captureReadPixels = process.argv.includes('--read-pixels');
 withBrowser(fixture, async page => {
   await new Promise(resolve => setTimeout(resolve, fixture.stableMs));
   const data = await page.evaluate(async () => {
@@ -17,6 +18,7 @@ withBrowser(fixture, async page => {
     const renderer = window.__THREE_GL__, main = window.__THREE_SCENE__;
     const render = renderer.render, direct = renderer.renderBufferDirect, shadow = renderer.shadowMap.render;
     const rows = new Map(), entities = new WeakMap();
+    const initialReadPixels = window.__testReadPixels?.length;
     let pass = 'main', frames = 0;
     renderer.shadowMap.render = function(...args) {
       const previous = pass; pass = 'shadow';
@@ -49,9 +51,11 @@ withBrowser(fixture, async page => {
         }
       };
     });
-    return { frames, rows: [...rows.values()].map(row => ({ ...row, calls: row.calls / frames, triangles: row.triangles / frames, materials: [...row.materials.values()] })).sort((a, b) => b.calls - a.calls) };
+    return { frames, readPixels: window.__testReadPixels, readPixelsDuringCapture: initialReadPixels === undefined ? undefined : window.__testReadPixels.length - initialReadPixels,
+      rows: [...rows.values()].map(row => ({ ...row, calls: row.calls / frames, triangles: row.triangles / frames, materials: [...row.materials.values()] })).sort((a, b) => b.calls - a.calls) };
   });
   fs.writeFileSync(`${directory}/submissions.json`, JSON.stringify(data, null, 2));
+  if (fixture.captureReadPixels) console.log(`ReadPixels tracés dans la page : ${data.readPixels.length} ; pendant la capture : ${data.readPixelsDuringCapture}. Piles dans le rapport JSON.`);
   const markdown = ['# Dessins par objet et par image', '', 'Moyennes sur 60 images, PNJ actifs. Mesure de soumissions, pas de temps GPU par objet.', '', '| Passe | Objet | Dessins/image | Triangles/image | Matériaux |', '| --- | --- | ---: | ---: | ---: |',
     ...data.rows.map(row => `| ${row.pass} | ${row.entity.replaceAll('|', '/')} | ${row.calls.toFixed(1)} | ${Math.round(row.triangles)} | ${row.materials.length} |`)];
   fs.writeFileSync(`${directory}/report.md`, markdown.join('\n') + '\n');

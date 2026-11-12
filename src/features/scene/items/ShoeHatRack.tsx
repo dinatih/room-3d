@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
 import { BaseballCap } from './BaseballCap';
 import { SHOE_HAT_RACK } from '../shoeHatRackData';
+import { MergedStaticGroup } from '../building/MergedStaticGroup';
 
 const { width: W, depth: D, height: H } = SHOE_HAT_RACK;
 const TR = 0.8;   // rayon tube
@@ -62,51 +63,57 @@ export function ShoeHatRack({ onSize, noCaps }: SceneModelProps & { noCaps?: boo
 
   return (
     <group userData={{ sceneItemRoot: true }}>
-      {/* ── Montants avant (pleine hauteur) ── */}
-      <Tube p1={[TR,   0, TR]}   p2={[TR,   H,      TR]}   />
-      <Tube p1={[W-TR, 0, TR]}   p2={[W-TR, H,      TR]}   />
-      {/* ── Montants arrière (zone étagères seulement) ── */}
-      <Tube p1={[TR,   0, D-TR]} p2={[TR,   H_BACK, D-TR]} />
-      <Tube p1={[W-TR, 0, D-TR]} p2={[W-TR, H_BACK, D-TR]} />
+      <MergedStaticGroup name="shoe-hat-rack-metal" receiveShadow={false} enableRaycast>
+        {/* ── Montants avant (pleine hauteur) ── */}
+        <Tube p1={[TR,   0, TR]}   p2={[TR,   H,      TR]}   />
+        <Tube p1={[W-TR, 0, TR]}   p2={[W-TR, H,      TR]}   />
+        {/* ── Montants arrière (zone étagères seulement) ── */}
+        <Tube p1={[TR,   0, D-TR]} p2={[TR,   H_BACK, D-TR]} />
+        <Tube p1={[W-TR, 0, D-TR]} p2={[W-TR, H_BACK, D-TR]} />
 
-      {/* ── Cadre bas ── */}
-      <Tube p1={[TR,   TR, TR]}   p2={[W-TR, TR, TR]}   />
-      <Tube p1={[TR,   TR, D-TR]} p2={[W-TR, TR, D-TR]} />
-      <Tube p1={[TR,   TR, TR]}   p2={[TR,   TR, D-TR]} />
-      <Tube p1={[W-TR, TR, TR]}   p2={[W-TR, TR, D-TR]} />
+        {/* ── Cadre bas ── */}
+        <Tube p1={[TR,   TR, TR]}   p2={[W-TR, TR, TR]}   />
+        <Tube p1={[TR,   TR, D-TR]} p2={[W-TR, TR, D-TR]} />
+        <Tube p1={[TR,   TR, TR]}   p2={[TR,   TR, D-TR]} />
+        <Tube p1={[W-TR, TR, TR]}   p2={[W-TR, TR, D-TR]} />
 
-      {/* ── Transition haut arrière → avant ── */}
-      <Tube p1={[TR,   H_BACK, D-TR]} p2={[TR,   H_BACK, TR]} />
-      <Tube p1={[W-TR, H_BACK, D-TR]} p2={[W-TR, H_BACK, TR]} />
+        {/* ── Transition haut arrière → avant ── */}
+        <Tube p1={[TR,   H_BACK, D-TR]} p2={[TR,   H_BACK, TR]} />
+        <Tube p1={[W-TR, H_BACK, D-TR]} p2={[W-TR, H_BACK, TR]} />
 
-      {/* ── 4 étagères ── */}
-      {SHELF_YS.map(y => (
-        <group key={y}>
-          <Tube p1={[TR,   y, TR]}   p2={[W-TR, y, TR]}   />
-          <Tube p1={[TR,   y, D-TR]} p2={[W-TR, y, D-TR]} />
-          <Tube p1={[TR,   y, TR]}   p2={[TR,   y, D-TR]} />
-          <Tube p1={[W-TR, y, TR]}   p2={[W-TR, y, D-TR]} />
-          <mesh position={[W/2, y+0.75, D/2]} castShadow receiveShadow material={fabricMat}>
+        {/* ── 4 étagères ── */}
+        {SHELF_YS.map(y => (
+          <group key={y}>
+            <Tube p1={[TR,   y, TR]}   p2={[W-TR, y, TR]}   />
+            <Tube p1={[TR,   y, D-TR]} p2={[W-TR, y, D-TR]} />
+            <Tube p1={[TR,   y, TR]}   p2={[TR,   y, D-TR]} />
+            <Tube p1={[W-TR, y, TR]}   p2={[W-TR, y, D-TR]} />
+          </group>
+        ))}
+
+        {/* ── Barres porte-manteaux / chapeaux ── */}
+        <Tube p1={[TR, Y_MID, TR]} p2={[W-TR, Y_MID, TR]} />
+        <Tube p1={[TR, Y_TOP, TR]} p2={[W-TR, Y_TOP, TR]} />
+
+        {/* ── Crochets doubles (4 positions × 2 barres) ── */}
+        {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
+          <group key={`${x}-${barY}`}>
+            {/* Poteau vertical */}
+            <Tube p1={[x, barY,        TR]} p2={[x, barY+7,        TR]}     />
+            {/* Crochet haut */}
+            <Tube p1={[x, barY+7,      TR]} p2={[x, barY+11.5, TR+5.5]}    />
+            {/* Crochet bas */}
+            <Tube p1={[x, barY+3.85,   TR]} p2={[x, barY+6.85,  TR+4]}     />
+          </group>
+        )))}
+      </MergedStaticGroup>
+      <MergedStaticGroup name="shoe-hat-rack-shelves" enableRaycast>
+        {SHELF_YS.map(y => (
+          <mesh key={y} position={[W/2, y+0.75, D/2]} castShadow receiveShadow material={fabricMat}>
             <boxGeometry args={[W-2*TR-0.5, 1.5, D-2*TR-0.5]} />
           </mesh>
-        </group>
-      ))}
-
-      {/* ── Barres porte-manteaux / chapeaux ── */}
-      <Tube p1={[TR, Y_MID, TR]} p2={[W-TR, Y_MID, TR]} />
-      <Tube p1={[TR, Y_TOP, TR]} p2={[W-TR, Y_TOP, TR]} />
-
-      {/* ── Crochets doubles (4 positions × 2 barres) ── */}
-      {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
-        <group key={`${x}-${barY}`}>
-          {/* Poteau vertical */}
-          <Tube p1={[x, barY,        TR]} p2={[x, barY+7,        TR]}     />
-          {/* Crochet haut */}
-          <Tube p1={[x, barY+7,      TR]} p2={[x, barY+11.5, TR+5.5]}    />
-          {/* Crochet bas */}
-          <Tube p1={[x, barY+3.85,   TR]} p2={[x, barY+6.85,  TR+4]}     />
-        </group>
-      )))}
+        ))}
+      </MergedStaticGroup>
 
       {/* Casquettes sur les crochets hauts */}
       {!noCaps && <ShoeHatRackCaps />}
