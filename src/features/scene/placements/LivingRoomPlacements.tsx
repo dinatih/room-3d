@@ -427,7 +427,6 @@ function LampOla_() {
   const { name, color, brightness } = useLightAppearance('lampOn', 0xfff2dc);
   const as = useFurnitureToggles(['lamp-toggle']);
   const lampOn = !!as['lamp-toggle'];
-  const fullLight = useSceneStore(state => state.nightLighting || state.layers.lightsHD);
   const [lampSize, setLampSize] = useState<THREE.Vector3>();
 
   return (
@@ -436,8 +435,8 @@ function LampOla_() {
       <LampOla onSize={setLampSize} actionState={{ on: lampOn, lightColor: color, brightness }} />
       {lampSize && <pointLight
         position={[0, lampSize.y, 0]}
-        intensity={lampOn ? (fullLight ? 35 : 3.5) * 100 ** 2 * brightness : 0}
-        distance={fullLight ? 0 : 350}
+        intensity={lampOn ? 35 * 100 ** 2 * brightness : 0}
+        distance={0}
         decay={2}
         color={color}
       />}

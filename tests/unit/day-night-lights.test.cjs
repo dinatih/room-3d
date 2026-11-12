@@ -107,7 +107,7 @@ it('garde le balayage Eiffel hors du groupe visuel masqué le jour et éteint so
   assert.equal(light.props.ref.current.visible, true);
 });
 
-it('garde les bandes aussi lumineuses la nuit sans HD, avec les ombres réservées au HD', () => {
+it('garde les bandes lumineuses avec les ombres réservées au HD', () => {
   for (const nightLighting of [false, true]) for (const lightsHD of [false, true]) for (const on of [false, true]) {
     const state = { nightLighting, layers: { lightsHD }, furniture: { lampGardenStrips: on } };
     const { GardenLightStrips } = load('src/features/scene/placements/GardenLightStrips.tsx', {
@@ -122,9 +122,9 @@ it('garde les bandes aussi lumineuses la nuit sans HD, avec les ombres réservé
       const group = strip.type(strip.props);
       for (const segment of group.props.children) {
         const light = segment.props.children[1].props;
-        assert.equal(light.intensity, on ? (nightLighting || lightsHD ? 120 : 2.5) : 0);
+        assert.equal(light.intensity, on ? 120 : 0);
         assert.equal(light.castShadow, lightsHD);
-        assert.equal(light.decay, nightLighting || lightsHD ? 1 : 2);
+        assert.equal(light.decay, 1);
       }
     }
   }
