@@ -86,17 +86,17 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
       {/* Ground Point root_joint (origine locale du personnage) */}
       <group ref={groupRef} position={[0, 0.05 * scale, 0]} scale={scale} name="GroundPoint">
         {/* Anneau extérieur - visible sur les 2 faces */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <ringGeometry args={[4, 5, 48]} />
           <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
         </mesh>
         {/* Disque central - visible sur les 2 faces */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <circleGeometry args={[1.2, 32]} />
           <meshBasicMaterial color={color} side={THREE.DoubleSide} />
         </mesh>
         {/* Flèche d'orientation 2D dirigée vers l'avant (-Z) - visible sur les 2 faces */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <shapeGeometry args={[arrowShape]} />
           <meshBasicMaterial color={color} side={THREE.DoubleSide} />
         </mesh>
@@ -104,7 +104,7 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
 
       {/* Ligne pointillée reliant root_joint et root_hip */}
       {hipsBone && (
-        <lineSegments ref={lineRef} material={dashedLineMat} frustumCulled={false}>
+        <lineSegments ref={lineRef} material={dashedLineMat} frustumCulled={false} renderOrder={3}>
           <bufferGeometry ref={lineGeomRef} />
         </lineSegments>
       )}
@@ -112,11 +112,11 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
       {/* Ground Point root_hip (projection XZ des hanches à Y=0) */}
       {hipsBone && (
         <group ref={hipMarkerRef} scale={scale * 0.85} name="GroundPointHips">
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
             <ringGeometry args={[2.5, 3.5, 36]} />
             <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
           </mesh>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
             <circleGeometry args={[1.0, 24]} />
             <meshBasicMaterial color={color} side={THREE.DoubleSide} />
           </mesh>

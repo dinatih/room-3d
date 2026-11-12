@@ -10,7 +10,7 @@ import { noCapMat } from '../building/buildingCommon';
 
 const RUG_W = 200;
 const RUG_D = 100;
-const RUG_H = 1.5;
+const RUG_H = 0.02;
 
 export function GrassRug() {
   const mats = useMemo(() => {
@@ -37,8 +37,7 @@ export function GrassRug() {
   return (
     <mesh
       material={mats}
-      position={[0, RUG_H / 2 + 0.1, 0]}
-      renderOrder={1}
+      position={[0, RUG_H / 2, 0]}
       receiveShadow
       userData={{ skipMerge: true, itemName: 'Tapis Gazon SDB' }}
     >
