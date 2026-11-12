@@ -25,7 +25,8 @@ import { Tisken40381253 } from '../items/Tisken40381253';
 import { OneBlade } from '../items/OneBlade';
 import { OralBToothbrush } from '../items/OralBToothbrush';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
-import { DroneCell } from '../items/Drona';
+import { DroneCell, DF } from '../items/Drona';
+import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
@@ -175,6 +176,9 @@ export function BathroomFurnishings() {
       {Object.entries(BATHROOM_STORAGE_ITEMS).filter(([, item]) => item.kind === 'box').map(([id, item]) => (
         <group key={id} name={id} position={item.position} rotation-y={item.rotationY + Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: item.label, hoverAction: { label: item.label, actions: SMART_OBJECTS[id].slots.map(slot => `smart-object:::${id}:::${slot.slotId}`) } }}>
           <DroneCell />
+          <group position={[0, -DF / 2 + 15, 0]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
+            <Stackstod60620144 />
+          </group>
         </group>
       ))}
 
