@@ -24,6 +24,7 @@ import { isAppIdle } from '../idleState';
 import { NavigationScope, navigationValue } from '../ai/navigation/navigationScope';
 import { appLog } from '@features/ui/AppConsole';
 import { SubjectDriver } from '../camera/subjectControls';
+import { BlobShadow } from '../BlobShadow';
 
 const ROBOTS = [
   { id: 'microduck', Component: Microduck, position: [320, 0, -440], walk: 'walk', speed: 9.917671587151622, pause: 4, radiusScale: 2 / 3 },
@@ -232,9 +233,12 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     }
   }, -0.5);
 
+  const shadowRadius = profile ? profile.radius : (config.radiusScale * 25);
+
   return (
     <group ref={group} position={config.position} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true,
       itemName: item.name, hoverAction: { label: item.name, actions: getObjectActionIds(id) } }}>
+      <BlobShadow size={[shadowRadius * 2, shadowRadius * 2]} />
       <Component item={item} actionState={{ ...actions, robotAutonomous: life.current.automatic, robotManualDriving: driver.current.active, onH2SoloActive }} onSize={onSize} />
     </group>
   );

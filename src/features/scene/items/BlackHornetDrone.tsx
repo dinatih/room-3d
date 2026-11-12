@@ -12,6 +12,7 @@ import { useDroneControls } from '../camera/useDroneControls';
 import { HornetTour, type TourRoom } from '../hornetTour';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { SubjectDriver, readSubjectInput, recordSubjectCommand } from '../camera/subjectControls';
+import { BlobShadow } from '../BlobShadow';
 
 const GLB_PATH = '/items/black-hornet/black-hornet.glb';
 const TARGET_LENGTH_CM = 16.8; // Longueur réelle du nano-drone Black Hornet (environ 16,8 cm)
@@ -97,7 +98,7 @@ export function BlackHornetDrone({
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
-      m.castShadow = true;
+      m.castShadow = isPreview;
       m.receiveShadow = true;
       if (m.material) {
         const mat = m.material as THREE.MeshStandardMaterial;
@@ -283,6 +284,7 @@ export function BlackHornetDrone({
 
   return (
     <group ref={modelRef} userData={{ itemName: 'Drone Black Hornet Nano', hornetTour: tourRef.current }}>
+      <BlobShadow size={[16, 16]} groundY opacity={0.3} />
       <primitive object={scene} />
     </group>
   );

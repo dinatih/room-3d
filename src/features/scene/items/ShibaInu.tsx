@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { cameraState } from '@features/scene/cameraState';
 import { isAppIdle } from '@features/scene/idleState';
+import { BlobShadow } from '../BlobShadow';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { glbLocalBBox } from '../glbUtils';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
@@ -96,7 +97,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
-      m.castShadow = true;
+      m.castShadow = isPreview;
       m.receiveShadow = true;
       enableAnimatedFrustumCulling(m);
       if (m.material) {
@@ -301,6 +302,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
         <boxGeometry args={bounds.size.toArray()} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>}
+      <BlobShadow size={[32, 50]} />
       <primitive object={scene} />
     </group>
   );

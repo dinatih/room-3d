@@ -12,6 +12,7 @@ import { cameraState } from '../cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { isAppIdle } from '../idleState';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { BlobShadow } from '../BlobShadow';
 import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 
@@ -71,7 +72,8 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
     scene.traverse(object => {
       if (!(object as THREE.Mesh).isMesh) return;
       const mesh = object as THREE.Mesh;
-      mesh.castShadow = mesh.receiveShadow = true;
+      mesh.castShadow = isPreview;
+      mesh.receiveShadow = true;
       enableAnimatedFrustumCulling(mesh);
     });
     if (!isPreview && navigationEnabled) {
@@ -176,6 +178,7 @@ export function Dachshund({ isPreview = false, previewAnim = 'idle-1', onSize }:
         <boxGeometry args={bounds.size.toArray()} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>}
+      <BlobShadow size={[25, 45]} />
       <primitive object={scene} />
     </group>
   );

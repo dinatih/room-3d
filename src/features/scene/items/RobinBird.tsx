@@ -13,6 +13,7 @@ import { cameraState } from '@features/scene/cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { SubjectDriver } from '../camera/subjectControls';
 import { chooseBirdPerch, chooseBirdForagePerch, birdGroundStep, resolveBirdPerch, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
+import { BlobShadow } from '../BlobShadow';
 
 const GLB_PATH = '/characters/robin/robin.glb';
 
@@ -166,7 +167,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
-      m.castShadow = true;
+      m.castShadow = isPreview;
       m.receiveShadow = true;
       if (m.geometry) {
         m.geometry.computeBoundingBox();
@@ -390,6 +391,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
 
   return (
     <group ref={modelRef}>
+      <BlobShadow size={[12, 12]} groundY opacity={0.3} />
       <primitive object={scene} />
     </group>
   );

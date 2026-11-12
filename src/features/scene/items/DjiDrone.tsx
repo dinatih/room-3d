@@ -11,6 +11,7 @@ import { SubjectDriver } from '../camera/subjectControls';
 import { useDroneControlStore } from '../droneControls';
 import { appLog } from '@features/ui/AppConsole';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
+import { BlobShadow } from '../BlobShadow';
 
 function createDroneClips(nodeName = 'DronePivot'): THREE.AnimationClip[] {
   const hoverTimes = [0, 0.5, 1.0, 1.5, 2.0];
@@ -129,7 +130,7 @@ export function DjiDrone({
     scene.traverse(c => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
-      m.castShadow = true;
+      m.castShadow = isPreview;
       m.receiveShadow = true;
     });
 
@@ -222,6 +223,7 @@ export function DjiDrone({
 
   return (
     <group ref={rootRef} userData={{ itemName }}>
+      <BlobShadow size={[targetMaxDimCm || 20, targetMaxDimCm || 20]} groundY opacity={0.35} />
       <group ref={pivotRef} name="DronePivot">
         <group rotation={[0, rotationY, 0]}>
           <primitive object={scene} />
