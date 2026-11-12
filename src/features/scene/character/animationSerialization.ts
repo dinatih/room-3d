@@ -32,6 +32,12 @@ export function captureAnimationRig(root: THREE.Object3D): RigNode {
 }
 
 export function restoreAnimationRig(node: RigNode): THREE.Object3D {
+  const root = restoreRigNode(node);
+  root.updateMatrixWorld(true);
+  return root;
+}
+
+function restoreRigNode(node: RigNode): THREE.Object3D {
   const root: RestObject = node.bone ? new THREE.Bone() : new THREE.Group();
   root.name = node.name;
   if (node.userData) root.userData = structuredClone(node.userData);
@@ -40,8 +46,7 @@ export function restoreAnimationRig(node: RigNode): THREE.Object3D {
   if (node.restLocalQuaternion) root.restLocalQuaternion = new THREE.Quaternion().fromArray(node.restLocalQuaternion);
   if (node.restWorldQuaternion) root.restWorldQuaternion = new THREE.Quaternion().fromArray(node.restWorldQuaternion);
   if (node.restWorldPosition) root.restWorldPosition = new THREE.Vector3().fromArray(node.restWorldPosition);
-  for (const child of node.children) root.add(restoreAnimationRig(child));
-  root.updateMatrixWorld(true);
+  for (const child of node.children) root.add(restoreRigNode(child));
   return root;
 }
 

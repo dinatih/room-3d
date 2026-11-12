@@ -293,3 +293,24 @@ Une correction supprime la fin inutile du parcours des receveurs d'ombres. Le re
 Contrôle sur la scène réelle : 4866 nœuds visibles, 180 images, ancienne et nouvelle fonctions appelées sur les mêmes images en alternant leur ordre. Les décisions d'ombres sont identiques sur les 180 comparaisons. Le coût CPU moyen passe de 0,638 à 0,378 ms, la médiane de 0,5 à 0,3 ms, le p95 de 2,1 à 1,2 ms. Cela économise environ **0,26 ms CPU par image**, sans démontrer un gain global de FPS. Rapport brut et durées individuelles : `/tmp/room-shadow-traversal-4liGWG/comparison.json`. Alimentation `battery` au début et à la fin ; swap en hausse pendant le chargement, donc cette session n'est pas approuvée comme référence de fluidité.
 
 La suite de l'enquête doit cibler les matrices et les animations à partir du profil, puis mesurer le rendu complet : les économies locales ne se traduisent pas automatiquement en FPS lorsque le GPU ou la cadence de présentation limite la scène. Les animations et la résolution des ombres n'ont pas été réduites pour obtenir cette économie.
+
+## Matrices et calibration des marches — 12 novembre 2026
+
+Trois calculs redondants sont retirés :
+
+- La restauration d'un squelette assemble désormais toute la hiérarchie avant d'initialiser ses matrices monde en un seul parcours. Elle recalculait auparavant chaque sous-arbre à chaque niveau de construction.
+- La calibration de la foulée met à jour les matrices des pieds et de leurs ancêtres via `getWorldPosition`, sans parcourir aussi tous les autres joints à chaque échantillon.
+- Le suivi de caméra conserve `getWorldPosition` pour la tête, les yeux et les hanches, en retirant les quatre appels `updateWorldMatrix` immédiatement précédents : Three.js r186 effectue déjà cette mise à jour dans le getter. Les positions restent fraîches à chaque image.
+
+Comparaison CPU locale sur batterie, ancien code `cfa1d33c` contre nouveau code, squelette réel `lara_native.glb` utilisé par les neuf personnages du cas standard. Pour chaque clip : quatre passages de chauffe puis douze passages mesurés de chaque version, ordre alterné, nouveaux clips pour mesurer la calibration sans son cache. Le retargeting et la lecture des fichiers sont exclus du chronométrage. Temps médians :
+
+| Clip | Avant | Après | Calculs de matrices avant → après |
+| --- | ---: | ---: | ---: |
+| walking | 4,07 ms | 2,36 ms | 31323 → 5078 |
+| running | 1,16 ms | 0,72 ms | 3273 → 488 |
+| miley-armature-catwalk-loop | 4,53 ms | 2,87 ms | 37703 → 6122 |
+| goofy-running | 0,73 ms | 0,55 ms | 3053 → 452 |
+
+Les quatre vitesses de foulée calculées sont strictement identiques entre versions. Le coût médian de calibration baisse d'environ 24 à 42 %, avec 84 à 85 % de compositions de matrices en moins. Cette calibration est déjà mémorisée par clip : l'économie concerne principalement sa première utilisation, pas chaque image. **Ces chiffres ne sont pas un gain global de FPS.** Le retrait des doublons du suivi caméra évite également du travail par image, sans gain FPS quantifié ici. Rapport brut : `/tmp/room-animation-matrices-bdwd5G/comparison.json`, alimentation `battery` au début et à la fin.
+
+Validation : 19 tests passent (moteur des personnages, marches sur tous les humanoïdes, grounding de cinq modèles, animation et transfert worker du H2), TypeScript et build de production réussissent. Deux régressions couvrent la restauration en un parcours avec matrices monde identiques, et une foulée avec bassin animé sous des ancêtres tournés et redimensionnés. La fréquence des animations, les pistes et les réglages de physique restent identiques.

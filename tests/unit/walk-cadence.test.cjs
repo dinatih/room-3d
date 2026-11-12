@@ -41,6 +41,15 @@ it('synchronise la phase avec la distance, quels que soient le FPS et les ralent
   assert.equal(walkTimeScale(0, 1 / 60, 100), 0);
   assert.equal(walkTimeScale(0, 0, 100), 0);
 });
+it('calibre les pieds avec un bassin animé et des ancêtres tournés et redimensionnés', () => {
+  const { rig, clip } = fixture();
+  const pelvis = new THREE.Bone(); pelvis.name = 'Pelvis';
+  pelvis.add(...rig.children.slice()); rig.add(pelvis);
+  rig.rotation.y = Math.PI / 3; rig.scale.set(2, 3, 4); rig.position.set(100, 10, 50);
+  clip.tracks.push(new THREE.VectorKeyframeTrack('Pelvis.position', [0, 1], [0, 0, 0, 0, 0, 20]));
+  assert(Math.abs(getWalkCycleSpeed(clip, rig) - 160) < 1e-10);
+  assert.equal(pelvis.position.z, 0, 'La calibration ne modifie pas la pose affichée');
+});
 it('mesure les avant-pieds plutôt que les chevilles pendant le déroulé du pied', () => {
   const { rig, clip } = fixture();
   for (const side of ['Left', 'Right']) {

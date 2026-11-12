@@ -25,7 +25,7 @@ export function getWalkCycleSpeed(clip: THREE.AnimationClip, scene: THREE.Object
   let previousTime = times[0], distance = 0, supportDuration = 0;
   for (const time of times) {
     mixer.setTime(time);
-    rig.updateMatrixWorld(true);
+    // getWorldPosition updates each foot's ancestors; unrelated joints need no matrices.
     const points = feet.map(foot => foot.getWorldPosition(new THREE.Vector3()));
     if (previous) {
       // Measure longitudinal travel of the lower forefoot, excluding its forward swing.

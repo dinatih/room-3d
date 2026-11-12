@@ -8,6 +8,25 @@ const serialization = require('../../src/features/scene/character/animationSeria
 const { retargetClip } = require('../../src/features/scene/retargeting/retargetClip.ts');
 
 describe('Moteur commun des personnages', () => {
+  it('restaure les matrices du squelette en un seul parcours après assemblage', () => {
+    const rig = new THREE.Group(), expected = [];
+    let parent = rig;
+    for (let i = 0; i < 30; i++) {
+      const bone = new THREE.Bone(); bone.name = `joint-${i}`;
+      bone.position.set(i, 2, -1); bone.rotation.set(.1, -.2, .3); bone.scale.set(1, 2, 1);
+      parent.add(bone); parent = bone;
+    }
+    rig.updateMatrixWorld(true); rig.traverse(node => expected.push([...node.matrixWorld.elements]));
+    const data = serialization.captureAnimationRig(rig);
+    const update = THREE.Object3D.prototype.updateMatrix;
+    let updates = 0, restored;
+    THREE.Object3D.prototype.updateMatrix = function() { updates++; return update.call(this); };
+    try { restored = serialization.restoreAnimationRig(data); }
+    finally { THREE.Object3D.prototype.updateMatrix = update; }
+    assert.equal(updates, expected.length, 'Chaque nœud est calculé une fois, sans recalcul de sous-arbres');
+    const actual = []; restored.traverse(node => actual.push([...node.matrixWorld.elements]));
+    assert.deepEqual(actual, expected);
+  });
   it('distingue le chargement d’un clip de l’attente de navigation sans répéter les logs', () => {
     const { select } = load('src/features/scene/character/Character.tsx', { three: require('three') }, source => {
       const start = source.indexOf('    let isTemporaryLoadingFallback = false;');

@@ -1270,7 +1270,6 @@ export function Character({
         if (headBone.scale.x < 0.5) {
           headBone.scale.set(1, 1, 1);
         }
-        headBone.updateWorldMatrix(true, false);
         headBone.getWorldPosition(_tmpHeadWorldPos);
         cameraState.activeHeadPos = syncVec(cameraState.activeHeadPos, _tmpHeadWorldPos);
 
@@ -1282,8 +1281,6 @@ export function Character({
 
         // Calcul précis du milieu des deux yeux
         if (leftEyeBone && rightEyeBone) {
-          leftEyeBone.updateWorldMatrix(true, false);
-          rightEyeBone.updateWorldMatrix(true, false);
           leftEyeBone.getWorldPosition(_tmpLeftEyeWorldPos);
           rightEyeBone.getWorldPosition(_tmpRightEyeWorldPos);
           _tmpEyesWorldPos.addVectors(_tmpLeftEyeWorldPos, _tmpRightEyeWorldPos).multiplyScalar(0.5);
@@ -1300,7 +1297,6 @@ export function Character({
         cameraState.activeEyesPos = syncVec(cameraState.activeEyesPos, _tmpEyesWorldPos);
       }
       if (hipsBone) {
-        hipsBone.updateWorldMatrix(true, false);
         hipsBone.getWorldPosition(_tmpHipsWorldPos);
         cameraState.activeHipsPos = syncVec(cameraState.activeHipsPos, _tmpHipsWorldPos);
       }
