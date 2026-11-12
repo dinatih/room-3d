@@ -85,10 +85,9 @@ export function getUnusedShadows(scene: THREE.Scene, camera: THREE.Camera) {
     if (!pending.size) break;
     projection.multiplyMatrices(view.projectionMatrix, view.matrixWorldInverse);
     frustum.setFromProjectionMatrix(projection, view.coordinateSystem, view.reversedDepth);
-    scene.traverseVisible(object => {
+    const visitReceiver = (object: THREE.Object3D) => {
       // A receiver proves that an entire shadow pass is needed. Once every
       // active light has one, later mesh bounds cannot change that decision.
-      if (!pending.size) return;
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.receiveShadow || !mesh.layers.test(view.layers)) return;
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -100,7 +99,16 @@ export function getUnusedShadows(scene: THREE.Scene, camera: THREE.Camera) {
         receiverBox.copy(box).expandByScalar(light.shadow.normalBias);
         if (coverage ? receiverBox.intersectsBox(coverage) : overlapsShadowFrame(light.shadow, receiverBox)) pending.delete(light);
       }
-    });
+    };
+    const visit = (object: THREE.Object3D) => {
+      if (object.visible === false || !pending.size) return;
+      visitReceiver(object);
+      for (const child of object.children) {
+        if (!pending.size) break;
+        visit(child);
+      }
+    };
+    visit(scene);
   }
   for (const light of pending.keys()) unused.add(light);
   return { shadows: lights.filter(light => unused.has(light)).map(light => light.shadow), allUnused: unused.size === lights.length };

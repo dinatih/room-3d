@@ -59,6 +59,18 @@ describe('Receveurs d’ombres', () => {
         assert.equal(compare(scene, camera).allUnused, false);
         assert.equal(beforeBounds, 100); assert.equal(afterBounds, 1);
     });
+    it('arrête aussi le parcours des branches restantes, même imbriquées', () => {
+        const { scene, camera } = world(); light(scene);
+        const group = new THREE.Group(); scene.add(group); group.add(receiver(scene));
+        const remaining = new THREE.Group(); group.add(remaining);
+        let visits = 0;
+        Object.defineProperty(remaining, 'visible', { get() { visits++; return true; } });
+        for (let i = 0; i < 100; i++) remaining.add(receiver(scene));
+        scene.updateMatrixWorld(true);
+        const actual = after(scene, camera);
+        assert.equal(visits, 1, 'Seul le recensement initial des lumières visite cette branche');
+        assert.deepEqual(actual, before(scene, camera));
+    });
     it('préserve les ombres directionnelles, spot et ponctuelles, les lumières éteintes et leur initialisation', () => {
         const { scene, camera } = world();
         const lights = [light(scene), light(scene, THREE.SpotLight), light(scene, THREE.PointLight)];
