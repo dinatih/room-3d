@@ -36,3 +36,31 @@ entity_config:
     expose: true
   switch.interrupteurs_salle_de_bain_switch_2:
     expose: true
+  script.ouvrir_volet_dans_1h:
+    expose: true
+  script.ouvrir_volet_dans_2h:
+    expose: true
+  script.ouvrir_volet_dans_4h:
+    expose: true
+  script.ouvrir_volet_dans_6h:
+    expose: true
+  script.ouvrir_volet_dans_8h:
+    expose: true
+  script.ouvrir_volet_a_6h:
+    expose: true
+  script.ouvrir_volet_a_7h:
+    expose: true
+  script.ouvrir_volet_a_8h:
+    expose: true
+  script.ouvrir_volet_a_9h:
+    expose: true
+  script.ouvrir_volet_a_10h:
+    expose: true
+  script.ouvrir_volet_a_11h:
+    expose: true
+  script.ouvrir_volet_a_12h:
+    expose: true
+  script.ouvrir_volet_a_13h:
+    expose: true
+  script.ouvrir_volet_a_14h:
+    expose: true
