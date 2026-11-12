@@ -48,7 +48,7 @@ Chaque meuble ou objet interactif est un composant autonome implémentant l'inte
 - Déclarer les associations objet/actions dans `src/features/scene/objectActions.ts` et les libellés, clés d'état et comportements dans `src/features/scene/objectActionRegistry.ts`.
 - Utiliser le même identifiant d'action dans les composants, les événements et les états de la scène ou de la preview, avec les mêmes libellés et comportements. La scène, les previews 3D et les filtres de l'inventaire doivent utiliser ce registre commun. Ne pas réintroduire de listes d'actions dans les données de l'inventaire ou de table de libellés dans `previewRegistry.tsx`.
 - Les placements peuvent ajouter leurs interactions IA contextuelles aux actions communes. Les commandes de déplacement dans l'appartement restent réservées à la scène.
-- Les composants reçoivent `isPreview` pour lire les états locaux de la preview ; la vidéo en preview ne doit pas piloter les écrans de l'appartement.
+- Les composants reçoivent `isPreview` pour lire les états locaux de la preview sans affecter la scène.
 
 ### Styles
 
@@ -69,7 +69,7 @@ Le terminal ou l'IDE utilisé ne détermine pas l'identité de l'agent. Codex ne
 - **Format des liens de code pour Zed** : Ne JAMAIS utiliser la syntaxe d'ancre `#L<num>` (comme `file:///path#L96`), car Zed tente de créer un fichier inexistant `path#L96`. Pour ouvrir un fichier à une ligne précise dans Zed, TOUJOURS utiliser le schéma natif avec un libellé propre : `[NomFichier.tsx:Ligne](zed://file/chemin/absolu:Ligne)`.
 - **Validation** : Toujours lancer `npx tsc --noEmit` après avoir modifié du code pour garantir l'absence d'erreurs de typage.
 - **Commit automatique obligatoire** : Avant chaque réponse finale, l’agent DOIT commiter toutes les modifications réalisées pendant le tour via `git commit`, sans attendre d’instruction explicite. Cette règle couvre aussi les modifications de documentation et de configuration. Ne pas créer de commit vide et ne pas inclure les modifications préexistantes étrangères à la tâche.
-- **Exécution de scripts / Règle Anti-Spam `node -e`** : Ne JAMAIS lancer de commandes inline répétitives de type `node -e "..."` qui demandent à l'utilisateur de valider chaque commande une par une. Toujours écrire le script dans un fichier réutilisable (`scripts/temp_inspect.cjs` ou similaire), puis exécuter ce fichier avec `node scripts/temp_inspect.cjs` (ou python). De cette façon, l'utilisateur ne valide l'autorisation d'exécution qu'une seule fois pour toute la conversation. **Ne JAMAIS supprimer les fichiers `scripts/temp_*`** : les conserver en place pour préserver les autorisations accordées et éviter le spam de validation.
+- **Exécution de scripts (`node` / `python`)** : Éviter d'enchaîner des commandes inline `node -e "..."` ; préférer un script fichier dédié (ex. `scripts/temp_inspect.cjs`) exécuté avec `node scripts/temp_inspect.cjs` pour limiter les demandes de validation.
 
 ## Simplicité du code, Anti Over-Engineering & Échec Explicite (Fail Fast)
 
