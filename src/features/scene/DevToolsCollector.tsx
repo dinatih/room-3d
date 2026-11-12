@@ -15,7 +15,7 @@ const FPS_SAMPLES = 80;
 /**
  * Trouve l'entité / ancêtre de plus haut niveau pour identifier clairement le composant.
  */
-function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string {
+export function resolveEntityKey(obj: THREE.Object3D, rootScene?: THREE.Scene): string {
   let cur: THREE.Object3D | null = obj;
   let semanticAncestor = '';
   let anyAncestor = '';

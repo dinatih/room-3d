@@ -83,6 +83,7 @@ test('Air Performer respects the selected arc, preview isolation and pause; dock
       '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 106, 1)) },
       '../objectActions': { getObjectActionIds: () => [] },
       '../utils/useFurnitureToggles': { useFurnitureToggles: () => ({ airPerformerOscillation: 0 }) },
+      '../utils/useSceneGlass': { useSceneGlass() {} },
       '../store/useSceneStore': {},
       '../../home-assistant/connection': { useHomeAssistant: () => ({ entities: {} }), isHomeAssistantLinked: () => linked },
       '../../home-assistant/appliances': { applianceValue: () => { throw Error('Preview must not read HA state'); } },

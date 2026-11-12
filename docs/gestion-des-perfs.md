@@ -314,3 +314,38 @@ Comparaison CPU locale sur batterie, ancien code `cfa1d33c` contre nouveau code,
 Les quatre vitesses de foulée calculées sont strictement identiques entre versions. Le coût médian de calibration baisse d'environ 24 à 42 %, avec 84 à 85 % de compositions de matrices en moins. Cette calibration est déjà mémorisée par clip : l'économie concerne principalement sa première utilisation, pas chaque image. **Ces chiffres ne sont pas un gain global de FPS.** Le retrait des doublons du suivi caméra évite également du travail par image, sans gain FPS quantifié ici. Rapport brut : `/tmp/room-animation-matrices-bdwd5G/comparison.json`, alimentation `battery` au début et à la fin.
 
 Validation : 19 tests passent (moteur des personnages, marches sur tous les humanoïdes, grounding de cinq modèles, animation et transfert worker du H2), TypeScript et build de production réussissent. Deux régressions couvrent la restauration en un parcours avec matrices monde identiques, et une foulée avec bassin animé sous des ancêtres tournés et redimensionnés. La fréquence des animations, les pistes et les réglages de physique restent identiques.
+
+## Regroupement des pièces du congélateur — 12 novembre 2026
+
+Un relevé des soumissions de rendu trouve 41 dessins du congélateur CHIQ par passe pour seulement quatre matériaux. Le GLB `items/tillreda_anim/TILLREDA_anim.glb` est réorganisé en six primitives : les pièces compatibles sont regroupées par matériau, en conservant le nœud `door` piloté par `door_open`. Le composant React, ses actions et son mixer restent identiques. Aucune décimation, réduction de texture ou baisse de cadence n'est appliquée ; le modèle optimisé est également utilisé en preview.
+
+Le script reproductible `scripts/batch-model.mjs` utilise `flatten` puis `join` de glTF Transform. Ces opérations préservent les cibles d'animation et leurs descendants ; le filtre de regroupement exclut les matériaux BLEND. Le script réécrit le fichier fourni. Il est réservé aux assets audités : les nœuds animés par du code qui recherche leurs noms doivent être vérifiés avant toute réorganisation de leur hiérarchie.
+
+```bash
+node scripts/batch-model.mjs public/items/tillreda_anim/TILLREDA_anim.glb
+```
+
+L'audit compare les 7399 triangles, leurs positions monde et leurs normales, avec l'ancien fichier, à six temps d'animation : 0 / 0,1 / 0,25 / 0,5 / 0,75 / 1 seconde. Les triangles et matériaux correspondent ; l'écart numérique maximal est de 1,35 × 10⁻⁷ (coordonnées du GLB ou composantes des normales). Le clip dure toujours une seconde et pilote `door.quaternion`. Rapport : `/tmp/room-freezer-geometry.json`. Le fichier passe de 398904 à 385316 octets.
+
+Le profilage détaillé initial ajoute des requêtes GPU autour des dessins : il perturbe fortement leur exécution et ne sert pas de référence de temps GPU ni de FPS. La comparaison suivante mesure l'image entière, avec une seule requête GPU par image et sans requêtes individuelles. Elle alterne ancien/nouveau/nouveau/ancien dans la même scène headless, avec cinq secondes de stabilisation puis vingt secondes mesurées par bloc. La porte d'origine est synchronisée avec celle de l'application, et les mêmes calques et paramètres d'ombres sont appliqués aux deux versions.
+
+La campagne exploratoire avec PNJ actifs (`/tmp/room-freezer-abba-6kJRL2/comparison.json`) ne démontre pas de gain global de FPS : ancien 15,40 / 14,42, nouveau 14,65 / 14,42. La quantité de géométrie rendue varie de 7,02 à 7,76 millions de triangles au fil du parcours des PNJ. Ces résultats sont conservés, sans attribuer leur variation au regroupement seul. Ils motivent le contrôle apparié à pose identique ci-dessous.
+
+Validation fonctionnelle : dix tests ciblés passent (GLB, porte, interaction et départ du congélateur, pause des meubles), ainsi que TypeScript et le build. Le mock `useSceneGlass` manquant dans l'ancien test de l'Air Performer est ajouté pour rétablir ce contrôle de pause ; son matériau réel n'est pas modifié.
+
+Contrôle apparié : 79 paires exploitables, ordre avant/après alterné à chaque image ; la paire utilisée pour lire les pixels est exclue des temps. Le nouveau modèle économise exactement **70 dessins par image**, avec un nombre de triangles strictement identique dans chaque paire. Sur les 4412880 octets du framebuffer comparé, 11 composantes diffèrent, d'une seule unité sur 255 au maximum : l'écart est limité à l'arrondi numérique du regroupement.
+
+Les médianes CPU sont 22,4 / 22,9 ms et GPU 24,42 / 24,92 ms (avant / après). Les différences appariées moyennes sont +0,44 ms CPU et −0,22 ms GPU ; elles varient fortement avec l'ordre des deux rendus, notamment parce que le second réutilise les calculs de pose du premier. **Ces durées ne démontrent pas d'accélération globale.** La réduction des soumissions est confirmée, sans promesse de FPS supplémentaire sur cette machine.
+
+Les audits sont conservés dans `test-results/freezer-batching-2026-11-12/` : `geometry.json`, `active-abba.json`, `paired.json` et `instrumented-draws.json`. Cette copie dans le projet survit au nettoyage de `/tmp`.
+
+### Suivre les dessins réellement soumis par objet
+
+```bash
+node scripts/profile-studio-draws.cjs --hardware-gpu
+node scripts/profile-studio-draws.cjs --night --hardware-gpu
+```
+
+Ce diagnostic réutilise le lanceur headless, le cas standard et les noms d'objets du panneau de diagnostic. Après la chauffe, il compte les dessins et triangles effectivement soumis pendant 60 images, par objet et par passe (image principale, ombres, miroirs), ainsi que les matériaux utilisés. Il conserve la scène et les PNJ actifs. Il ne place aucune requête GPU autour des dessins individuels et ne prétend pas mesurer des millisecondes GPU par objet. Les rapports Markdown et JSON sont dans `test-results/draw-submissions-*/`, avec le contexte du navigateur dans `draw-submissions/result.json`. Il complète les campagnes FPS et aide à choisir la prochaine cible sans confondre le nombre de meshes chargés avec le coût de leurs différentes passes.
+
+Premier contrôle GPU du nouveau diagnostic : `test-results/draw-submissions-QAe7sS/report.md`. Il retrouve six dessins du congélateur dans l'image principale et six dans les ombres. Le bloc nommé `Kallax SE` atteint 56 dessins dans chaque passe pour 1712 triangles et deux matériaux principaux : c'est une prochaine cible de regroupement à examiner, distincte du congélateur désormais compté séparément.
