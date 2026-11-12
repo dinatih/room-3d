@@ -32,6 +32,8 @@ export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItem
   }, [scene, onSize]);
 
   useLayoutEffect(() => {
+    const targetColor = actionState?.lightColor ?? 0xffc266;
+    const brightness = actionState?.brightness ?? 1;
     scene.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (mesh.isMesh && mesh.material) {
@@ -40,9 +42,11 @@ export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItem
           if ('emissive' in m) {
             const stdMat = m as THREE.MeshStandardMaterial;
             if (isOn) {
-              stdMat.emissive.set(actionState?.lightColor ?? 0xffc266);
-              stdMat.emissiveIntensity = 2.0 * (actionState?.brightness ?? 1);
+              stdMat.color.set(targetColor);
+              stdMat.emissive.set(targetColor);
+              stdMat.emissiveIntensity = 1.2 * brightness;
             } else {
+              stdMat.color.set(0xffffff);
               stdMat.emissive.set(0x000000);
               stdMat.emissiveIntensity = 0;
             }

@@ -199,16 +199,29 @@ export function LampOla({ actionState = {}, onSize }: Partial<Omit<SceneItemProp
   }, [scene, onSize]);
 
   useLayoutEffect(() => {
-    if (diffuserMatRef.current) {
-      if (isOn) {
-        diffuserMatRef.current.emissive.set(actionState?.lightColor ?? 0xffc266);
-        diffuserMatRef.current.emissiveIntensity = 2.5 * (actionState?.brightness ?? 1);
-      } else {
-        diffuserMatRef.current.emissive.set(0x000000);
-        diffuserMatRef.current.emissiveIntensity = 0;
+    const targetColor = actionState?.lightColor ?? 0xffc266;
+    const brightness = actionState?.brightness ?? 1;
+    scene.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (mesh.isMesh && mesh.material) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((mat) => {
+          if ('emissive' in mat) {
+            const stdMat = mat as THREE.MeshStandardMaterial;
+            if (isOn) {
+              stdMat.color.set(targetColor);
+              stdMat.emissive.set(targetColor);
+              stdMat.emissiveIntensity = 1.2 * brightness;
+            } else {
+              stdMat.color.set(0xffffff);
+              stdMat.emissive.set(0x000000);
+              stdMat.emissiveIntensity = 0;
+            }
+          }
+        });
       }
-    }
-  }, [isOn, actionState?.lightColor, actionState?.brightness]);
+    });
+  }, [scene, isOn, actionState?.lightColor, actionState?.brightness]);
 
   return <primitive object={scene} />;
 }
