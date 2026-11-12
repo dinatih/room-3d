@@ -2,6 +2,8 @@
 
 Fichier de directives pour tous les assistants IA. Ce document liste les règles de développement, les repères 3D, les commandes de validation et les conventions du projet.
 
+Pour **Codex**, lire uniquement `AGENTS.md` comme fichier de directives du projet ; ne jamais lire `GEMINI.md` ni `Gemini.md`.
+
 ## Commandes du projet
 
 ```bash
