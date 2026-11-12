@@ -71,6 +71,10 @@ export interface FurnitureState {
   lampCorridor: boolean;
   lampKitchen:  boolean;
   lampGardenStrips: boolean;
+  lampWindow:   boolean;
+  socketGarden: boolean;
+  lampGardenStrip: boolean;
+  lampSink:     boolean;
   freezerOpen:    boolean;
   fridge:         boolean;
   tvOn:           boolean;

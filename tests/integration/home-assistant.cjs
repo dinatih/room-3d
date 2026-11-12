@@ -8,6 +8,10 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     { key: 'lampBath', entity: 'light.douche_douche', button: 'Lampe SDB', action: 'lampBath' },
     { key: 'lampOn', entity: 'light.porte', button: 'Lumière Séjour (OLA)', action: 'lamp-toggle' },
     { key: 'lampKitchen', entity: 'light.cuisine_barre', button: 'Barre · Cuisine', action: 'kolvatten-toggle' },
+    { key: 'lampWindow', entity: 'light.fenetre', button: 'Lumière Fenêtre', action: 'lamp-window-toggle' },
+    { key: 'socketGarden', entity: 'switch.jardin_socket_1', button: 'Jardin Socket 1', action: 'socket-garden-toggle' },
+    { key: 'lampGardenStrip', entity: 'light.douche_strip_blanc_jardin', button: 'Strip Blanc Jardin', action: 'lamp-garden-toggle' },
+    { key: 'lampSink', entity: 'switch.interrupteurs_salle_de_bain_switch_1', button: 'Lumière Lavabo', action: 'lamp-sink-toggle' },
   ];
   let accepting = true;
   let authorizationExchanges = 0;
@@ -157,9 +161,9 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     assert.equal(await disabled('Lampe Couloir'), false);
     await page.evaluate(() => window.haTest.useSceneStore.getState().triggerAction('lamp-toggle', false, 'user'));
     await page.waitForFunction(() => !window.haTest.useHomeAssistant.getState().lights.lampOn.pending);
-    assert.equal(calls.length, 5);
-    assert.equal(calls[4].service, 'turn_off');
-    assert.equal(calls[4].service_data.entity_id, 'light.porte');
+    assert.equal(calls.length, lights.length + 1);
+    assert.equal(calls[lights.length].service, 'turn_off');
+    assert.equal(calls[lights.length].service_data.entity_id, 'light.porte');
     publish('light.porte', 'off');
     await page.waitForFunction(() => !window.haTest.useSceneStore.getState().furniture.lampOn);
     await page.evaluate(() => {

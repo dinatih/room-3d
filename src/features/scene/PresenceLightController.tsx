@@ -11,7 +11,7 @@ const LIGHT_ZONES = [
   { key: 'lampBath', check: isAgentInBathroom },
   { key: 'lampCorridor', check: isAgentInCorridor },
   { key: 'lampKitchen', check: isAgentInKitchen },
-  { key: 'lampGardenStrips', check: (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos) },
+  { key: 'lampGardenStrip', check: (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos) },
 ] as const;
 
 function getActivePositions() {

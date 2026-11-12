@@ -1,13 +1,17 @@
 # Room-3D et Home Assistant
 
-Quatre éclairages de la scène sont associés aux ampoules physiques HA :
+Huit éclairages et prises de la scène sont associés aux appareils physiques HA :
 
-| Éclairage | Entité physique | Clé du store |
+| Éclairage / Prise | Entité physique | Clé du store |
 | --- | --- | --- |
 | Entrée / Couloir | `light.entree_entree` | `lampCorridor` |
 | Salle de bain | `light.douche_douche` | `lampBath` |
 | Lumière Séjour — OLA | `light.porte` | `lampOn` |
 | Barre — coin cuisine | `light.cuisine_barre` | `lampKitchen` |
+| Lumière Fenêtre | `light.fenetre` | `lampWindow` |
+| Prise Jardin | `switch.jardin_socket_1` | `socketGarden` |
+| Strip Blanc Jardin | `light.douche_strip_blanc_jardin` | `lampGardenStrip` |
+| Lumière Lavabo | `switch.interrupteurs_salle_de_bain_switch_1` | `lampSink` |
 
 Le couloir a été validé en fonctionnement réel par l’utilisateur. Les trois
 associations suivantes correspondent aux lampes qu’il a identifiées. Les groupes

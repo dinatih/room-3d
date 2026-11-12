@@ -115,6 +115,7 @@ it('garde les bandes lumineuses avec les ombres réservées au HD', () => {
       react: { useMemo: fn => fn(), useEffect() {}, useRef: value => ({ current: value }) },
       '@react-three/fiber': { useFrame() {} },
       '../store/useSceneStore': { useSceneStore: select => select(state) },
+      '../../home-assistant/useLightAppearance': { useLightAppearance: () => ({ remote: false, name: null, color: new THREE.Color(0xffffff), brightness: 1 }) },
       '../wallData': { pEast: () => 95, pWest: () => 260, ROOM_NORTH_WALL: 0 },
     });
     for (const placement of GardenLightStrips().props.children) {

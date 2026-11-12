@@ -9,6 +9,10 @@ export const LIGHTS = {
   lampBath: { entity: 'light.douche_douche', label: 'Salle de bain' },
   lampOn: { entity: 'light.porte', label: 'Lumière Séjour' },
   lampKitchen: { entity: 'light.cuisine_barre', label: 'Barre · Cuisine' },
+  lampWindow: { entity: 'light.fenetre', label: 'Lumière Fenêtre' },
+  socketGarden: { entity: 'switch.jardin_socket_1', label: 'Jardin Socket 1' },
+  lampGardenStrip: { entity: 'light.douche_strip_blanc_jardin', label: 'Strip Blanc Jardin' },
+  lampSink: { entity: 'switch.interrupteurs_salle_de_bain_switch_1', label: 'Lumière Lavabo' },
 } as const;
 export type LightKey = keyof typeof LIGHTS;
 export const LIGHT_KEYS = Object.keys(LIGHTS) as LightKey[];
@@ -194,7 +198,8 @@ export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
   const run = generation;
   updateLight(key, { pending: true, error: null });
   try {
-    await callService(connection, 'light', (on ?? !light.on) ? 'turn_on' : 'turn_off', { entity_id: LIGHTS[key].entity });
+    const domain = LIGHTS[key].entity.split('.')[0];
+    await callService(connection, domain, (on ?? !light.on) ? 'turn_on' : 'turn_off', { entity_id: LIGHTS[key].entity });
   } catch {
     if (run === generation) updateLight(key, { error: `La commande de ${LIGHTS[key].label} a échoué.` });
   } finally {

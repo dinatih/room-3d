@@ -191,6 +191,14 @@ const ACTIONS: Record<string, ActionConfig> = {
   lampCorridor: { label: ['Allumer Couloir', 'Éteindre Couloir'] },
   lampKitchen: { label: ['Allumer Cuisine', 'Éteindre Cuisine'] },
   'kolvatten-toggle': { label: ['Allumer Cuisine', 'Éteindre Cuisine'] },
+  lampSink: { label: ['Allumer Lavabo', 'Éteindre Lavabo'] },
+  'lamp-sink-toggle': { label: ['Allumer Lavabo', 'Éteindre Lavabo'] },
+  lampWindow: { label: ['Allumer Fenêtre', 'Éteindre Fenêtre'] },
+  'lamp-window-toggle': { label: ['Allumer Fenêtre', 'Éteindre Fenêtre'] },
+  lampGardenStrip: { label: ['Allumer Jardin', 'Éteindre Jardin'] },
+  'lamp-garden-toggle': { label: ['Allumer Jardin', 'Éteindre Jardin'] },
+  socketGarden: { label: ['Allumer Prise Jardin', 'Éteindre Prise Jardin'] },
+  'socket-garden-toggle': { label: ['Allumer Prise Jardin', 'Éteindre Prise Jardin'] },
   'bed-double': { label: ['Mettre en lit double', 'Séparer en lits simples'] },
   'bed-position': { sceneOnly: true, label: () => {
     const p = positionState['bed-position'];

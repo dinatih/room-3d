@@ -43,15 +43,16 @@ const TOILET_FOOTPRINT = [
 function SinkLight() {
   const light = useRef<PointLight>(null!);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
+  const on = useSceneStore(state => !!state.furniture.lampSink);
   useFrame(() => {
     const inUse = OccupancyManager.getReservations().some(({ slot, characterId }) => {
       if (!slot.startsWith('vasque-sdb:')) return false;
       const action = SMART_OBJECTS['vasque-sdb'].slots.find(candidate => candidate.slotId === slot.split(':')[1]);
       return !!action?.animation && action.animation === cameraState.positions[characterId]?.anim;
     });
-    light.current.intensity = inUse ? 6 * 100 ** 2 : 0;
+    light.current.intensity = (on || inUse) ? 6 * 100 ** 2 : 0;
   });
-  return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult' }}>
+  return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult', hoverAction: { label: 'Lumière Lavabo', actions: ['lamp-sink-toggle'] } }}>
     <Vathult40467548 />
     <pointLight ref={light} position={[0, -3, 8]} color="#fff2dc" intensity={0} distance={140} decay={2} castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} shadow-camera-far={180} />
   </group>;

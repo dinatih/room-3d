@@ -158,9 +158,13 @@ export function InteractiveSection({
 
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">LUMIÈRES</div>
       {furnitureBtn('Lampe SDB', 'lampBath')}
+      {furnitureBtn('Lumière Lavabo', 'lampSink')}
       {furnitureBtn('Lampe Couloir', 'lampCorridor')}
       {furnitureBtn('Barre · Cuisine', 'lampKitchen')}
       {furnitureBtn('Lumière Séjour (OLA)', 'lampOn')}
+      {furnitureBtn('Lumière Fenêtre', 'lampWindow')}
+      {furnitureBtn('Strip Blanc Jardin', 'lampGardenStrip')}
+      {furnitureBtn('Jardin Socket 1', 'socketGarden')}
     </div>
   );
 }
