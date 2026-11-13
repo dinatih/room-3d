@@ -34,16 +34,18 @@ interface HomeAssistantState {
   enabled: boolean;
   linked: boolean;
   status: 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+  hassUrl: string | null;
   lights: Record<LightKey, LightState>;
   entities: Record<string, HassEntity>;
   applianceCommands: Partial<Record<ApplianceAction, { pending: boolean; error: string | null }>>;
   error: string | null;
 }
+const isTrackedEntity = (entityId: string) => APPLIANCE_ENTITIES.includes(entityId) || entityId.startsWith('camera.');
 const emptyLights = () => Object.fromEntries(LIGHT_KEYS.map(key => [key, {
   name: null, on: null, brightness: 1, rgb: null, available: false, pending: false, error: null,
 }])) as Record<LightKey, LightState>;
 export const useHomeAssistant = create<HomeAssistantState>(() => ({
-  enabled: false, linked: sessionStorage.getItem(LINKED_KEY) !== '0', status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null,
+  enabled: false, linked: sessionStorage.getItem(LINKED_KEY) !== '0', status: 'disconnected', hassUrl: null, lights: emptyLights(), entities: {}, applianceCommands: {}, error: null,
 }));
 export const isHomeAssistantLinked = (state: HomeAssistantState) => state.enabled && state.linked;
 export function setHomeAssistantLinked(linked: boolean) {
@@ -115,7 +117,12 @@ export async function connectHomeAssistant(url?: string) {
         if (run !== generation || snapshot !== synchronization || !next.connected) return;
         synchronized = true;
         for (const key of LIGHT_KEYS) receiveLight(key, entities.find(entity => entity.entity_id === LIGHTS[key].entity));
-        useHomeAssistant.setState({ status: 'connected', error: null, entities: Object.fromEntries(entities.filter(entity => APPLIANCE_ENTITIES.includes(entity.entity_id)).map(entity => [entity.entity_id, entity])) });
+        useHomeAssistant.setState({
+          status: 'connected',
+          hassUrl: auth.data.hassUrl.replace(/\/$/, ''),
+          error: null,
+          entities: Object.fromEntries(entities.filter(entity => isTrackedEntity(entity.entity_id)).map(entity => [entity.entity_id, entity])),
+        });
       } catch {
         if (run === generation && snapshot === synchronization) useHomeAssistant.setState({ status: 'error', error: 'Lecture des états Home Assistant impossible.' });
       }
@@ -141,7 +148,7 @@ export async function connectHomeAssistant(url?: string) {
       if (run !== generation || !synchronized || !next.connected) return;
       const key = LIGHT_KEYS.find(key => LIGHTS[key].entity === event.data.entity_id);
       if (key) receiveLight(key, event.data.new_state ?? undefined);
-      if (APPLIANCE_ENTITIES.includes(event.data.entity_id)) {
+      if (isTrackedEntity(event.data.entity_id)) {
         useHomeAssistant.setState(state => {
           const entities = { ...state.entities };
           if (event.data.new_state) entities[event.data.entity_id] = event.data.new_state;
@@ -173,7 +180,7 @@ export function stopHomeAssistant() {
   // HA cancels the socket's subscriptions when it closes.
   connection?.close();
   connection = undefined;
-  useHomeAssistant.setState({ enabled: false, status: 'disconnected', lights: emptyLights(), entities: {}, applianceCommands: {}, error: null });
+  useHomeAssistant.setState({ enabled: false, status: 'disconnected', hassUrl: null, lights: emptyLights(), entities: {}, applianceCommands: {}, error: null });
 }
 
 export function disconnectHomeAssistant() {
@@ -232,15 +239,30 @@ export async function requestHomeAssistantAction(key: LightKey | ApplianceAction
   }
 }
 
-export async function loadTuyaNameComparison() {
+export interface HomeAssistantRegistries {
+  devices: NameDevice[];
+  entities: NameEntity[];
+  areas: NameArea[];
+}
+
+export async function loadHomeAssistantRegistries(): Promise<HomeAssistantRegistries> {
   const current = connection;
-  if (!current?.connected || useHomeAssistant.getState().status !== 'connected') throw new Error('Connexion HA requise pour lire les noms.');
+  if (!current?.connected || useHomeAssistant.getState().status !== 'connected') {
+    throw new Error('Connexion HA requise pour lire les registres.');
+  }
   const [devices, entities, areas] = await Promise.all([
     current.sendMessagePromise<NameDevice[]>({ type: 'config/device_registry/list' }),
     current.sendMessagePromise<NameEntity[]>({ type: 'config/entity_registry/list' }),
     current.sendMessagePromise<NameArea[]>({ type: 'config/area_registry/list' }),
   ]);
-  if (current !== connection || !current.connected) throw new Error('Connexion HA interrompue pendant la lecture des noms.');
+  if (current !== connection || !current.connected) {
+    throw new Error('Connexion HA interrompue pendant la lecture des registres.');
+  }
+  return { devices, entities, areas };
+}
+
+export async function loadTuyaNameComparison() {
+  const { devices, entities, areas } = await loadHomeAssistantRegistries();
   return compareTuyaNames(devices, entities, areas);
 }
 

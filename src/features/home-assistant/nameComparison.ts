@@ -6,7 +6,7 @@ export interface NameDevice {
   area_id: string | null;
   model: string | null;
 }
-export interface NameEntity { device_id: string | null; platform: string; entity_id: string; name: string | null }
+export interface NameEntity { device_id: string | null; area_id?: string | null; platform: string; entity_id: string; name: string | null }
 export interface NameArea { area_id: string; name: string }
 
 export function compareTuyaNames(devices: NameDevice[], entities: NameEntity[], areas: NameArea[]) {

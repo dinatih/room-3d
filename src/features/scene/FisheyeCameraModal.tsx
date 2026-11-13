@@ -1,8 +1,17 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { LAYER_WALKER_DETAIL } from '@config';
+import {
+  findLivingRoom360Camera,
+  homeAssistantCameraStreamUrl,
+} from '../home-assistant/camera';
+import {
+  loadHomeAssistantRegistries,
+  useHomeAssistant,
+  type HomeAssistantRegistries,
+} from '../home-assistant/connection';
 import { ceilingCameraFeed, FISHEYE_CANVAS_SIZE } from './ceilingCameraFeed';
 import { cameraState } from './cameraState';
 
@@ -36,11 +45,11 @@ const FISHEYE_FRAGMENT = /* glsl */ `
     float theta = r * HALF_PI;
     float sinTheta = sin(theta);
     vec2 dir2d = r > 1e-5 ? (p / r) : vec2(0.0);
-    // Vue plongeante (-Y) : Nord (-Z) en haut (+p.y), Est (+X) à droite (+p.x).
+    // Vue plongeante (-Y) tournée 90° anti-horaire : porte-fenêtre (-Z) à gauche (-p.x), Est (+X) en haut (+p.y).
     vec3 dir = normalize(vec3(
-      dir2d.x * sinTheta,
+      dir2d.y * sinTheta,
       -cos(theta),
-      -dir2d.y * sinTheta
+      dir2d.x * sinTheta
     ));
 
     vec3 linearColor = textureCube(tCube, dir).rgb;
@@ -142,9 +151,137 @@ export function FisheyeCameraCapture({ position }: { position: [number, number, 
   return null;
 }
 
+function HomeAssistantCameraPanel() {
+  const status = useHomeAssistant(state => state.status);
+  const hassUrl = useHomeAssistant(state => state.hassUrl);
+  const entities = useHomeAssistant(state => state.entities);
+  const [registries, setRegistries] = useState<HomeAssistantRegistries | null>(null);
+  const [registryError, setRegistryError] = useState<string | null>(null);
+  const [streamNonce, setStreamNonce] = useState(0);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+
+  const directLookup = useMemo(() => findLivingRoom360Camera(entities, registries), [entities, registries]);
+
+  useEffect(() => {
+    if (status !== 'connected') {
+      setRegistries(null);
+      setRegistryError(null);
+      return;
+    }
+    if (!directLookup.needsRegistry || registries || registryError) return;
+    let active = true;
+    loadHomeAssistantRegistries()
+      .then(result => {
+        if (active) setRegistries(result);
+      })
+      .catch(error => {
+        if (active) setRegistryError(error instanceof Error ? error.message : 'Lecture des registres HA impossible.');
+      });
+    return () => {
+      active = false;
+    };
+  }, [status, directLookup.needsRegistry, registries, registryError]);
+
+  const entity = directLookup.entity;
+  const cameraLabel = String(entity?.attributes.friendly_name ?? 'Caméra 360 Séjour');
+  const streamBaseUrl = useMemo(() => homeAssistantCameraStreamUrl(hassUrl, entity), [hassUrl, entity]);
+  const streamUrl = streamBaseUrl ? (streamNonce > 0 ? `${streamBaseUrl}&v=${streamNonce}` : streamBaseUrl) : null;
+  const isAvailable = !!entity && entity.state !== 'unavailable' && entity.state !== 'unknown';
+  const isResolving = directLookup.needsRegistry && !registries && !registryError;
+  const isLoaded = !!streamUrl && loadedUrl === streamUrl;
+  const hasStreamError = !!streamUrl && erroredUrl === streamUrl;
+
+  let errorMessage: string | null = null;
+  if (registryError) {
+    errorMessage = registryError;
+  } else if (!entity && !isResolving) {
+    const found = directLookup.cameras
+      .map(cam => cam.attributes.friendly_name ? `${String(cam.attributes.friendly_name)} (${cam.entity_id})` : cam.entity_id)
+      .join(', ');
+    errorMessage = directLookup.cameras.length > 0
+      ? `Caméra 360 Séjour introuvable dans Home Assistant. Entités détectées : ${found}.`
+      : 'Aucune entité camera.* trouvée dans Home Assistant.';
+  } else if (entity && !isAvailable) {
+    errorMessage = `Caméra indisponible dans Home Assistant (état : ${entity.state}).`;
+  } else if (entity && !streamUrl) {
+    errorMessage = `Flux caméra indisponible pour ${entity.entity_id} : adresse HA ou jeton absent.`;
+  }
+
+  return (
+    <div className="col d-flex flex-column gap-2" data-testid="fisheye-ha-panel">
+      <div className="d-flex align-items-center justify-content-between gap-2 small">
+        <span className="fw-semibold text-truncate">{cameraLabel}</span>
+        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+          {streamUrl && isAvailable && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-dark py-0 px-1"
+              title="Actualiser le flux Home Assistant"
+              aria-label="Actualiser le flux Home Assistant"
+              onClick={() => setStreamNonce(n => n + 1)}
+            >
+              <i className="bi bi-arrow-clockwise" aria-hidden="true" />
+            </button>
+          )}
+          <span className={`badge rounded-pill ${isLoaded ? 'bg-danger' : 'text-bg-secondary'}`}>
+            {isLoaded ? 'HA LIVE' : 'HA'}
+          </span>
+        </div>
+      </div>
+
+      <div className="w-100 ratio ratio-1x1 rounded-4 overflow-hidden bg-dark shadow border border-secondary border-opacity-50 position-relative">
+        {streamUrl && isAvailable && !errorMessage ? (
+          <>
+            <img
+              key={streamUrl}
+              src={streamUrl}
+              alt={`Flux caméra Home Assistant : ${cameraLabel}`}
+              className="w-100 h-100 object-fit-contain d-block"
+              onLoad={() => setLoadedUrl(streamUrl)}
+              onError={() => setErroredUrl(streamUrl)}
+            />
+            {!isLoaded && !hasStreamError && (
+              <div className="d-flex flex-column align-items-center justify-content-center gap-2 text-light bg-dark bg-opacity-75 p-3 text-center small">
+                <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                <span>Connexion au flux Home Assistant…</span>
+              </div>
+            )}
+            {hasStreamError && (
+              <div role="alert" className="d-flex flex-column align-items-center justify-content-center gap-2 text-light bg-dark p-3 text-center small">
+                <i className="bi bi-exclamation-triangle text-warning fs-4" aria-hidden="true" />
+                <span>Impossible de lire le flux de {entity?.entity_id}.</span>
+                <button type="button" className="btn btn-sm btn-outline-light" onClick={() => setStreamNonce(n => n + 1)}>
+                  Réessayer
+                </button>
+              </div>
+            )}
+          </>
+        ) : isResolving ? (
+          <div className="d-flex flex-column align-items-center justify-content-center gap-2 text-light p-3 text-center small">
+            <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+            <span>Recherche de la caméra 360 séjour…</span>
+          </div>
+        ) : (
+          <div role="alert" className="d-flex flex-column align-items-center justify-content-center gap-2 text-light p-3 text-center small">
+            <i className="bi bi-camera-video-off text-warning fs-4" aria-hidden="true" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 small text-body-secondary">
+        <span>Home Assistant · Séjour</span>
+        {entity && <span className="text-truncate">{entity.entity_id}</span>}
+      </div>
+    </div>
+  );
+}
+
 export function FisheyeCameraModal({ onClose }: { onClose: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isHomeAssistantConnected = useHomeAssistant(state => state.status === 'connected');
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -182,7 +319,7 @@ export function FisheyeCameraModal({ onClose }: { onClose: () => void }) {
     <dialog
       ref={dialogRef}
       {...{ closedby: 'any' }}
-      className="fisheye-modal glass-card col-11 col-sm-9 col-md-7 col-lg-5 m-auto p-0 rounded-4 text-dark"
+      className={`fisheye-modal glass-card ${isHomeAssistantConnected ? 'col-11 col-lg-10 col-xl-9' : 'col-11 col-sm-9 col-md-7 col-lg-5'} m-auto p-0 rounded-4 text-dark`}
       aria-labelledby="fisheye-modal-title"
       onClose={onClose}
       onKeyDown={event => event.stopPropagation()}
@@ -198,19 +335,30 @@ export function FisheyeCameraModal({ onClose }: { onClose: () => void }) {
         </div>
         <button type="button" className="btn-close flex-shrink-0" aria-label="Fermer" autoFocus onClick={onClose} />
       </div>
-      <div className="p-3 p-sm-4 d-flex flex-column align-items-center gap-3">
-        <div className="w-100 ratio ratio-1x1 rounded-circle overflow-hidden bg-dark shadow border border-secondary border-opacity-50">
-          <canvas
-            ref={canvasRef}
-            width={FISHEYE_CANVAS_SIZE}
-            height={FISHEYE_CANVAS_SIZE}
-            className="w-100 h-100 d-block"
-            aria-label="Flux vidéo fisheye 360° de la caméra de plafond Reolink FE-W"
-          />
-        </div>
-        <div className="d-flex flex-wrap align-items-center justify-content-between w-100 gap-2 small text-body-secondary">
-          <span>Reolink FE-W 6MP · Plafond séjour</span>
-          <span>Projection hémisphérique 180° · Nord en haut</span>
+      <div className="container-fluid p-3 p-sm-4">
+        <div className={`row g-3 g-sm-4 align-items-start ${isHomeAssistantConnected ? 'row-cols-1 row-cols-md-2' : 'row-cols-1'}`}>
+          <div className="col d-flex flex-column gap-2" data-testid="fisheye-3d-panel">
+            {isHomeAssistantConnected && (
+              <div className="d-flex align-items-center justify-content-between gap-2 small">
+                <span className="fw-semibold text-truncate">Simulation 3D · Porte-fenêtre à gauche</span>
+                <span className="badge text-bg-secondary rounded-pill flex-shrink-0">3D</span>
+              </div>
+            )}
+            <div className="w-100 ratio ratio-1x1 rounded-circle overflow-hidden bg-dark shadow border border-secondary border-opacity-50">
+              <canvas
+                ref={canvasRef}
+                width={FISHEYE_CANVAS_SIZE}
+                height={FISHEYE_CANVAS_SIZE}
+                className="w-100 h-100 d-block"
+                aria-label="Flux vidéo fisheye 360° de la caméra de plafond Reolink FE-W"
+              />
+            </div>
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 small text-body-secondary">
+              <span>Reolink FE-W 6MP · Plafond séjour</span>
+              <span>Projection hémisphérique 180° · Porte-fenêtre à gauche</span>
+            </div>
+          </div>
+          {isHomeAssistantConnected && <HomeAssistantCameraPanel />}
         </div>
       </div>
     </dialog>,
