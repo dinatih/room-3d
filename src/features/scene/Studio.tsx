@@ -1013,7 +1013,7 @@ export function Studio() {
 
           {/* LAYER_MIRRORS (17) — plans de réflexion Reflector (MD/HD) ou glaces ambiantes PBR (SD) */}
           <CategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrorSurfaces}>
-            <MirrorReflectors showReflection={layers.mirrors} />
+            <MirrorReflectors showReflection={layers.mirrors || isFisheyeModalOpen} />
           </CategoryLayerGroup>
 
           {/* LAYER_NEIGHBORS (14) — appartements voisins */}

@@ -48,8 +48,8 @@ export const MIRROR_HD_MASK =
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
 function getMirrorTargetConfig(): { res: number; mask: number } {
-  const { layers } = useSceneStore.getState();
-  if (layers.mirrorsHD) {
+  const { layers, isFisheyeModalOpen } = useSceneStore.getState();
+  if (layers.mirrorsHD || isFisheyeModalOpen) {
     return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
   }
   return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
@@ -78,6 +78,9 @@ function MirrorSurface({ geometry, position, rotationY }: {
         : camera;
 
       const savedProj = renderCam.projectionMatrix.clone();
+      const savedRenderTarget = renderer.getRenderTarget();
+      const savedCubeFace = renderer.getActiveCubeFace();
+      const savedMipmapLevel = renderer.getActiveMipmapLevel();
 
       _reflectionDepth++;
 
@@ -103,6 +106,8 @@ function MirrorSurface({ geometry, position, rotationY }: {
       try {
         origOnBeforeRender(renderer, scene, renderCam, geometry, material, group);
       } finally {
+        // Reflector.onBeforeRender restaure setRenderTarget sans activeCubeFace/mipmapLevel, ce qui casse CubeCamera (fisheye).
+        renderer.setRenderTarget(savedRenderTarget, savedCubeFace, savedMipmapLevel);
         scene.background = oldBackground;
         scene.matrixWorldAutoUpdate = worldAutoUpdate;
         renderCam.projectionMatrix.copy(savedProj);
@@ -194,7 +199,8 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
   useFrame(({ camera }) => {
     if (!showReflection) return;
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
-    const isVisible = !isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270;
+    const isVisible = useSceneStore.getState().isFisheyeModalOpen
+      || (!isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270);
 
     if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
       reflectorRef.current.visible = isVisible;
@@ -258,7 +264,8 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
   useFrame(({ camera }) => {
     if (!showReflection) return;
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
-    const isVisible = !isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270;
+    const isVisible = useSceneStore.getState().isFisheyeModalOpen
+      || (!isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270);
 
     if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
       reflectorRef.current.visible = isVisible;
