@@ -59,14 +59,14 @@ export function CuisineDrona() {
 
 export function CuisineLillhavet() {
   return (
-    <group position={[18, 155, 34]} rotation={[0, Math.PI - Math.PI / 4 - Math.PI / 8, 0]}>
+    <group position={[18, 155, 34]} rotation={[0, -Math.PI / 4 - Math.PI / 8, 0]}>
       <Lillhavet80461276 />
       {[0, 1, 2, 3].map(i => (
         <group key={i} position={[1.14 + i * 2.5, 15.87, 0]} rotation={[0, 0, Math.PI / 2 + Math.PI / 12]}>
           <RedPlate />
         </group>
       ))}
-      <group position={[15.5, 0, 0]}>
+      <group position={[-15.5, 0, 0]} rotation={[0, Math.PI, 0]}>
         <group position={[0.2, 11.86, -3.73]} rotation={[0.969, 0, 0]}><Snitta00287295 /></group>
         <group position={[-0.2, 12.2, -3.71]} rotation={[1.025, 0, 0]}><Snitta00287295 /></group>
         <group position={[0, 11.39, -2.8]} rotation={[1.079, 0, 0]}><Fornuft40428482 /></group>
