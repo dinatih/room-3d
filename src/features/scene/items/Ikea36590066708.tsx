@@ -10,13 +10,18 @@ export type Ikea365Contents = 'rice' | 'macaroni' | 'semolina';
 
 interface Ikea365Props extends SceneModelProps {
   contents?: Ikea365Contents;
+  fillLevel?: number;
 }
 
 const FILL_BASE_Y = 0.7;
-const FILL_TOP_Y = 20.0; // ~2/3 de la hauteur totale (30 cm)
+const DEFAULT_FILL_LEVEL: Record<Ikea365Contents, number> = {
+  rice: 0.25,
+  macaroni: 0.75,
+  semolina: 0.5,
+};
 const UV_TILE_CM = 10;
 
-let cachedFillGeometry: THREE.BufferGeometry | null = null;
+const cachedFillGeometries = new Map<number, THREE.BufferGeometry>();
 const cachedMaterials = new Map<Ikea365Contents, THREE.MeshStandardMaterial>();
 
 function mulberry32(seed: number): () => number {
@@ -47,14 +52,20 @@ function drawWrapped(
   }
 }
 
-function getFillGeometry(): THREE.BufferGeometry {
-  if (cachedFillGeometry) return cachedFillGeometry;
+function getFillGeometry(fillLevel: number): THREE.BufferGeometry {
+  const ratio = Math.min(0.92, Math.max(0.05, fillLevel));
+  const key = Math.round(ratio * 100);
+  const existing = cachedFillGeometries.get(key);
+  if (existing) return existing;
 
+  const topY = ratio * 30;
   // Section elliptique évasée ajustée à l'intérieur mesuré du bocal (dégagement ~3-4 mm)
   const radSegs = 40;
   const heightSegs = 6;
   const hx0 = 6.3, hz0 = 2.7;
-  const hx1 = 6.95, hz1 = 3.15;
+  const taperT = (topY - FILL_BASE_Y) / (25.0 - FILL_BASE_Y);
+  const hx1 = hx0 + taperT * (7.12 - hx0);
+  const hz1 = hz0 + taperT * (3.27 - hz0);
 
   const positions: number[] = [];
   const uvs: number[] = [];
@@ -75,7 +86,7 @@ function getFillGeometry(): THREE.BufferGeometry {
   // Paroi latérale évasée
   for (let iy = 0; iy <= heightSegs; iy++) {
     const t = iy / heightSegs;
-    const y = FILL_BASE_Y + t * (FILL_TOP_Y - FILL_BASE_Y);
+    const y = FILL_BASE_Y + t * (topY - FILL_BASE_Y);
     const hx = hx0 + t * (hx1 - hx0);
     const hz = hz0 + t * (hz1 - hz0);
     for (let ix = 0; ix <= radSegs; ix++) {
@@ -107,7 +118,7 @@ function getFillGeometry(): THREE.BufferGeometry {
   // Calotte supérieure légèrement bombée pour un aspect vrac naturel
   const capRings = 4;
   const capStart = positions.length / 3;
-  positions.push(0, FILL_TOP_Y + 0.35, 0);
+  positions.push(0, topY + 0.35, 0);
   uvs.push(0, 0);
 
   for (let ir = 1; ir <= capRings; ir++) {
@@ -118,7 +129,7 @@ function getFillGeometry(): THREE.BufferGeometry {
       const edgeRipple = rf * (0.14 * Math.sin(a * 3) + 0.08 * Math.cos(a * 2));
       const x = rf * hx1 * Math.cos(a);
       const z = rf * hz1 * Math.sin(a);
-      positions.push(x, FILL_TOP_Y + mound + edgeRipple, z);
+      positions.push(x, topY + mound + edgeRipple, z);
       uvs.push(x / UV_TILE_CM, z / UV_TILE_CM);
     }
   }
@@ -140,7 +151,7 @@ function getFillGeometry(): THREE.BufferGeometry {
   geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
   geom.setIndex(indices);
   geom.computeVertexNormals();
-  cachedFillGeometry = geom;
+  cachedFillGeometries.set(key, geom);
   return geom;
 }
 
@@ -315,7 +326,7 @@ function getFillMaterial(kind: Ikea365Contents): THREE.MeshStandardMaterial {
   return mat;
 }
 
-export function Ikea36590066708({ onSize, contents }: Ikea365Props) {
+export function Ikea36590066708({ onSize, contents, fillLevel }: Ikea365Props) {
   const { scene } = useGLTFClone(GLB);
 
   useLayoutEffect(() => {
@@ -335,7 +346,7 @@ export function Ikea36590066708({ onSize, contents }: Ikea365Props) {
       <primitive object={scene} />
       {contents && (
         <mesh
-          geometry={getFillGeometry()}
+          geometry={getFillGeometry(fillLevel ?? DEFAULT_FILL_LEVEL[contents])}
           material={getFillMaterial(contents)}
           userData={{ isContainerFill: true }}
         />

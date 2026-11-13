@@ -34,8 +34,12 @@ const KALLAX_FRAME = 3.5;
 const KALLAX_DIVIDER = 1.5;
 const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
 const KALLAX_UPPER_CELL_BASE = 2 * 76.5 + KALLAX_FRAME;
-const IKEA365_CONTENTS: readonly Ikea365Contents[] = ['rice', 'macaroni', 'semolina'];
-const IKEA365_COUNT = IKEA365_CONTENTS.length;
+const IKEA365_JARS: readonly { contents: Ikea365Contents; fillLevel: number }[] = [
+  { contents: 'rice', fillLevel: 0.25 },
+  { contents: 'macaroni', fillLevel: 0.75 },
+  { contents: 'semolina', fillLevel: 0.5 },
+];
+const IKEA365_COUNT = IKEA365_JARS.length;
 const IKEA365_LENGTH = 17;
 const HOOD_SHELF_TOP = 166.9; // face supérieure du montant METOD couché : 173 - 7 + 0.9
 
@@ -102,14 +106,14 @@ export function KitchenFurnishings() {
         <KallaxCuisineDrona />
       </group>
 
-      {/* IKEA 365+ — bord avant de la case supérieure gauche (riz, macaronis, semoule de gauche à droite). */}
+      {/* IKEA 365+ — bord avant de la case supérieure gauche (riz 1/4, macaronis 3/4, semoule 2/4 de gauche à droite). */}
       <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]}>
-        {IKEA365_CONTENTS.map((contents, i) => (
+        {IKEA365_JARS.map(({ contents, fillLevel }, i) => (
           <group key={contents}
             position={[w2 / 2 - KALLAX_FRAME - (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, -(KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
             rotation-y={Math.PI / 2}
             userData={{ sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
-            <Ikea36590066708 contents={contents} />
+            <Ikea36590066708 contents={contents} fillLevel={fillLevel} />
           </group>
         ))}
       </group>
