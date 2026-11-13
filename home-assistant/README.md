@@ -266,3 +266,11 @@ L’intégration manuelle [Fluvy](https://github.com/acosta290/fluvy) (`v1.19.1`
 - Entrée d’intégration active (`loaded`) et thème backend défini sur `Fluvy` via `frontend.set_theme`. Si un profil utilisateur HA remplace le thème serveur ou après un redémarrage ultérieur sans réglage par profil, sélectionner **Fluvy** dans le profil utilisateur (ou **Sélectionné par le serveur** / le panneau `/fluvy`).
 
 Pour mettre à jour manuellement vers une nouvelle version de Fluvy, remplacer `/opt/homeassistant/config/custom_components/fluvy/` depuis l’archive `fluvy.zip` de la release GitHub correspondante et redémarrer le conteneur `homeassistant`.
+
+## Carte persistante Vue 3D (`room3d-keepalive-card`)
+
+Pour éviter que `https://dinatih.org/?ha=1` ne se recharge à chaque changement d’onglet ou de panneau dans Home Assistant, la vue **Vue 3D** de `dashboard-maison.yaml` utilise [room3d-keepalive-card.js](./room3d-keepalive-card.js) :
+- Fichier déployé sur `homeserver` : `/opt/homeassistant/config/www/room3d-keepalive-card.js`
+- Ressource Lovelace enregistrée (`type: module`) : `/local/room3d-keepalive-card.js?v=1`
+- Utilisation dans `dashboard-maison.yaml` : `type: custom:room3d-keepalive-card` (`url: https://dinatih.org/?ha=1`, `title: Room 3D`)
+- Comportement : l’`<iframe>` est monté une seule fois dans le conteneur persistant de `home-assistant-main` (sous la barre HA, le menu latéral et les modales), masqué en `visibility: hidden` hors de **Vue 3D**, réaffiché instantanément au retour, et inclut un bouton **Recharger** pour forcer un rechargement ciblé de la scène 3D (`_reload=<timestamp>`).
