@@ -60,6 +60,22 @@ button, input, select, textarea {
   background: rgba(14, 14, 24, 0.3);
 }
 
+.fisheye-modal {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+
+.fisheye-modal:modal {
+  overscroll-behavior: contain;
+}
+
+.fisheye-modal::backdrop {
+  background: rgba(14, 14, 24, 0.55);
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 .contact-modal .form-control {
   background: rgba(255, 255, 255, 0.45);
   border-color: rgba(255, 255, 255, 0.7);

@@ -78,6 +78,15 @@ import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { duoSessionManager }     from './ai/duoSessionManager';
 import { LoadingShiba } from './LoadingShiba';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
+import { ROOM_W, ROOM_D } from './wallData';
+import { CEILING_Y } from './building/roofData';
+import { getObjectActionIds } from './objectActions';
+import { ReolinkFeW } from './items/ReolinkFeW';
+import { FisheyeCameraCapture, FisheyeCameraModal } from './FisheyeCameraModal';
+import { ceilingCameraFeed } from './ceilingCameraFeed';
+
+const CEILING_CAMERA_POS: [number, number, number] = [ROOM_W / 2, CEILING_Y, ROOM_D / 2];
+const CEILING_CAMERA_CAPTURE_POS: [number, number, number] = [ROOM_W / 2, CEILING_Y - 6, ROOM_D / 2];
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
@@ -306,7 +315,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   return null;
 }
 
-function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean; isOrbiting: boolean }) {
+function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isFisheyeModalOpen, isOrbiting }: { isIdle: boolean; showInventory: boolean; isCvModalOpen: boolean; isPhotoModeOpen: boolean; isFisheyeModalOpen: boolean; isOrbiting: boolean }) {
   const setFrameloop = useThree((state) => state.setFrameloop);
   const invalidate = useThree((state) => state.invalidate);
   const gl = useThree((state) => state.gl);
@@ -317,7 +326,7 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       const isXRActive = cameraState.isXR || gl.xr.isPresenting;
       const loop = isXRActive || cameraState.isIntroRunning || event?.type === 'start-camera-intro' ? 'always'
         : (showInventory || isCvModalOpen || isPhotoModeOpen || isIdle) ? 'never'
-        : isOrbiting ? 'always' : 'demand';
+        : (isOrbiting || isFisheyeModalOpen) ? 'always' : 'demand';
       // Discard queued frames before 'never' interprets their RAF timestamps as manual time.
       if (loop === 'never') internal.frames = 0;
       setFrameloop(loop);
@@ -333,7 +342,7 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       gl.xr.removeEventListener('sessionend', updateLoop);
       window.removeEventListener('camera-intro-finished', updateLoop);
     };
-  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isOrbiting, setFrameloop, invalidate, gl, internal]);
+  }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isFisheyeModalOpen, isOrbiting, setFrameloop, invalidate, gl, internal]);
 
   return null;
 }
@@ -749,6 +758,7 @@ export function Studio() {
   const isIdle = useAppIdle();
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
   const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
+  const isFisheyeModalOpen = useSceneStore(state => state.isFisheyeModalOpen);
   const cameraMovement = useSceneStore(state => state.cameraMovement);
   const activeSceneRef = useRef<Scene | null>(null);
   const activeCameraRef = useRef<PerspectiveCamera | OrthographicCamera | null>(null);
@@ -822,7 +832,7 @@ export function Studio() {
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
-        frameloop={cameraState.isXR || cameraState.isIntroRunning ? 'always' : showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (cameraMovement === 'orbit' ? 'always' : 'demand')}
+        frameloop={cameraState.isXR || cameraState.isIntroRunning ? 'always' : showInventory || isCvModalOpen || isPhotoModeOpen || isIdle ? 'never' : (cameraMovement === 'orbit' || isFisheyeModalOpen ? 'always' : 'demand')}
         /*
          * ── Placement & configuration initiale de la caméra 3D ───────────────
          * - fov: 50° (champ de vision vertical naturel)
@@ -879,7 +889,7 @@ export function Studio() {
         <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
-        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isOrbiting={cameraMovement === 'orbit'} />
+        <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isFisheyeModalOpen={isFisheyeModalOpen} isOrbiting={cameraMovement === 'orbit'} />
         {planeMode    && <PaperPlane
                            onExit={() => setPlaneMode(false)}
                            model={planeModel}
@@ -1004,6 +1014,30 @@ export function Studio() {
             <CategoryLayerGroup layer={LAYER_LIDAR}>
               <LidarScan mode={lidarMode} opacity={lidarOpacity} />
             </CategoryLayerGroup>
+          )}
+
+          {layers.ceilingCamera && (
+            <Suspense fallback={null}>
+              <group
+                ref={node => { ceilingCameraFeed.cameraGroup = node; }}
+                position={CEILING_CAMERA_POS}
+                userData={{
+                  skipMerge: true,
+                  sceneItemRoot: true,
+                  itemName: 'Caméra de plafond (Reolink FE-W)',
+                  hoverAction: {
+                    label: 'Caméra de plafond (Fisheye)',
+                    actions: getObjectActionIds('reolink-fe-w'),
+                  },
+                }}
+              >
+                <ReolinkFeW />
+              </group>
+            </Suspense>
+          )}
+
+          {isFisheyeModalOpen && (
+            <FisheyeCameraCapture position={CEILING_CAMERA_CAPTURE_POS} />
           )}
 
 
@@ -1181,6 +1215,9 @@ export function Studio() {
             onClose={() => useSceneStore.getState().setPhotoModeOpen(false)}
           />
         </Suspense>
+      )}
+      {isFisheyeModalOpen && (
+        <FisheyeCameraModal onClose={() => useSceneStore.getState().setFisheyeModalOpen(false)} />
       )}
       <button
         onClick={showUI}

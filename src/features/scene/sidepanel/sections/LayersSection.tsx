@@ -168,6 +168,7 @@ export function LayersSection({
       {layerBtn('Mobilier (Furniture) (Alt+F)',    'furniture')}
       {layerBtn('Habillage (Furnishings) (Alt+H)', 'furnishings')}
       {layerBtn('Décoration (Decor) (Alt+D)',      'decor')}
+      {layerBtn(iconLabel('bi-webcam', 'Caméra de plafond (Fisheye)'), 'ceilingCamera')}
       {layerBtn(iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
       {layerBtn(iconLabel('bi-arrows-move', 'Lissage origine (anti-téléportation)'), 'animOriginLerp')}
       {layerBtn(iconLabel('bi-bezier2', 'Fondu squelettique (Crossfade)'), 'animCrossfade')}

@@ -147,8 +147,10 @@ interface SceneStore {
   setCameraElevation: (elev: number) => void;
   isCvModalOpen: boolean;
   isPhotoModeOpen: boolean;
+  isFisheyeModalOpen: boolean;
   setCvModalOpen: (open: boolean) => void;
   setPhotoModeOpen: (open: boolean) => void;
+  setFisheyeModalOpen: (open: boolean) => void;
   setMeasurementActive: (active: boolean) => void;
   setCameraProjection: (proj: 'persp' | 'ortho') => void;
   toggleCameraProjection: () => void;
@@ -489,6 +491,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   isCvModalOpen: false,
   isPhotoModeOpen: false,
+  isFisheyeModalOpen: false,
   desk2ScreenActive: false,
   setDesk2SmartActionActive: (active: boolean) => {
     set(state => {
@@ -502,6 +505,10 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setPhotoModeOpen: (open: boolean) => {
     set({ isPhotoModeOpen: open });
+    cameraState.invalidate?.();
+  },
+  setFisheyeModalOpen: (open: boolean) => {
+    set({ isFisheyeModalOpen: open });
     cameraState.invalidate?.();
   },
   setMeasurementActive: (active: boolean) => {
@@ -764,6 +771,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   triggerAction: (key, targetState, source) => {
+    if (key === 'ceiling-camera-fisheye') {
+      set({ isFisheyeModalOpen: targetState ?? true });
+      cameraState.invalidate?.();
+      return;
+    }
     if (key === 'bed-position' && refuseUnsafeBedLayout(useSceneStore.getState().furniture.bedDouble, ((positionState['bed-position']?.idx ?? 0) + 1) % DOUBLE_BED_POSITIONS.length)) return;
     const lightKey = resolveStoreKey(key).name;
     if (isHomeAssistantAction(lightKey) && isHomeAssistantLinked(useHomeAssistant.getState())) {

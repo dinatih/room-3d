@@ -410,6 +410,12 @@ export function HoverRaycaster() {
       hoverState.onUpdate?.();
     };
 
+    const onCacheInvalidate = () => {
+      lastCacheTime = 0;
+      pointerDirty = true;
+      invalidate();
+    };
+
     canvas.addEventListener('pointerdown',  onPointerDown);
     canvas.addEventListener('pointerup',    onPointerUp);
     canvas.addEventListener('pointermove',  onMove);
@@ -418,6 +424,7 @@ export function HoverRaycaster() {
     canvas.addEventListener('dblclick',     onDblClick);
     window.addEventListener('keydown',      onKeyDown);
     window.addEventListener('blur',         onLeave);
+    document.addEventListener('hover-cache-invalidate', onCacheInvalidate);
     canvas.addEventListener('touchstart',   onTouchStart, { passive: true });
     canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
     canvas.addEventListener('touchend',     onTouchEnd);
@@ -430,6 +437,7 @@ export function HoverRaycaster() {
       canvas.removeEventListener('dblclick',     onDblClick);
       window.removeEventListener('keydown',      onKeyDown);
       window.removeEventListener('blur',         onLeave);
+      document.removeEventListener('hover-cache-invalidate', onCacheInvalidate);
       canvas.removeEventListener('touchstart',   onTouchStart);
       canvas.removeEventListener('touchmove',    onTouchMove);
       canvas.removeEventListener('touchend',     onTouchEnd);

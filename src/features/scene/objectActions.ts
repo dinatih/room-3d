@@ -91,6 +91,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'desk-bollsidan-2': ['desk2-toggle', 'desk2-position', 'desk2-screen-toggle'],
   'air-performer': [...AIR_PERFORMER_ACTION_IDS, 'airperformer-position'],
   'air-performer-remote': ['airperformer-remote-position', ...AIR_PERFORMER_ACTION_IDS],
+  'reolink-fe-w': ['ceiling-camera-fisheye'],
 };
 
 /** Shared by scene hover menus, inventory filters and 3D previews. */

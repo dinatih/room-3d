@@ -241,6 +241,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   nestMusic: { label: 'Jouer la musique 🎵', sceneOnly: true },
   nestMusicStop: { label: 'Arrêter la musique ⏹', sceneOnly: true },
   'tv-toggle': { label: ['Allumer', 'Éteindre'] },
+  'ceiling-camera-fisheye': { label: 'Afficher la vue fisheye', icon: 'bi-webcam', sceneOnly: true },
   'bin-toggle': { label: ['Ouvrir', 'Fermer'] },
   ...Object.fromEntries(Object.entries(AIR_PERFORMER_CONTROLS).map(([id, config]) => [id, {
     label: (value: unknown) => `${config.label} : ${value === undefined ? '—' : typeof value === 'boolean' ? value ? 'Oui' : 'Non' : value}${id === 'airPerformerOscillation' ? '°' : id === 'airPerformerTemperature' ? ' °C' : id === 'airPerformerDisplay' ? ' %' : ''}`,
