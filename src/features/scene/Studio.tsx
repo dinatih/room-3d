@@ -755,7 +755,21 @@ export function Studio() {
     setAssetsLoaded(true);
   }, []);
 
-  const isIdle = useAppIdle();
+  const appIdle = useAppIdle();
+  const [isHostHidden, setIsHostHidden] = useState(false);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || !event.data || typeof event.data !== 'object') return;
+      if ((event.data as { type?: string }).type === 'room3d:host-visibility') {
+        setIsHostHidden(!(event.data as { visible?: boolean }).visible);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+
+  const isIdle = appIdle || isHostHidden;
   const isCvModalOpen = useSceneStore(state => state.isCvModalOpen);
   const isPhotoModeOpen = useSceneStore(state => state.isPhotoModeOpen);
   const isFisheyeModalOpen = useSceneStore(state => state.isFisheyeModalOpen);

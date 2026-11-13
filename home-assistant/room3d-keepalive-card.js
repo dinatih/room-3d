@@ -38,6 +38,45 @@
     return layer;
   }
 
+  function notifyIframeVisibility(entry, visible) {
+    if (entry.visible === visible) return;
+    entry.visible = visible;
+    try {
+      entry.iframe.contentWindow?.postMessage(
+        { type: 'room3d:host-visibility', visible },
+        '*',
+      );
+    } catch {
+      // Cross-origin postMessage best-effort
+    }
+  }
+
+  function hideHost(entry) {
+    const { style } = entry.host;
+    // display: none détache complètement la surface GPU/Wayland et suspend rAF dans l'iframe.
+    style.display = 'none';
+    style.visibility = 'hidden';
+    style.pointerEvents = 'none';
+    style.zIndex = '-1';
+    style.clipPath = '';
+    notifyIframeVisibility(entry, false);
+  }
+
+  function showHost(entry, rect, clipTop, clipBottom) {
+    const { style } = entry.host;
+    style.display = 'block';
+    style.left = `${rect.left}px`;
+    style.top = `${rect.top}px`;
+    style.width = `${rect.width}px`;
+    style.height = `${rect.height}px`;
+    style.clipPath =
+      clipTop > 0 || clipBottom > 0 ? `inset(${clipTop}px 0px ${clipBottom}px 0px)` : '';
+    style.visibility = 'visible';
+    style.pointerEvents = 'auto';
+    style.zIndex = '3';
+    notifyIframeVisibility(entry, true);
+  }
+
   function getOrCreateEntry(config) {
     const registry = getRegistry();
     const key = config.url;
@@ -53,6 +92,7 @@
         'top:0px',
         'width:800px',
         'height:600px',
+        'display:none',
         'visibility:hidden',
         'pointer-events:none',
         'z-index:-1',
@@ -79,11 +119,15 @@
         iframe,
         activeCard: null,
         reloading: false,
+        visible: false,
         listeners: new Set(),
       };
 
       iframe.addEventListener('load', () => {
         entry.reloading = false;
+        const currentVisible = entry.visible;
+        entry.visible = !currentVisible;
+        notifyIframeVisibility(entry, currentVisible);
         for (const fn of entry.listeners) fn();
       });
 
@@ -336,11 +380,7 @@
         this._entry.listeners.delete(this._onEntryChange);
         if (this._entry.activeCard === this) {
           this._entry.activeCard = null;
-          const { style } = this._entry.host;
-          style.visibility = 'hidden';
-          style.pointerEvents = 'none';
-          style.zIndex = '-1';
-          style.clipPath = '';
+          hideHost(this._entry);
         }
       }
     }
@@ -367,7 +407,6 @@
       }
 
       const rect = this._slot.getBoundingClientRect();
-      const { style } = this._entry.host;
       const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
       const bottomInset = ha
         ? parseFloat(getComputedStyle(ha).getPropertyValue('--safe-area-inset-bottom')) || 0
@@ -379,21 +418,11 @@
       const visibleHeight = rect.height - clipTop - clipBottom;
 
       if (rect.width < 10 || visibleHeight < 10) {
-        style.visibility = 'hidden';
-        style.pointerEvents = 'none';
-        style.zIndex = '-1';
+        hideHost(this._entry);
         return;
       }
 
-      style.left = `${rect.left}px`;
-      style.top = `${rect.top}px`;
-      style.width = `${rect.width}px`;
-      style.height = `${rect.height}px`;
-      style.clipPath =
-        clipTop > 0 || clipBottom > 0 ? `inset(${clipTop}px 0px ${clipBottom}px 0px)` : '';
-      style.visibility = 'visible';
-      style.pointerEvents = 'auto';
-      style.zIndex = '3';
+      showHost(this._entry, rect, clipTop, clipBottom);
     }
 
     _updateReloadButton() {

@@ -1289,7 +1289,11 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   });
 
   // Frustum caméra orthographique (vue dessus)
-  const aspect = size.width / size.height;
+  const hasValidSize = size.width > 0 && size.height > 0;
+  const lastValidAspectRef = useRef(16 / 9);
+  const aspect = hasValidSize
+    ? (lastValidAspectRef.current = size.width / size.height)
+    : lastValidAspectRef.current;
   const viewH = CAMERA_VIEW_HEIGHT;
   const viewW = viewH * aspect;
 
@@ -1297,12 +1301,33 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   const orthoViewH = orthoConfig.viewH;
   const orthoViewW = orthoViewH * aspect;
 
+  // Conserver les bornes orthographiques et l'aspect perspectif exacts lors des resizes
+  // (R3F updateCamera écraserait sinon top/bottom avec ±size.height/2 quand manual n'est pas actif).
+  useLayoutEffect(() => {
+    if (!hasValidSize) return;
+    const ortho = orthoCamRef.current;
+    if (ortho) {
+      ortho.left = -viewW / 2;
+      ortho.right = viewW / 2;
+      ortho.top = viewH / 2;
+      ortho.bottom = -viewH / 2;
+      ortho.updateProjectionMatrix();
+    }
+    const persp = defaultPerspCamRef.current;
+    if (persp?.isPerspectiveCamera) {
+      persp.aspect = aspect;
+      persp.updateProjectionMatrix();
+    }
+    invalidate();
+  }, [hasValidSize, aspect, viewW, viewH, invalidate]);
+
   return (
     <>
       {/* Les commandes choisissent la caméra active. makeDefault restaurerait
           une ancienne caméra à sa désactivation, écrasant ce choix. */}
       <OrthographicCamera
         ref={orthoCamRef}
+        manual
         position={mode === 'top' ? (topFollowRef.current ? [cameraState.characterX, 2000, cameraState.characterZ] : TOP_POS) : undefined}
         up={mode === 'top' ? [1, 0, 0] : [0, 1, 0]}
         left={-viewW / 2}
@@ -1316,6 +1341,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       {mode === 'iso' && (
         <OrthographicCamera
           makeDefault
+          manual
           position={orthoConfig.pos}
           up={orthoConfig.up}
           left={-orthoViewW / 2}
@@ -1325,6 +1351,10 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
           near={-20000}
           far={50000}
           onUpdate={(self) => {
+            self.left = -orthoViewW / 2;
+            self.right = orthoViewW / 2;
+            self.top = orthoViewH / 2;
+            self.bottom = -orthoViewH / 2;
             self.position.set(...orthoConfig.pos);
             self.up.set(...orthoConfig.up);
             self.lookAt(...orthoConfig.target);

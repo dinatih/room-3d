@@ -151,6 +151,7 @@ function RunningShiba() {
   }, [clips, mixer]);
 
   useLayoutEffect(() => {
+    if (size.width <= 0 || size.height <= 0) return;
     const ortho = camera as OrthographicCamera;
     ortho.zoom = Math.min(size.height / (envelope.height + DOG_HEIGHT / 2), size.width / (envelope.radius * 2 + DOG_HEIGHT / 2));
     ortho.updateProjectionMatrix();
