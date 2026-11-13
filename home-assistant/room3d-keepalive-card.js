@@ -1,6 +1,7 @@
 /**
  * Custom Lovelace card keeping the Room 3D iframe mounted for the entire
- * Home Assistant tab session so switching views/panels does not reload the 3D scene.
+ * Home Assistant tab session so switching views/panels (or resizing between
+ * compact Commandes card and fullscreen Vue 3D) never reloads the 3D scene.
  */
 (() => {
   const CARD_TAG = 'room3d-keepalive-card';
@@ -14,14 +15,19 @@
     return window[REGISTRY_KEY];
   }
 
-  function getOverlayParent() {
+  function getHaRoots() {
     const ha = document.querySelector('home-assistant');
     const main = ha?.shadowRoot?.querySelector('home-assistant-main');
-    return main?.shadowRoot || ha?.shadowRoot || document.body;
+    const huiRoot = main?.shadowRoot
+      ?.querySelector('partial-panel-resolver')
+      ?.firstElementChild?.shadowRoot?.querySelector('hui-root');
+    const header = huiRoot?.shadowRoot?.querySelector('.header');
+    return { ha, main, header };
   }
 
   function ensureLayer() {
-    const parent = getOverlayParent();
+    const { ha, main } = getHaRoots();
+    const parent = main?.shadowRoot || ha?.shadowRoot || document.body;
     let layer = parent.querySelector(`#${LAYER_ID}`);
     if (!layer) {
       layer = document.createElement('div');
@@ -89,6 +95,16 @@
     return entry;
   }
 
+  function formatCssLength(value) {
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+      return `${value}px`;
+    }
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+    return null;
+  }
+
   class Room3DKeepaliveCard extends HTMLElement {
     constructor() {
       super();
@@ -109,6 +125,11 @@
         url: config.url.trim(),
         title: typeof config.title === 'string' && config.title.trim() ? config.title.trim() : 'Room 3D',
         allow: typeof config.allow === 'string' && config.allow.trim() ? config.allow.trim() : 'fullscreen; clipboard-write',
+        height: formatCssLength(config.height),
+        fullscreenPath:
+          typeof config.fullscreen_path === 'string' && config.fullscreen_path.trim()
+            ? config.fullscreen_path.trim()
+            : null,
       };
       this._render();
       if (this.isConnected) {
@@ -121,7 +142,7 @@
     }
 
     getCardSize() {
-      return 10;
+      return this._config?.height ? 7 : 10;
     }
 
     connectedCallback() {
@@ -139,13 +160,18 @@
 
     _render() {
       const title = this._config?.title || 'Room 3D';
+      const heightRule = this._config?.height
+        ? this._config.height
+        : 'calc(100dvh - var(--room3d-card-top, 72px) - var(--safe-area-inset-bottom, 0px))';
+      const showFullscreen = Boolean(this._config?.fullscreenPath);
+
       this.shadowRoot.innerHTML = `
         <style>
           :host {
             display: block;
             width: 100%;
-            height: calc(100dvh - var(--room3d-card-top, 72px) - var(--safe-area-inset-bottom, 0px));
-            min-height: 320px;
+            height: ${heightRule};
+            min-height: 260px;
             box-sizing: border-box;
           }
           ha-card {
@@ -186,7 +212,13 @@
             text-overflow: ellipsis;
             white-space: nowrap;
           }
-          .reload-btn {
+          .actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+          }
+          .bar-btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -202,15 +234,15 @@
             cursor: pointer;
             transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
           }
-          .reload-btn:hover {
+          .bar-btn:hover {
             border-color: var(--primary-color);
             color: var(--primary-color);
           }
-          .reload-btn:focus-visible {
+          .bar-btn:focus-visible {
             outline: 2px solid var(--focus-color, var(--primary-color));
             outline-offset: 2px;
           }
-          .reload-btn ha-icon {
+          .bar-btn ha-icon {
             --mdc-icon-size: 16px;
           }
           .reload-btn.is-reloading ha-icon {
@@ -233,10 +265,20 @@
               <ha-icon icon="mdi:cube-outline"></ha-icon>
               <span class="title-text"></span>
             </div>
-            <button type="button" class="reload-btn" title="Recharger uniquement la vue 3D">
-              <ha-icon icon="mdi:refresh"></ha-icon>
-              <span>Recharger</span>
-            </button>
+            <div class="actions">
+              ${
+                showFullscreen
+                  ? `<button type="button" class="bar-btn fullscreen-btn" title="Ouvrir Vue 3D en plein écran">
+                      <ha-icon icon="mdi:fullscreen"></ha-icon>
+                      <span>Plein écran</span>
+                    </button>`
+                  : ''
+              }
+              <button type="button" class="bar-btn reload-btn" title="Recharger uniquement la vue 3D">
+                <ha-icon icon="mdi:refresh"></ha-icon>
+                <span>Recharger</span>
+              </button>
+            </div>
           </div>
           <div class="viewport-slot"></div>
         </ha-card>
@@ -246,6 +288,16 @@
       this._slot = this.shadowRoot.querySelector('.viewport-slot');
       this._reloadBtn = this.shadowRoot.querySelector('.reload-btn');
       this._reloadBtn.addEventListener('click', () => this._reloadIframe());
+
+      const fsBtn = this.shadowRoot.querySelector('.fullscreen-btn');
+      if (fsBtn && this._config?.fullscreenPath) {
+        fsBtn.addEventListener('click', () => this._navigate(this._config.fullscreenPath));
+      }
+    }
+
+    _navigate(path) {
+      window.history.pushState(null, '', path);
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
     }
 
     _attachOverlay() {
@@ -288,6 +340,7 @@
           style.visibility = 'hidden';
           style.pointerEvents = 'none';
           style.zIndex = '-1';
+          style.clipPath = '';
         }
       }
     }
@@ -305,14 +358,27 @@
         return;
       }
 
-      const hostRect = this.getBoundingClientRect();
-      if (hostRect.top > 0) {
-        this.style.setProperty('--room3d-card-top', `${Math.round(hostRect.top)}px`);
+      const { ha, header } = getHaRoots();
+      if (!this._config?.height) {
+        const hostRect = this.getBoundingClientRect();
+        if (hostRect.top > 0) {
+          this.style.setProperty('--room3d-card-top', `${Math.round(hostRect.top)}px`);
+        }
       }
 
       const rect = this._slot.getBoundingClientRect();
       const { style } = this._entry.host;
-      if (rect.width < 10 || rect.height < 10) {
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const bottomInset = ha
+        ? parseFloat(getComputedStyle(ha).getPropertyValue('--safe-area-inset-bottom')) || 0
+        : 0;
+      const viewportBottom = window.innerHeight - bottomInset;
+
+      const clipTop = Math.max(0, headerBottom - rect.top);
+      const clipBottom = Math.max(0, rect.bottom - viewportBottom);
+      const visibleHeight = rect.height - clipTop - clipBottom;
+
+      if (rect.width < 10 || visibleHeight < 10) {
         style.visibility = 'hidden';
         style.pointerEvents = 'none';
         style.zIndex = '-1';
@@ -323,6 +389,8 @@
       style.top = `${rect.top}px`;
       style.width = `${rect.width}px`;
       style.height = `${rect.height}px`;
+      style.clipPath =
+        clipTop > 0 || clipBottom > 0 ? `inset(${clipTop}px 0px ${clipBottom}px 0px)` : '';
       style.visibility = 'visible';
       style.pointerEvents = 'auto';
       style.zIndex = '3';

@@ -271,6 +271,6 @@ Pour mettre à jour manuellement vers une nouvelle version de Fluvy, remplacer `
 
 Pour éviter que `https://dinatih.org/?ha=1` ne se recharge à chaque changement d’onglet ou de panneau dans Home Assistant, la vue **Vue 3D** de `dashboard-maison.yaml` utilise [room3d-keepalive-card.js](./room3d-keepalive-card.js) :
 - Fichier déployé sur `homeserver` : `/opt/homeassistant/config/www/room3d-keepalive-card.js`
-- Ressource Lovelace enregistrée (`type: module`) : `/local/room3d-keepalive-card.js?v=1`
-- Utilisation dans `dashboard-maison.yaml` : `type: custom:room3d-keepalive-card` (`url: https://dinatih.org/?ha=1`, `title: Room 3D`)
-- Comportement : l’`<iframe>` est monté une seule fois dans le conteneur persistant de `home-assistant-main` (sous la barre HA, le menu latéral et les modales), masqué en `visibility: hidden` hors de **Vue 3D**, réaffiché instantanément au retour, et inclut un bouton **Recharger** pour forcer un rechargement ciblé de la scène 3D (`_reload=<timestamp>`).
+- Ressource Lovelace enregistrée (`type: module`) : `/local/room3d-keepalive-card.js?v=2`
+- Utilisation dans `dashboard-maison.yaml` : `type: custom:room3d-keepalive-card` (`url: https://dinatih.org/?ha=1`, `title: Room 3D`) en bloc compact (`height: 360`, `fullscreen_path: /dashboard-maison/vue-3d`) en tête de **Commandes** (suivi de Lumières, Volet et programmation, Températures, Air Performer, Chauffe-serviettes & Prises, puis Détecteurs) et en plein écran dans **Vue 3D**.
+- Comportement : les deux vues partagent la même instance `<iframe>` montée dans le conteneur persistant de `home-assistant-main` (avec découpe au scroll sous l’en-tête et le cadre Fluvy), incluent un bouton **Plein écran** (côté Commandes) et un bouton **Recharger** (`_reload=<timestamp>`).
