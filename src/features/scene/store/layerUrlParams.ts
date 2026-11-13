@@ -80,7 +80,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   npcCollisions: true,
   debugNpcCollisions: false,
   debugFurnitureCollisions: false,
-  windowStepElevation: false,
+  windowStepElevation: true,
   // Terrain
   bermudaGrass: true,
   // Divers

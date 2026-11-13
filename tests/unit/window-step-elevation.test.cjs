@@ -50,6 +50,15 @@ const dogs = load('src/features/scene/items/dogBehavior.ts', {
   '../camera/subjectControls': controls,
 });
 
+const { LAYER_DEFAULTS } = load('src/features/scene/store/layerUrlParams.ts', {
+  './debugPresets': { getDebugPreset: () => null },
+  '../camera/cameraUrlParams': { getUrlParams: () => new URLSearchParams() },
+});
+
+it('active le franchissement de la marche par défaut', () => {
+  assert.equal(LAYER_DEFAULTS.windowStepElevation, true);
+});
+
 it('retourne 0 hors toggle et 25 cm sur la marche de la baie vitrée quand le toggle est actif', () => {
   windowStepElevation = false;
   assert.equal(groundElevation.getWalkableGroundY(177.5, -15), 0);
