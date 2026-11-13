@@ -216,11 +216,13 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene.traverse((obj) => {
       const name = (obj.name || '').toLowerCase();
 
-      // Masquer les colliders et proxies de survol invisibles (ex: cylindres de sélection des personnages)
+      // Masquer les colliders, proxies de survol et ombres factices (ShaderMaterial)
       if (
         obj.userData?.isHoverProxy ||
+        obj.userData?.isBlobShadow ||
         name.includes('hoverproxy') ||
-        name.includes('hitbox')
+        name.includes('hitbox') ||
+        name.includes('blob-shadow')
       ) {
         if (obj.visible) {
           obj.visible = false;
@@ -229,24 +231,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         return;
       }
 
-      // Personnages : gérés selon l'option showCharacters
-      if (isCharacterObj(obj)) {
-        return;
-      }
-
-      // Animaux : ne pas masquer
-      const isAnimal = (obj.layers.mask & ((1 << LAYER_ANIMALS) | (1 << LAYER_ROBOTS))) !== 0;
-      if (isAnimal) {
-        return;
-      }
+      const isProtectedActor =
+        isCharacterObj(obj) ||
+        (obj.layers.mask & ((1 << LAYER_ANIMALS) | (1 << LAYER_ROBOTS))) !== 0;
 
       // Masquer les dômes de ciel 3D et backdrops (le path-tracer utilise nativement scene.environment)
       if (
-        name.includes('skysphere') ||
-        name.includes('skydome') ||
-        name.includes('spacebackdrop') ||
-        name.includes('sunsphere') ||
-        (obj.userData && obj.userData.isSky)
+        !isProtectedActor &&
+        (name.includes('skysphere') ||
+          name.includes('skydome') ||
+          name.includes('spacebackdrop') ||
+          name.includes('sunsphere') ||
+          (obj.userData && obj.userData.isSky))
       ) {
         obj.traverse((child) => {
           if (child.visible) {
@@ -267,21 +263,21 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
 
       // Masquer les helpers, grilles, repères et gizmos visuels de dev
-      const isHelper =
-        obj.type.includes('Helper') ||
-        (obj as any).isSkeletonHelper ||
-        name.includes('helper') ||
-        name.includes('gizmo') ||
-        name.includes('grid') ||
-        name.includes('landingstrip') ||
-        name.includes('collision') ||
-        name.includes('aizone') ||
-        name.includes('hoveroverlay') ||
-        name.includes('edgehover') ||
-        name.includes('measurement') ||
-        name.includes('skeletonhelper');
+      const isExplicitHelper = obj.type.includes('Helper') || (obj as any).isSkeletonHelper;
+      const isNamedHelper =
+        !isProtectedActor &&
+        (name.includes('helper') ||
+          name.includes('gizmo') ||
+          name.includes('grid') ||
+          name.includes('landingstrip') ||
+          name.includes('collision') ||
+          name.includes('aizone') ||
+          name.includes('hoveroverlay') ||
+          name.includes('edgehover') ||
+          name.includes('measurement') ||
+          name.includes('skeletonhelper'));
 
-      if (isHelper && obj.visible) {
+      if ((isExplicitHelper || isNamedHelper) && obj.visible) {
         obj.traverse((child) => {
           if (child.visible) {
             child.visible = false;
@@ -376,17 +372,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             throw new Error(`[Raytracing] Missing material on mesh "${mesh.name || mesh.uuid}".`);
           }
 
-          // Personnages : s'assurer que les maillages ont DoubleSide pour éviter les faces arrière transparentes
-          if (isChar) {
-            if (m.side !== THREE.DoubleSide) {
-              modified = true;
-              const cloned = m.clone();
-              cloned.side = THREE.DoubleSide;
-              cloned.depthWrite = true;
-              return cloned;
-            }
-          }
-
           // Matériaux invisibles (ex: noCapMat sur découpes de murs sans embouts)
           // Remplacer par un matériau complètement transparent pour que les rayons le traversent sans créer de bloc noir
           if (m.visible === false || m.opacity === 0) {
@@ -406,37 +391,48 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
               color: 0xd0d0d0,
               roughness: 0.5,
               metalness: 0.1,
+              ...(isChar ? { side: THREE.DoubleSide } : {}),
             });
           }
 
+          let nextMat: THREE.Material = m;
+
           // Matériaux Basic (non PBR) -> conversion en Standard pour réagir correctement aux rebonds de lumière
-          if (m.type === 'MeshBasicMaterial' && !(m as any).isMeshStandardMaterial) {
+          if (nextMat.type === 'MeshBasicMaterial' && !(nextMat as any).isMeshStandardMaterial) {
             modified = true;
-            return new THREE.MeshStandardMaterial({
-              color: (m as any).color,
-              map: (m as any).map ?? null,
-              transparent: m.transparent,
-              opacity: m.opacity,
+            nextMat = new THREE.MeshStandardMaterial({
+              color: (nextMat as any).color,
+              map: (nextMat as any).map ?? null,
+              transparent: nextMat.transparent,
+              opacity: nextMat.opacity,
               roughness: 0.8,
               metalness: 0.1,
+              side: isChar ? THREE.DoubleSide : nextMat.side,
+              depthWrite: isChar ? true : nextMat.depthWrite,
             });
+          } else if (isChar && nextMat.side !== THREE.DoubleSide) {
+            // Personnages : s'assurer que les maillages ont DoubleSide pour éviter les faces arrière transparentes
+            modified = true;
+            nextMat = nextMat.clone();
+            nextMat.side = THREE.DoubleSide;
+            nextMat.depthWrite = true;
           }
 
           // Sécuriser les propriétés physiques optionnelles que three-gpu-pathtracer inspecte via 'prop' in m
-          if ('emissive' in m && (!(m as any).emissive || typeof (m as any).emissive.r !== 'number')) {
-            (m as any).emissive = new THREE.Color(0x000000);
+          if ('emissive' in nextMat && (!(nextMat as any).emissive || typeof (nextMat as any).emissive.r !== 'number')) {
+            (nextMat as any).emissive = new THREE.Color(0x000000);
           }
-          if ('sheenColor' in m && (!(m as any).sheenColor || typeof (m as any).sheenColor.r !== 'number')) {
-            (m as any).sheenColor = new THREE.Color(0x000000);
+          if ('sheenColor' in nextMat && (!(nextMat as any).sheenColor || typeof (nextMat as any).sheenColor.r !== 'number')) {
+            (nextMat as any).sheenColor = new THREE.Color(0x000000);
           }
-          if ('specularColor' in m && (!(m as any).specularColor || typeof (m as any).specularColor.r !== 'number')) {
-            (m as any).specularColor = new THREE.Color(0xffffff);
+          if ('specularColor' in nextMat && (!(nextMat as any).specularColor || typeof (nextMat as any).specularColor.r !== 'number')) {
+            (nextMat as any).specularColor = new THREE.Color(0xffffff);
           }
-          if ('attenuationColor' in m && (!(m as any).attenuationColor || typeof (m as any).attenuationColor.r !== 'number')) {
-            (m as any).attenuationColor = new THREE.Color(0xffffff);
+          if ('attenuationColor' in nextMat && (!(nextMat as any).attenuationColor || typeof (nextMat as any).attenuationColor.r !== 'number')) {
+            (nextMat as any).attenuationColor = new THREE.Color(0xffffff);
           }
 
-          return m;
+          return nextMat;
         });
 
         if (modified) {

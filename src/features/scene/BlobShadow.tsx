@@ -47,7 +47,15 @@ export function BlobShadow({
   });
 
   return (
-    <mesh ref={meshRef} visible={visible} renderOrder={2} rotation={[-Math.PI / 2, 0, 0]} position={[0, y, 0]}>
+    <mesh
+      ref={meshRef}
+      name="blob-shadow"
+      userData={{ isBlobShadow: true }}
+      visible={visible}
+      renderOrder={2}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, y, 0]}
+    >
       <planeGeometry args={size} />
       <shaderMaterial
         transparent
