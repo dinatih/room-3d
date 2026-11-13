@@ -24,7 +24,7 @@ import { KALLAX_NE_TOP_DRONA_FLOOR_LOCAL } from './KallaxNE';
 
 const GLB_PATH = 'models/ring-drone-cam.glb';
 const METERS_TO_CM = 100;
-const DOCKED_OFFSET_Y = 4.35; // Hauteur d'assise du drone dans le berceau du dock (cm)
+const DOCKED_OFFSET_Y = 1.2; // Hauteur d'assise du drone dans le creux du dock (cm)
 const TAKEOFF_ALTITUDE_Y = 178; // Dégagement au-dessus de la boîte DRONA (166.5 cm) et sous la TV murale (199 cm)
 const VERTICAL_TAKEOFF_SPEED = 65;
 const VERTICAL_LAND_SPEED = 50;
@@ -46,7 +46,7 @@ export const RING_DOCK_POSITION: [number, number, number] = [
 ];
 export const RING_DOCK_ROTATION_Y = -Math.PI / 2;
 
-type FlightPhase = 'docked' | 'taking-off' | 'hover' | 'patrol' | 'returning' | 'landing';
+type FlightPhase = 'docked' | 'taking-off' | 'patrol' | 'returning' | 'landing';
 
 export function RingDroneCam({
   isPreview = false,
@@ -63,7 +63,7 @@ export function RingDroneCam({
   const droneRootRef = useRef<THREE.Group>(null);
   const dronePivotRef = useRef<THREE.Group>(null);
 
-  const rotorsRef = useRef<{ pivot: THREE.Group; dir: number }[]>([]);
+  const rotorsRef = useRef<{ mesh: THREE.Object3D; dir: number }[]>([]);
   const spotlightMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
   const droneObjRef = useRef<THREE.Object3D | null>(null);
   const tourRef = useRef<HornetTour | null>(null);
@@ -133,36 +133,19 @@ export function RingDroneCam({
     droneObj.rotation.set(0, 0, 0);
     droneObj.scale.set(1, 1, 1);
 
-    // Création des pivots de rotors autour de chaque moteur (idempotent)
-    droneObj.updateMatrixWorld(true);
-    const pivots: { pivot: THREE.Group; dir: number }[] = [];
+    const rotors: { mesh: THREE.Object3D; dir: number }[] = [];
     for (const { tag, dir } of ROTOR_TAGS) {
-      let pivot = droneObj.getObjectByName(`RotorPivot_${tag}`) as THREE.Group | undefined;
-      if (!pivot) {
-        const motor = droneObj.getObjectByName(`Drone_Motor_${tag}`);
-        if (!motor) throw new Error(`RingDroneCam : moteur Drone_Motor_${tag} absent`);
-        pivot = new THREE.Group();
-        pivot.name = `RotorPivot_${tag}`;
-        pivot.position.copy(motor.position);
-        droneObj.add(pivot);
-        pivot.updateMatrixWorld(true);
-        for (let b = 0; b < 3; b++) {
-          const blade = droneObj.getObjectByName(`Drone_Blade_${tag}_${b}`);
-          if (blade) pivot.attach(blade);
-        }
-      }
-      pivots.push({ pivot, dir });
+      const rotor = droneObj.getObjectByName(`Drone_Rotor_${tag}`);
+      if (!rotor) throw new Error(`RingDroneCam : rotor Drone_Rotor_${tag} absent`);
+      rotors.push({ mesh: rotor, dir });
     }
-    rotorsRef.current = pivots;
+    rotorsRef.current = rotors;
 
-    const spotlights: THREE.MeshStandardMaterial[] = [];
-    for (const side of ['Left', 'Right']) {
-      const led = droneObj.getObjectByName(`Drone_SpotlightLED_${side}`) as THREE.Mesh | undefined;
-      if (led?.material && !Array.isArray(led.material)) {
-        spotlights.push(led.material as THREE.MeshStandardMaterial);
-      }
+    const led = droneObj.getObjectByName('Drone_SpotlightLED') as THREE.Mesh | undefined;
+    if (!led?.material || Array.isArray(led.material)) {
+      throw new Error('RingDroneCam : mesh/matériau Drone_SpotlightLED absent');
     }
-    spotlightMatsRef.current = spotlights;
+    spotlightMatsRef.current = [led.material as THREE.MeshStandardMaterial];
     spotlightsOnRef.current = null;
 
     scene.traverse(child => {
@@ -264,8 +247,8 @@ export function RingDroneCam({
           previewAnim === 'Drone_Scan' ? Math.sin(t * 1.2) * 0.25 : 0,
           Math.cos(t * 2.0) * 0.02,
         );
-        for (const { pivot, dir } of rotorsRef.current) {
-          pivot.rotation.y += dir * delta * 48;
+        for (const { mesh, dir } of rotorsRef.current) {
+          mesh.rotation.y += dir * delta * 48;
         }
       }
       invalidate();
@@ -278,7 +261,10 @@ export function RingDroneCam({
     if (!root || !pivot || !tour) return;
 
     const patrolRequested = Boolean(useSceneStore.getState().extraStates['ring-drone-patrol']);
-    const inFpv = cameraState.animalTarget === 'ring-drone-cam' && cameraState.mode === 'fpv';
+    const inRingView =
+      cameraState.animalTarget === 'ring-drone-cam' &&
+      (cameraState.mode === 'fpv' || cameraState.mode === 'follow');
+    const patrolActive = patrolRequested || inRingView;
     const [dockX, dockY, dockZ] = RING_DOCK_POSITION;
     const dockedY = dockY + DOCKED_OFFSET_Y;
 
@@ -299,14 +285,12 @@ export function RingDroneCam({
     driver.step(root, delta, useDroneControlStore.getState().speed, tour.radius);
     if (driver.started) {
       tour.release();
-      if (phaseRef.current === 'docked') phaseRef.current = 'hover';
+      if (phaseRef.current === 'docked') phaseRef.current = 'patrol';
     }
     if (driver.resumed) {
-      if (patrolRequested) {
+      if (patrolActive) {
         tour.reset();
         phaseRef.current = 'patrol';
-      } else if (inFpv) {
-        phaseRef.current = 'hover';
       } else {
         planReturnToDock();
       }
@@ -320,49 +304,40 @@ export function RingDroneCam({
         pivot.position.set(0, 0, 0);
         pivot.rotation.set(0, 0, 0);
         setSpotlights(false);
-        if (patrolRequested || inFpv) {
+        if (patrolActive) {
           phaseRef.current = 'taking-off';
-          appLog('drone', patrolRequested ? 'Ring Drone Cam : décollage depuis la base.' : 'Ring Drone Cam : décollage en vue FPV.');
+          appLog(
+            'drone',
+            inRingView && !patrolRequested
+              ? 'Ring Drone Cam : décollage en vue Ring Drone.'
+              : 'Ring Drone Cam : décollage depuis la base.',
+          );
         }
       } else if (phase === 'taking-off') {
         setSpotlights(true);
         root.position.y = Math.min(TAKEOFF_ALTITUDE_Y, root.position.y + VERTICAL_TAKEOFF_SPEED * delta);
         if (root.position.y >= TAKEOFF_ALTITUDE_Y) {
-          if (patrolRequested) {
+          if (patrolActive) {
             tour.reset();
             phaseRef.current = 'patrol';
             appLog('drone', 'Ring Drone Cam : patrouille autonome.');
-          } else if (inFpv) {
-            phaseRef.current = 'hover';
           } else {
             phaseRef.current = 'landing';
           }
         }
-      } else if (phase === 'hover') {
-        setSpotlights(true);
-        if (patrolRequested) {
-          tour.reset();
-          phaseRef.current = 'patrol';
-          appLog('drone', 'Ring Drone Cam : patrouille autonome.');
-        } else if (!inFpv) {
-          planReturnToDock();
-        }
       } else if (phase === 'patrol') {
         setSpotlights(true);
-        if (!patrolRequested) {
+        if (!patrolActive) {
           tour.release();
-          if (inFpv) phaseRef.current = 'hover';
-          else planReturnToDock();
+          planReturnToDock();
         } else {
           tour.tick(root.position, root.quaternion, delta);
         }
       } else if (phase === 'returning') {
         setSpotlights(true);
-        if (patrolRequested) {
+        if (patrolActive) {
           tour.reset();
           phaseRef.current = 'patrol';
-        } else if (inFpv) {
-          phaseRef.current = 'hover';
         } else {
           const waypoints = returnWaypointsRef.current;
           const nextTarget = waypoints[0];
@@ -387,8 +362,13 @@ export function RingDroneCam({
         }
       } else if (phase === 'landing') {
         setSpotlights(true);
-        if (patrolRequested || inFpv) {
-          phaseRef.current = root.position.y < TAKEOFF_ALTITUDE_Y ? 'taking-off' : patrolRequested ? 'patrol' : 'hover';
+        if (patrolActive) {
+          if (root.position.y < TAKEOFF_ALTITUDE_Y) {
+            phaseRef.current = 'taking-off';
+          } else {
+            tour.reset();
+            phaseRef.current = 'patrol';
+          }
         } else {
           root.quaternion.rotateTowards(dockQuat, Math.PI * delta);
           root.position.y = Math.max(dockedY, root.position.y - VERTICAL_LAND_SPEED * delta);
@@ -404,10 +384,10 @@ export function RingDroneCam({
     }
 
     if (phaseRef.current !== 'docked' || driver.active) {
-      for (const { pivot: rotorPivot, dir } of rotorsRef.current) {
-        rotorPivot.rotation.y += dir * delta * 48;
+      for (const { mesh, dir } of rotorsRef.current) {
+        mesh.rotation.y += dir * delta * 48;
       }
-      if (phaseRef.current === 'patrol' || phaseRef.current === 'hover' || driver.active) {
+      if (phaseRef.current === 'patrol' || driver.active) {
         const t = performance.now() * 0.003;
         pivot.position.y = Math.sin(t) * 0.4;
       } else {
