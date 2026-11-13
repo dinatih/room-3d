@@ -90,3 +90,42 @@ it('limite le total au démarrage et pendant une session longue sans laisser de 
     assert(fs.existsSync(path.join(directory, 'latest.jsonl')));
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
+
+it('reste synchronisé si un autre processus supprime un journal pendant la session ou la purge', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-concurrent-')), errors = [], budget = 2048;
+  let vanishOnce = false;
+  const wrappedFs = {
+    ...fs,
+    unlinkSync(target) {
+      if (vanishOnce && target.endsWith('.jsonl') && !target.endsWith('latest.jsonl')) {
+        vanishOnce = false;
+        fs.unlinkSync(target);
+      }
+      return fs.unlinkSync(target);
+    },
+  };
+  const { devLogPlugin } = load('scripts/dev-log-plugin.ts', {
+    'node:fs': wrappedFs, 'node:path': path, 'node:child_process': { execFileSync: () => 'test' },
+  });
+  let receive;
+  try {
+    devLogPlugin(directory, budget).configureServer({ config: { root: process.cwd(), logger: { info() {}, error: e => errors.push(e) } },
+      ws: { on: (_, handler) => { receive = handler; } } });
+    const send = (session, pageStartedAt, size = 120) =>
+      receive({ session, pageStartedAt, entry: { action: 'frame', data: 'a'.repeat(size) } });
+    send('first', '2026-01-01');
+    send('second', '2026-01-02');
+    const firstFile = fs.readdirSync(directory).find(name => name.includes('_first.jsonl'));
+    fs.unlinkSync(path.join(directory, firstFile));
+    for (let i = 0; i < 10; i++) send('second', '2026-01-02');
+    vanishOnce = true;
+    for (let i = 0; i < 10; i++) send('third', '2026-01-03');
+    const thirdFile = fs.readdirSync(directory).find(name => name.includes('_third.jsonl'));
+    fs.unlinkSync(path.join(directory, thirdFile));
+    send('third', '2026-01-03', 40);
+    assert.deepEqual(errors, []);
+    const rows = fs.readFileSync(path.join(directory, 'latest.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(rows[0].entry.action, 'server_session');
+    assert.equal(rows.at(-1).entry.action, 'frame');
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
