@@ -40,7 +40,7 @@ export function HomeAssistantSync() {
 export function HomeAssistantPanel() {
   const inputId = useId();
   const { enabled, linked, status, lights, error } = useHomeAssistant();
-  const [url, setUrl] = useState(location.protocol === 'https:' ? 'https://ha.dinatih.org' : 'http://192.168.1.68:8123');
+  const [url, setUrl] = useState('https://ha.dinatih.org');
   return (
     <div className="p-2 border-bottom small">
       <div className="fw-bold mb-1">Home Assistant</div>

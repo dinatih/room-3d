@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { compareTuyaNames, type NameDevice, type NameEntity, type NameArea } from './nameComparison';
 import { APPLIANCES, APPLIANCE_ENTITIES, applianceAvailable, applianceCommand, isApplianceAction, type ApplianceAction } from './appliances';
-import { callService, createConnection, getAuth, getStates, ERR_INVALID_AUTH } from 'home-assistant-js-websocket';
+import { callService, createConnection, genClientId, getAuth, getStates, ERR_INVALID_AUTH } from 'home-assistant-js-websocket';
 import type { Connection, HassEntity, AuthData, StateChangedEvent } from 'home-assistant-js-websocket';
 
 export const LIGHTS = {
@@ -20,6 +20,166 @@ export const isHomeAssistantLight = (key: string): key is LightKey => Object.pro
 const TOKEN_KEY = 'room3d.ha.auth';
 const ENABLED_KEY = 'room3d.ha.enabled';
 const LINKED_KEY = 'room3d.ha.linked';
+const OAUTH_STATE_STORAGE_PREFIX = 'hass_oauth_state_';
+const POPUP_OAUTH_MESSAGE = 'room3d:ha-oauth-callback';
+const POPUP_CLOSE_GRACE_MS = 300;
+const POPUP_POLL_MS = 200;
+
+class HomeAssistantUserError extends Error {}
+
+function isEmbeddedFrame(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
+function loadStoredTokens(): AuthData | null {
+  try {
+    return JSON.parse(sessionStorage.getItem(TOKEN_KEY) ?? 'null') as AuthData | null;
+  } catch {
+    return null;
+  }
+}
+
+function base64UrlEncode(value: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < value.length; i += 1) binary += String.fromCharCode(value[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function supportsPkce(hassUrl: string): Promise<boolean> {
+  if (!window.crypto?.subtle) return false;
+  try {
+    const response = await fetch(`${hassUrl}/.well-known/oauth-authorization-server`);
+    if (!response.ok) return false;
+    const metadata = await response.json() as { code_challenge_methods_supported?: unknown };
+    return Array.isArray(metadata.code_challenge_methods_supported) && metadata.code_challenge_methods_supported.includes('S256');
+  } catch {
+    return false;
+  }
+}
+
+async function buildAuthorizeRequest(hassUrl: string): Promise<{ url: string; state: string; storageKey: string | null }> {
+  const clientId = genClientId();
+  const redirect = new URL(window.location.href);
+  redirect.hash = '';
+  redirect.searchParams.delete('code');
+  redirect.searchParams.delete('state');
+  redirect.searchParams.set('auth_callback', '1');
+  const redirectUrl = redirect.toString();
+
+  const baseState: Record<string, string> = { hassUrl, clientId };
+  let authorizationState = btoa(JSON.stringify(baseState));
+  let codeChallenge: string | undefined;
+  let storageKey: string | null = null;
+
+  if (await supportsPkce(hassUrl)) {
+    const codeVerifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(64)));
+    const nonce = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
+    codeChallenge = base64UrlEncode(new Uint8Array(digest));
+    authorizationState = btoa(JSON.stringify({ ...baseState, nonce }));
+    storageKey = `${OAUTH_STATE_STORAGE_PREFIX}${nonce}`;
+    sessionStorage.setItem(storageKey, JSON.stringify({ codeVerifier, state: authorizationState }));
+  }
+
+  let authorizeUrl = `${hassUrl}/auth/authorize?response_type=code&redirect_uri=${encodeURIComponent(redirectUrl)}&client_id=${encodeURIComponent(clientId)}&state=${encodeURIComponent(authorizationState)}`;
+  if (codeChallenge) authorizeUrl += `&code_challenge=${encodeURIComponent(codeChallenge)}&code_challenge_method=S256`;
+  return { url: authorizeUrl, state: authorizationState, storageKey };
+}
+
+/**
+ * Authenticates via a top-level popup when running inside an iframe so Home Assistant's
+ * `/auth/authorize` reads query params from the popup instead of an empty parent window.
+ */
+async function authorizeViaPopup(
+  hassUrl: string,
+  popup: Window,
+  isActiveRun: () => boolean,
+): Promise<{ code: string; state: string }> {
+  let storageKey: string | null = null;
+  try {
+    const request = await buildAuthorizeRequest(hassUrl);
+    storageKey = request.storageKey;
+    if (!isActiveRun()) {
+      popup.close();
+      throw new HomeAssistantUserError('Connexion Home Assistant annulée.');
+    }
+
+    return await new Promise<{ code: string; state: string }>((resolve, reject) => {
+      let settled = false;
+      let closeDeadline: number | null = null;
+
+      const cleanup = () => {
+        window.removeEventListener('message', onMessage);
+        window.clearInterval(pollTimer);
+      };
+      const finishReject = (err: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(err);
+      };
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin || event.source !== popup) return;
+        const payload = event.data as { type?: unknown; code?: unknown; state?: unknown; error?: unknown } | null;
+        if (payload?.type !== POPUP_OAUTH_MESSAGE) return;
+        if (typeof payload.error === 'string' && payload.error) {
+          finishReject(new HomeAssistantUserError('Autorisation Home Assistant refusée.'));
+          return;
+        }
+        if (typeof payload.code !== 'string' || typeof payload.state !== 'string') return;
+        if (payload.state !== request.state) {
+          finishReject(new HomeAssistantUserError('État d’autorisation Home Assistant invalide.'));
+          return;
+        }
+        settled = true;
+        cleanup();
+        resolve({ code: payload.code, state: payload.state });
+      };
+
+      window.addEventListener('message', onMessage);
+      const pollTimer = window.setInterval(() => {
+        if (!isActiveRun()) {
+          if (!popup.closed) popup.close();
+          finishReject(new HomeAssistantUserError('Connexion Home Assistant annulée.'));
+          return;
+        }
+        if (popup.closed) {
+          closeDeadline ??= Date.now() + POPUP_CLOSE_GRACE_MS;
+          if (Date.now() >= closeDeadline) {
+            finishReject(new HomeAssistantUserError('Fenêtre de connexion Home Assistant fermée avant la fin de l’autorisation.'));
+          }
+        }
+      }, POPUP_POLL_MS);
+
+      popup.location.href = request.url;
+    });
+  } catch (error) {
+    if (storageKey) sessionStorage.removeItem(storageKey);
+    throw error;
+  }
+}
+
+/**
+ * Relays the OAuth callback from an auth popup back to its embedded opener frame and closes the popup.
+ */
+export function completeHomeAssistantPopupCallback(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('auth_callback') || !window.opener || window.opener === window) return false;
+  const code = params.get('code');
+  const state = params.get('state');
+  const error = params.get('error');
+  if (!error && (!code || !state)) return false;
+  window.opener.postMessage(
+    error ? { type: POPUP_OAUTH_MESSAGE, error } : { type: POPUP_OAUTH_MESSAGE, code, state },
+    window.location.origin,
+  );
+  window.close();
+  return true;
+}
 
 export interface LightState {
   name: string | null;
@@ -89,21 +249,52 @@ function receiveLight(key: LightKey, entity: HassEntity | undefined) {
 
 export async function connectHomeAssistant(url?: string) {
   if (useHomeAssistant.getState().enabled) return;
+  const hassUrl = url?.trim().replace(/\/+$/, '');
+  const hasAuthCallback = new URL(window.location.href).searchParams.has('auth_callback');
+  const needsInteractiveAuth = Boolean(hassUrl && !hasAuthCallback && loadStoredTokens()?.hassUrl !== hassUrl);
+  // Open the OAuth popup synchronously inside the user gesture before awaiting PKCE discovery.
+  const popup = needsInteractiveAuth && isEmbeddedFrame()
+    ? window.open('', 'room3d-ha-auth', 'popup,width=520,height=720')
+    : null;
+  if (needsInteractiveAuth && isEmbeddedFrame() && !popup) {
+    sessionStorage.removeItem(ENABLED_KEY);
+    useHomeAssistant.setState({
+      enabled: true,
+      status: 'error',
+      hassUrl: null,
+      error: 'Fenêtre de connexion bloquée par le navigateur. Autorise les popups pour connecter Home Assistant.',
+    });
+    return;
+  }
+
   const run = ++generation;
   useHomeAssistant.setState({ enabled: true, status: 'connecting', error: null });
   sessionStorage.setItem(ENABLED_KEY, '1');
   try {
     if (sessionStorage.getItem(TOKEN_KEY)) clearAuthCallback();
-    const auth = await getAuth({
-      hassUrl: url,
-      loadTokens: async () => JSON.parse(sessionStorage.getItem(TOKEN_KEY) ?? 'null') as AuthData | null,
-      saveTokens: data => {
-        if (run !== generation) return;
-        if (data) sessionStorage.setItem(TOKEN_KEY, JSON.stringify(data));
-        else sessionStorage.removeItem(TOKEN_KEY);
-      },
-    });
-    clearAuthCallback();
+    let auth;
+    if (popup && hassUrl) {
+      const callback = await authorizeViaPopup(hassUrl, popup, () => run === generation);
+      if (run !== generation) return;
+      const callbackUrl = new URL(window.location.href);
+      callbackUrl.searchParams.set('auth_callback', '1');
+      callbackUrl.searchParams.set('code', callback.code);
+      callbackUrl.searchParams.set('state', callback.state);
+      window.history.replaceState(window.history.state, '', callbackUrl);
+    }
+    try {
+      auth = await getAuth({
+        hassUrl,
+        loadTokens: async () => loadStoredTokens(),
+        saveTokens: data => {
+          if (run !== generation) return;
+          if (data) sessionStorage.setItem(TOKEN_KEY, JSON.stringify(data));
+          else sessionStorage.removeItem(TOKEN_KEY);
+        },
+      });
+    } finally {
+      clearAuthCallback();
+    }
     const next = await createConnection({ auth });
     if (run !== generation) { next.close(); return; }
     connection = next;
@@ -168,8 +359,12 @@ export async function connectHomeAssistant(url?: string) {
     connection = undefined;
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(ENABLED_KEY);
-    useHomeAssistant.setState({ status: 'error',
-      error: error === ERR_INVALID_AUTH ? 'Autorisation Home Assistant refusée ou expirée.' : 'Connexion Home Assistant impossible. Vérifie l’adresse et son accès depuis ce navigateur.' });
+    const errorMessage = error instanceof HomeAssistantUserError
+      ? error.message
+      : error === ERR_INVALID_AUTH
+        ? 'Autorisation Home Assistant refusée ou expirée.'
+        : 'Connexion Home Assistant impossible. Vérifie l’adresse et son accès depuis ce navigateur.';
+    useHomeAssistant.setState({ status: 'error', error: errorMessage });
   }
 }
 
@@ -190,7 +385,14 @@ export function disconnectHomeAssistant() {
 }
 
 export function resumeHomeAssistant() {
-  if (sessionStorage.getItem(ENABLED_KEY)) void connectHomeAssistant();
+  if (!sessionStorage.getItem(ENABLED_KEY)) return;
+  const hasAuthCallback = new URL(window.location.href).searchParams.has('auth_callback');
+  // An interrupted redirect leaves ENABLED_KEY without tokens or callback; avoid triggering ERR_HASS_HOST_REQUIRED on reload.
+  if (!loadStoredTokens() && !hasAuthCallback) {
+    sessionStorage.removeItem(ENABLED_KEY);
+    return;
+  }
+  void connectHomeAssistant();
 }
 
 export async function setHomeAssistantLight(key: LightKey, on?: boolean) {
