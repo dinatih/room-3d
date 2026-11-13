@@ -31,31 +31,23 @@ const FISHEYE_FRAGMENT = /* glsl */ `
   uniform samplerCube tCube;
   #include <tonemapping_pars_fragment>
 
-  const float HALF_PI = 1.5707963267948966;
-
   void main() {
     // vUv.y = 0 correspond à la ligne supérieure de l'ImageData via readRenderTargetPixels + putImageData.
     vec2 p = vec2(vUv.x * 2.0 - 1.0, 1.0 - 2.0 * vUv.y);
-    float r = length(p);
-    if (r > 1.0) {
+    float rSq = dot(p, p);
+    if (rSq > 1.0) {
       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
       return;
     }
 
-    float theta = r * HALF_PI;
-    float sinTheta = sin(theta);
-    vec2 dir2d = r > 1e-5 ? (p / r) : vec2(0.0);
+    // Projection fisheye orthographique 180° (r = sin(theta)) : reproduit le grossissement central de la Reolink FE-W (f = 1,98 mm sur capteur 1/2,5").
     // Vue plongeante (-Y) tournée 90° anti-horaire : porte-fenêtre (-Z) à gauche (-p.x), Est (+X) en haut (+p.y).
-    vec3 dir = normalize(vec3(
-      dir2d.y * sinTheta,
-      -cos(theta),
-      dir2d.x * sinTheta
-    ));
+    vec3 dir = vec3(p.y, -sqrt(1.0 - rSq), p.x);
 
     vec3 linearColor = textureCube(tCube, dir).rgb;
     vec3 mapped = AgXToneMapping(linearColor);
     vec4 outColor = sRGBTransferOETF(vec4(mapped, 1.0));
-    float edge = 1.0 - smoothstep(0.992, 1.0, r);
+    float edge = 1.0 - smoothstep(0.992, 1.0, sqrt(rSq));
     gl_FragColor = vec4(outColor.rgb * edge, 1.0);
   }
 `;
