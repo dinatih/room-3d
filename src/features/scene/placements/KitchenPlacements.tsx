@@ -16,7 +16,7 @@ import { SyckRc003a } from '../items/SyckRc003a';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
 import { Lillviken20317852 } from '../items/Lillviken20317852';
 import { Pepprig70567650 } from '../items/Pepprig70567650';
-import { Ikea36590066708 } from '../items/Ikea36590066708';
+import { Ikea36590066708, type Ikea365Contents } from '../items/Ikea36590066708';
 import { Kolvatten00594176 } from '../items/Kolvatten00594176';
 import { useSceneStore } from '../store/useSceneStore';
 import { getObjectActionIds } from '../objectActions';
@@ -34,7 +34,8 @@ const KALLAX_FRAME = 3.5;
 const KALLAX_DIVIDER = 1.5;
 const KALLAX_CELL_WIDTH = (w2 - 2 * KALLAX_FRAME - KALLAX_DIVIDER) / 2;
 const KALLAX_UPPER_CELL_BASE = 2 * 76.5 + KALLAX_FRAME;
-const IKEA365_COUNT = 3;
+const IKEA365_CONTENTS: readonly Ikea365Contents[] = ['rice', 'macaroni', 'semolina'];
+const IKEA365_COUNT = IKEA365_CONTENTS.length;
 const IKEA365_LENGTH = 17;
 const HOOD_SHELF_TOP = 166.9; // face supérieure du montant METOD couché : 173 - 7 + 0.9
 
@@ -101,14 +102,14 @@ export function KitchenFurnishings() {
         <KallaxCuisineDrona />
       </group>
 
-      {/* IKEA 365+ — bord avant de la case supérieure gauche (côté nord). */}
+      {/* IKEA 365+ — bord avant de la case supérieure gauche (riz, macaronis, semoule de gauche à droite). */}
       <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]}>
-        {Array.from({ length: IKEA365_COUNT }, (_, i) => (
-          <group key={i}
-            position={[-w2 / 2 + KALLAX_FRAME + (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, (KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
+        {IKEA365_CONTENTS.map((contents, i) => (
+          <group key={contents}
+            position={[w2 / 2 - KALLAX_FRAME - (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, -(KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
             rotation-y={Math.PI / 2}
             userData={{ sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
-            <Ikea36590066708 />
+            <Ikea36590066708 contents={contents} />
           </group>
         ))}
       </group>
