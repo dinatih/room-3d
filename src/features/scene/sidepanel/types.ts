@@ -122,7 +122,6 @@ export interface LayerState {
 
   skeleton:     boolean;
   ceiling:      boolean;
-  ceilingCamera?: boolean;
   doors:        boolean;
   wallEdges:    boolean;
   measuredDimensions: boolean;

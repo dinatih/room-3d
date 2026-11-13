@@ -1030,25 +1030,23 @@ export function Studio() {
             </CategoryLayerGroup>
           )}
 
-          {layers.ceilingCamera && (
-            <Suspense fallback={null}>
-              <group
-                ref={node => { ceilingCameraFeed.cameraGroup = node; }}
-                position={CEILING_CAMERA_POS}
-                userData={{
-                  skipMerge: true,
-                  sceneItemRoot: true,
-                  itemName: 'Caméra de plafond (Reolink FE-W)',
-                  hoverAction: {
-                    label: 'Caméra de plafond (Fisheye)',
-                    actions: getObjectActionIds('reolink-fe-w'),
-                  },
-                }}
-              >
-                <ReolinkFeW />
-              </group>
-            </Suspense>
-          )}
+          <Suspense fallback={null}>
+            <group
+              ref={node => { ceilingCameraFeed.cameraGroup = node; }}
+              position={CEILING_CAMERA_POS}
+              userData={{
+                skipMerge: true,
+                sceneItemRoot: true,
+                itemName: 'Caméra de plafond (Reolink FE-W)',
+                hoverAction: {
+                  label: 'Caméra de plafond (Fisheye)',
+                  actions: getObjectActionIds('reolink-fe-w'),
+                },
+              }}
+            >
+              <ReolinkFeW />
+            </group>
+          </Suspense>
 
           {isFisheyeModalOpen && (
             <FisheyeCameraCapture position={CEILING_CAMERA_CAPTURE_POS} />

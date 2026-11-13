@@ -26,7 +26,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   doors: true,
   transparentWallsDoors: true,
   ceiling: false,
-  ceilingCamera: false,
   // Contenu
   equipment: true,
   furniture: true,
@@ -105,11 +104,6 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
   { layerKey: 'transparentWallsDoors', canonicalParam: 'transparentWallsDoors', urlParams: ['transparentwallsdoors'] },
   { layerKey: 'wigGrid', canonicalParam: 'wigGrid', urlParams: ['wiggrid'] },
   { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
-  {
-    layerKey: 'ceilingCamera',
-    canonicalParam: 'ceilingCamera',
-    urlParams: ['ceilingcamera', 'ceiling-camera', 'camera-plafond', 'cameraplafond', 'fisheye'],
-  },
   {
     layerKey: 'lightsHD',
     canonicalParam: 'lightsHD',

@@ -78,6 +78,12 @@ export function InteractiveSection({
   return (
     <div className="d-flex flex-column bg-transparent">
       <HomeAssistantPanel />
+      <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">CAMÉRA</div>
+      {actionButton(
+        <><i className="bi bi-webcam me-2" aria-hidden="true" />Caméra de plafond (Fisheye 360°)</>,
+        <span className="badge bg-danger">LIVE</span>,
+        { onClick: () => triggerAction('ceiling-camera-fisheye', true, 'user') },
+      )}
       <div className="text-muted fw-bold p-2 bg-light border-bottom small text-uppercase">PORTES & FENÊTRES</div>
       {doorBtn('Porte Entrée', 'entryDoor')}
       {doorBtn('Porte Séjour', 'livingDoor')}

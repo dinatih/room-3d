@@ -332,11 +332,11 @@ export function FisheyeCameraModal({ onClose }: { onClose: () => void }) {
           <div className="col d-flex flex-column gap-2" data-testid="fisheye-3d-panel">
             {isHomeAssistantConnected && (
               <div className="d-flex align-items-center justify-content-between gap-2 small">
-                <span className="fw-semibold text-truncate">Simulation 3D · Porte-fenêtre à gauche</span>
+                <span className="fw-semibold text-truncate">Simulation 3D</span>
                 <span className="badge text-bg-secondary rounded-pill flex-shrink-0">3D</span>
               </div>
             )}
-            <div className="w-100 ratio ratio-1x1 rounded-circle overflow-hidden bg-dark shadow border border-secondary border-opacity-50">
+            <div className="w-100 ratio ratio-1x1 rounded-4 overflow-hidden bg-black shadow border border-secondary border-opacity-50">
               <canvas
                 ref={canvasRef}
                 width={FISHEYE_CANVAS_SIZE}
@@ -347,7 +347,7 @@ export function FisheyeCameraModal({ onClose }: { onClose: () => void }) {
             </div>
             <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 small text-body-secondary">
               <span>Reolink FE-W 6MP · Plafond séjour</span>
-              <span>Projection hémisphérique 180° · Porte-fenêtre à gauche</span>
+              <span>Projection hémisphérique 180°</span>
             </div>
           </div>
           {isHomeAssistantConnected && <HomeAssistantCameraPanel />}
