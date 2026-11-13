@@ -256,3 +256,13 @@ instantanée du moteur. La télécommande posée sur l'appareil suit son mouveme
 Les mesures PM2.5, gaz, humidité, température, allergènes et filtres sont lues
 sur les entités réelles. Hors liaison, aucune mesure de qualité d'air n'est
 inventée et la minuterie éteint la simulation locale.
+
+## Thème Fluvy (`acosta290/fluvy`)
+
+L’intégration manuelle [Fluvy](https://github.com/acosta290/fluvy) (`v1.19.1`, sans HACS) est installée sur `homeserver` :
+- Dossier d’intégration : `/opt/homeassistant/config/custom_components/fluvy/`
+- Thème généré : `/opt/homeassistant/config/themes/fluvy/fluvy.yaml` (chargé par `frontend: themes: !include_dir_merge_named themes` dans `configuration.yaml`)
+- Ressource Lovelace enregistrée : `/fluvy-frontend/1.19.1-57bc1e19/fluvy.js` et panneau latéral `/fluvy`
+- Entrée d’intégration active (`loaded`) et thème backend défini sur `Fluvy` via `frontend.set_theme`. Si un profil utilisateur HA remplace le thème serveur ou après un redémarrage ultérieur sans réglage par profil, sélectionner **Fluvy** dans le profil utilisateur (ou **Sélectionné par le serveur** / le panneau `/fluvy`).
+
+Pour mettre à jour manuellement vers une nouvelle version de Fluvy, remplacer `/opt/homeassistant/config/custom_components/fluvy/` depuis l’archive `fluvy.zip` de la release GitHub correspondante et redémarrer le conteneur `homeassistant`.
