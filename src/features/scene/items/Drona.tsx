@@ -24,9 +24,16 @@ const parts: THREE.BufferGeometry[] = [];
 function panel(w: number, h: number, d: number, x: number, y: number, z: number, tint = 0xffffff) {
   const geometry = new THREE.BoxGeometry(w, h, d).translate(x, y, z);
   const color = new THREE.Color(tint);
-  const colors = new Float32Array(geometry.attributes.position.count * 3);
-  for (let i = 0; i < colors.length; i += 3) color.toArray(colors, i);
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const count = geometry.attributes.position.count;
+  const colors = new Float32Array(count * 4);
+  for (let i = 0; i < count; i++) {
+    const offset = i * 4;
+    colors[offset] = color.r;
+    colors[offset + 1] = color.g;
+    colors[offset + 2] = color.b;
+    colors[offset + 3] = 1;
+  }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 4));
   parts.push(geometry);
 }
 panel(DF, PANEL, DRONA_DEPTH, 0, -DF / 2 + PANEL / 2, 0);

@@ -25,12 +25,12 @@ function readRawUrlParams(): URLSearchParams {
 }
 
 export function isRaytracingUrl(params?: URLSearchParams): boolean {
-  return (params ?? readRawUrlParams()).get('raytracing') === '1';
+  return (params ?? readRawUrlParams()).get('raytracing') === 'debug';
 }
 
 export function getDefaultRaytracingUrl(): string {
-  if (typeof window === 'undefined') return '?raytracing=1';
-  return `${window.location.pathname}?raytracing=1`;
+  if (typeof window === 'undefined') return '?raytracing=debug';
+  return `${window.location.pathname}?raytracing=debug`;
 }
 
 export function getUrlParams(): URLSearchParams {

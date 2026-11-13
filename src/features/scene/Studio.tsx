@@ -1150,8 +1150,8 @@ export function Studio() {
                     href={getDefaultRaytracingUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Ouvrir la vue raytracing par défaut (?raytracing=1) dans un nouvel onglet"
-                    aria-label="Ouvrir la vue raytracing par défaut (?raytracing=1)"
+                    title="Ouvrir la vue raytracing par défaut (?raytracing=debug) dans un nouvel onglet"
+                    aria-label="Ouvrir la vue raytracing par défaut (?raytracing=debug)"
                   >
                     <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
                     <span className="fw-semibold">Raytracing par défaut</span>

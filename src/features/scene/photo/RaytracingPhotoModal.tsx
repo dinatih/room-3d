@@ -14,11 +14,16 @@ import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { isRaytracingUrl, getDefaultRaytracingUrl } from '../camera/cameraUrlParams';
 import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
+import { useSceneStore } from '../store/useSceneStore';
 import { packRenderArchive } from './renderArchive';
 import { serializeRenderScene } from './serializeRenderScene';
 import { splitMultiMaterialMeshes } from './splitMultiMaterialMeshes';
 import {
   LAYER_STRUCTURE,
+  LAYER_WALL_STRUCTURE,
+  LAYER_FLOOR_COVERINGS,
+  LAYER_DOORS,
+  LAYER_GRASS,
   LAYER_EQUIPMENT,
   LAYER_FURNITURE,
   LAYER_FURNISHINGS,
@@ -100,6 +105,73 @@ function downsampleHdr(hdrTexture: THREE.Texture, targetWidth = 1024, targetHeig
   return downsampled;
 }
 
+/**
+ * Normalise l'attribut `color` d'une géométrie au format RGBA Float32 (itemSize = 4) attendu par three-gpu-pathtracer,
+ * évitant la corruption des tampons lors de la fusion (itemSize = 3 ou Uint8Array normalisé).
+ */
+function normalizeGeometryVertexColors(
+  mesh: THREE.Mesh,
+  geomMap: Map<THREE.Mesh, THREE.BufferGeometry>,
+): void {
+  const colorAttr = mesh.geometry?.attributes?.color;
+  if (!colorAttr) return;
+  if (colorAttr.itemSize === 4 && colorAttr.array instanceof Float32Array && !colorAttr.normalized) return;
+
+  if (!geomMap.has(mesh)) {
+    const original = mesh.geometry;
+    geomMap.set(mesh, original);
+    mesh.geometry = original.clone();
+  }
+  const rgba = new Float32Array(colorAttr.count * 4);
+  const hasAlpha = colorAttr.itemSize >= 4;
+  for (let i = 0; i < colorAttr.count; i++) {
+    const offset = i * 4;
+    rgba[offset] = colorAttr.getX(i);
+    rgba[offset + 1] = colorAttr.getY(i);
+    rgba[offset + 2] = colorAttr.getZ(i);
+    rgba[offset + 3] = hasAlpha ? colorAttr.getW(i) : 1;
+  }
+  mesh.geometry.setAttribute('color', new THREE.BufferAttribute(rgba, 4));
+}
+
+/**
+ * Sépare les plans coplanaires utilisant `polygonOffset` (ignoré par le path-tracer)
+ * en les décalant de 0,5 mm par unité de `polygonOffsetFactor` le long de leur normale mondiale.
+ */
+function offsetCoplanarPolygonMesh(
+  mesh: THREE.Mesh,
+  materials: THREE.Material[],
+  posMap: Map<THREE.Object3D, THREE.Vector3>,
+): void {
+  const offsetMat = materials.find(m => m.polygonOffset && m.polygonOffsetFactor !== 0);
+  if (!offsetMat) return;
+  const normalAttr = mesh.geometry?.attributes?.normal;
+  if (!normalAttr || normalAttr.count === 0) return;
+
+  const avgNormal = new THREE.Vector3();
+  const sample = new THREE.Vector3();
+  for (let i = 0; i < normalAttr.count; i++) {
+    sample.fromBufferAttribute(normalAttr, i);
+    avgNormal.add(sample);
+  }
+  // Ignore les volumes fermés dont les normales opposées s'annulent.
+  if (avgNormal.length() / normalAttr.count <= 0.9) return;
+
+  avgNormal.normalize();
+  const worldQuat = mesh.getWorldQuaternion(new THREE.Quaternion());
+  const worldDir = avgNormal.applyQuaternion(worldQuat).normalize();
+  const worldPos = mesh.getWorldPosition(new THREE.Vector3());
+  worldPos.addScaledVector(worldDir, -offsetMat.polygonOffsetFactor * 0.05);
+
+  if (!posMap.has(mesh)) {
+    posMap.set(mesh, mesh.position.clone());
+  }
+  if (mesh.parent) {
+    mesh.parent.worldToLocal(worldPos);
+  }
+  mesh.position.copy(worldPos);
+}
+
 export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingPhotoModalProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +182,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const renderCameraRef = useRef<PhysicalCamera | THREE.OrthographicCamera | null>(null);
   const wakeRenderLoopRef = useRef<(() => void) | null>(null);
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
+  const originalGeometriesMapRef = useRef<Map<THREE.Mesh, THREE.BufferGeometry>>(new Map());
+  const originalPositionsMapRef = useRef<Map<THREE.Object3D, THREE.Vector3>>(new Map());
+  const prevWallLayersRef = useRef<{ wallStructure: boolean; structure: boolean; doors: boolean; pillarsOnly: boolean; transparentWallsDoors: boolean } | null>(null);
   const restoreSplitMeshesRef = useRef<(() => void) | null>(null);
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
@@ -122,6 +197,32 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const savedEnvironmentRef = useRef<THREE.Texture | null | undefined>(undefined);
   const downsampledEnvRef = useRef<THREE.Texture | null>(null);
   const tempLightsRef = useRef<THREE.Object3D[]>([]);
+
+  const wallStructure = useSceneStore(state => Boolean(state.layers.wallStructure));
+  const structure = useSceneStore(state => Boolean(state.layers.structure));
+  const doors = useSceneStore(state => Boolean(state.layers.doors));
+  const pillarsOnly = useSceneStore(state => Boolean(state.layers.pillarsOnly));
+  const transparentWallsDoors = useSceneStore(state => Boolean(state.layers.transparentWallsDoors));
+  const setLayers = useSceneStore(state => state.setLayers);
+  const areWallsCeilingFull = wallStructure && structure && doors && !pillarsOnly && !transparentWallsDoors;
+
+  const handleToggleWallsCeilingFull = () => {
+    if (!areWallsCeilingFull) {
+      prevWallLayersRef.current = { wallStructure, structure, doors, pillarsOnly, transparentWallsDoors };
+      setLayers({
+        wallStructure: true,
+        structure: true,
+        doors: true,
+        pillarsOnly: false,
+        transparentWallsDoors: false,
+      });
+    } else if (prevWallLayersRef.current) {
+      setLayers(prevWallLayersRef.current);
+      prevWallLayersRef.current = null;
+    } else {
+      setLayers({ transparentWallsDoors: true });
+    }
+  };
 
   const isUrlRaytracing = isRaytracingUrl();
   const [useDefaultView, setUseDefaultView] = useState<boolean>(isUrlRaytracing);
@@ -183,7 +284,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const prepareScene = useCallback(() => {
     const hidden = hiddenHelpersRef.current;
     const matMap = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
+    const geomMap = new Map<THREE.Mesh, THREE.BufferGeometry>();
+    const posMap = new Map<THREE.Object3D, THREE.Vector3>();
     originalMaterialsMapRef.current = matMap;
+    originalGeometriesMapRef.current = geomMap;
+    originalPositionsMapRef.current = posMap;
 
     // Mettre à jour toutes les matrices mondiales (notamment les os des SkinnedMeshes)
     scene.updateMatrixWorld(true);
@@ -441,6 +546,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           matMap.set(mesh, mesh.material);
           mesh.material = isArray ? newMats : newMats[0];
         }
+
+        normalizeGeometryVertexColors(mesh, geomMap);
+        const activeMats = isArray ? newMats : [newMats[0]];
+        offsetCoplanarPolygonMesh(mesh, activeMats, posMap);
       }
     });
 
@@ -486,12 +595,28 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
 
     hiddenHelpersRef.current = hidden;
     originalMaterialsMapRef.current = matMap;
+    originalGeometriesMapRef.current = geomMap;
+    originalPositionsMapRef.current = posMap;
   }, [scene, showCharacters]);
 
   // Restauration de la scène après fermeture ou rendu
   const restoreScene = useCallback(() => {
     restoreSplitMeshesRef.current?.();
     restoreSplitMeshesRef.current = null;
+
+    originalPositionsMapRef.current.forEach((origPos, obj) => {
+      obj.position.copy(origPos);
+    });
+    originalPositionsMapRef.current.clear();
+
+    originalGeometriesMapRef.current.forEach((origGeom, mesh) => {
+      const tempGeom = mesh.geometry;
+      mesh.geometry = origGeom;
+      if (tempGeom && tempGeom !== origGeom) {
+        tempGeom.dispose();
+      }
+    });
+    originalGeometriesMapRef.current.clear();
 
     tempLightsRef.current.forEach((obj) => {
       scene.remove(obj);
@@ -669,6 +794,10 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     renderCamera.layers.mask = camera.layers.mask;
     // S'assurer que les calques essentiels du studio sont activés
     renderCamera.layers.enable(LAYER_STRUCTURE);
+    renderCamera.layers.enable(LAYER_WALL_STRUCTURE);
+    renderCamera.layers.enable(LAYER_FLOOR_COVERINGS);
+    renderCamera.layers.enable(LAYER_DOORS);
+    renderCamera.layers.enable(LAYER_GRASS);
     renderCamera.layers.enable(LAYER_EQUIPMENT);
     renderCamera.layers.enable(LAYER_FURNITURE);
     renderCamera.layers.enable(LAYER_FURNISHINGS);
@@ -913,6 +1042,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const timer = setTimeout(async () => {
       if (isDisposed) return;
       try {
+        // Attendre deux frames pour laisser R3F appliquer les bascules de calques avant la préparation.
+        await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        if (isDisposed) return;
         prepareScene();
         gl.setRenderTarget(null);
         gl.setViewport(0, 0, width, height);
@@ -1019,6 +1151,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     useDefaultView,
     renderLocally,
     showCharacters,
+    wallStructure,
+    structure,
+    doors,
+    pillarsOnly,
+    transparentWallsDoors,
     prepareScene,
     restoreScene,
     getRenderDimensions,
@@ -1235,9 +1372,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
               href={getDefaultRaytracingUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              title="Ouvrir la vue par défaut (?raytracing=1) dans un nouvel onglet"
+              title="Ouvrir la vue par défaut (?raytracing=debug) dans un nouvel onglet"
             >
-              <i className="bi bi-box-arrow-up-right me-2" aria-hidden="true" />Ouvrir ?raytracing=1
+              <i className="bi bi-box-arrow-up-right me-2" aria-hidden="true" />Ouvrir ?raytracing=debug
             </a>
           )}
           <a className="btn btn-sm btn-outline-primary" href="http://127.0.0.1:5174/render-jobs.html" target="_blank" rel="noopener noreferrer"><i className="bi bi-images me-2" aria-hidden="true" />Mes rendus</a>
@@ -1298,6 +1435,17 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
                   Revenir à la vue courante
                 </button>
               )}
+              <button
+                type="button"
+                className={`btn btn-sm ${areWallsCeilingFull ? 'btn-outline-primary' : 'btn-outline-secondary'}`}
+                disabled={isSubmitting || isBuildingScene}
+                aria-pressed={areWallsCeilingFull}
+                onClick={handleToggleWallsCeilingFull}
+                title="Activer les calques murs, portes et plafonds à 100 % d’opacité"
+              >
+                <i className={`bi ${areWallsCeilingFull ? 'bi-check2-circle' : 'bi-bricks'} me-2`} aria-hidden="true" />
+                {areWallsCeilingFull ? 'Murs et plafond à 100 %' : 'Afficher murs et plafond à 100 %'}
+              </button>
               <button className="btn btn-sm btn-outline-primary" disabled={bvhProgress === null || renderLocally || isSubmitting} onClick={() => void sendBackgroundRender()}>{isSubmitting ? 'Envoi en cours…' : 'Lancer en arrière-plan'}</button>
             </div>
             {renderLocally && <p className="small text-body-secondary mt-2 mb-0">Arrêtez le calcul ici pour passer au service local.</p>}

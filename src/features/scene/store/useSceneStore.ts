@@ -157,6 +157,7 @@ interface SceneStore {
   toggleFurniture: (key: keyof FurnitureState) => void;
   setLaraClothing: (key: 'laraTop' | 'laraBottom', value: LaraClothing) => void;
   toggleLayer: (key: keyof LayerState) => void;
+  setLayers: (partial: Partial<LayerState>) => void;
   setActiveExtraIds: (ids: string[]) => void;
   toggleExtraCharacter: (id: string) => void;
   selectAllExtraCharacters: () => void;
@@ -643,6 +644,19 @@ export const useSceneStore = create<SceneStore>((set) => ({
       return {
         layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
       };
+    });
+  },
+
+  setLayers: (partial) => {
+    set((state) => {
+      const nextLayers = { ...state.layers, ...partial };
+      for (const [key, value] of Object.entries(partial)) {
+        if (typeof value === 'boolean') {
+          updateUrlLayer(key as keyof LayerState, value);
+        }
+      }
+      cameraState.invalidate?.();
+      return { layers: nextLayers };
     });
   },
 
