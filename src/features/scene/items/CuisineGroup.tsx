@@ -62,7 +62,7 @@ export function CuisineLillhavet() {
     <group position={[18, 155, 34]} rotation={[0, -Math.PI / 4 - Math.PI / 8, 0]}>
       <Lillhavet80461276 />
       {[0, 1, 2, 3].map(i => (
-        <group key={i} position={[1.14 + i * 2.5, 15.87, 0]} rotation={[0, 0, Math.PI / 2 + Math.PI / 12]}>
+        <group key={i} position={[2.16 + i * 2.5, 15.87, 0]} rotation={[0, Math.PI, Math.PI / 2 + Math.PI / 12]}>
           <RedPlate />
         </group>
       ))}
