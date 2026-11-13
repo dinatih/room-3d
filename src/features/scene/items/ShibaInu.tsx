@@ -2,6 +2,7 @@ import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
+import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import { useRef, useLayoutEffect, useEffect, useState, useMemo } from 'react';
@@ -247,7 +248,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           const steer = computeSteeringVector('shiba', before.x, before.z, direction.x, direction.z, remaining);
           return { x: steer.steerX, z: steer.steerZ };
         });
-        position.x = next.x; position.z = next.z;
+        position.x = next.x;
+        position.z = next.z;
+        position.y = getWalkableGroundY(next.x, next.z);
         const arrived = Math.hypot(position.x - target.x, position.z - target.z) < 1e-6;
         if (!arrived) {
           if (dance.jumping) {
@@ -259,7 +262,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           }
           if (next.x !== before.x || next.z !== before.z) modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta);
         } else {
-          modelRef.current.position.y = target.y;
+          modelRef.current.position.y = getWalkableGroundY(position.x, position.z);
           modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, target.yaw, Math.PI, delta);
           if (!dance.jumping) {
             dance.jumping = true;

@@ -8,6 +8,7 @@ const controls = load('src/features/scene/camera/subjectControls.ts', {
   './cameraSubjects': require('../../src/features/scene/camera/cameraSubjects.ts'),
   three: THREE, '../cameraState': { cameraState }, '../hornetTour': { HornetSpace: class { blocker() { return blocked; } } },
   '../ai/navigation/service': { getNavigationGraph: () => ({ obstacles: [] }) },
+  '../ai/navigation/groundElevation': { getWalkableGroundY: () => 0 },
   '../ai/navigation/obstacles': { getAgentProfile: () => ({ radius: 10, height: 30 }) },
   '../ai/agent/agentAvoidance': { limitAgentMovement: (_, __, point) => point },
   '../ai/navigation/navigationScope': { NavigationScope: class { poll(fn) { fn(); return true; } clear() {} } },
@@ -16,6 +17,7 @@ const controls = load('src/features/scene/camera/subjectControls.ts', {
 const dogs = load('src/features/scene/items/dogBehavior.ts', {
   three: THREE, '../ai/SpatialZone': {},
   '../ai/navigation/service': { createRouteState: () => ({}), resetRoute() {} },
+  '../ai/navigation/groundElevation': { getWalkableGroundY: () => 0 },
   '../ai/navigation/obstacles': {},
   '../ai/agent/agentAvoidance': { reserveAgentDestination() {} },
   '@features/ui/AppConsole': {}, './dogBowlData': {},

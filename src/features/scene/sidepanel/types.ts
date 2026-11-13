@@ -150,6 +150,7 @@ export interface LayerState {
   npcCollisions: boolean;
   debugNpcCollisions: boolean;
   debugFurnitureCollisions: boolean;
+  windowStepElevation?: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;
   breastMass?: number;

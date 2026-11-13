@@ -34,6 +34,7 @@ import type { AgentInstruction } from '../ai/aiTypes';
 import { useAgentController, resetAgentDeployment } from '../ai/useAgentController';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { measureHumanProfile } from '../ai/navigation/profiles';
+import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { duoSessionManager } from '../ai/duoSessionManager';
 import { appLog } from '@features/ui/AppConsole';
@@ -749,14 +750,15 @@ export function Character({
             delete cameraState.positions[id];
           }
         } else {
-          groupRef.current.position.set(cameraState.characterX, 0, cameraState.characterZ);
+          const groundY = getWalkableGroundY(cameraState.characterX, cameraState.characterZ);
+          groupRef.current.position.set(cameraState.characterX, groundY, cameraState.characterZ);
           groupRef.current.rotation.y = cameraState.followYaw;
           groupRef.current.visible = !cameraState.characterHidden;
           cameraState.isAIControlled = false;
           currentAnimClip.current = null;
-          cameraState.positions[id] = { x: cameraState.characterX, y: 0, z: cameraState.characterZ, yaw: cameraState.followYaw, anim: (cameraState.isMoving ? 'walk' : 'idle') };
+          cameraState.positions[id] = { x: cameraState.characterX, y: groundY, z: cameraState.characterZ, yaw: cameraState.followYaw, anim: (cameraState.isMoving ? 'walk' : 'idle') };
           
-          setAgentPosition(cameraState.characterX, 0, cameraState.characterZ);
+          setAgentPosition(cameraState.characterX, groundY, cameraState.characterZ);
           setAgentRotation(cameraState.followYaw);
         }
       } else if (isNPC) {

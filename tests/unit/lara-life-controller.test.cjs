@@ -77,6 +77,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
       getInteractionOwner: value => value, getContainingObjectOwner: noop, getNavigationGraph: () => graph,
       describeNavigationBlock: () => 'sealed', navigationDiagnostics: noop,
       NavigationBlockedError },
+    './navigation/groundElevation': { getWalkableGroundY: () => 0 },
     './diyChairClearance': { releaseKitchenStorageAccess: noop },
     './navigation/obstacles': { hasAgentProfile: () => true, getObstacleRevision: () => revision,
       getAgentProfile: () => ({ radius: 10, height: 170 }), furnitureObstacles: new Map() },

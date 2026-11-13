@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SpatialZoneManager } from '../ai/SpatialZone';
 import { randomReachableTarget, getNavigationGraph, followRoute, resetRoute, createRouteState } from '../ai/navigation/service';
+import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { getAgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination, isAgentDestinationFree } from '../ai/agent/agentAvoidance';
 import { appLog } from '@features/ui/AppConsole';
@@ -126,6 +127,8 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
   root.getWorldQuaternion(state.rotation);
   const yaw = state.euler.setFromQuaternion(state.rotation).y;
   if (state.mode === 'rest') {
+    state.position.y = getWalkableGroundY(state.position.x, state.position.z);
+    root.position.copy(root.parent!.worldToLocal(state.local.copy(state.position)));
     state.remaining -= delta;
     if (state.remaining > 0) return;
     if (state.action === 'jump') { startDogPause(state, context); return; }
@@ -170,7 +173,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
     return { x: steer.steerX, z: steer.steerZ };
   });
   // Authoritative world coordinates must never round-trip through the rotated parent.
-  state.position.set(next.x, state.position.y, next.z);
+  state.position.set(next.x, getWalkableGroundY(next.x, next.z), next.z);
   root.position.copy(root.parent!.worldToLocal(state.local.copy(state.position)));
   if (next.x !== before.x || next.z !== before.z) {
     if (state.action !== state.gait) { state.action = state.gait; context.play(state.gait); }

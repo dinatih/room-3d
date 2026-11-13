@@ -8,6 +8,7 @@ import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
 import { duoSessionManager, DuoRole } from './duoSessionManager';
 import { getDuoAnimationForClip } from '../animations/duoAnimations';
 import { createRouteState, followRoute, resetRoute, recoverDoorContact, getInteractionOwner, getContainingObjectOwner, movePostureTransition, NavigationBlockedError, getNavigationGraph, describeNavigationBlock, prepareInteractionNavigation, navigationDiagnostics } from './navigation/service';
+import { getWalkableGroundY } from './navigation/groundElevation';
 import { prepareKitchenStorageAccess, releaseKitchenStorageAccess } from './diyChairClearance';
 import { hasAgentProfile, getObstacleRevision, furnitureClearance, getAgentProfile, navigationDebug, furnitureObstacles } from './navigation/obstacles';
 import { distance, inflate, pointInRing, BOOLEAN_PRECISION } from './navigation/geometry';
@@ -1010,6 +1011,7 @@ export function createAgentController(
     }
     const hasNavStepInUpdate = dynamicNavIndex < dynamicNavQueue.length;
     if (!scenario && !hasNavStepInUpdate && !postureTransition) {
+      state.y = getWalkableGroundY(state.x, state.z);
       state.animation = 'idle';
       return state;
     }
@@ -1157,6 +1159,7 @@ export function createAgentController(
           agentStatus = 'FINISHED';
           if (onComplete) onComplete();
         }
+        state.y = getWalkableGroundY(state.x, state.z);
         state.animation = 'idle';
         return state;
       }
@@ -1168,6 +1171,7 @@ export function createAgentController(
       : (scenario ? scenario[stepIndex] : null);
 
     if (!currentInstruction) {
+      state.y = getWalkableGroundY(state.x, state.z);
       state.animation = 'idle';
       return state;
     }
@@ -1487,9 +1491,13 @@ export function createAgentController(
       state.x = position.x;
       state.z = position.z;
       const moved = distance(oldPosition, position);
-      if (currentInstruction.navigation === 'interaction' && target.ty !== undefined && moved > 0) {
-        const remaining = distance(oldPosition, { x: target.tx, z: target.tz });
-        state.y += (target.ty - state.y) * Math.min(1, moved / remaining);
+      if (currentInstruction.navigation === 'interaction' && target.ty !== undefined) {
+        if (moved > 0) {
+          const remaining = distance(oldPosition, { x: target.tx, z: target.tz });
+          state.y += (target.ty - state.y) * Math.min(1, moved / remaining);
+        }
+      } else {
+        state.y = getWalkableGroundY(state.x, state.z);
       }
       if (moved > 0) state.rotY = computeRotYStep(state.rotY, Math.atan2(position.x - oldPosition.x, position.z - oldPosition.z), ROT_SPEED, dt);
       if (route.error) {
@@ -1530,7 +1538,7 @@ export function createAgentController(
           return state;
         }
         if (currentInstruction.smartObjectId) { state.x = target.tx; state.z = target.tz; }
-        if (target.ty !== undefined) state.y = target.ty;
+        state.y = target.ty !== undefined ? target.ty : getWalkableGroundY(state.x, state.z);
 
         if (currentInstruction.type === 'OBSERVE_OBJECT') {
           agentStatus = 'INTERACTING';
@@ -1736,7 +1744,7 @@ export function createAgentController(
       state.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
       if (currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'INTERACT') {
         if (currentInstruction.smartObjectId) { state.x = target.tx; state.z = target.tz; }
-        if (target.ty !== undefined) state.y = target.ty;
+        state.y = target.ty !== undefined ? target.ty : getWalkableGroundY(state.x, state.z);
       }
 
       const targetRotY = currentInstruction.rotY !== undefined ? currentInstruction.rotY : target.rotY;

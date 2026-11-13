@@ -180,6 +180,7 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn(iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
       {layerBtn(iconLabel('bi-rulers', 'Debug trajets et obstacles'), 'debugFurnitureCollisions')}
+      {layerBtn(iconLabel('bi-arrow-bar-up', 'Marche fenêtre agents (Y)'), 'windowStepElevation')}
       {layers.debugFurnitureCollisions && <div className="small px-3 py-1" title="Préférence de trajet, franchissable dans les passages étroits">
         <svg width="24" height="8" className="me-1" aria-hidden="true"><path d="M0 4H24" stroke={NAVIGATION_COMFORT_COLOR} strokeWidth="2" /></svg>
         Confort Native : +{NAVIGATION_COMFORT_CM} cm (préférence)

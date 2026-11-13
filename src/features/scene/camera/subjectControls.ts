@@ -3,6 +3,7 @@ import { cameraState } from '../cameraState';
 import { isFlyingSubject } from './cameraSubjects';
 import { HornetSpace } from '../hornetTour';
 import { getNavigationGraph } from '../ai/navigation/service';
+import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { getAgentProfile } from '../ai/navigation/obstacles';
 import { limitAgentMovement } from '../ai/agent/agentAvoidance';
 import { NavigationScope } from '../ai/navigation/navigationScope';
@@ -75,7 +76,9 @@ export class SubjectDriver {
     this.next.copy(this.position);
     const travel = (held('ArrowUp') - held('ArrowDown')) * speed * delta;
     const rise = isFlyingSubject(this.id) ? (held('Elevate') - held('Descend')) * speed * delta : 0;
-    if (travel || rise) {
+    const isGroundSubject = flightRadius === undefined && this.id !== 'robin';
+    const groundY = isGroundSubject ? getWalkableGroundY(this.position.x, this.position.z) : this.position.y;
+    if (travel || rise || groundY !== this.position.y) {
       this.direction.set(Math.sin(this.heading), 0, Math.cos(this.heading));
       this.next.addScaledVector(this.direction, travel);
       this.next.y += rise;
@@ -96,8 +99,9 @@ export class SubjectDriver {
           else { const limited = limitAgentMovement(this.id, start, goal); this.next.x = limited.x; this.next.z = limited.z; }
         });
         if (!ready) this.next.copy(this.position);
+        this.next.y = getWalkableGroundY(this.next.x, this.next.z);
       }
-      this.moving = !this.next.equals(this.position);
+      this.moving = this.next.x !== this.position.x || this.next.z !== this.position.z || (rise !== 0 && this.next.y !== this.position.y);
       if (root.parent) root.position.copy(root.parent.worldToLocal(this.next));
       else root.position.copy(this.next);
     }

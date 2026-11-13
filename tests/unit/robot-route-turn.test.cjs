@@ -13,7 +13,7 @@ it('tourne puis repart sur un détour qui ne rappelle pas le steering, même ave
   const end = source.indexOf('        if (route.current.error', begin);
   assert(begin > 0 && end > begin);
   const advance = new Function('root', 'route', 'ai', 'config', 'delta', 'followRoute', 'computeRotYStep',
-    `const id = 'microduck', selectMotion = () => {}; ${source.slice(begin, end)}`);
+    `const id = 'microduck', selectMotion = () => {}, getWalkableGroundY = () => 0; ${source.slice(begin, end)}`);
   const root = { position: { x: 0, z: 0 }, rotation: { y: 0 } };
   const target = { x: 0, z: -10 }, route = { current: { path: [target], index: 0 } };
   let callbacks = 0;

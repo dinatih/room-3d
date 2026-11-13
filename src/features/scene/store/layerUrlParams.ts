@@ -80,6 +80,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   npcCollisions: true,
   debugNpcCollisions: false,
   debugFurnitureCollisions: false,
+  windowStepElevation: false,
   // Terrain
   bermudaGrass: true,
   // Divers
@@ -227,6 +228,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'animCrossfade',
     canonicalParam: 'animCrossfade',
     urlParams: ['animcrossfade', 'crossfade', 'fonducrossfade', 'animblend'],
+  },
+  {
+    layerKey: 'windowStepElevation',
+    canonicalParam: 'windowStepElevation',
+    urlParams: ['windowstepelevation', 'windowstep', 'marchefenetre'],
   },
 ];
 

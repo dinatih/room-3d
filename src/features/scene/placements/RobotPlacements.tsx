@@ -16,6 +16,7 @@ import { getObjectActionIds } from '../objectActions';
 import { getActionDef } from '../objectActionRegistry';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { randomReachableTarget, createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
+import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { setAgentProfile, removeAgentProfile, type AgentProfile } from '../ai/navigation/obstacles';
 import { computeSteeringVector, computeRotYStep, isAgentDestinationFree, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import type { Point } from '../ai/navigation/geometry';
@@ -158,6 +159,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         root.rotation.y = computeRotYStep(root.rotation.y, Math.atan2(facing.x - before.x, facing.z - before.z), Math.PI, delta);
         root.position.x = next.x;
         root.position.z = next.z;
+        root.position.y = getWalkableGroundY(next.x, next.z);
         selectMotion(moved ? config.walk : 'idle');
         if (route.current.error || (next.x === ai.target.x && next.z === ai.target.z)) {
           if (route.current.error) appLog(id, `Navigation : ${route.current.error}`);
@@ -168,6 +170,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
           selectMotion('idle');
         }
       } else {
+        root.position.y = getWalkableGroundY(root.position.x, root.position.z);
         ai.wait -= delta;
         if (ai.wait <= 0) {
           selectMotion('idle');
