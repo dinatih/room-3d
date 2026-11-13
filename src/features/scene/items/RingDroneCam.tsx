@@ -28,7 +28,8 @@ const DOCKED_OFFSET_Y = 1.2; // Hauteur d'assise du drone dans le creux du dock 
 const TAKEOFF_ALTITUDE_Y = 178; // Dégagement au-dessus de la boîte DRONA (166.5 cm) et sous la TV murale (199 cm)
 const VERTICAL_TAKEOFF_SPEED = 65;
 const VERTICAL_LAND_SPEED = 50;
-const RETURN_CRUISE_SPEED = 100;
+const PATROL_ROUND_SECONDS = 45;
+const RECHARGE_PAUSE_SECONDS = 20;
 const ROTOR_TAGS = [
   { tag: 'FL', dir: 1 },
   { tag: 'FR', dir: -1 },
@@ -68,7 +69,10 @@ export function RingDroneCam({
   const droneObjRef = useRef<THREE.Object3D | null>(null);
   const tourRef = useRef<HornetTour | null>(null);
   const phaseRef = useRef<FlightPhase>('docked');
-  const returnWaypointsRef = useRef<THREE.Vector3[]>([]);
+  const patrolElapsedRef = useRef(0);
+  const rechargeRemainingRef = useRef(0);
+  const rechargeTimerRef = useRef<number | null>(null);
+  const wasInRingViewRef = useRef(false);
   const previewElapsedRef = useRef(0);
   const spotlightsOnRef = useRef<boolean | null>(null);
   const dimensionsRef = useRef(new THREE.Vector3(17.18, 3.315, 13.69));
@@ -78,12 +82,10 @@ export function RingDroneCam({
   const cameraMount = useMemo(() => new THREE.Vector3(0, 1.66, 7.5), []);
   const cameraPosition = useMemo(() => new THREE.Vector3(), []);
   const cameraForward = useMemo(() => new THREE.Vector3(), []);
-  const targetQuat = useMemo(() => new THREE.Quaternion(), []);
   const dockQuat = useMemo(
     () => new THREE.Quaternion().setFromEuler(new THREE.Euler(0, RING_DOCK_ROTATION_Y, 0)),
     [],
   );
-  const directionVec = useMemo(() => new THREE.Vector3(), []);
   const previewDummyClip = useMemo(() => new THREE.AnimationClip('RingPreview', 2.0, []), []);
   const previewMixerRef = useRef<THREE.AnimationMixer | null>(null);
 
@@ -195,7 +197,9 @@ export function RingDroneCam({
     }
 
     phaseRef.current = 'docked';
-    returnWaypointsRef.current = [];
+    patrolElapsedRef.current = 0;
+    rechargeRemainingRef.current = 0;
+    wasInRingViewRef.current = false;
     setSpotlights(false);
 
     const radius = Math.hypot(dimensionsRef.current.x / 2, dimensionsRef.current.y, dimensionsRef.current.z / 2);
@@ -206,6 +210,10 @@ export function RingDroneCam({
     invalidate();
 
     return () => {
+      if (rechargeTimerRef.current !== null) {
+        window.clearTimeout(rechargeTimerRef.current);
+        rechargeTimerRef.current = null;
+      }
       driver.dispose();
       removeAgentProfile('ring-drone-cam');
       tourRef.current?.release();
@@ -260,39 +268,55 @@ export function RingDroneCam({
     const tour = tourRef.current;
     if (!root || !pivot || !tour) return;
 
-    const patrolRequested = Boolean(useSceneStore.getState().extraStates['ring-drone-patrol']);
     const inRingView =
       cameraState.animalTarget === 'ring-drone-cam' &&
       (cameraState.mode === 'fpv' || cameraState.mode === 'follow');
-    const patrolActive = patrolRequested || inRingView;
+    const inFpv = cameraState.animalTarget === 'ring-drone-cam' && cameraState.mode === 'fpv';
+    const enteredRingView = inRingView && !wasInRingViewRef.current;
+    wasInRingViewRef.current = inRingView;
+    const patrolEnabled = Boolean(useSceneStore.getState().extraStates['ring-drone-patrol']) || inRingView;
     const [dockX, dockY, dockZ] = RING_DOCK_POSITION;
     const dockedY = dockY + DOCKED_OFFSET_Y;
 
-    const planReturnToDock = () => {
+    const clearRechargeTimer = () => {
+      if (rechargeTimerRef.current !== null) {
+        window.clearTimeout(rechargeTimerRef.current);
+        rechargeTimerRef.current = null;
+      }
+    };
+
+    const planReturnToDock = (reason: 'recharge' | 'manual') => {
       const hoverAboveDock = new THREE.Vector3(dockX, TAKEOFF_ALTITUDE_Y, dockZ);
       const waypoints: THREE.Vector3[] = [];
-      if (tour.space.blocker(root.position, hoverAboveDock)) {
-        const neObs = tour.observations.find(o => o.id === 'north-east') ?? tour.observations[0];
-        const route = tour.route(root.position, neObs.position);
+      if (tour.space.blocker(root.position, hoverAboveDock) || tour.space.doorsBetween(root.position, hoverAboveDock).length > 0) {
+        const approach = tour.observations.find(o => o.id === 'under-tv') ?? tour.observations.find(o => o.id === 'north-east') ?? tour.observations[0];
+        const route = tour.route(root.position, approach.position);
         if (route) waypoints.push(...route);
       }
       waypoints.push(hoverAboveDock);
-      returnWaypointsRef.current = waypoints;
+      tour.goTo(waypoints, 'Retour vers la base');
       phaseRef.current = 'returning';
-      appLog('drone', 'Ring Drone Cam : retour vers la base.');
+      appLog(
+        'drone',
+        reason === 'recharge'
+          ? 'Ring Drone Cam : fin de ronde, retour pour rechargement.'
+          : 'Ring Drone Cam : retour vers la base.',
+      );
     };
 
     driver.step(root, delta, useDroneControlStore.getState().speed, tour.radius);
     if (driver.started) {
+      clearRechargeTimer();
       tour.release();
       if (phaseRef.current === 'docked') phaseRef.current = 'patrol';
     }
     if (driver.resumed) {
-      if (patrolActive) {
+      if (patrolEnabled) {
+        patrolElapsedRef.current = 0;
         tour.reset();
         phaseRef.current = 'patrol';
       } else {
-        planReturnToDock();
+        planReturnToDock('manual');
       }
     }
 
@@ -304,20 +328,33 @@ export function RingDroneCam({
         pivot.position.set(0, 0, 0);
         pivot.rotation.set(0, 0, 0);
         setSpotlights(false);
-        if (patrolActive) {
+        if (!patrolEnabled) {
+          clearRechargeTimer();
+          rechargeRemainingRef.current = 0;
+        } else if (enteredRingView || rechargeRemainingRef.current <= 0) {
+          clearRechargeTimer();
+          const resumingFromRecharge = !enteredRingView && patrolElapsedRef.current > 0;
+          rechargeRemainingRef.current = 0;
+          patrolElapsedRef.current = 0;
           phaseRef.current = 'taking-off';
           appLog(
             'drone',
-            inRingView && !patrolRequested
+            enteredRingView
               ? 'Ring Drone Cam : décollage en vue Ring Drone.'
-              : 'Ring Drone Cam : décollage depuis la base.',
+              : resumingFromRecharge
+                ? 'Ring Drone Cam : batterie rechargée, décollage pour la prochaine ronde.'
+                : 'Ring Drone Cam : décollage pour sa ronde.',
           );
+        } else {
+          rechargeRemainingRef.current = Math.max(0, rechargeRemainingRef.current - delta);
+          if (rechargeRemainingRef.current <= 0) invalidate();
         }
       } else if (phase === 'taking-off') {
         setSpotlights(true);
         root.position.y = Math.min(TAKEOFF_ALTITUDE_Y, root.position.y + VERTICAL_TAKEOFF_SPEED * delta);
         if (root.position.y >= TAKEOFF_ALTITUDE_Y) {
-          if (patrolActive) {
+          if (patrolEnabled) {
+            patrolElapsedRef.current = 0;
             tour.reset();
             phaseRef.current = 'patrol';
             appLog('drone', 'Ring Drone Cam : patrouille autonome.');
@@ -327,42 +364,34 @@ export function RingDroneCam({
         }
       } else if (phase === 'patrol') {
         setSpotlights(true);
-        if (!patrolActive) {
-          tour.release();
-          planReturnToDock();
+        if (!patrolEnabled) {
+          planReturnToDock('manual');
         } else {
+          patrolElapsedRef.current += delta;
           tour.tick(root.position, root.quaternion, delta);
+          if (!inFpv && patrolElapsedRef.current >= PATROL_ROUND_SECONDS && tour.state === 'observing') {
+            planReturnToDock('recharge');
+          }
         }
       } else if (phase === 'returning') {
         setSpotlights(true);
-        if (patrolActive) {
+        if (enteredRingView) {
+          patrolElapsedRef.current = 0;
           tour.reset();
           phaseRef.current = 'patrol';
+          appLog('drone', 'Ring Drone Cam : reprise de patrouille.');
+        } else if (tour.observation?.id !== 'return') {
+          planReturnToDock(patrolEnabled ? 'recharge' : 'manual');
+        } else if (tour.state === 'observing') {
+          tour.release();
+          phaseRef.current = 'landing';
         } else {
-          const waypoints = returnWaypointsRef.current;
-          const nextTarget = waypoints[0];
-          if (!nextTarget) {
-            phaseRef.current = 'landing';
-          } else {
-            const dist = root.position.distanceTo(nextTarget);
-            const step = Math.min(dist, RETURN_CRUISE_SPEED * delta);
-            if (dist > 0.01) {
-              directionVec.subVectors(nextTarget, root.position).normalize();
-              const yaw = Math.atan2(directionVec.x, directionVec.z);
-              targetQuat.setFromEuler(new THREE.Euler(0, yaw, 0));
-              root.quaternion.rotateTowards(targetQuat, Math.PI * delta);
-              root.position.addScaledVector(directionVec, step);
-            }
-            if (dist - step <= 0.1) {
-              root.position.copy(nextTarget);
-              waypoints.shift();
-              if (!waypoints.length) phaseRef.current = 'landing';
-            }
-          }
+          tour.tick(root.position, root.quaternion, delta);
         }
       } else if (phase === 'landing') {
         setSpotlights(true);
-        if (patrolActive) {
+        if (enteredRingView) {
+          patrolElapsedRef.current = 0;
           if (root.position.y < TAKEOFF_ALTITUDE_Y) {
             phaseRef.current = 'taking-off';
           } else {
@@ -377,7 +406,18 @@ export function RingDroneCam({
             root.quaternion.copy(dockQuat);
             phaseRef.current = 'docked';
             setSpotlights(false);
-            appLog('drone', 'Ring Drone Cam : posé sur sa base (confidentialité activée).');
+            clearRechargeTimer();
+            if (patrolEnabled) {
+              rechargeRemainingRef.current = RECHARGE_PAUSE_SECONDS;
+              rechargeTimerRef.current = window.setTimeout(() => {
+                rechargeTimerRef.current = null;
+                invalidate();
+              }, RECHARGE_PAUSE_SECONDS * 1000);
+              appLog('drone', `Ring Drone Cam : pause de rechargement sur sa base (${RECHARGE_PAUSE_SECONDS} s).`);
+            } else {
+              rechargeRemainingRef.current = 0;
+              appLog('drone', 'Ring Drone Cam : posé sur sa base (confidentialité activée).');
+            }
           }
         }
       }

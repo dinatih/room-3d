@@ -171,6 +171,15 @@ export class HornetTour {
     this.revision = -1;
   }
   release(): void { releaseAgentDoors(this.agentId); }
+  goTo(waypoints: Vector3[], label: string): void {
+    this.release();
+    const target = waypoints[waypoints.length - 1];
+    this.observation = { id: 'return', room: 'living', label, position: target, target, seconds: 0 };
+    this.path = [...waypoints];
+    this.state = 'travelling';
+    this.elapsed = this.wait = this.speed = 0;
+    this.waitReason = '';
+  }
   private network(): void {
     if (this.revision === getObstacleRevision()) return;
     this.revision = getObstacleRevision();
@@ -315,7 +324,7 @@ export class HornetTour {
       }
       this.wait += delta;
       if (blocked !== this.waitReason) { this.log(`Visite : attente hors passage (${blocked}).`); this.waitReason = blocked; }
-      if (this.wait >= DOOR_WAIT_SECONDS && this.space.safeStop(position)) this.choose(position);
+      if (this.observation?.id !== 'return' && this.wait >= DOOR_WAIT_SECONDS && this.space.safeStop(position)) this.choose(position);
       return;
     }
     this.wait = 0;

@@ -19,7 +19,6 @@ import { BathtubStarfish } from '../items/Starfish';
 import { Goldfish } from '../items/Goldfish';
 import { RobinBird } from '../items/RobinBird';
 import { BlackHornetDrone } from '../items/BlackHornetDrone';
-import { DjiAvata2Drone } from '../items/DjiDrone';
 import { DogBowl } from '../items/DogBowl';
 import { ULOTTE_BOWL_POSITION } from '../items/dogBowlData';
 import { Dachshund } from '../items/Dachshund';
@@ -120,9 +119,6 @@ export function GardenAnimals() {
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Drone Black Hornet Nano', hoverAction: { label: 'Black Hornet Nano Drone', actions: getObjectActionIds('black-hornet-drone') } }}>
         {visible.includes('black-hornet-drone') && <BlackHornetDrone />}
-      </group>
-      <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true }}>
-        {visible.includes('dji-avata-2') && <DjiAvata2Drone />}
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Shiba Inu' }}>
         <ShibaInu />

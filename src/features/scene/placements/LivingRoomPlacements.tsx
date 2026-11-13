@@ -7,6 +7,7 @@ import * as THREE from 'three';
 
 import { useFurnitureToggles } from '../utils/useFurnitureToggles';
 import { useSceneStore } from '../store/useSceneStore';
+import { useRobotVisibility } from '../store/useRobotVisibility';
 import { MergedStaticGroup } from '../Building';
 import { positionState } from '@features/scene/positionState';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
@@ -610,6 +611,7 @@ export function LivingRoomFurnishings() {
 
 // Pass 3 — Decor (Détails & habillage de surface)
 export function LivingRoomDecor() {
+  const visibleRobots = useRobotVisibility(state => state.visible);
   return (
     <>
     <MergedStaticGroup name="merged-living-room-decor">
@@ -691,7 +693,7 @@ export function LivingRoomDecor() {
 
     {/* Ring Drone Cam et sa base dans la boîte DRONA sur Kallax NE */}
     <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ring Drone Cam', hoverAction: { label: 'Ring Drone Cam', actions: getObjectActionIds('ring-drone-cam') } }}>
-      <RingDroneCam />
+      {visibleRobots.includes('ring-drone-cam') && <RingDroneCam />}
     </group>
     </>
   );

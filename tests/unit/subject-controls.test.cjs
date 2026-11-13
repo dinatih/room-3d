@@ -56,7 +56,7 @@ it('fait sauter puis asseoir chaque chien sans répéter le saut pendant un appu
   }
 });
 it('monte et descend les sujets volants sans déplacer les sujets terrestres', () => {
-  for (const id of ['drone', 'robin', 'dji-neo', 'dji-avata-2', 'test']) {
+  for (const id of ['drone', 'robin', 'ring-drone-cam', 'test']) {
     cameraState.animalViews[id] = { forward: { x: 0, y: 0, z: 1 } };
     const driver = new controls.SubjectDriver(id), root = new THREE.Group();
     root.position.y = 100;

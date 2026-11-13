@@ -549,32 +549,6 @@ Source : https://www.capital.fr/economie-politique/defense-quest-ce-que-le-black
 });
 
 INVENTORY.push({
-  id: 'dji-neo',
-  name: 'Drone DJI Neo',
-  brand: 'DJI',
-  category: 'robots',
-  qty: 1,
-  dims: { w: 13.0, d: 15.7, h: 4.85 },
-  glbPath: 'items/dji-neo/dji-neo.glb',
-  photos: ['items/dji-neo/presentation-1.jpg'],
-  url: 'https://www.dji.com/fr/neo',
-  notes: `Drone compact et ultraléger (135 g) à décollage et atterrissage palmaires. Équipé d'un suivi de sujet assisté par IA, de modes QuickShots, d'une caméra 4K ultra-stabilisée et de protections d'hélices intégrales.`
-});
-
-INVENTORY.push({
-  id: 'dji-avata-2',
-  name: 'Drone DJI Avata 2',
-  brand: 'DJI',
-  category: 'robots',
-  qty: 1,
-  dims: { w: 21.2, d: 18.5, h: 6.4 },
-  glbPath: 'items/dji-avata-2/dji-avata-2.glb',
-  photos: ['items/dji-avata-2/presentation-1.jpg', 'items/dji-avata-2/presentation-2.png'],
-  url: 'https://www.dji.com/fr/avata-2',
-  notes: `Drone FPV immersif et agile (377 g) avec protections d'hélices intégrées, capteurs visuels binoculaires fisheye, caméra 4K/60fps HDR ultra grand-angle 155° et mode Tortue (Turtle mode).`
-});
-
-INVENTORY.push({
   id: 'ring-drone-cam',
   name: 'Ring Drone Cam',
   brand: 'Ring Robotics',

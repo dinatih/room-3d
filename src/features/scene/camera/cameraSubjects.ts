@@ -10,7 +10,6 @@ export const CHARACTER_CONTROL_ANIMATIONS = {
 export const CAMERA_SUBJECTS = [
   { id: 'character', target: 'character', label: 'Personnage actif', icon: 'bi-person-bounding-box', category: 'Personnages' },
   { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane', category: 'Robots' },
-  { id: 'dji-avata-2', target: 'dji-avata-2', label: 'Avata 2', icon: 'bi-airplane', category: 'Robots' },
   { id: 'ring-drone-cam', target: 'ring-drone-cam', label: 'Ring Drone', icon: 'bi-airplane', category: 'Robots' },
   { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart', category: 'Animaux' },
   { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart', category: 'Animaux' },
@@ -25,7 +24,7 @@ export const CAMERA_SUBJECTS = [
 
 export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'cat';
 export function isFlyingSubject(id: string | null): boolean {
-  return id === 'drone' || id === 'robin' || id === 'dji-neo' || id === 'dji-avata-2' || id === 'ring-drone-cam';
+  return id === 'drone' || id === 'robin' || id === 'ring-drone-cam';
 }
 
 export function resolveCameraSubject(value: string): CameraSubjectId | undefined {

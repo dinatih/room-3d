@@ -5,7 +5,7 @@ const { useRobotVisibility, isRobotSubjectVisible, ROBOT_SUBJECTS } = load('src/
 
 it('affiche les cinq robots demandés et retire les autres sujets jusqu’à leur activation', () => {
   const initial = useRobotVisibility.getState().visible;
-  assert.deepEqual(initial, ['black-hornet-drone', 'dji-avata-2', 'unitree-g1', 'microduck', 'jumper-robot']);
+  assert.deepEqual(initial, ['black-hornet-drone', 'ring-drone-cam', 'unitree-g1', 'microduck', 'jumper-robot']);
   for (const [id, subject] of Object.entries(ROBOT_SUBJECTS)) {
     assert.equal(isRobotSubjectVisible(subject, initial), initial.includes(id));
     useRobotVisibility.getState().toggle(id);

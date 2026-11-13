@@ -27,16 +27,16 @@ const openRequested = () => {
   for (const key of Object.keys(doors.DOOR_CONFIGS)) doors.doorCollisionState[key].angle = requests.doorRequested(key) ? doors.DOOR_CONFIGS[key].maxAngle : 0;
 };
 it('conserve les demandes des autres drones lorsqu’une visite libère ses portes', () => {
-  const neo = new HornetTour(radius, () => {}, Math.random, 'dji-neo');
-  const avata = new HornetTour(radius, () => {}, Math.random, 'dji-avata-2');
-  requests.requestDoor('living', 'dji-neo');
-  requests.requestDoor('living', 'dji-avata-2');
+  const ring = new HornetTour(radius, () => {}, Math.random, 'ring-drone-cam');
+  const other = new HornetTour(radius, () => {}, Math.random, 'drone-2');
+  requests.requestDoor('living', 'ring-drone-cam');
+  requests.requestDoor('living', 'drone-2');
   try {
-    neo.release();
+    ring.release();
     assert(requests.doorRequested('living'));
-    avata.release();
+    other.release();
     assert(!requests.doorRequested('living'));
-  } finally { neo.release(); avata.release(); }
+  } finally { ring.release(); other.release(); }
 });
 afterEach(() => {
   requests.releaseAgentDoors('drone');
@@ -126,7 +126,7 @@ it('attend loin des portes fermées puis reprend la traversée après ouverture'
 });
 
 it('remonte au-dessus du battant séjour au lieu de le retenir à la position des logs', () => {
-  const id = 'dji-neo', tour = new HornetTour(10.99532, () => {}, () => .37, id);
+  const id = 'ring-drone-cam', tour = new HornetTour(10.99532, () => {}, () => .37, id);
   const position = new Vector3(242.6, 182.00936, 371.26765), quaternion = new Quaternion();
   const door = doors.DOOR_CONFIGS.living;
   obstacles.setAgentProfile(id, { radius: tour.radius, height: tour.radius * 2 });
