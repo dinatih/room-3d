@@ -29,6 +29,8 @@ import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
 import { Smorkull, SMORKULL_FOOTPRINT } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
+import { RugLarge, RugSmall } from '../items/Rugs';
+import { ElectricSwatter } from '../items/ElectricSwatter';
 import { Grejig40329868 } from '../items/Grejig40329868';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { Lagerpoppel00561816 } from '../items/Lagerpoppel00561816';
@@ -445,16 +447,17 @@ function LampOla_() {
   );
 }
 
+const SNEAKER_PAIR_DX = 13.5;
+
 function SneakersPair() {
   const pz = ROOM_D - 16;
   return (
     <>
-      <group position={[MIRROR_CX, 0.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Bas' }}>
-        <SneakersRed />
-      </group>
-      <group position={[MIRROR_CX, 18.5, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges Haut' }}>
-        <SneakersRed />
-      </group>
+      {[0.5, 18.5].flatMap(y => [-SNEAKER_PAIR_DX, SNEAKER_PAIR_DX].map(dx => (
+        <group key={`${y}-${dx}`} position={[MIRROR_CX + dx, y, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges' }}>
+          <SneakersRed />
+        </group>
+      )))}
     </>
   );
 }
@@ -497,6 +500,16 @@ export function LivingRoomFurniture() {
           <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 /></NavigationObstacle>
         </group>
       ))}
+
+      {/* Grand tapis sous la baie vitrée (côté droit) */}
+      <group position={[230, 0.2, 70]} userData={{ sceneItemRoot: true, itemName: 'Grand tapis rouge' }}>
+        <RugLarge />
+      </group>
+
+      {/* Petit tapis sous les range-chaussures */}
+      <group position={[MIRROR_CX, 0.2, ROOM_D - 20]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Petit tapis rouge' }}>
+        <RugSmall />
+      </group>
 
       {/* Poubelle Fniss Séjour */}
       <group position={[21, 1, 110]} userData={{ sceneItemRoot: true, itemName: 'Poubelle Fniss Séjour' }}>
@@ -668,6 +681,10 @@ export function LivingRoomDecor() {
       <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
         <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
+          {/* Tapette électrique sur l'étage supérieur, à droite des porte-chapeaux */}
+          <group position={[48, 54.5, 13]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Tapette électrique' }}>
+            <ElectricSwatter />
+          </group>
         </group>
       </group>
     </MergedStaticGroup>
