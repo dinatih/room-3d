@@ -34,6 +34,8 @@ export const SHOWER_H = 200;
 // Bac GLB recentré (script Python) : bbox ±0.34m → scale normalisé à 71×71cm centré à l'origine.
 const TRAY_CM   = SHOWER_W;
 const TRAY_HALF = SHOWER_D / 2;  // 35.5
+const TRAY_BODY_Y = 6;            // Dessous du corps du bac (au-dessus des pieds), mesuré sur le GLB (cm)
+const TRAY_TOP_Y = 0.16268815 * 100 * (TRAY_CM / 68); // Rebord supérieur du bac (≈ 17 cm)
 
 // Porte procédurale : paroi fixe 20 cm à l'Ouest + battant pivotant de 51 cm
 const FIXED_W = 20;               // Largeur paroi fixe côté Ouest (cm)
@@ -319,9 +321,9 @@ export function Shower({ onSize, isPreview = false, actionState = {} }: Partial<
       {/* Receveur — setupScene centre et pose au sol (détaché parent pendant calcul). */}
       <primitive object={tray} />
 
-      {/* Planche de coffrage sous le bac côté SDB (de Y=0 à Y=6cm) */}
-      <mesh position={[0, 3, -TRAY_HALF + 0.75]} material={coffrageMat} castShadow receiveShadow>
-        <boxGeometry args={[SHOWER_W, 6, 1.5]} />
+      {/* Planche de coffrage sous le bac côté SDB : du sol jusqu'à 1 cm dans le bac, légèrement en retrait pour éviter tout z-fighting */}
+      <mesh position={[0, (TRAY_BODY_Y + 1) / 2, -TRAY_HALF + 0.9]} material={coffrageMat} castShadow receiveShadow>
+        <boxGeometry args={[SHOWER_W, TRAY_BODY_Y + 1, 1.5]} />
       </mesh>
 
       {/* Barre douchette — platines murales au ras du mur Sud */}
@@ -335,7 +337,7 @@ export function Shower({ onSize, isPreview = false, actionState = {} }: Partial<
       </group>
 
       {/* Porte — centrée en X, au niveau du nez nord du bac (local Z=−TRAY_HALF) */}
-      <group position={[0, 20, -TRAY_HALF]}>
+      <group position={[0, TRAY_TOP_Y, -TRAY_HALF]}>
         <ShowerDoor actionState={actionState} isPreview={isPreview} condensation={condensation} />
       </group>
       <ShowerEffects origin={waterOrigin} humidity={humidity} condensation={condensation} isPreview={isPreview} />
