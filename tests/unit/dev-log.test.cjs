@@ -65,7 +65,7 @@ it('écrit un fichier par chargement, conserve les événements tardifs et point
 });
 
 it('limite le total au démarrage et pendant une session longue sans laisser de fichiers ouverts', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-budget-')), errors = [], budget = 2048;
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'room-log-budget-')), errors = [], infos = [], budget = 2048;
   const { devLogPlugin } = load('scripts/dev-log-plugin.ts', {
     'node:fs': fs, 'node:path': path, 'node:child_process': { execFileSync: () => 'test' },
   });
@@ -73,9 +73,11 @@ it('limite le total au démarrage et pendant une session longue sans laisser de 
   fs.writeFileSync(old, 'x'.repeat(budget + 1));
   let receive;
   try {
-    devLogPlugin(directory, budget).configureServer({ config: { root: process.cwd(), logger: { info() {}, error: e => errors.push(e) } },
+    devLogPlugin(directory, budget).configureServer({ config: { root: process.cwd(), logger: { info: m => infos.push(m), error: e => errors.push(e) } },
       ws: { on: (_, handler) => { receive = handler; } } });
     assert.equal(fs.existsSync(old), false);
+    assert.match(infos[0], /1 fichier supprimé .*2026-01-01_old\.jsonl/);
+    assert.match(infos[1], /0 o \/ limite 2 Kio/);
     for (let i = 0; i < 40; i++) {
       receive({ session: i < 10 ? 'first' : 'second', pageStartedAt: i < 10 ? '2026-01-02' : '2026-01-03', entry: { action: 'frame', data: 'é'.repeat(100), i } });
       const files = fs.readdirSync(directory).filter(name => name !== 'latest.jsonl');
@@ -84,6 +86,7 @@ it('limite le total au démarrage et pendant une session longue sans laisser de 
       assert.equal(rows[0].entry.action, 'server_session');
       assert.equal(rows.at(-1).entry.i, i);
     }
+    assert(infos.some((msg, idx) => idx >= 2 && /supprimé/.test(msg) && /_first\.jsonl/.test(msg)));
     assert.equal(errors.length, 0);
     receive({ session: 'oversized', pageStartedAt: '2026-01-04', entry: { data: 'x'.repeat(budget) } });
     assert.match(errors[0], /exceeds disk budget/);

@@ -3,10 +3,18 @@ import { appendFileSync, mkdirSync, readdirSync, renameSync, statSync, symlinkSy
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
-const unlinkIfExists = (target: string) => {
-  try { unlinkSync(target); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+const unlinkIfExists = (target: string): boolean => {
+  try { unlinkSync(target); return true; }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    return false;
+  }
 };
+
+const formatBytes = (bytes: number): string =>
+  bytes >= 1024 * 1024 ? `${Number((bytes / 1024 / 1024).toFixed(1))} Mio`
+    : bytes >= 1024 ? `${Number((bytes / 1024).toFixed(1))} Kio`
+      : `${bytes} o`;
 
 /** Keep recent document journals within a shared disk budget, including long-running sessions. */
 export function devLogPlugin(directory = '/tmp/room-3d-logs', maxBytes = 500 * 1024 * 1024): Plugin {
@@ -32,15 +40,24 @@ export function devLogPlugin(directory = '/tmp/room-3d-logs', maxBytes = 500 * 1
         return { files, total };
       };
       const prune = (incoming: number, state = scan()) => {
-        let pruned = false;
+        const removed: string[] = [];
+        let freed = 0;
         for (const [file, size] of state.files) {
           if (state.total + incoming <= maxBytes) break;
-          unlinkIfExists(file);
+          if (unlinkIfExists(file)) {
+            removed.push(path.basename(file));
+            freed += size;
+          }
           state.files.delete(file);
           state.total -= size;
-          pruned = true;
         }
-        return { ...state, pruned };
+        if (removed.length) {
+          const plural = removed.length > 1 ? 's' : '';
+          server.config.logger.info(
+            `Logs : ${removed.length} fichier${plural} supprimé${plural} (libéré : ${formatBytes(freed)}, reste ${formatBytes(state.total)} / ${formatBytes(maxBytes)}) : ${removed.join(', ')}`,
+          );
+        }
+        return { ...state, pruned: removed.length > 0 };
       };
       const updateLatest = (files: Map<string, number>) => {
         const latest = [...files.keys()].sort().at(-1);
@@ -51,8 +68,9 @@ export function devLogPlugin(directory = '/tmp/room-3d-logs', maxBytes = 500 * 1
         symlinkSync(latest, temporary);
         renameSync(temporary, link);
       };
-      updateLatest(prune(0).files);
-      server.config.logger.info(`Logs : ${directory}/latest.jsonl (limite totale : ${maxBytes / 1024 / 1024} Mio)`);
+      const initial = prune(0);
+      updateLatest(initial.files);
+      server.config.logger.info(`Logs : ${directory}/latest.jsonl (${formatBytes(initial.total)} / limite ${formatBytes(maxBytes)})`);
       server.ws.on('room:app-log', payload => {
         try {
           if (typeof payload.session !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(payload.session)) throw Error('Invalid log session');
