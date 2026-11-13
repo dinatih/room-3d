@@ -51,6 +51,7 @@ import { Fniss40295439 } from '../items/Fniss40295439';
 import { TV } from '../items/TV';
 import { TV_POSITION } from '../tvData';
 import { MllseG2Pro } from '../items/MllseG2Pro';
+import { RingDroneCam } from '../items/RingDroneCam';
 
 import {
   ROOM_W,
@@ -597,6 +598,7 @@ export function LivingRoomFurnishings() {
 // Pass 3 — Decor (Détails & habillage de surface)
 export function LivingRoomDecor() {
   return (
+    <>
     <MergedStaticGroup name="merged-living-room-decor">
       {/* Têtes de mannequin 1 (Kallax NW) et 3 (Meuble T) */}
       <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]}>
@@ -669,5 +671,11 @@ export function LivingRoomDecor() {
         </group>
       </group>
     </MergedStaticGroup>
+
+    {/* Ring Drone Cam et sa base dans la boîte DRONA sur Kallax NE */}
+    <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ring Drone Cam', hoverAction: { label: 'Ring Drone Cam', actions: getObjectActionIds('ring-drone-cam') } }}>
+      <RingDroneCam />
+    </group>
+    </>
   );
 }

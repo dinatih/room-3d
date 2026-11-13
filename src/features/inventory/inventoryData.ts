@@ -575,6 +575,18 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'ring-drone-cam',
+  name: 'Ring Drone Cam',
+  brand: 'Ring Robotics',
+  category: 'robots',
+  qty: 1,
+  dims: { w: 27.0, d: 23.35, h: 7.83 },
+  glbPath: 'models/ring-drone-cam.glb',
+  url: 'https://ring.com/products/drone-cam',
+  notes: `Drone de sécurité intérieur autonome (165 g, 17,18 × 13,69 × 3,32 cm) avec 4 rotors carénés, caméra 2K 148° à double projecteur LED et base de charge à obturateur physique de confidentialité (27 × 23,35 × 7,83 cm). Placé dans le DRONA sur la Kallax NE.`
+});
+
+INVENTORY.push({
   id: 'jikin-goldfish',
   name: 'Poisson rouge Jikin',
   brand: 'Animal',

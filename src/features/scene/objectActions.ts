@@ -38,6 +38,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
     'drone-goto-corridor',
     'drone-toggle-land',
   ],
+  'ring-drone-cam': ['ring-drone-patrol'],
   'utdrag10389142': ['utdrag'],
   'kolvatten00594176': ['kolvatten-toggle'],
   'bollsidan30574370': ['desk-toggle'],

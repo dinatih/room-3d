@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { glbLocalBBox } from '../glbUtils';
 import { Kallax2x1 }   from './Kallax2x1';
 import { Kallax2x2 }   from './Kallax2x2';
-import { DroneCell, DF } from './Drona';
+import { DroneCell, DF, DRONA_PANEL } from './Drona';
 import { Variera60136623 } from './Variera60136623';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
@@ -26,6 +26,12 @@ const h2 = th(2); // 76.5
 const W2_HALF = 37.75; // 2×Kallax half-width (w2/2)
 const DEP_HALF = 19.5; // Kallax depth/2
 const VAR2_W = 32, VAR2_D = 28, VAR2_H = 16; // VARIERA 32×28×16 demi-étag
+
+export const KALLAX_NE_TOP_DRONA_FLOOR_LOCAL: [number, number, number] = [
+  W2_HALF - VAR2_W / 2 - 4,
+  h1 + h2 + VAR2_H + DRONA_PANEL,
+  DEP_HALF - VAR2_D / 2 - 10,
+];
 
 const DRONA_POSITIONS = [
   ...[-17.5, 17.5].map(x => new THREE.Vector3(x, h1 - 20.5, 0)),

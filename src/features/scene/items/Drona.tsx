@@ -19,7 +19,8 @@ import type { SceneModelProps } from '@shared/types';
 /** Dimension standard d'une boîte DRONA (largeur / hauteur) en cm */
 export const DF = 33;
 export const DRONA_DEPTH = 38;
-const PANEL = 0.2;
+export const DRONA_PANEL = 0.2;
+const PANEL = DRONA_PANEL;
 const parts: THREE.BufferGeometry[] = [];
 function panel(w: number, h: number, d: number, x: number, y: number, z: number, tint = 0xffffff) {
   const geometry = new THREE.BoxGeometry(w, h, d).translate(x, y, z);

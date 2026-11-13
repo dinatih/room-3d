@@ -237,6 +237,7 @@ const ACTIONS: Record<string, ActionConfig> = {
   'drone-goto-bathroom': { label: '🚿 Aller à la Salle de bain', sceneOnly: true },
   'drone-goto-corridor': { label: '🚪 Aller au Couloir', sceneOnly: true },
   'drone-toggle-land': { label: ['🛬 Atterrir', '🛫 Décoller'], sceneOnly: true },
+  'ring-drone-patrol': { label: ['🛫 Décoller & patrouiller', '🛬 Retourner à la base'], sceneOnly: true },
   nestMini: { label: 'Ok Google 🎙️' },
   nestMusic: { label: 'Jouer la musique 🎵', sceneOnly: true },
   nestMusicStop: { label: 'Arrêter la musique ⏹', sceneOnly: true },
