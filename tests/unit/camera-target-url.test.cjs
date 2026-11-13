@@ -117,7 +117,8 @@ it('préserve les paramètres étrangers dans une URL avec recherche et hash', (
 });
 
 it('ouvre le debug raytracing en perspective fixe sur le studio, sans intro', () => {
-  browser('?raytracing=debug&fpv=1&follow=shiba&target=bird&projection=ortho&cameraPos=top&cameraMovement=orbit');
+  browser('?raytracing=1&fpv=1&follow=shiba&target=bird&projection=ortho&cameraPos=top&cameraMovement=orbit');
+  assert.equal(camera.isRaytracingUrl(), true);
   assert.equal(camera.parseUrlCameraMode(), 'orbit');
   assert.equal(camera.parseUrlCameraTarget(), 'studio');
   assert.equal(camera.parseUrlCameraProjection(), 'persp');
@@ -125,8 +126,13 @@ it('ouvre le debug raytracing en perspective fixe sur le studio, sans intro', ()
   assert.equal(camera.parseUrlCameraPos(), null);
   assert.equal(camera.parseUrlSkipIntro(), true);
 });
+it('construit une URL ?raytracing=1 sans la vue courante', () => {
+  browser('studio.html?fpv=1&follow=shiba&target=bird#section');
+  assert.equal(camera.isRaytracingUrl(), false);
+  assert.equal(camera.getDefaultRaytracingUrl(), '/studio.html?raytracing=1');
+});
 it('place la caméra debug sous la TV et vise le centre au tiers des murs', () => {
-  browser('?raytracing=debug');
+  browser('?raytracing=1');
   const THREE = require('three');
   const constants = load('src/features/scene/camera/cameraConstants.ts', {
     three: THREE,

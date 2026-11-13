@@ -18,7 +18,7 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
-import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro, getUrlParams } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro, isRaytracingUrl, getDefaultRaytracingUrl } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlInventory, updateUrlInventory } from '@features/inventory/inventoryUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
@@ -810,7 +810,7 @@ export function Studio() {
   const handleLaunch = useCallback(() => {
     setShowLoadingShiba(false);
     revealScene();
-    if (getUrlParams().get('raytracing') === 'debug') useSceneStore.getState().setPhotoModeOpen(true);
+    if (isRaytracingUrl()) useSceneStore.getState().setPhotoModeOpen(true);
   }, [revealScene]);
 
   return (
@@ -1145,6 +1145,17 @@ export function Studio() {
                     <i className="bi bi-camera-fill" aria-hidden="true" />
                     <span className="fw-semibold">Raytracing (F10)</span>
                   </button>
+                  <a
+                    className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100 text-decoration-none`}
+                    href={getDefaultRaytracingUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Ouvrir la vue raytracing par défaut (?raytracing=1) dans un nouvel onglet"
+                    aria-label="Ouvrir la vue raytracing par défaut (?raytracing=1)"
+                  >
+                    <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
+                    <span className="fw-semibold">Raytracing par défaut</span>
+                  </a>
                   <button
                     type="button"
                     className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary d-flex align-items-center gap-2 text-start w-100`}

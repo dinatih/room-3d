@@ -12,7 +12,7 @@ import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-path
 import './RaytracingPhotoModal.css';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
-import { getUrlParams } from '../camera/cameraUrlParams';
+import { isRaytracingUrl, getDefaultRaytracingUrl } from '../camera/cameraUrlParams';
 import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
 import { packRenderArchive } from './renderArchive';
 import { serializeRenderScene } from './serializeRenderScene';
@@ -123,6 +123,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const downsampledEnvRef = useRef<THREE.Texture | null>(null);
   const tempLightsRef = useRef<THREE.Object3D[]>([]);
 
+  const isUrlRaytracing = isRaytracingUrl();
+  const [useDefaultView, setUseDefaultView] = useState<boolean>(isUrlRaytracing);
   const [renderLocally, setRenderLocally] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -610,11 +612,21 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     gl.toneMappingExposure = exposure;
     rendererRef.current = gl;
 
-    const isOrtho = (camera as any).isOrthographicCamera === true;
+    const isOrtho = !useDefaultView && (camera as any).isOrthographicCamera === true;
 
     let renderCamera: PhysicalCamera | THREE.OrthographicCamera;
 
-    if (isOrtho) {
+    if (useDefaultView) {
+      const physCamera = new PhysicalCamera(50, width / height, 5, 50000);
+      physCamera.position.fromArray(RAYTRACING_DEBUG_POS);
+      physCamera.lookAt(...PERSP_TARGET);
+      physCamera.focusDistance = focusDistance;
+      physCamera.fStop = fStop;
+      physCamera.bokehSize = dofEnabled ? physCamera.getFocalLength() / physCamera.fStop : 0;
+      physCamera.updateProjectionMatrix();
+      physCamera.updateMatrixWorld(true);
+      renderCamera = physCamera;
+    } else if (isOrtho) {
       const ortho = camera as THREE.OrthographicCamera;
       const origH = ortho.top - ortho.bottom;
       const origCenterY = (ortho.top + ortho.bottom) / 2;
@@ -651,12 +663,6 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       physCamera.updateProjectionMatrix();
       physCamera.updateMatrixWorld(true);
       renderCamera = physCamera;
-    }
-
-    if (getUrlParams().get('raytracing') === 'debug') {
-      renderCamera.position.fromArray(RAYTRACING_DEBUG_POS);
-      renderCamera.lookAt(...PERSP_TARGET);
-      renderCamera.updateMatrixWorld(true);
     }
 
     // Synchronisation complète des layers Three.js avec la caméra active de la scène
@@ -1010,6 +1016,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     scene,
     camera,
     resolution,
+    useDefaultView,
     renderLocally,
     showCharacters,
     prepareScene,
@@ -1209,7 +1216,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const progressPercent = Math.min(100, Math.round((currentSamples / targetSamples) * 100));
   const isFinished = currentSamples >= targetSamples;
 
-  const isOrthographic = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
+  const isOrthographic = !useDefaultView && (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
   const status = isSubmitting ? 'Envoi au service local…' : isBuildingScene
     ? bvhProgress === null ? 'Préparation de la scène…' : `Construction du BVH : ${Math.round(bvhProgress * 100)} %`
     : !renderLocally ? 'Prêt — choisissez où calculer' : isFinished ? 'Rendu terminé' : isPaused ? 'Rendu en pause' : 'Calcul en cours…';
@@ -1221,7 +1228,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           <i className="bi bi-camera fs-3 text-primary" aria-hidden="true" />
           <div><h1 id="raytracing-title" className="fs-5 fw-semibold mb-1">Photo · Raytracing</h1><p className="small text-body-secondary mb-0">Cadrage, lumière et rendu physique du studio</p></div>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
+          {!isUrlRaytracing && (
+            <a
+              className="btn btn-sm btn-outline-primary"
+              href={getDefaultRaytracingUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Ouvrir la vue par défaut (?raytracing=1) dans un nouvel onglet"
+            >
+              <i className="bi bi-box-arrow-up-right me-2" aria-hidden="true" />Ouvrir ?raytracing=1
+            </a>
+          )}
           <a className="btn btn-sm btn-outline-primary" href="http://127.0.0.1:5174/render-jobs.html" target="_blank" rel="noopener noreferrer"><i className="bi bi-images me-2" aria-hidden="true" />Mes rendus</a>
           <button className="btn btn-sm btn-outline-dark" onClick={onClose} title="Fermer (Échap)"><i className="bi bi-x-lg me-2" aria-hidden="true" />Retour au studio</button>
         </div>
@@ -1256,6 +1274,30 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
             <p className="small text-body-secondary mb-3">Le service local continue de calculer si vous fermez cet onglet.</p>
             <div className="d-grid gap-2">
               <button className={`btn btn-sm ${renderLocally ? 'btn-outline-dark' : 'btn-primary'}`} disabled={isSubmitting || (isBuildingScene && !renderLocally)} onClick={() => setRenderLocally(value => !value)}>{renderLocally ? 'Arrêter le calcul ici' : 'Calculer ici'}</button>
+              {!useDefaultView && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={isSubmitting || (isBuildingScene && !renderLocally)}
+                  onClick={() => {
+                    setUseDefaultView(true);
+                    setRenderLocally(true);
+                  }}
+                  title="Basculer sur la vue par défaut (sous la TV vers le centre du studio) et lancer le calcul"
+                >
+                  Lancer le rendu par défaut
+                </button>
+              )}
+              {!isUrlRaytracing && useDefaultView && !renderLocally && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  disabled={isSubmitting || isBuildingScene}
+                  onClick={() => setUseDefaultView(false)}
+                >
+                  Revenir à la vue courante
+                </button>
+              )}
               <button className="btn btn-sm btn-outline-primary" disabled={bvhProgress === null || renderLocally || isSubmitting} onClick={() => void sendBackgroundRender()}>{isSubmitting ? 'Envoi en cours…' : 'Lancer en arrière-plan'}</button>
             </div>
             {renderLocally && <p className="small text-body-secondary mt-2 mb-0">Arrêtez le calcul ici pour passer au service local.</p>}

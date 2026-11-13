@@ -16,13 +16,26 @@ export const CAMERA_POS_ALIASES: Record<string, string> = {
   bottom: 'bottom',
 };
 
-export function getUrlParams(): URLSearchParams {
+function readRawUrlParams(): URLSearchParams {
   let search = typeof window === 'undefined' ? '' : window.location.search;
   if (!search && typeof window !== 'undefined' && window.location.hash.includes('?')) {
     search = window.location.hash.substring(window.location.hash.indexOf('?'));
   }
-  const params = new URLSearchParams(search);
-  if (params.get('raytracing') === 'debug') {
+  return new URLSearchParams(search);
+}
+
+export function isRaytracingUrl(params?: URLSearchParams): boolean {
+  return (params ?? readRawUrlParams()).get('raytracing') === '1';
+}
+
+export function getDefaultRaytracingUrl(): string {
+  if (typeof window === 'undefined') return '?raytracing=1';
+  return `${window.location.pathname}?raytracing=1`;
+}
+
+export function getUrlParams(): URLSearchParams {
+  const params = readRawUrlParams();
+  if (isRaytracingUrl(params)) {
     for (const key of ['fpv', 'follow', 'cameraPos']) params.delete(key);
     params.set('target', 'studio');
     params.set('projection', 'persp');

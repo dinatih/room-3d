@@ -24,7 +24,7 @@ const puppeteer = require('puppeteer');
       const { createRoot } = (await import('/node_modules/.vite/deps/react-dom_client.js')).default;
       const THREE = await import('/node_modules/.vite/deps/three.js');
       const { RaytracingPhotoModal } = await import('/src/features/scene/photo/RaytracingPhotoModal.tsx');
-      history.replaceState(null, '', '/?raytracing=debug');
+      history.replaceState(null, '', '/?raytracing=1');
       document.body.replaceChildren();
       const container = document.createElement('div');
       const canvasParent = document.createElement('div');
