@@ -36,6 +36,7 @@ import { Tasjon80392023 } from '@features/scene/items/Tasjon80392023';
 import { Pepprig70567650 } from '@features/scene/items/Pepprig70567650';
 import { Metod50205532 } from '@features/scene/items/Metod50205532';
 import { Ikea36590066708 } from '@features/scene/items/Ikea36590066708';
+import { RedPlate } from '@features/scene/items/RedPlate';
 /**
  * Registry des composants TSX dédiés par item.id.
  * Uniquement pour les items interactifs (open/close) ou procéduraux (pas de glbPath).
@@ -190,6 +191,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'annons80298474': Annons80298474,
   'pepprig70567650': Pepprig70567650,
   'metod50205532': Metod50205532,
+  'red-plate': RedPlate,
   // ── Interactifs (open/close) ───────────────────────────────────────────────
   'freezer':                Freezer,
   'fridge':                 Fridge,
