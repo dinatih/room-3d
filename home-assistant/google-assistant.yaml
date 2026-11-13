@@ -64,3 +64,33 @@ entity_config:
     expose: true
   script.ouvrir_volet_a_14h:
     expose: true
+  script.ouvrir_volet_dans_30m:
+    expose: true
+  script.ouvrir_volet_dans_1h30:
+    expose: true
+  script.ouvrir_volet_dans_2h30:
+    expose: true
+  script.ouvrir_volet_dans_4h30:
+    expose: true
+  script.ouvrir_volet_dans_6h30:
+    expose: true
+  script.ouvrir_volet_dans_8h30:
+    expose: true
+  script.ouvrir_volet_a_6h30:
+    expose: true
+  script.ouvrir_volet_a_7h30:
+    expose: true
+  script.ouvrir_volet_a_8h30:
+    expose: true
+  script.ouvrir_volet_a_9h30:
+    expose: true
+  script.ouvrir_volet_a_10h30:
+    expose: true
+  script.ouvrir_volet_a_11h30:
+    expose: true
+  script.ouvrir_volet_a_12h30:
+    expose: true
+  script.ouvrir_volet_a_13h30:
+    expose: true
+  script.ouvrir_volet_a_14h30:
+    expose: true
