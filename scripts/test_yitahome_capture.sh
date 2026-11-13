@@ -1,11 +1,10 @@
 #!/bin/bash
-export ANDROID_HOME=/home/dinatih/.cache/room-3d-android/sdk
-export ANDROID_AVD_HOME=/home/dinatih/.cache/room-3d-android/avd
-export ANDROID_USER_HOME=/home/dinatih/.cache/room-3d-android/user
+export ANDROID_HOME=/home/dinatih/Android/Sdk
+export ANDROID_AVD_HOME=/home/dinatih/.android/avd
 ADB="$ANDROID_HOME/platform-tools/adb -s emulator-5556"
 
 killall -9 adb emulator qemu-system-x86_64 2>/dev/null || true
-rm -f /home/dinatih/.cache/room-3d-android/avd/room3d-amazon35.avd/*.lock /run/user/1000/avd/running/*
+rm -f /home/dinatih/.android/avd/room3d-amazon35.avd/*.lock /run/user/1000/avd/running/*
 
 $ANDROID_HOME/emulator/emulator -avd room3d-amazon35 -port 5556 -no-window -no-audio -gpu swiftshader &
 EMU_PID=$!
