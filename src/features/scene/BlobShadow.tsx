@@ -66,8 +66,8 @@ export function BlobShadow({
         transparent
         depthWrite={false}
         polygonOffset
-        polygonOffsetFactor={-1}
-        polygonOffsetUnits={-1}
+        polygonOffsetFactor={-3}
+        polygonOffsetUnits={-3}
         uniforms={uniforms}
         vertexShader="varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }"
         fragmentShader="varying vec2 vUv; uniform float uOpacity; void main() { float d = length(vUv - 0.5) * 2.0; gl_FragColor = vec4(0.0, 0.0, 0.0, smoothstep(1.0, 0.0, d) * uOpacity); }"

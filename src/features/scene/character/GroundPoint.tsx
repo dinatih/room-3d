@@ -38,6 +38,9 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
       gapSize: 1,
       transparent: true,
       opacity: 0.8,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
     });
   }, [color]);
 
@@ -88,17 +91,17 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
         {/* Anneau extérieur - visible sur les 2 faces */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <ringGeometry args={[4, 5, 48]} />
-          <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
+          <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
         </mesh>
         {/* Disque central - visible sur les 2 faces */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <circleGeometry args={[1.2, 32]} />
-          <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+          <meshBasicMaterial color={color} side={THREE.DoubleSide} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
         </mesh>
         {/* Flèche d'orientation 2D dirigée vers l'avant (-Z) - visible sur les 2 faces */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
           <shapeGeometry args={[arrowShape]} />
-          <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+          <meshBasicMaterial color={color} side={THREE.DoubleSide} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
         </mesh>
       </group>
 
@@ -114,11 +117,11 @@ export function GroundPoint({ color = '#0058a3', scale = 1, hipsBone }: GroundPo
         <group ref={hipMarkerRef} scale={scale * 0.85} name="GroundPointHips">
           <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
             <ringGeometry args={[2.5, 3.5, 36]} />
-            <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} />
+            <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
           </mesh>
           <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
             <circleGeometry args={[1.0, 24]} />
-            <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+            <meshBasicMaterial color={color} side={THREE.DoubleSide} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} />
           </mesh>
         </group>
       )}
