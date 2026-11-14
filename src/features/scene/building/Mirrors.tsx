@@ -49,10 +49,11 @@ const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << 
 
 function getMirrorTargetConfig(): { res: number; mask: number } {
   const { layers, isFisheyeModalOpen } = useSceneStore.getState();
-  if (layers.mirrorsHD || isFisheyeModalOpen) {
+  if (layers.mirrorsHD) {
     return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
   }
-  return { res: 256, mask: MIRROR_BASE_MASK & ~MIRROR_EXCLUDED_MASK };
+  const mask = (isFisheyeModalOpen ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
+  return { res: 256, mask };
 }
 
 let _reflectionDepth = 0;
