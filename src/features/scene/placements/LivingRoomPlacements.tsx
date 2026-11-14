@@ -57,6 +57,7 @@ import { MllseG2Pro } from '../items/MllseG2Pro';
 import { RingDroneCam } from '../items/RingDroneCam';
 
 import {
+  FURNITURE_WALL_CLEARANCE,
   ROOM_W,
   ROOM_D,
   WALL_H,
@@ -97,7 +98,7 @@ const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X = 32; // contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
-const MACK_Z = ROOM_D - w2 - 16;
+const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - 16.035; // plaqué contre Kallax Cuisine
 const MIRROR_CX = (KITCHEN_EAST_WALL + DOOR_START) / 2; // centre des miroirs Nissedal D
 
 const SIT_H = 70;

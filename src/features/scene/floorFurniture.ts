@@ -68,7 +68,7 @@ export function drawFurniture(ctx: CanvasRenderingContext2D) {
   // Meuble T intégré au KALLAX NW, déport local de 59.5 cm.
   rect(39 / 2 - 0.75, 40.5 / 2 + 59.5, 27.5, 22.5);
   rect(39 / 2 - 0.75 - 2, 40.5 / 2 + 59.5, 23.5, 80);
-  rect(32, ROOM_D - 75.5 - 16, 78, 32);
+  rect(32, ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - 16.035, 78, 32);
   rect(160, ROOM_D - 14, 58, 27);
   for (const z of [155, 220]) rect(16, z, 22, 65, 3);
 
