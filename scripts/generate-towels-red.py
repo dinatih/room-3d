@@ -17,12 +17,9 @@ def create_towel_material(name="CoralFleeceRed"):
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (0.48, 0.018, 0.025, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.92
-    if "Sheen Weight" in bsdf.inputs:
-        bsdf.inputs["Sheen Weight"].default_value = 0.45
-    if "Sheen Roughness" in bsdf.inputs:
-        bsdf.inputs["Sheen Roughness"].default_value = 0.65
+    # Match Drona's rich red (0xcc0000 sRGB -> ~0.60 linear) without white sheen washout
+    bsdf.inputs["Base Color"].default_value = (0.58, 0.004, 0.006, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.94
     return mat
 
 
