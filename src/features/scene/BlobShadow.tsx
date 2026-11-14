@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
+const _q = new THREE.Quaternion();
+const _flat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
 
 export interface BlobShadowProps {
   size?: [number, number];
@@ -39,7 +41,10 @@ export function BlobShadow({
     } else if (groundY && mesh.parent) {
       mesh.parent.getWorldPosition(_v);
       const altitude = Math.max(0, _v.y);
-      mesh.position.y = -altitude + y;
+      // Ombre posée à plat au sol monde, malgré l'inclinaison/rotation du parent.
+      _v.y = y;
+      mesh.position.copy(mesh.parent.worldToLocal(_v));
+      mesh.quaternion.copy(mesh.parent.getWorldQuaternion(_q).invert()).multiply(_flat);
       const factor = Math.max(0, 1 - altitude / 300);
       mesh.scale.setScalar(1 + (1 - factor) * 0.8);
       uniforms.uOpacity.value = opacity * factor;
