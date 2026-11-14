@@ -37,6 +37,7 @@ export function ToolbarPanelsRow({
   asVerticalList = false,
 }: ToolbarPanelsRowProps) {
   const isMobile = useIsMobile();
+  const npcGridActive = useSceneStore(state => state.layers.characterGrid);
 
   const interactiveSectionContent = (
     <InteractiveSection
@@ -62,7 +63,22 @@ export function ToolbarPanelsRow({
         {interactiveSectionContent}
       </PanelPopover>
 
-      {/* 2. Grille inventaire */}
+      {/* 2. Grille / Vitrine Personnages */}
+      <button
+        type="button"
+        className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+        onClick={() => {
+          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
+        }}
+        title="Afficher ou quitter la grille / vitrine des Personnages (G)"
+        aria-label="Afficher ou quitter la grille des Personnages (G)"
+        aria-pressed={npcGridActive}
+      >
+        <i className="bi bi-people-fill" aria-hidden="true" />
+        <span className="fw-semibold">Grille Personnages</span>
+      </button>
+
+      {/* 3. Grille inventaire */}
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${layers.inventoryGrid ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
@@ -78,7 +94,7 @@ export function ToolbarPanelsRow({
         <span className="fw-semibold">Grille Inventaire</span>
       </button>
 
-      {/* 3. Grille perruques */}
+      {/* 4. Grille perruques */}
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${layers.wigGrid ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
