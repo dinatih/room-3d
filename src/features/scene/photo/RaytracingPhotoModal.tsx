@@ -12,7 +12,8 @@ import { WebGLPathTracer, PhysicalCamera, DenoiseMaterial } from 'three-gpu-path
 import './RaytracingPhotoModal.css';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
-import { isRaytracingUrl, getDefaultRaytracingUrl } from '../camera/cameraUrlParams';
+import { getRaytracingPreset, getDefaultRaytracingUrl } from '../camera/cameraUrlParams';
+import { clipGeometryWorldY } from './clipGeometryY';
 import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
 import { useSceneStore } from '../store/useSceneStore';
 import { packRenderArchive } from './renderArchive';
@@ -224,8 +225,9 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     }
   };
 
-  const isUrlRaytracing = isRaytracingUrl();
-  const [useDefaultView, setUseDefaultView] = useState<boolean>(isUrlRaytracing);
+  const raytracingPreset = getRaytracingPreset();
+  const isUrlRaytracing = raytracingPreset !== null;
+  const [useDefaultView, setUseDefaultView] = useState<boolean>(raytracingPreset === 'debug');
   const [renderLocally, setRenderLocally] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -553,6 +555,42 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
+    const isMagazine = raytracingPreset === 'magazine';
+    const MAGAZINE_CUT_HEIGHT = 135;
+    if (isMagazine) {
+      const MAGAZINE_CLIP_MASK =
+        (1 << LAYER_STRUCTURE) |
+        (1 << LAYER_DOORS) |
+        (1 << LAYER_WALL_STRUCTURE) |
+        (1 << LAYER_FLOOR_COVERINGS) |
+        (1 << LAYER_MIRRORS);
+      const box = new THREE.Box3();
+      scene.traverse((obj) => {
+        if (!obj.visible) return;
+        if ((obj.layers.mask & (1 << LAYER_GRASS)) !== 0) {
+          obj.visible = false;
+          hidden.push(obj);
+          return;
+        }
+        if (!(obj as THREE.Mesh).isMesh || (obj.layers.mask & MAGAZINE_CLIP_MASK) === 0) return;
+        const mesh = obj as THREE.Mesh;
+        box.setFromObject(mesh);
+        if (box.min.y >= MAGAZINE_CUT_HEIGHT - 0.5) {
+          mesh.visible = false;
+          hidden.push(mesh);
+        } else if (box.max.y > MAGAZINE_CUT_HEIGHT + 0.5) {
+          const clipped = clipGeometryWorldY(mesh, MAGAZINE_CUT_HEIGHT);
+          if (!clipped) {
+            mesh.visible = false;
+            hidden.push(mesh);
+          } else {
+            if (!geomMap.has(mesh)) geomMap.set(mesh, mesh.geometry);
+            mesh.geometry = clipped;
+          }
+        }
+      });
+    }
+
     restoreSplitMeshesRef.current = splitMultiMaterialMeshes(scene);
 
     // Détecter l'ambiance lumineuse et créer une douce lumière de remplissage physique zénithale
@@ -566,8 +604,11 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       }
     });
 
-    const fillLight = new THREE.DirectionalLight(ambColor, ambIntensity * 2.2);
-    fillLight.position.set(300, 500, 300);
+    const fillLight = new THREE.DirectionalLight(
+      isMagazine ? 0xfffbf4 : ambColor,
+      isMagazine ? 1.4 : ambIntensity * 2.2,
+    );
+    fillLight.position.set(isMagazine ? 350 : 300, isMagazine ? 600 : 500, isMagazine ? 250 : 300);
     fillLight.target.position.set(150, 0, 150);
     scene.add(fillLight);
     scene.add(fillLight.target);
@@ -578,18 +619,44 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     // Sauvegarder le background d'origine et connecter le ciel HDRI pour illuminer et habiller le fond
     savedBackgroundRef.current = scene.background;
     savedEnvironmentRef.current = scene.environment;
-    const skyTex = getLoadedSkyTexture() || (scene.environment && (scene.environment as any).isDataTexture ? scene.environment : null);
-    if (skyTex) {
-      scene.background = skyTex;
-      // Allègement drastique de la RAM : downsample 1K (1024x512) pour l'échantillonnage CDF de three-gpu-pathtracer
-      // Évite l'allocation de 1.5 Go de FloatArrays par l'environnement 8K d'origine
-      const smallEnv = downsampleHdr(skyTex, 1024, 512);
-      if (smallEnv !== skyTex) {
-        downsampledEnvRef.current = smallEnv;
+    if (isMagazine) {
+      const w = 64;
+      const h = 32;
+      const data = new Float32Array(w * h * 4);
+      for (let y = 0; y < h; y++) {
+        const v = y / (h - 1);
+        const r = 0.85 + 0.5 * v;
+        const g = 0.86 + 0.48 * v;
+        const b = 0.88 + 0.44 * v;
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          data[i] = r;
+          data[i + 1] = g;
+          data[i + 2] = b;
+          data[i + 3] = 1;
+        }
       }
-      scene.environment = smallEnv;
-      if ('backgroundIntensity' in scene && 'environmentIntensity' in scene) {
-        scene.backgroundIntensity = scene.environmentIntensity;
+      const studioEnv = new THREE.DataTexture(data, w, h, THREE.RGBAFormat, THREE.FloatType);
+      studioEnv.mapping = THREE.EquirectangularReflectionMapping;
+      studioEnv.needsUpdate = true;
+      downsampledEnvRef.current = studioEnv;
+      scene.environment = studioEnv;
+      scene.background = new THREE.Color(0xf2f3f5);
+      if ('environmentIntensity' in scene) scene.environmentIntensity = 1.1;
+    } else {
+      const skyTex = getLoadedSkyTexture() || (scene.environment && (scene.environment as any).isDataTexture ? scene.environment : null);
+      if (skyTex) {
+        scene.background = skyTex;
+        // Allègement drastique de la RAM : downsample 1K (1024x512) pour l'échantillonnage CDF de three-gpu-pathtracer
+        // Évite l'allocation de 1.5 Go de FloatArrays par l'environnement 8K d'origine
+        const smallEnv = downsampleHdr(skyTex, 1024, 512);
+        if (smallEnv !== skyTex) {
+          downsampledEnvRef.current = smallEnv;
+        }
+        scene.environment = smallEnv;
+        if ('backgroundIntensity' in scene && 'environmentIntensity' in scene) {
+          scene.backgroundIntensity = scene.environmentIntensity;
+        }
       }
     }
 
@@ -828,7 +895,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     pathTracer.setBVHWorker(bvhWorker);
     pathTracer.bounces = bounces;
     pathTracer.transmissiveBounces = bounces;
-    pathTracer.filterGlossyFactor = 0.5;
+    pathTracer.filterGlossyFactor = 1.0;
     pathTracer.renderToCanvas = true;
     pathTracer.fadeDuration = 0;
     pathTracer.minSamples = 1;

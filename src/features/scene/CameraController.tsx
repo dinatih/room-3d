@@ -25,7 +25,7 @@ import { OrbitControls } from './camera/OrbitControls';
 import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
-import { isRaytracingUrl } from './camera/cameraUrlParams';
+import { getRaytracingPreset } from './camera/cameraUrlParams';
 import { RAYTRACING_DEBUG_POS } from './camera/cameraConstants';
 import { cameraState } from './cameraState';
 import { droneInput, useDroneControlStore } from './droneControls';
@@ -828,7 +828,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
     if (ctrlRef.current) {
       if (targetKey === 'studio') {
         switchOrbitProjection(store.cameraProjection, {
-          pos: isRaytracingUrl() ? RAYTRACING_DEBUG_POS : PERSP_POS,
+          pos: getRaytracingPreset() === 'debug' ? RAYTRACING_DEBUG_POS : PERSP_POS,
           target: PERSP_TARGET,
         });
       } else {

@@ -143,16 +143,17 @@ export function PillarLabels() {
   return null;
 }
 
-export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
+export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolean; cutHeight?: number }) {
   const wallEdges = useSceneStore(state => state.layers.wallEdges);
   const showLabels = pillarsOnly || wallEdges;
   const iceCastle = useSceneStore(state => state.layers.iceCastle);
   const materialOverride = iceCastle ? architecturalGlassMat : undefined;
+  const effectiveWallH = cutHeight !== undefined ? Math.min(WALL_H, cutHeight) : WALL_H;
 
   const diagGeos = useMemo(() => ({
-    diagPillar: makeExtrudeGeo(PILLAR_KITE_NE, WALL_H),
-    diagPillarSW: makeExtrudeGeo(PILLAR_KITE_SW, WALL_H),
-  }), []);
+    diagPillar: makeExtrudeGeo(PILLAR_KITE_NE, effectiveWallH),
+    diagPillarSW: makeExtrudeGeo(PILLAR_KITE_SW, effectiveWallH),
+  }), [effectiveWallH]);
 
   return (
     <>
@@ -169,15 +170,15 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
               const rot = pp.rot ?? 0;
               if (rot) {
                 return (
-                  <mesh key={pp.id} position={[pp.x, WALL_H / 2, pp.z]} rotation-y={rot}
+                  <mesh key={pp.id} position={[pp.x, effectiveWallH / 2, pp.z]} rotation-y={rot}
                         material={wallMat} castShadow receiveShadow
                         userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: pp.id }}>
-                    <boxGeometry args={[pw, WALL_H, pd]} />
+                    <boxGeometry args={[pw, effectiveWallH, pd]} />
                   </mesh>
                 );
               }
               return (
-                <P key={pp.id} w={pw} h={WALL_H} d={pd} x={pp.x} y={WALL_H / 2} z={pp.z}
+                <P key={pp.id} w={pw} h={effectiveWallH} d={pd} x={pp.x} y={effectiveWallH / 2} z={pp.z}
                   userData={{ sceneItemRoot: true, brickType: 'wall', type: 'pillar', id: pp.id }} />
               );
             })}
@@ -192,8 +193,9 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
         {!pillarsOnly && (
           <MergedStaticGroup name="merged-walls" materialOverride={materialOverride}>
             <group name="walls">
-              {WALL_DEFS.filter(d => d.segKind !== 'door').map((d, i) => {
+              {WALL_DEFS.filter(d => d.segKind !== 'door' && (d.yBase ?? 0) < effectiveWallH).map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];
+                const segH = Math.min(d.h ?? WALL_H, effectiveWallH - (d.yBase ?? 0));
                 const uData = {
                   sceneItemRoot: true,
                   brickType: 'wall',
@@ -201,16 +203,19 @@ export function Walls({ pillarsOnly = false }: { pillarsOnly?: boolean }) {
                   itemName: d.yBase ? 'Linteau mur' : ((d.h ?? WALL_H) < 50 ? 'Muret bas' : 'Mur'),
                 };
                 if (d.axis === 'z')
-                  return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
-                return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={d.h} yBase={d.yBase} t={d.t} userData={uData} />;
+                  return <WZ key={i} xc={d.xc} z1={d.z1} z2={d.z2} mat={mat} h={segH} yBase={d.yBase} t={d.t} userData={uData} />;
+                return <WX key={i} x1={d.x1} x2={d.x2} zc={d.zc} mat={mat} h={segH} yBase={d.yBase} t={d.t} userData={uData} />;
               })}
               {/* Mur diagonal (partie pleine après la porte d'entrée) */}
-              {DIAG_WALL_DEFS.map((d, i) => <DiagBox key={i} {...d} userData={{ sceneItemRoot: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />)}
+              {DIAG_WALL_DEFS.map((d, i) => (
+                <DiagBox key={i} {...d} h={effectiveWallH}
+                  userData={{ sceneItemRoot: true, brickType: 'wall', side: 'diag', itemName: 'Mur diagonal' }} />
+              ))}
 
               {/* Panneaux bois occultants jardin */}
               {GARDEN_PANEL_DEFS.map((p, i) => (
                 <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, sceneItemRoot: true, brickType: 'wall', side: 'garden' }}>
-                  <WoodenFencePanel w={p.w} h={p.h} d={p.d} />
+                  <WoodenFencePanel w={p.w} h={Math.min(p.h, effectiveWallH)} d={p.d} />
                 </group>
               ))}
 

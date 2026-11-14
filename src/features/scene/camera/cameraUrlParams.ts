@@ -24,21 +24,37 @@ function readRawUrlParams(): URLSearchParams {
   return new URLSearchParams(search);
 }
 
-export function isRaytracingUrl(params?: URLSearchParams): boolean {
-  return (params ?? readRawUrlParams()).get('raytracing') === 'debug';
+export type RaytracingPreset = 'debug' | 'iso' | 'magazine';
+
+export function getRaytracingPreset(params?: URLSearchParams): RaytracingPreset | null {
+  const value = (params ?? readRawUrlParams()).get('raytracing')?.trim().toLowerCase();
+  if (value === 'debug' || value === 'iso' || value === 'magazine') return value;
+  return null;
 }
 
-export function getDefaultRaytracingUrl(): string {
-  if (typeof window === 'undefined') return '?raytracing=debug';
-  return `${window.location.pathname}?raytracing=debug`;
+export function isRaytracingUrl(params?: URLSearchParams): boolean {
+  return getRaytracingPreset(params) !== null;
+}
+
+export function getDefaultRaytracingUrl(preset: RaytracingPreset = 'debug'): string {
+  if (typeof window === 'undefined') return `?raytracing=${preset}`;
+  return `${window.location.pathname}?raytracing=${preset}`;
 }
 
 export function getUrlParams(): URLSearchParams {
   const params = readRawUrlParams();
-  if (isRaytracingUrl(params)) {
+  const raytracingPreset = getRaytracingPreset(params);
+  if (raytracingPreset === 'debug') {
     for (const key of ['fpv', 'follow', 'cameraPos']) params.delete(key);
     params.set('target', 'studio');
     params.set('projection', 'persp');
+    params.set('cameraMovement', 'fix');
+    params.set('skipIntro', '1');
+  } else if (raytracingPreset === 'iso' || raytracingPreset === 'magazine') {
+    for (const key of ['fpv', 'follow']) params.delete(key);
+    params.set('target', 'studio');
+    params.set('projection', 'ortho');
+    if (!params.has('cameraPos')) params.set('cameraPos', 'north-west');
     params.set('cameraMovement', 'fix');
     params.set('skipIntro', '1');
   }

@@ -60,7 +60,7 @@ window.renderJob = async inputUrl => {
   const tracer = new WebGLPathTracer(renderer);
   const bvhWorker = new GenerateMeshBVHWorker();
   tracer.setBVHWorker(bvhWorker);
-  tracer.filterGlossyFactor = 0.5;
+  tracer.filterGlossyFactor = 1.0;
   tracer.minSamples = 1;
   tracer.bounces = bounces; tracer.transmissiveBounces = bounces;
   tracer.tiles.set(Math.max(4, Math.ceil(width / 160)), Math.max(4, Math.ceil(height / 120)));

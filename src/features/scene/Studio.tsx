@@ -18,7 +18,7 @@ import {
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
 import { SKY_START_POS }     from '@features/scene/camera';
-import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro, isRaytracingUrl, getDefaultRaytracingUrl } from '@features/scene/camera/cameraUrlParams';
+import { parseUrlHideUI, updateUrlHideUI, parseUrlFlightMode, updateUrlFlightMode, parseUrlSkipIntro, getRaytracingPreset, getDefaultRaytracingUrl } from '@features/scene/camera/cameraUrlParams';
 import { parseUrlInventory, updateUrlInventory } from '@features/inventory/inventoryUrlParams';
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
@@ -833,7 +833,35 @@ export function Studio() {
   const handleLaunch = useCallback(() => {
     setShowLoadingShiba(false);
     revealScene();
-    if (isRaytracingUrl()) useSceneStore.getState().setPhotoModeOpen(true);
+    const raytracingPreset = getRaytracingPreset();
+    if (raytracingPreset === 'iso' || raytracingPreset === 'magazine') {
+      const store = useSceneStore.getState();
+      useSceneStore.setState(state => ({
+        furniture: {
+          ...state.furniture,
+          lampOn: true,
+          lampBath: true,
+          lampCorridor: true,
+          lampKitchen: true,
+          lampGardenStrips: true,
+          lampWindow: true,
+          lampGardenStrip: true,
+          lampSink: true,
+          socketGarden: true,
+        },
+      }));
+      store.setLayers({
+        wallStructure: true,
+        structure: true,
+        doors: true,
+        pillarsOnly: false,
+        transparentWallsDoors: false,
+        ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
+      });
+      requestAnimationFrame(() => requestAnimationFrame(() => store.setPhotoModeOpen(true)));
+    } else if (raytracingPreset === 'debug') {
+      useSceneStore.getState().setPhotoModeOpen(true);
+    }
   }, [revealScene]);
 
   return (
@@ -953,7 +981,7 @@ export function Studio() {
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
           <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
-            <Walls pillarsOnly={layers.pillarsOnly} />
+            <Walls pillarsOnly={layers.pillarsOnly} cutHeight={getRaytracingPreset() === 'magazine' ? 135 : undefined} />
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
