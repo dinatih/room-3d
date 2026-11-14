@@ -22,7 +22,7 @@ export const CAMERA_SUBJECTS = [
   { id: 'jumper-robot', target: 'jumper', label: 'Jumper', icon: 'bi-robot', category: 'Robots' },
 ] as const;
 
-export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'cat';
+export type CameraSubjectId = typeof CAMERA_SUBJECTS[number]['id'] | 'jikin' | 'tosakin' | 'comet' | 'cat';
 export function isFlyingSubject(id: string | null): boolean {
   return id === 'drone' || id === 'robin' || id === 'ring-drone-cam';
 }
@@ -31,7 +31,7 @@ export function resolveCameraSubject(value: string): CameraSubjectId | undefined
   const choice = CAMERA_SUBJECTS.find(subject => subject.id === value || subject.target === value);
   if (choice) return choice.id;
   if (value === 'dog') return 'shiba';
-  if (value === 'jikin' || value === 'tosakin' || value === 'cat') return value;
+  if (value === 'jikin' || value === 'tosakin' || value === 'comet' || value === 'cat') return value;
 }
 
 /** The selected subject is observed only while a follow/FPV camera is active. */

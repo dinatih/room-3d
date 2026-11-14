@@ -585,6 +585,17 @@ INVENTORY.push({
 });
 
 INVENTORY.push({
+  id: 'comet-goldfish',
+  name: 'Poisson rouge Comète',
+  brand: 'Animal',
+  category: 'animals',
+  qty: 1,
+  dims: { w: 4.9, d: 17.4, h: 9.45 },
+  glbPath: 'characters/comet-goldfish/comet-goldfish.glb',
+  notes: 'Poisson rouge Comète animé : repos, nage, repas et virages gauche/droite. Vit dans la baignoire avec le Jikin et le Tosakin.',
+});
+
+INVENTORY.push({
   id: UNITREE_H2.id,
   name: UNITREE_H2.name,
   brand: 'Unitree Robotics',

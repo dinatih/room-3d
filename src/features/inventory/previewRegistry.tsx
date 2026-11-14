@@ -313,6 +313,9 @@ SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSiz
 SCENE_REGISTRY['tosakin-goldfish'] = function TosakinPreview({ actionState, onSize }: SceneItemProps) {
   return <Goldfish species="tosakin" isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
 };
+SCENE_REGISTRY['comet-goldfish'] = function CometPreview({ actionState, onSize }: SceneItemProps) {
+  return <Goldfish species="comet" isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;
+};
 
 function AnimatedBustGroup({
   children,

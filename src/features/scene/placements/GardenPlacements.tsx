@@ -112,6 +112,7 @@ export function GardenAnimals() {
       </group>
       <group position={BATHTUB.position} rotation={BATHTUB.rotation}>
         <Goldfish species="tosakin" />
+        <Goldfish species="comet" />
         <BathtubStarfish />
       </group>
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'animal-robin-fpv', 'animal-robin-follow'] } }}>

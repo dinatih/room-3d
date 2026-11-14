@@ -8,8 +8,10 @@ import { FADE_SECONDS, FISH_SPEED, fishHabitat, pickFishTarget, shortestFishTurn
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import jikinModel from './goldfishModel.json';
 import tosakinModel from './tosakinModel.json';
+import cometModel from './cometModel.json';
 
-const MODELS = { jikin: jikinModel, tosakin: tosakinModel };
+const MODELS = { jikin: jikinModel, tosakin: tosakinModel, comet: cometModel };
+const LABELS: Record<keyof typeof MODELS, string> = { jikin: 'Poisson Jikin', tosakin: 'Poisson Tosakin', comet: 'Poisson Comète' };
 
 export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = 'idle', onSize }: {
   species?: keyof typeof MODELS;
@@ -60,7 +62,7 @@ export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = '
     const ai = life.current;
     ai.timer = clips.idle.duration * 2;
     body.current!.rotation.set(0, 0, 0);
-    body.current!.position.set(0, isPreview ? 0 : (habitat.bottom + habitat.top) / 2, isPreview ? 0 : (species === 'jikin' ? -20 : 20));
+    body.current!.position.set(0, isPreview ? 0 : (habitat.bottom + habitat.top) / 2, isPreview ? 0 : (species === 'jikin' ? -20 : species === 'tosakin' ? 20 : 0));
     const mode = isPreview ? previewAnim : 'idle';
     if (!(mode in clips)) throw new Error(`Goldfish: unknown animation ${mode}`);
     play(mode as FishMode);
@@ -132,12 +134,12 @@ export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = '
     invalidate();
   });
 
-  useAnimalCamera(species, body, scene, isPreview, 'B_DEF_Head', 'B_DEF_MouthT', ['B_DEF_Eye_L', 'B_DEF_Eye_R']);
+  useAnimalCamera(species, body, scene, isPreview, 'B_DEF_Head', species === 'comet' ? 'B_DEF_Jaw' : 'B_DEF_MouthT', ['B_DEF_Eye_L', 'B_DEF_Eye_R']);
 
   return (
     <group ref={body} rotation-order="YXZ" userData={isPreview ? {} : {
-      itemName: species === 'jikin' ? 'Poisson Jikin' : 'Poisson Tosakin',
-      hoverAction: { label: species === 'jikin' ? 'Poisson Jikin' : 'Poisson Tosakin', actions: [`animal-${species}-fpv`, `animal-${species}-follow`] },
+      itemName: LABELS[species],
+      hoverAction: { label: LABELS[species], actions: [`animal-${species}-fpv`, `animal-${species}-follow`] },
     }}>
       <group scale={model.scale}>
         <group position={[-model.center[0], -model.center[1], -model.center[2]]}>

@@ -263,7 +263,7 @@ const ACTIONS: Record<string, ActionConfig> = {
 
 export function getActionDef(id: string): ActionDef | undefined {
   if (ACTIONS[id]) return { id, ...ACTIONS[id] };
-  if (/^animal-(robin|shiba|ulotte|jikin|tosakin|drone)-(fpv|follow)$/.test(id)) {
+  if (/^animal-(robin|shiba|ulotte|jikin|tosakin|comet|drone)-(fpv|follow)$/.test(id)) {
     const fpv = id.endsWith('-fpv');
     return { id, label: fpv ? 'Vue FPV' : 'Suivre', icon: fpv ? 'bi-eye' : 'bi-camera-video', sceneOnly: true };
   }
