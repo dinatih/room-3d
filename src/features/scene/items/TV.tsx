@@ -8,7 +8,7 @@ import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneItemProps } from '@shared/types';
-import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
+import { useDeskScreenVideo, useTvClipVideo } from '@features/scene/utils/deskScreenVideo';
 import { getObjectActionIds } from '../objectActions';
 import { TV_W, TV_H } from '../tvData';
 
@@ -19,7 +19,11 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
   const screenTex = useTexture('items/omarchy-screen/omarchy-screen.png');
   screenTex.colorSpace = THREE.SRGBColorSpace;
 
-  const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
+  const { isVideoActive: isDeskVideoActive, texture: deskVideoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
+  const { isVideoActive: isTvClipActive, texture: tvClipTex } = useTvClipVideo(isPreview ? !!actionState['tv-clip-toggle'] : undefined);
+
+  const isVideoActive = isTvClipActive || isDeskVideoActive;
+  const videoTex = isTvClipActive ? tvClipTex : deskVideoTex;
 
   const isTvOn = actionState[ACTION_KEY] ?? false;
   const isDisplaying = isVideoActive || isTvOn;

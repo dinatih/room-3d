@@ -45,7 +45,7 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'utaker-stack': ['bed-double', 'bed-position'],
   'armrest-sofa': ['sofa-arm-left', 'sofa-arm-right'],
   'vihals-chair': ['vihals-toggle'],
-  'tv': ['tv-toggle', 'desk2-screen-toggle'],
+  'tv': ['tv-toggle', 'tv-clip-toggle', 'desk2-screen-toggle'],
   'scooter': ['scooter-steering-toggle'],
   'sony-srs-xb33': ['nestMusic', 'nestMusicStop'],
   'google-nest-mini': ['nestMini', 'nestMusic', 'nestMusicStop'],

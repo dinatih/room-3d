@@ -4,6 +4,7 @@ const TRACKS = [
   'audio/house-music.mp3',
   'audio/Xysgex3e6UE.mp3',
   'audio/VQvRrQhA--o.mp3',
+  'audio/bPJSsAr2iu0.mp3',
 ];
 
 let cleanup: (() => void) | undefined;

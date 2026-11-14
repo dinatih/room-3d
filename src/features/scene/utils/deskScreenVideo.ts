@@ -2,35 +2,43 @@ import * as THREE from 'three';
 import { useEffect, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { SCREEN_VIDEO_SOURCES, type ScreenVideoQuality } from '../screenVideoConfig';
+import { SCREEN_VIDEO_SOURCES, TV_CLIP_VIDEO_SOURCES, type ScreenVideoQuality } from '../screenVideoConfig';
 
 interface ScreenVideo {
+  key: string;
   video: HTMLVideoElement;
   texture: THREE.VideoTexture;
   quality: ScreenVideoQuality;
   users: number;
 }
 
-const sharedVideos = new Map<ScreenVideoQuality, ScreenVideo>();
+const sharedVideos = new Map<string, ScreenVideo>();
 
-function acquireVideo(quality: ScreenVideoQuality): ScreenVideo {
-  let resource = sharedVideos.get(quality);
+function acquireVideo(sources: Record<ScreenVideoQuality, string>, quality: ScreenVideoQuality, muted: boolean): ScreenVideo {
+  const key = `${sources[quality]}:${quality}`;
+  let resource = sharedVideos.get(key);
   if (!resource) {
     const video = document.createElement('video');
     video.crossOrigin = 'anonymous';
     video.loop = true;
-    video.muted = true;
+    video.muted = muted;
     video.playsInline = true;
-    video.src = SCREEN_VIDEO_SOURCES[quality];
+    video.src = sources[quality];
 
     const texture = new THREE.VideoTexture(video);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;
-    resource = { video, texture, quality, users: 0 };
-    sharedVideos.set(quality, resource);
+    resource = { key, video, texture, quality, users: 0 };
+    sharedVideos.set(key, resource);
     video.play().catch((error: DOMException) => {
+      if (error.name === 'NotAllowedError' && !video.muted) {
+        video.muted = true;
+        return video.play().catch((fallbackError: DOMException) => {
+          if (fallbackError.name !== 'AbortError') console.error('Lecture vidéo écran impossible', fallbackError);
+        });
+      }
       // Removing the source during cleanup interrupts pending play requests.
       if (error.name !== 'AbortError') console.error('Lecture vidéo écran impossible', error);
     });
@@ -46,7 +54,7 @@ function releaseVideo(resource: ScreenVideo) {
     resource.texture.dispose();
     resource.video.removeAttribute('src');
     resource.video.load();
-    sharedVideos.delete(resource.quality);
+    sharedVideos.delete(resource.key);
   }
 }
 
@@ -61,14 +69,12 @@ export function setDesk2SmartActionState(characterId: string, active: boolean) {
   useSceneStore.getState().setDesk2SmartActionActive(activeDesk2Agents.size > 0);
 }
 
-export function useDeskScreenVideo(previewActive?: boolean) {
-  const isDesk2Active = useSceneStore(s => Boolean(s.desk2ScreenActive || s.extraStates.desk2Screen));
+function useScreenVideo(requested: boolean, sources: Record<ScreenVideoQuality, string>, muted: boolean) {
   const enabled = useSceneStore(s => s.screenVideosEnabled);
   const quality = useSceneStore(s => s.screenVideoQuality);
   const invalidate = useThree(s => s.invalidate);
   const [resource, setResource] = useState<ScreenVideo | null>(null);
   const [stillTexture, setStillTexture] = useState<THREE.Texture | null>(null);
-  const requested = previewActive ?? isDesk2Active;
 
   useEffect(() => {
     if (!requested) {
@@ -93,7 +99,7 @@ export function useDeskScreenVideo(previewActive?: boolean) {
     }
 
     setStillTexture(null);
-    const acquired = acquireVideo(quality);
+    const acquired = acquireVideo(sources, quality, muted);
     setResource(acquired);
     // Render on decoded video frames, rather than forcing a continuous render loop.
     let frameId: number;
@@ -108,9 +114,19 @@ export function useDeskScreenVideo(previewActive?: boolean) {
       releaseVideo(acquired);
       invalidate();
     };
-  }, [requested, enabled, quality, invalidate]);
+  }, [requested, enabled, quality, sources, muted, invalidate]);
 
   const active = requested && (enabled ? resource?.quality === quality : Boolean(stillTexture));
   const currentTex = enabled ? (resource?.texture ?? null) : stillTexture;
   return { isVideoActive: active, texture: active ? currentTex : null };
+}
+
+export function useDeskScreenVideo(previewActive?: boolean) {
+  const isDesk2Active = useSceneStore(s => Boolean(s.desk2ScreenActive || s.extraStates.desk2Screen));
+  return useScreenVideo(previewActive ?? isDesk2Active, SCREEN_VIDEO_SOURCES, true);
+}
+
+export function useTvClipVideo(previewActive?: boolean) {
+  const isTvClipActive = useSceneStore(s => Boolean(s.extraStates.tvClip));
+  return useScreenVideo(previewActive ?? isTvClipActive, TV_CLIP_VIDEO_SOURCES, false);
 }

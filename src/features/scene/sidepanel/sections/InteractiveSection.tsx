@@ -125,6 +125,13 @@ export function InteractiveSection({
       <button
         type="button"
         className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 small bg-transparent"
+        onClick={() => triggerAction('tv-clip-toggle')}
+      >
+        {getActionLabel('tv-clip-toggle', getSceneActionValue('tv-clip-toggle'))}
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm btn-light w-100 text-start rounded-0 border-0 border-bottom py-2 px-3 small bg-transparent"
         onClick={() => triggerAction('desk2-screen-toggle')}
       >
         {getActionLabel('desk2-screen-toggle', getSceneActionValue('desk2-screen-toggle'))}

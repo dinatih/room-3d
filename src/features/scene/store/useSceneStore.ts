@@ -294,6 +294,7 @@ const initialExtraStates: Record<string, boolean> = {
   aiFreshAir: false,
   aiFullTour: false,
   desk2Screen: false,
+  tvClip: false,
 };
 
 export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'extra' | 'transient'; name: string } {
@@ -307,6 +308,8 @@ export function resolveStoreKey(key: string): { type: 'furniture' | 'layer' | 'e
     freezer: 'freezerOpen',
     tv: 'tvOn',
     'tv-toggle': 'tvOn',
+    'tv-clip': 'tvClip',
+    'tv-clip-toggle': 'tvClip',
     'desk2-screen-toggle': 'desk2Screen',
     'desk2-screen': 'desk2Screen',
     'desk-video': 'desk2Screen',
@@ -576,7 +579,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       void requestHomeAssistantAction(key, value);
       return;
     }
-    if (key === 'fridge') {
+    if (key === 'fridge' || key === 'tvOn') {
       useSceneStore.getState().triggerAction(key);
       return;
     }
@@ -851,6 +854,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       if (fKey === 'bedDouble' && refuseUnsafeBedLayout(targetState ?? !useSceneStore.getState().furniture.bedDouble)) return;
       set((state) => {
         let nextFurniture: FurnitureState;
+        let nextExtraStates: Record<string, boolean> | undefined;
         if (fKey === 'glassDoorV2ShutterPos') {
           const cur = state.furniture.glassDoorV2ShutterPos;
           const next = getNextActionValue('glassDoorV2ShutterPos', cur);
@@ -858,9 +862,12 @@ export const useSceneStore = create<SceneStore>((set) => ({
         } else {
           const nextVal = targetState !== undefined ? targetState : !state.furniture[fKey];
           nextFurniture = { ...state.furniture, [fKey]: nextVal as any };
+          if (fKey === 'tvOn' && !nextVal && state.extraStates.tvClip) {
+            nextExtraStates = { ...state.extraStates, tvClip: false };
+          }
         }
         cameraState.invalidate?.();
-        return { furniture: nextFurniture };
+        return nextExtraStates ? { furniture: nextFurniture, extraStates: nextExtraStates } : { furniture: nextFurniture };
       });
     } else if (resolved.type === 'layer') {
       const lKey = resolved.name as keyof LayerState;
@@ -878,6 +885,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
         const nextVal = targetState !== undefined ? targetState : !state.extraStates[resolved.name];
         const nextExtra = toggleObjectAction(resolved.name, state.extraStates, nextVal);
         cameraState.invalidate?.();
+        if (resolved.name === 'tvClip' && nextVal && !state.furniture.tvOn) {
+          return { extraStates: nextExtra, furniture: { ...state.furniture, tvOn: true } };
+        }
         return { extraStates: nextExtra };
       });
     }
