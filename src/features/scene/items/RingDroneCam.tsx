@@ -19,6 +19,7 @@ import { SubjectDriver } from '../camera/subjectControls';
 import { useDroneControlStore } from '../droneControls';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { useSceneStore } from '../store/useSceneStore';
+import { BlobShadow } from '../BlobShadow';
 import { KALLAX_NE_POSITION, KALLAX_NE_ROTATION } from './kallaxNeDrona';
 import { KALLAX_NE_TOP_DRONA_FLOOR_LOCAL } from './KallaxNE';
 
@@ -452,6 +453,7 @@ export function RingDroneCam({
         rotation={[0, RING_DOCK_ROTATION_Y, 0]}
       />
       <group ref={droneRootRef} name="ring-drone-root">
+        <BlobShadow size={[18, 18]} groundY opacity={0.3} />
         <group ref={dronePivotRef} name="RingDronePivot" />
       </group>
     </>
