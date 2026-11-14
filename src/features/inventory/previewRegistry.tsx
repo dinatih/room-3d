@@ -412,3 +412,7 @@ SCENE_REGISTRY['citronhaj40553211'] = Citronhaj40553211;
 import { Wy0083 } from '@features/scene/items/Wy0083';
 
 SCENE_REGISTRY['wy008-3'] = Wy0083;
+
+import { HeartEarbudsRed } from '@features/scene/items/HeartEarbudsRed';
+
+SCENE_REGISTRY['heart-earbuds-red'] = HeartEarbudsRed;
