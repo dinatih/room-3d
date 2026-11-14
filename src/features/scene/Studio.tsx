@@ -78,15 +78,14 @@ import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { duoSessionManager }     from './ai/duoSessionManager';
 import { LoadingShiba } from './LoadingShiba';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
-import { ROOM_W, ROOM_D } from './wallData';
-import { CEILING_Y } from './building/roofData';
+import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { getObjectActionIds } from './objectActions';
 import { ReolinkFeW } from './items/ReolinkFeW';
 import { FisheyeCameraCapture, FisheyeCameraModal } from './FisheyeCameraModal';
 import { ceilingCameraFeed } from './ceilingCameraFeed';
 
-const CEILING_CAMERA_POS: [number, number, number] = [ROOM_W / 2, CEILING_Y, ROOM_D / 2];
-const CEILING_CAMERA_CAPTURE_POS: [number, number, number] = [ROOM_W / 2, CEILING_Y - 6, ROOM_D / 2];
+const CEILING_CAMERA_POS: [number, number, number] = [ROOM_W / 2, WALL_H, ROOM_D / 2];
+const CEILING_CAMERA_CAPTURE_POS: [number, number, number] = [ROOM_W / 2, WALL_H - 6, ROOM_D / 2];
 
 // The inventory pulls in a second R3F canvas, its GLTF loaders and a large
 // catalogue. Do not parse it until the user explicitly opens the inventory.
