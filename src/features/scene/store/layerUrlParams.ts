@@ -99,7 +99,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
-  ...(['montparnasseLights', 'bnfLights', 'arcLights', 'bridgeLights', 'bankLights', 'boisLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
+  ...(['bnfMarker', 'montparnasseLights', 'bnfLights', 'arcLights', 'bridgeLights', 'bankLights', 'boisLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
     layerKey: key, canonicalParam: key, urlParams: [key.toLowerCase()],
   })),
   { layerKey: 'cutWalls', canonicalParam: 'cutWalls', urlParams: ['cutwalls', 'magazine', 'murscoupes'] },

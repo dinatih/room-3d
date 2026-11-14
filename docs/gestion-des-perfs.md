@@ -445,3 +445,36 @@ Avant une campagne complète, préférer les tests unitaires et une seule sessio
 `npx tsc --noEmit` et les 19 tests ciblés (cache animé, préparation GPU, receveurs et politique d'ombres) passent. Avec l'ancien calcul de volumes, les deux nouveaux tests de régression échouent : 121 entrées sont retenues pour 120 poids, et la suppression des influences conserve une sphère périmée. Après correction, une seule entrée reste et la sphère retrouve sa position neutre.
 
 La suite complète exécutée pendant cette reprise donne 551 réussites et huit échecs. Sept se reproduisent dans le sous-ensemble concerné avec l'ancien calcul de volumes : télévision/vidéo, `EXTERIOR_GROUND` dans le test des spécialités, marche Miley, deux tests qui n'injectent plus `smartObjectCache`, mock du renderer des miroirs et import du tissu dans le test UTÅKER. L'échec du profil de navigation des robots apparaît dans la suite complète mais pas dans ce sous-ensemble ; une dépendance à l'état laissé par d'autres tests reste à examiner. Ces échecs ne sont pas masqués et la suite globale n'est pas déclarée verte. Cette passe ne mesure pas de nouveaux FPS GPU.
+
+## Profilage et appuis animés du rouge-gorge — 14 novembre 2026
+
+L'utilisateur autorise Codex à fermer les onglets Room-3D de son Chrome juste avant les mesures GPU. Prévenir au début de cette fermeture, conserver les autres onglets et annoncer la fin des mesures pour permettre de rouvrir l'application pendant l'analyse. Ne pas fermer ces onglets pendant les préparatifs ou les tests unitaires.
+
+```bash
+node scripts/profile-studio-draws.cjs --hardware-gpu --cpu
+```
+
+L'option `--cpu` ajoute une capture CPU de 20 secondes après la stabilisation, avant les 60 images de comptage. `cpu.json` contient le profil brut ; `cpu-summary.json` et le rapport Markdown listent les temps propres et inclusifs des fonctions applicatives. Les temps inclusifs comprennent les descendants et ne s'additionnent pas. Ce diagnostic ne remplace pas la campagne FPS et ne mesure pas de temps GPU par objet.
+
+Ce diagnostic bloque désormais les requêtes HTTP externes et conserve leur liste dans `result.json`. Les erreurs locales et les exceptions applicatives restent fatales. Le repère BNF est désactivé dans cette seule fixture : Troika utilise une police Unicode distante pour son libellé. Le paramètre `bnfMarker=0`, précédemment absent des associations URL, est maintenant correctement lu et sauvegardé. La visibilité par défaut de l'application et les cas `test:perf` restent inchangés.
+
+### Relevé actuel
+
+Rapport : `test-results/draw-submissions-e4gLTJ/report.md`, profil brut et synthèse dans le même dossier. Radeon 840M via Vulkan, headless, 1362 × 810, DPR 1, Mid, neuf Laras, animaux et robots actifs, ombres et miroirs actifs, jour fixé. Le navigateur de l'utilisateur n'exécutait plus Room-3D pendant la mesure. Au démarrage : secteur, environ 4,41 Gio de mémoire disponible et 11,64 Gio de swap déjà occupé. Ces observations ne prouvent pas une activité de swap pendant la capture.
+
+| Passe | Dessins moyens par image | Triangles moyens par image |
+| --- | ---: | ---: |
+| Principale | 987,6 | 3947475 |
+| Ombres | 635 | 2345534 |
+
+Les Laras occupent environ 35–43 dessins principaux chacune dans ce relevé ; ViviDa atteint 30 dessins d'ombres et les autres personnages affichés environ 23–24. Les compteurs dépendent de la pose et du cadrage. Aucune passe de miroir n'est soumise pendant ces 60 images malgré le calque actif : ne pas en déduire que les miroirs sont gratuits dans les autres vues.
+
+Le profil cumulé trouve environ 972 ms dans le runtime des neuf personnages et 705 ms dans le callback de l'oiseau sur les 20 secondes capturées. Les appuis de celui-ci représentent environ 329 ms inclusifs, dont 309 ms pour la mesure des pattes. Ce sont des échantillons CPU, pas une mesure du temps GPU ou une somme indépendante de toutes les fonctions.
+
+### Travail supprimé sans changer les contacts
+
+Le modèle utilise 12009 sommets de pattes pour calculer ses appuis. `RobinFootContact` relisait les indices et poids de skinning ainsi que les positions au repos à chaque pose. Ces données sont désormais préparées une fois ; les références aux matrices des os restent mises à jour à chaque mesure. Les géométries avec morphing continuent à évaluer leurs positions déformées. Les mêmes sommets et les mêmes opérations de skinning déterminent les contacts : aucune réduction géométrique ou fréquence de mise à jour n'est introduite.
+
+Deux séries exploratoires sur le vrai modèle et son animation d'alimentation comparent l'ancien code à la correction, en alternant l'ordre de mesure : six passages de 300 poses par série. Les médianes par appel passent d'environ 0,739 à 0,540 ms, puis de 0,680 à 0,356 ms, soit environ 27–48 % de temps en moins pour ce calcul. La première série contient deux passages sans amélioration ; la variabilité interdit de généraliser un pourcentage unique. Les positions des pattes, l'épaisseur et la translation de contact sont identiques dans les deux séries, avec un écart maximal nul sur les poses testées. Le dernier relevé brut est `test-results/robin-contact-benchmark.json` ; les sorties des deux séries sont dans `/tmp/room-3d-robin-benchmark.log` et `/tmp/room-3d-robin-benchmark-unique.log`.
+
+Le test unitaire compare aussi les appuis au skinning natif Three.js avec mélanges d'os, morphs, échelles, déplacements et retour à une pose déjà mesurée. Les ombres de contact et les animations sont conservées. Aucun gain global de FPS n'est annoncé à partir de ce microbenchmark. Les dessins et matériaux des Laras et leurs passes d'ombres restent les prochaines cibles prioritaires.

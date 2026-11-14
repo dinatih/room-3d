@@ -11,8 +11,35 @@ const directory = fs.mkdtempSync(path.resolve('test-results/draw-submissions-'))
 process.env.ROOM_TEST_RESULTS = directory;
 const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-mid-${process.argv.includes('--night') ? 'night' : 'day'}`], id: 'draw-submissions' };
 fixture.captureReadPixels = process.argv.includes('--read-pixels');
-withBrowser(fixture, async page => {
+fixture.localResourcesOnly = true;
+// The BNF label uses Troika's remote Unicode fallback. Exclude this overlay
+// from the offline object diagnostic, without changing the app or FPS cases.
+fixture.query = { ...fixture.query, bnfMarker: '0' };
+withBrowser(fixture, async (page, result) => {
   await new Promise(resolve => setTimeout(resolve, fixture.stableMs));
+  let cpuRows;
+  if (process.argv.includes('--cpu')) {
+    console.log('Profil CPU : capture de 20 secondes…');
+    const client = await page.createCDPSession();
+    await client.send('Profiler.enable');
+    await client.send('Profiler.start');
+    await new Promise(resolve => setTimeout(resolve, 20000));
+    const { profile } = await client.send('Profiler.stop');
+    await client.detach();
+    fs.writeFileSync(`${directory}/cpu.json`, JSON.stringify(profile));
+    const nodes = new Map(profile.nodes.map(node => [node.id, node]));
+    const parents = new Map(), self = new Map(), total = new Map();
+    for (const node of profile.nodes) for (const child of node.children ?? []) parents.set(child, node.id);
+    for (let i = 0; i < profile.samples.length; i++) {
+      let id = profile.samples[i];
+      const ms = profile.timeDeltas[i] / 1000;
+      self.set(id, (self.get(id) ?? 0) + ms);
+      while (id !== undefined) { total.set(id, (total.get(id) ?? 0) + ms); id = parents.get(id); }
+    }
+    cpuRows = [...nodes.values()].map(node => ({ ...node.callFrame, selfMs: self.get(node.id) ?? 0, totalMs: total.get(node.id) ?? 0 }))
+      .filter(row => row.url.includes('/src/')).sort((a, b) => b.selfMs - a.selfMs);
+    fs.writeFileSync(`${directory}/cpu-summary.json`, JSON.stringify(cpuRows, null, 2));
+  }
   const data = await page.evaluate(async () => {
     const { resolveEntityKey } = await import('/src/features/scene/DevToolsCollector.tsx');
     const renderer = window.__THREE_GL__, main = window.__THREE_SCENE__;
@@ -56,8 +83,12 @@ withBrowser(fixture, async page => {
   });
   fs.writeFileSync(`${directory}/submissions.json`, JSON.stringify(data, null, 2));
   if (fixture.captureReadPixels) console.log(`ReadPixels tracés dans la page : ${data.readPixels.length} ; pendant la capture : ${data.readPixelsDuringCapture}. Piles dans le rapport JSON.`);
-  const markdown = ['# Dessins par objet et par image', '', 'Moyennes sur 60 images, PNJ actifs. Mesure de soumissions, pas de temps GPU par objet.', '', '| Passe | Objet | Dessins/image | Triangles/image | Matériaux |', '| --- | --- | ---: | ---: | ---: |',
+  const markdown = ['# Dessins par objet et par image', '', `Commit : ${result.commit}. GPU : ${result.loaded.renderer}. Rendu : ${result.loaded.drawingBuffer.join(' × ')}.`, '',
+    'Moyennes sur 60 images, PNJ actifs. Mesure de soumissions, pas de temps GPU par objet. Requêtes externes bloquées et repère BNF masqué (police distante).', '', '| Passe | Objet | Dessins/image | Triangles/image | Matériaux |', '| --- | --- | ---: | ---: | ---: |',
     ...data.rows.map(row => `| ${row.pass} | ${row.entity.replaceAll('|', '/')} | ${row.calls.toFixed(1)} | ${Math.round(row.triangles)} | ${row.materials.length} |`)];
+  if (cpuRows) markdown.push('', '## Profil CPU applicatif', '', 'Échantillonnage sur 20 secondes avant le relevé des dessins. Temps propre et inclusif ; les temps inclusifs ne s’additionnent pas. Profil brut : cpu.json.', '',
+    '| Fonction | Source | Propre (ms) | Inclusif (ms) |', '| --- | --- | ---: | ---: |',
+    ...cpuRows.map(row => `| ${row.functionName.replaceAll('|', '/')} | ${new URL(row.url).pathname}:${row.lineNumber + 1} | ${row.selfMs.toFixed(1)} | ${row.totalMs.toFixed(1)} |`));
   fs.writeFileSync(`${directory}/report.md`, markdown.join('\n') + '\n');
   console.log(`Rapport Markdown : ${directory}/report.md`);
   console.log(`Rapport JSON : ${directory}/submissions.json`);

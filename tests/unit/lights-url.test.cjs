@@ -37,3 +37,13 @@ it('restaure la grille perruques depuis son paramètre et le retire à la fermet
   assert.equal(window.location.searchParams.has('wigGrid'), false);
   assert.equal(window.location.searchParams.get('target'), 'inventoryObjectGrid');
 });
+it('désactive le repère BNF depuis l’URL et conserve son état après rechargement', () => {
+  browser('https://room.test/?target=studio&bnfMarker=0');
+  assert.equal(parseUrlLayerOverrides().bnfMarker, false);
+  updateUrlLayer('bnfMarker', true);
+  assert.equal(window.location.searchParams.has('bnfMarker'), false);
+  updateUrlLayer('bnfMarker', false);
+  assert.equal(window.location.searchParams.get('bnfMarker'), '0');
+  assert.equal(parseUrlLayerOverrides().bnfMarker, false);
+  assert.equal(window.location.searchParams.get('target'), 'studio');
+});

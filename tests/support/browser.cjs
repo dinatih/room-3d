@@ -109,6 +109,19 @@ exports.withBrowser = async (fixture, exercise) => {
         if (fixture.fixedEnvironment && (!result.gpu.gpu.devices.length || /swiftshader|llvmpipe|software/i.test(JSON.stringify(result.gpu.gpu.devices))))
             throw Error('Performance reference requires a verified hardware GPU; software rendering is not comparable');
         const page = await browser.newPage();
+        const fail = error => { if (closing) return; result.errors.push(error.stack ?? String(error)); save(); rejectBrowser(Error(String(error))); };
+        const blockedExternalUrls = new Set();
+        if (fixture.localResourcesOnly) {
+            await page.setRequestInterception(true);
+            page.on('request', request => {
+                const url = new URL(request.url());
+                if (['http:', 'https:'].includes(url.protocol) && !['localhost', '127.0.0.1'].includes(url.hostname)) {
+                    blockedExternalUrls.add(request.url());
+                    result.logs.push({ type: 'blocked-external-request', text: request.url() });
+                    void request.abort('blockedbyclient').catch(fail);
+                } else void request.continue().catch(fail);
+            });
+        }
         if (fixture.captureReadPixels) await page.evaluateOnNewDocument(() => {
             window.__testReadPixels = [];
             for (const Type of [WebGLRenderingContext, WebGL2RenderingContext]) {
@@ -131,9 +144,9 @@ exports.withBrowser = async (fixture, exercise) => {
             await debuggerSession.send('Debugger.enable');
         }
         await page.setViewport(fixture.viewport);
-        const fail = error => { if (closing) return; result.errors.push(error.stack ?? String(error)); save(); rejectBrowser(Error(String(error))); };
         page.on('console', message => {
             result.logs.push({ type: message.type(), text: message.text() });
+            if (blockedExternalUrls.has(message.location().url) && message.text().startsWith('Failed to load resource: net::ERR_BLOCKED_BY_CLIENT')) return;
             if (message.type() === 'error') fail(message.text());
         });
         page.on('pageerror', fail);
@@ -143,6 +156,7 @@ exports.withBrowser = async (fixture, exercise) => {
         page.on('requestfailed', request => {
             if (closing) return;
             const message = `${request.url()}: ${request.failure()?.errorText}`;
+            if (blockedExternalUrls.has(request.url()) && request.failure()?.errorText.startsWith('net::ERR_BLOCKED_BY_CLIENT')) return;
             if (request.failure()?.errorText === 'net::ERR_ABORTED' && fixture.cancelledRequestPaths?.includes(new URL(request.url()).pathname)) {
                 result.logs.push({ type: 'expected-request-cancellation', text: message });
                 return;

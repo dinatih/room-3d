@@ -373,12 +373,18 @@ export function birdGroundStep(
   return null;
 }
 
+interface FootVertex {
+  index: number;
+  bindPosition: THREE.Vector3;
+  influences: { matrix: THREE.Matrix4; weight: number }[];
+}
+
 /** Read the actual animated toe geometry, rather than the bind-pose body bounding box. */
 export class RobinFootContact {
   private vertices: {
     mesh: THREE.SkinnedMesh;
-    left: number[];
-    right: number[];
+    left: FootVertex[];
+    right: FootVertex[];
     boneMatrices: Map<number, THREE.Matrix4>;
     poseMatrices: Map<number, THREE.Matrix4>;
     prevMorphs: number[];
@@ -433,7 +439,18 @@ export class RobinFootContact {
           }
         }
         const hasMorphs = Boolean(mesh.geometry.morphAttributes.position?.length);
-        this.vertices.push({ mesh, left, right, boneMatrices, poseMatrices, prevMorphs: [], hasMorphs });
+        // Skin weights and rest positions are static; only bone matrices and
+        // optional morph positions need updating while the bird animates.
+        const prepareVertex = (index: number): FootVertex => {
+          const influences: FootVertex['influences'] = [];
+          for (let channel = 0; channel < weights.itemSize; channel++) {
+            const weight = weights.getComponent(index, channel);
+            if (weight !== 0) influences.push({ matrix: boneMatrices.get(indices.getComponent(index, channel))!, weight });
+          }
+          return { index, influences, bindPosition: new THREE.Vector3()
+            .fromBufferAttribute(mesh.geometry.getAttribute('position'), index).applyMatrix4(mesh.bindMatrix) };
+        };
+        this.vertices.push({ mesh, left: left.map(prepareVertex), right: right.map(prepareVertex), boneMatrices, poseMatrices, prevMorphs: [], hasMorphs });
       }
     });
     if (!this.vertices.length) throw new Error('Robin : géométrie des pattes introuvable');
@@ -476,24 +493,20 @@ export class RobinFootContact {
     for (const entry of this.vertices) {
       const { mesh, left, right, boneMatrices, poseMatrices, hasMorphs } = entry;
       this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld).multiply(mesh.bindMatrixInverse);
-      const posAttr = mesh.geometry.getAttribute('position');
-      const skinIndices = mesh.geometry.getAttribute('skinIndex');
-      const skinWeights = mesh.geometry.getAttribute('skinWeight');
       const morphs = mesh.morphTargetInfluences ?? [];
       entry.prevMorphs = [...morphs];
       for (const [bone, matrix] of boneMatrices) {
         poseMatrices.get(bone)!.multiplyMatrices(this.transform, matrix).multiply(mesh.bindMatrix);
       }
       for (const [indices, box] of [[left, this.left], [right, this.right]] as const) {
-        for (const i of indices) {
-          if (hasMorphs) THREE.Mesh.prototype.getVertexPosition.call(mesh, i, this.baseVertex);
-          else this.baseVertex.fromBufferAttribute(posAttr, i);
-          this.baseVertex.applyMatrix4(mesh.bindMatrix);
+        for (const vertex of indices) {
+          if (hasMorphs) {
+            THREE.Mesh.prototype.getVertexPosition.call(mesh, vertex.index, this.baseVertex);
+            this.baseVertex.applyMatrix4(mesh.bindMatrix);
+          } else this.baseVertex.copy(vertex.bindPosition);
           this.vertex.set(0, 0, 0);
-          for (let channel = 0; channel < 4; channel++) {
-            const weight = skinWeights.getComponent(i, channel);
-            if (weight === 0) continue;
-            this.weightedVertex.copy(this.baseVertex).applyMatrix4(boneMatrices.get(skinIndices.getComponent(i, channel))!);
+          for (const { matrix, weight } of vertex.influences) {
+            this.weightedVertex.copy(this.baseVertex).applyMatrix4(matrix);
             this.vertex.addScaledVector(this.weightedVertex, weight);
           }
           this.vertex.applyMatrix4(this.transform);

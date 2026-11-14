@@ -8,6 +8,43 @@ const { castAt } = load('src/features/scene/birdPerches.ts', {
     three: THREE, 'three-mesh-bvh': require('three-mesh-bvh'), './wallData': require('../../src/features/scene/wallData.ts'),
 }, source => source + '\nexport { castAt };');
 
+it('mesure les mêmes pattes que le skinning natif avec morphs, poses et déplacements', () => {
+    for (const morphs of [false, true]) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute([-2, 0, 0, -1, .2, 1, -2, .4, 1, 1, 0, 0, 2, .2, 1, 2, .4, 1], 3));
+        geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute([0,2,0,0, 0,2,0,0, 0,2,0,0, 1,2,0,0, 1,2,0,0, 1,2,0,0], 4));
+        geometry.setAttribute('skinWeight', new THREE.Float32BufferAttribute(Array.from({length: 6}, () => [.75,.25,0,0]).flat(), 4));
+        if (morphs) {
+            geometry.morphTargetsRelative = true;
+            geometry.morphAttributes.position = [new THREE.Float32BufferAttribute(Array.from({length: 6}, () => [0,.5,.2]).flat(), 3)];
+        }
+        const mesh = new THREE.SkinnedMesh(geometry, new THREE.MeshBasicMaterial());
+        const bones = ['L_Digit_1', 'R_Digit_1', 'Body'].map(name => { const bone = new THREE.Bone(); bone.name = name; mesh.add(bone); return bone; });
+        const model = new THREE.Group(), content = new THREE.Group();
+        content.scale.setScalar(2); content.add(mesh); model.add(content);
+        model.updateMatrixWorld(true); mesh.bind(new THREE.Skeleton(bones));
+        const contact = new current.RobinFootContact(model);
+        for (const angle of [0, .2, -.4, .2, 0]) {
+            content.position.set(0,0,0);
+            model.position.set(angle * 5, 3, -2); model.rotation.y = angle;
+            bones[0].position.y = angle; bones[1].rotation.x = angle; bones[2].rotation.z = angle / 2;
+            if (morphs) mesh.morphTargetInfluences[0] = Math.abs(angle);
+            model.updateMatrixWorld(true);
+            const inverse = model.matrixWorld.clone().invert(), boxes = [new THREE.Box3(), new THREE.Box3()];
+            for (let i = 0; i < 6; i++) boxes[Math.floor(i / 3)].expandByPoint(mesh.getVertexPosition(i, new THREE.Vector3()).applyMatrix4(mesh.matrixWorld).applyMatrix4(inverse));
+            const points = boxes.map(box => { const point = box.getCenter(new THREE.Vector3()); point.y = box.min.y; return point; });
+            const center = points[0].clone().add(points[1]).multiplyScalar(.5); center.y = Math.min(points[0].y, points[1].y);
+            const pose = contact.measure(model);
+            assert.ok(pose.left.distanceTo(points[0].sub(center)) < 1e-10);
+            assert.ok(pose.right.distanceTo(points[1].sub(center)) < 1e-10);
+            assert.ok(Math.abs(pose.thickness - Math.min(...boxes.map(box => box.max.y - box.min.y))) < 1e-10);
+            assert.ok(contact.measure(model).left.distanceTo(pose.left) < 1e-10);
+            contact.ground(model, content);
+            assert.ok(content.position.distanceTo(center.negate()) < 1e-10);
+        }
+    }
+});
+
 it('accélère les appuis animés sans changer les contacts, UV, triangles ni instances', () => {
     const geometry = new THREE.PlaneGeometry(20, 20, 30, 30).rotateX(-Math.PI / 2);
     const count = geometry.getAttribute('position').count;
