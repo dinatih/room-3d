@@ -9,6 +9,7 @@ import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
+import { mergeLaraPairs } from './mergeLaraPairs';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
@@ -202,7 +203,10 @@ export function Character({
   }, [id, modelPath, scene, renderId, isGridPartner]);
 
   // Extraction structurée des maillages et des os
-  const parts = useMemo(() => extractCharacterParts(scene), [scene]);
+  const parts = useMemo(() => {
+    if (isLara) mergeLaraPairs(scene);
+    return extractCharacterParts(scene);
+  }, [scene, isLara]);
   const pendantRef = useRef<CharacterPendantHandle>(null);
   const parachuteRef = useRef<HeartParachuteHandle>(null);
   const headBone = parts.bones.head;

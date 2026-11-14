@@ -478,3 +478,25 @@ Le modèle utilise 12009 sommets de pattes pour calculer ses appuis. `RobinFootC
 Deux séries exploratoires sur le vrai modèle et son animation d'alimentation comparent l'ancien code à la correction, en alternant l'ordre de mesure : six passages de 300 poses par série. Les médianes par appel passent d'environ 0,739 à 0,540 ms, puis de 0,680 à 0,356 ms, soit environ 27–48 % de temps en moins pour ce calcul. La première série contient deux passages sans amélioration ; la variabilité interdit de généraliser un pourcentage unique. Les positions des pattes, l'épaisseur et la translation de contact sont identiques dans les deux séries, avec un écart maximal nul sur les poses testées. Le dernier relevé brut est `test-results/robin-contact-benchmark.json` ; les sorties des deux séries sont dans `/tmp/room-3d-robin-benchmark.log` et `/tmp/room-3d-robin-benchmark-unique.log`.
 
 Le test unitaire compare aussi les appuis au skinning natif Three.js avec mélanges d'os, morphs, échelles, déplacements et retour à une pose déjà mesurée. Les ombres de contact et les animations sont conservées. Aucun gain global de FPS n'est annoncé à partir de ce microbenchmark. Les dessins et matériaux des Laras et leurs passes d'ombres restent les prochaines cibles prioritaires.
+
+## Regroupement des paires de meshes Lara — 14 novembre 2026
+
+Trois paires du modèle Lara utilisent les mêmes propriétés de matériau et les mêmes commandes de visibilité : `eye2` / `eyes`, les deux pistolets tenus en main, et les deux pistolets rangés. `mergeLaraPairs` réunit la géométrie de chaque paire avant l'extraction des parties et l'application des styles. Les indices de skinning restent inchangés : les deux pistolets continuent à suivre leurs os respectifs. Les trois géométries produites sont partagées entre clones du même modèle ; leurs matériaux et squelettes restent indépendants par personnage. Aucun fichier GLB n'est modifié.
+
+La fusion conserve le nom sémantique du premier mesh et les catégories existantes : yeux internes/tête FPV, pistolets tenus et pistolets rangés. Elle refuse explicitement des matériaux, palettes de skinning, matrices de bind, transformations, calques ou propriétés de rendu incompatibles. Elle ne fusionne ni vêtements, ni cheveux, ni parties dont les commandes de visibilité diffèrent. Le mécanisme de volumes animés réinitialise désormais aussi son cache lorsqu'un mesh change de géométrie.
+
+### Contrôle GPU isolé
+
+Rapport : `test-results/lara-pairs-qLutVq/comparison.json`. Une page WebGL minimale, GPU Radeon 840M/Vulkan headless, cible 640 × 640, un personnage, éclairage et vraie shadow map, compare les versions avant/après. Elle teste neuf variantes (Native, Rosanna, Marissa, Delphina, Sara, Cha, ViviDa, Sabira et Helena), les pistolets en main, rangés ou masqués pour la douche, et les vues de face/dos : **54 comparaisons**. Les textures sont chargées avant la comparaison et le réseau externe est bloqué.
+
+| État | Soumissions principale + ombres économisées par personnage |
+| --- | ---: |
+| Pistolets en main | 3 |
+| Pistolets rangés | 3 |
+| Douche, sans équipement | 1 |
+
+Dans les états équipés, cela représente deux dessins principaux et un dessin d'ombres en moins pour une lumière projetant ses ombres. Avec neuf Laras visibles dans les deux passes, l'économie attendue est de 27 soumissions ; c'est une projection du test isolé, pas un nouveau relevé complet du Studio. Les miroirs et les autres vues peuvent modifier le nombre de passes.
+
+Les triangles sont conservés. Sur les 54 paires d'images, l'écart maximal est d'une unité sur 255 ; au maximum 68 composantes sur 1638400 diffèrent dans une paire, et 235 au total sur l'ensemble des comparaisons. Ce contrôle borne les différences observées sur ces vues, sans prétendre couvrir toutes les poses possibles.
+
+Les tests unitaires comparent les positions skinnées avant/après pour plusieurs poses, vérifient le renouvellement des bornes, le partage des géométries sans partage de matériaux/squelettes entre personnages, les erreurs d'incompatibilité, les modes d'équipement, les ombres et les calques FPV. Le gain global de FPS reste à mesurer dans une campagne comparable ; le nombre de triangles et la résolution des textures n'ont pas été réduits.

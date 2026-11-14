@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-const configuredMeshes = new WeakMap<THREE.SkinnedMesh, { box: THREE.Box3; skeleton: THREE.Skeleton; bindMatrix: THREE.Matrix4 }>();
+const configuredMeshes = new WeakMap<THREE.SkinnedMesh, { box: THREE.Box3; geometry: THREE.BufferGeometry; skeleton: THREE.Skeleton; bindMatrix: THREE.Matrix4 }>();
 
 interface CachedBoneBoxes {
   posVersion: number;
@@ -52,7 +52,7 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   const skinned = mesh as THREE.SkinnedMesh;
   if (!skinned.isSkinnedMesh) return;
   const existing = configuredMeshes.get(skinned);
-  if (existing && existing.skeleton === skinned.skeleton && existing.bindMatrix.equals(skinned.bindMatrix)) return;
+  if (existing && existing.geometry === skinned.geometry && existing.skeleton === skinned.skeleton && existing.bindMatrix.equals(skinned.bindMatrix)) return;
 
   const { geometry, skeleton, bindMatrix } = skinned;
   const positions = geometry.getAttribute('position');
@@ -222,7 +222,7 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
       return sphere;
     },
   });
-  configuredMeshes.set(skinned, { box: posedBox, skeleton, bindMatrix: bindMatrix.clone() });
+  configuredMeshes.set(skinned, { box: posedBox, geometry, skeleton, bindMatrix: bindMatrix.clone() });
 }
 
 /** Current world bounds for shadow receivers, including skeletal deformation. */
