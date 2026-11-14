@@ -16,40 +16,13 @@ def reset_scene():
 def create_towel_material(name="CoralFleeceRed"):
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
-    nodes = mat.node_tree.nodes
-    links = mat.node_tree.links
-    nodes.clear()
-
-    out = nodes.new("ShaderNodeOutputMaterial")
-    bsdf = nodes.new("ShaderNodeBsdfPrincipled")
+    bsdf = mat.node_tree.nodes.get("Principled BSDF")
+    bsdf.inputs["Base Color"].default_value = (0.48, 0.018, 0.025, 1.0)
     bsdf.inputs["Roughness"].default_value = 0.92
     if "Sheen Weight" in bsdf.inputs:
         bsdf.inputs["Sheen Weight"].default_value = 0.45
     if "Sheen Roughness" in bsdf.inputs:
         bsdf.inputs["Sheen Roughness"].default_value = 0.65
-
-    tex_coord = nodes.new("ShaderNodeTexCoord")
-    noise = nodes.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 320.0
-    noise.inputs["Detail"].default_value = 8.0
-    noise.inputs["Roughness"].default_value = 0.75
-
-    ramp = nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.25
-    ramp.color_ramp.elements[0].color = (0.38, 0.012, 0.018, 1.0)
-    ramp.color_ramp.elements[1].position = 0.78
-    ramp.color_ramp.elements[1].color = (0.56, 0.025, 0.032, 1.0)
-
-    bump = nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.18
-    bump.inputs["Distance"].default_value = 0.002
-
-    links.new(tex_coord.outputs["Object"], noise.inputs["Vector"])
-    links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
-    links.new(ramp.outputs["Color"], bsdf.inputs["Base Color"])
-    links.new(noise.outputs["Fac"], bump.inputs["Height"])
-    links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
-    links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     return mat
 
 
