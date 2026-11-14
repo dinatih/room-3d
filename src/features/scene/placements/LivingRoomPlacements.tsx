@@ -506,12 +506,12 @@ export function LivingRoomFurniture() {
       ))}
 
       {/* Grand tapis sous la baie vitrée (côté droit, dans la longueur) */}
-      <group position={[200, 0.2, 35]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Grand tapis rouge' }}>
+      <group position={[200, 0.5, 35]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Grand tapis rouge' }}>
         <RugLarge />
       </group>
 
       {/* Petit tapis sous les range-chaussures */}
-      <group position={[MIRROR_CX, 0.2, ROOM_D - 20]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Petit tapis rouge' }}>
+      <group position={[MIRROR_CX, 0.5, ROOM_D - 20]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Petit tapis rouge' }}>
         <RugSmall />
       </group>
 
