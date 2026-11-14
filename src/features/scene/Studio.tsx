@@ -8,7 +8,7 @@ import { WeatherSystem } from './WeatherSystem';
 import { useState, useCallback, useEffect, useLayoutEffect, useRef, Suspense, lazy } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 
-import { useProgress, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import { useProgress, AdaptiveDpr } from '@react-three/drei';
 import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
@@ -222,13 +222,59 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
       updateShaders();
+      phase('⚡ Préparation des textures GPU…');
+      if (typeof gl.initTexture === 'function' && typeof scene?.traverse === 'function') {
+        const textures = new Set<any>();
+        if ((scene as any).environment?.isTexture) textures.add((scene as any).environment);
+        if ((scene as any).background?.isTexture) textures.add((scene as any).background);
+        scene.traverse(object => {
+          const mesh = object as Mesh;
+          const mats = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+          for (const mat of mats) {
+            for (const value of Object.values(mat as unknown as Record<string, unknown>)) {
+              if (value && typeof value === 'object' && (value as { isTexture?: boolean }).isTexture) {
+                textures.add(value);
+              }
+            }
+          }
+        });
+        let texIndex = 0;
+        for (const texture of textures) {
+          if (document.hidden) break;
+          gl.initTexture(texture);
+          if (++texIndex % 24 === 0) {
+            await pause();
+            if (cancelled) return;
+          }
+        }
+      }
       phase('⚡ Initialisation du rendu 3D…');
       await pause();
       if (cancelled) return;
 
-      // Préparer textures et ombres même si la boucle R3F est suspendue.
-      gl.shadowMap.needsUpdate = true;
-      gl.render(scene, camera);
+      // Préparer géométries (VBOs), textures et ombres même hors frustum initial pour éviter les gels post-chargement.
+      const savedCull = new Map<any, boolean>();
+      const savedReflectorForce = new Map<any, boolean>();
+      if (typeof scene?.traverse === 'function') {
+        scene.traverse(object => {
+          const anyObj = object as any;
+          if (anyObj.isMesh) {
+            savedCull.set(anyObj, anyObj.frustumCulled);
+            anyObj.frustumCulled = false;
+          }
+          if (anyObj.isReflector && 'forceUpdate' in anyObj) {
+            savedReflectorForce.set(anyObj, Boolean(anyObj.forceUpdate));
+            anyObj.forceUpdate = true;
+          }
+        });
+      }
+      try {
+        gl.shadowMap.needsUpdate = true;
+        gl.render(scene, camera);
+      } finally {
+        for (const [obj, val] of savedCull) obj.frustumCulled = val;
+        for (const [obj, val] of savedReflectorForce) obj.forceUpdate = val;
+      }
       readyRef.current = true;
       setCompiling(false);
       invalidate();
@@ -930,7 +976,6 @@ export function Studio() {
         <SceneLayerController layers={layers} />
 
         <AdaptiveDpr pixelated />
-        <PerformanceMonitor />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
         <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isFisheyeModalOpen={isFisheyeModalOpen} isOrbiting={cameraMovement === 'orbit'} />

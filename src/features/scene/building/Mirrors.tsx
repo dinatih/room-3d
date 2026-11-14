@@ -67,7 +67,7 @@ function MirrorSurface({ geometry, position, rotationY }: {
   const reflector = useMemo(() => {
     geometry.computeBoundingBox();
     const { res } = getMirrorTargetConfig();
-    const mir = new Reflector(geometry, { textureWidth: res, textureHeight: res, color: 0xbbbbbb });
+    const mir = new Reflector(geometry, { textureWidth: res, textureHeight: res, color: 0xbbbbbb, multisample: 0 });
     mir.position.set(x, y, z);
     mir.rotation.y = rotationY;
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
@@ -150,6 +150,21 @@ function MergedReflector({ planes, ...props }: {
   return <MirrorSurface geometry={geometry} {...props} />;
 }
 
+const _mirrorFrustum = new THREE.Frustum();
+const _mirrorProjScreen = new THREE.Matrix4();
+const _mirrorCamInv = new THREE.Matrix4();
+const _mirrorBox = new THREE.Box3();
+
+function isMirrorInCameraView(camera: THREE.Camera, obj: THREE.Object3D | null): boolean {
+  if (!obj) return false;
+  camera.updateMatrixWorld();
+  _mirrorCamInv.copy(camera.matrixWorld).invert();
+  _mirrorProjScreen.multiplyMatrices(camera.projectionMatrix, _mirrorCamInv);
+  _mirrorFrustum.setFromProjectionMatrix(_mirrorProjScreen);
+  _mirrorBox.setFromObject(obj);
+  return !_mirrorBox.isEmpty() && _mirrorFrustum.intersectsBox(_mirrorBox);
+}
+
 const silverMirrorMat = new THREE.MeshStandardMaterial({
   color: 0xd0d8e0,
   roughness: 0.05,
@@ -201,7 +216,8 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
     if (!showReflection) return;
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
     const isVisible = useSceneStore.getState().isFisheyeModalOpen
-      || (!isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270);
+      || (!isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270
+          && isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current));
 
     if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
       reflectorRef.current.visible = isVisible;
@@ -266,7 +282,8 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
     if (!showReflection) return;
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
     const isVisible = useSceneStore.getState().isFisheyeModalOpen
-      || (!isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270);
+      || (!isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270
+          && isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current));
 
     if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
       reflectorRef.current.visible = isVisible;
@@ -337,7 +354,8 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
       camera.position.z >= 450 &&
       camera.position.z <= 750 &&
       camera.position.y >= 0 &&
-      camera.position.y <= 270;
+      camera.position.y <= 270 &&
+      isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current);
 
     if (reflectorRef.current && reflectorRef.current.visible !== isNearBath) {
       reflectorRef.current.visible = isNearBath;

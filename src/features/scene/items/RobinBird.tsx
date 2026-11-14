@@ -12,7 +12,7 @@ import { appLog } from '@features/ui/AppConsole';
 import { cameraState } from '@features/scene/cameraState';
 import { useAnimalCamera } from '../camera/useAnimalCamera';
 import { SubjectDriver } from '../camera/subjectControls';
-import { chooseBirdPerch, chooseBirdForagePerch, birdGroundStep, resolveBirdPerch, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
+import { chooseBirdPerch, chooseBirdForagePerch, birdGroundStep, resolveBirdPerch, supportIsAvailable, RobinFootContact, ROBIN_HEIGHT, type BirdPerch, type BirdFootPose } from '../birdPerches';
 import { BlobShadow } from '../BlobShadow';
 
 const GLB_PATH = '/characters/robin/robin.glb';
@@ -57,6 +57,9 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
   const sourceRotation = useRef(new THREE.Quaternion());
   const up = useRef(new THREE.Vector3(0, 1, 0));
   const origin = useRef(new THREE.Vector3());
+  const lastPerchRef = useRef<BirdPerch | null>(null);
+  const lastPerchMatrix = useRef(new THREE.Matrix4());
+  const perchResolveCooldown = useRef(0);
 
   function playAnimation(name: string, once = false, speed = 1) {
     const clip = animations.find(a => a.name === name);
@@ -291,8 +294,26 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       ai.state = 'idle';
     }
 
-    const available = ai.perch && resolveBirdPerch(ai.perch, world, feet, ai.targetPos, landingRotation.current);
+    let available = false;
+    if (ai.perch && supportIsAvailable(ai.perch.support, world)) {
+      perchResolveCooldown.current -= delta;
+      const needsResolve =
+        ai.perch !== lastPerchRef.current ||
+        !ai.perch.mesh.matrixWorld.equals(lastPerchMatrix.current) ||
+        perchResolveCooldown.current <= 0;
+      if (needsResolve) {
+        available = resolveBirdPerch(ai.perch, world, feet, ai.targetPos, landingRotation.current);
+        if (available) {
+          lastPerchRef.current = ai.perch;
+          lastPerchMatrix.current.copy(ai.perch.mesh.matrixWorld);
+          perchResolveCooldown.current = 0.35;
+        }
+      } else {
+        available = true;
+      }
+    }
     if (!available) {
+      lastPerchRef.current = null;
       const next = chooseBirdPerch(world, feet, ai.perch);
       if (!next) {
         model.visible = false;

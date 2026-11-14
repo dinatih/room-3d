@@ -5,7 +5,7 @@
  * Utilise le composant Group (glass-card accordion) pour l'harmonie visuelle
  * avec les autres composants (Minimap, DevTools).
  */
-import { useState, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
 import { CHARACTERS, findCharacter } from '@features/scene/characterConfig';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { getDebugPreset } from '@features/scene/store/debugPresets';
@@ -259,9 +259,16 @@ export function AppConsole({
     };
   }, []);
 
-  // Écoute des CustomEvents 'app-log'
+  // Écoute des CustomEvents 'app-log' : ne re-render que lorsque le tiroir console est ouvert.
+  const openRef = useRef(open);
+  openRef.current = open;
+  useEffect(() => {
+    if (open) setLogs([...APP_LOG_HISTORY]);
+  }, [open]);
+
   useEffect(() => {
     const handler = (e: Event) => {
+      if (!openRef.current) return;
       const detail = (e as CustomEvent<AppLogEntry>).detail;
       setLogs(prev => {
         const next = [...prev, { ...detail, id: detail.id ?? ++_logCounter }];
@@ -269,7 +276,7 @@ export function AppConsole({
       });
     };
     document.addEventListener('app-log', handler);
-    setLogs([...APP_LOG_HISTORY]);
+    if (openRef.current) setLogs([...APP_LOG_HISTORY]);
     return () => document.removeEventListener('app-log', handler);
   }, []);
 
@@ -306,28 +313,32 @@ export function AppConsole({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const availableActions = Array.from(
-    new Set(
-      logs
-        .filter(e => !categoryFilter || e.category === categoryFilter)
-        .map(e => e.action)
-        .filter((a): a is string => Boolean(a))
-    )
-  ).sort();
+  const availableActions = useMemo(() => (
+    open ? Array.from(
+      new Set(
+        logs
+          .filter(e => !categoryFilter || e.category === categoryFilter)
+          .map(e => e.action)
+          .filter((a): a is string => Boolean(a))
+      )
+    ).sort() : []
+  ), [open, logs, categoryFilter]);
 
-  const displayedLogs = logs.filter(entry => {
-    if (filterBubbleOnly) {
-      const activeId = activeCharacterId.toLowerCase();
-      if (entry.tag.toLowerCase() !== 'system') {
-        const tagParts = entry.tag.toLowerCase().split('+').map(s => s.trim());
-        const actorMatch = entry.actors.some(a => a.toLowerCase() === activeId) || tagParts.some(t => t === activeId);
-        if (!actorMatch) return false;
+  const displayedLogs = useMemo(() => (
+    open ? logs.filter(entry => {
+      if (filterBubbleOnly) {
+        const activeId = activeCharacterId.toLowerCase();
+        if (entry.tag.toLowerCase() !== 'system') {
+          const tagParts = entry.tag.toLowerCase().split('+').map(s => s.trim());
+          const actorMatch = entry.actors.some(a => a.toLowerCase() === activeId) || tagParts.some(t => t === activeId);
+          if (!actorMatch) return false;
+        }
       }
-    }
-    if (categoryFilter && entry.category !== categoryFilter) return false;
-    if (actionFilter && entry.action !== actionFilter) return false;
-    return true;
-  });
+      if (categoryFilter && entry.category !== categoryFilter) return false;
+      if (actionFilter && entry.action !== actionFilter) return false;
+      return true;
+    }) : []
+  ), [open, logs, filterBubbleOnly, activeCharacterId, categoryFilter, actionFilter]);
   const latestLog = displayedLogs[displayedLogs.length - 1];
   const latestLogTag = latestLog?.tag.split('+').map(part => {
     const character = findCharacter(part.trim());

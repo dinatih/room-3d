@@ -7,29 +7,61 @@ const session = DEV_LOG_ENABLED ? host.__roomDevLog ??= {
   session: crypto.randomUUID(), pageStartedAt: new Date(performance.timeOrigin).toISOString(), sequence: 0,
 } : undefined;
 
+function sanitizeForLog(
+  value: unknown,
+  ancestors: Set<object>,
+  normalized: WeakMap<object, object>,
+): unknown {
+  if (value === null) return null;
+  const type = typeof value;
+  if (type === 'string' || type === 'number' || type === 'boolean') return value;
+  if (type === 'bigint') return (value as bigint).toString();
+  if (type !== 'object') return undefined;
+
+  const obj = value as object;
+  let target = normalized.get(obj);
+  if (!target) {
+    if (obj instanceof Error) {
+      target = { ...obj, name: obj.name, message: obj.message, stack: obj.stack, cause: (obj as Error & { cause?: unknown }).cause };
+      normalized.set(obj, target);
+    } else if (obj instanceof Map || obj instanceof Set) {
+      target = [...obj];
+      normalized.set(obj, target);
+    } else {
+      target = obj;
+    }
+  }
+  if (ancestors.has(target)) return '[Circular]';
+  ancestors.add(target);
+  try {
+    if (Array.isArray(target)) {
+      const out = new Array(target.length);
+      for (let i = 0; i < target.length; i++) {
+        const sanitized = sanitizeForLog(target[i], ancestors, normalized);
+        out[i] = sanitized === undefined ? null : sanitized;
+      }
+      return out;
+    }
+    const maybeToJSON = target as { toJSON?: () => unknown };
+    if (typeof maybeToJSON.toJSON === 'function') {
+      const jsonVal = maybeToJSON.toJSON();
+      if (jsonVal !== target) return sanitizeForLog(jsonVal, ancestors, normalized);
+    }
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(target)) {
+      const sanitized = sanitizeForLog(v, ancestors, normalized);
+      if (sanitized !== undefined) out[k] = sanitized;
+    }
+    return out;
+  } finally {
+    ancestors.delete(target);
+  }
+}
+
 export function devLog(entry: DevEntry): void {
   if (!session) return;
   const started = performance.now();
-  const ancestors: object[] = [], normalized = new WeakMap<object, object>();
-  const serializable = JSON.parse(JSON.stringify(entry, function (_key, value) {
-    if (typeof value === 'bigint') return value.toString();
-    if (value instanceof Error || value instanceof Map || value instanceof Set) {
-      let replacement = normalized.get(value);
-      if (!replacement) {
-        replacement = value instanceof Error
-          ? { ...value, name: value.name, message: value.message, stack: value.stack, cause: (value as Error & { cause?: unknown }).cause }
-          : [...value];
-        normalized.set(value, replacement);
-      }
-      value = replacement;
-    }
-    if (value && typeof value === 'object') {
-      while (ancestors.length && ancestors[ancestors.length - 1] !== this) ancestors.pop();
-      if (ancestors.includes(value)) return '[Circular]';
-      ancestors.push(value);
-    }
-    return value;
-  }));
+  const serializable = sanitizeForLog(entry, new Set<object>(), new WeakMap<object, object>()) as Record<string, unknown>;
   import.meta.hot!.send('room:app-log', {
     session: session.session, pageStartedAt: session.pageStartedAt, sequence: ++session.sequence,
     elapsedMs: performance.now(), url: location.href, userAgent: navigator.userAgent,

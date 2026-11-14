@@ -54,25 +54,31 @@ export function EnvironmentButton({ hideUI = false }: { hideUI?: boolean }) {
   const setGroundType = useSceneStore(state => state.setGroundType);
   const currentGroundType = layers.groundType ?? 'bermuda';
 
-  // Système de vie : heure simulée & besoin environnement
-  const { characters, home } = useLaraLifeStore();
+  // Système de vie : heure simulée & besoin environnement (sélecteurs fins pour éviter les re-rendus inutiles)
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
   const selectedCharacterId = isLifeCharacter(activeCharacterId) ? activeCharacterId : 'native';
-  const character = characters[selectedCharacterId];
-  const clock = lifeClock(character?.elapsedSeconds ?? 0);
+  const elapsedSeconds = useLaraLifeStore(state => state.characters[selectedCharacterId]?.elapsedSeconds ?? 0);
+  const selectedRoom = useLaraLifeStore(state => state.characters[selectedCharacterId]?.room ?? 'living');
+  const cleanlinessInfo = useLaraLifeStore(state => {
+    const h = state.home;
+    const dirt = roomDirt(h, selectedRoom);
+    const details = (Object.keys(HOME_TASKS) as HomeTask[])
+      .filter(key => HOME_TASKS[key].room === selectedRoom)
+      .map(key => `${HOME_TASKS[key].label} : ${Math.round(h[key])} %`).join(' · ');
+    return `${Math.round(dirt)}|${details}`;
+  });
+  const sepIdx = cleanlinessInfo.indexOf('|');
+  const envNeed = Number(cleanlinessInfo.slice(0, sepIdx));
+  const cleanliness = `${HOME_ROOMS[selectedRoom]} · 0 % = propre. ${cleanlinessInfo.slice(sepIdx + 1)}`;
+  const clock = lifeClock(elapsedSeconds);
   const hourFloat = simulatedHour();
-  const currentPhase = WEATHER_PHASES[Math.floor((character?.elapsedSeconds ?? 0) / WEATHER_PERIOD) % WEATHER_PHASES.length];
+  const currentPhase = WEATHER_PHASES[Math.floor(elapsedSeconds / WEATHER_PERIOD) % WEATHER_PHASES.length];
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
   const commitTime = (minute: number) => {
     advanceToTime(minute);
     setSelectedMinute(null);
     cameraState.invalidate?.();
   };
-
-  const envNeed = roomDirt(home, character?.room ?? 'living');
-  const cleanliness = `${HOME_ROOMS[character?.room ?? 'living']} · 0 % = propre. ` + (Object.keys(HOME_TASKS) as HomeTask[])
-    .filter(key => HOME_TASKS[key].room === (character?.room ?? 'living'))
-    .map(key => `${HOME_TASKS[key].label} : ${Math.round(home[key])} %`).join(' · ');
 
   const activeHdri = HDRI_LIST.find(h => h.id === currentHdri);
   const displayName = activeHdri?.name || '';

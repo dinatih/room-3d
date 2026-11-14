@@ -68,9 +68,9 @@ export function devLogPlugin(directory = '/tmp/room-3d-logs', maxBytes = 500 * 1
         symlinkSync(latest, temporary);
         renameSync(temporary, link);
       };
-      const initial = prune(0);
-      updateLatest(initial.files);
-      server.config.logger.info(`Logs : ${directory}/latest.jsonl (${formatBytes(initial.total)} / limite ${formatBytes(maxBytes)})`);
+      let tracked = prune(0);
+      updateLatest(tracked.files);
+      server.config.logger.info(`Logs : ${directory}/latest.jsonl (${formatBytes(tracked.total)} / limite ${formatBytes(maxBytes)})`);
       server.ws.on('room:app-log', payload => {
         try {
           if (typeof payload.session !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(payload.session)) throw Error('Invalid log session');
@@ -78,22 +78,47 @@ export function devLogPlugin(directory = '/tmp/room-3d-logs', maxBytes = 500 * 1
           const file = path.join(directory, `${started}_${payload.session}.jsonl`);
           let text = JSON.stringify({ receivedAt: new Date().toISOString(), ...payload }) + '\n';
           const textBytes = Buffer.byteLength(text);
-          const before = scan();
+          // Vérifier sans rescanner tout le dossier à chaque événement, tout en détectant une suppression externe.
+          if (tracked.files.has(file)) {
+            try {
+              const liveSize = statSync(file).size;
+              const prevSize = tracked.files.get(file)!;
+              if (liveSize !== prevSize) {
+                tracked.files.set(file, liveSize);
+                tracked.total += liveSize - prevSize;
+              }
+            } catch (error) {
+              if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+              tracked.total -= tracked.files.get(file)!;
+              tracked.files.delete(file);
+            }
+          }
+          const needsPrune = tracked.total + textBytes > maxBytes;
+          const before = needsPrune ? scan() : tracked;
           // Reserve the session header as well before deleting any existing journals.
           const needsHeader = !before.files.has(file) || before.total + textBytes > maxBytes;
           const revision = needsHeader
             ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: server.config.root, encoding: 'utf8' }).trim() : '';
           const changes = revision ? execFileSync('git', ['status', '--short'], { cwd: server.config.root, encoding: 'utf8' }) : '';
-          const header = JSON.stringify({ receivedAt: new Date().toISOString(), session: payload.session,
-            entry: { tag: 'system', action: 'server_session', data: { revision, changes, file } } }) + '\n';
-          if (textBytes + Buffer.byteLength(header) > maxBytes) throw Error('Log event exceeds disk budget');
-          const { files, pruned } = prune(textBytes + (needsHeader ? Buffer.byteLength(header) : 0), before);
-          const created = !files.has(file);
+          const header = needsHeader
+            ? JSON.stringify({ receivedAt: new Date().toISOString(), session: payload.session,
+                entry: { tag: 'system', action: 'server_session', data: { revision, changes, file } } }) + '\n'
+            : '';
+          const headerBytes = Buffer.byteLength(header);
+          if (textBytes + headerBytes > maxBytes) throw Error('Log event exceeds disk budget');
+          const state = needsPrune || needsHeader ? prune(textBytes + headerBytes, before) : { ...before, pruned: false };
+          const created = !state.files.has(file);
           if (created) text = header + text;
           appendFileSync(file, text);
-          files.set(file, (files.get(file) ?? 0) + Buffer.byteLength(text));
-          if (created || pruned) updateLatest(files);
-        } catch (error) { server.config.logger.error(`Échec journal applicatif : ${error}`); }
+          const written = Buffer.byteLength(text);
+          state.files.set(file, (state.files.get(file) ?? 0) + written);
+          state.total += written;
+          tracked = state;
+          if (created || state.pruned) updateLatest(state.files);
+        } catch (error) {
+          tracked = scan();
+          server.config.logger.error(`Échec journal applicatif : ${error}`);
+        }
       });
     },
   };

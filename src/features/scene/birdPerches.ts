@@ -375,7 +375,15 @@ export function birdGroundStep(
 
 /** Read the actual animated toe geometry, rather than the bind-pose body bounding box. */
 export class RobinFootContact {
-  private vertices: { mesh: THREE.SkinnedMesh; left: number[]; right: number[]; boneMatrices: Map<number, THREE.Matrix4> }[] = [];
+  private vertices: {
+    mesh: THREE.SkinnedMesh;
+    left: number[];
+    right: number[];
+    boneMatrices: Map<number, THREE.Matrix4>;
+    poseMatrices: Map<number, THREE.Matrix4>;
+    prevMorphs: number[];
+    hasMorphs: boolean;
+  }[] = [];
   private left = new THREE.Box3();
   private right = new THREE.Box3();
   private vertex = new THREE.Vector3();
@@ -383,6 +391,10 @@ export class RobinFootContact {
   private weightedVertex = new THREE.Vector3();
   private inverse = new THREE.Matrix4();
   private transform = new THREE.Matrix4();
+  private candidateMatrix = new THREE.Matrix4();
+  private boneCombined = new THREE.Matrix4();
+  private cachedPose: BirdFootPose | null = null;
+  private cachedGroundCenter = new THREE.Vector3();
   private radius: number;
 
   constructor(model: THREE.Object3D) {
@@ -410,10 +422,18 @@ export class RobinFootContact {
       }
       if (left.length || right.length) {
         const boneMatrices = new Map<number, THREE.Matrix4>();
+        const poseMatrices = new Map<number, THREE.Matrix4>();
         for (const vertex of [...left, ...right]) for (let channel = 0; channel < 4; channel++) {
-          if (weights.getComponent(vertex, channel) !== 0) boneMatrices.set(indices.getComponent(vertex, channel), new THREE.Matrix4());
+          if (weights.getComponent(vertex, channel) !== 0) {
+            const boneIdx = indices.getComponent(vertex, channel);
+            if (!boneMatrices.has(boneIdx)) {
+              boneMatrices.set(boneIdx, new THREE.Matrix4());
+              poseMatrices.set(boneIdx, new THREE.Matrix4());
+            }
+          }
         }
-        this.vertices.push({ mesh, left, right, boneMatrices });
+        const hasMorphs = Boolean(mesh.geometry.morphAttributes.position?.length);
+        this.vertices.push({ mesh, left, right, boneMatrices, poseMatrices, prevMorphs: [], hasMorphs });
       }
     });
     if (!this.vertices.length) throw new Error('Robin : géométrie des pattes introuvable');
@@ -424,18 +444,50 @@ export class RobinFootContact {
     // SkinnedMesh.updateMatrixWorld also updates bindMatrixInverse after the bird moves.
     model.updateMatrixWorld(true);
     this.inverse.copy(model.matrixWorld).invert();
+    let changed = this.cachedPose === null;
+    for (const entry of this.vertices) {
+      const { mesh, boneMatrices, poseMatrices, prevMorphs } = entry;
+      this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld).multiply(mesh.bindMatrixInverse);
+      const morphs = mesh.morphTargetInfluences ?? [];
+      if (morphs.length !== prevMorphs.length) changed = true;
+      else {
+        for (let i = 0; i < morphs.length; i++) {
+          if (morphs[i] !== prevMorphs[i]) { changed = true; break; }
+        }
+      }
+      for (const [bone, matrix] of boneMatrices) {
+        this.boneCombined.multiplyMatrices(mesh.skeleton.bones[bone].matrixWorld, mesh.skeleton.boneInverses[bone]);
+        this.candidateMatrix.multiplyMatrices(this.transform, this.boneCombined).multiply(mesh.bindMatrix);
+        if (!changed && !this.candidateMatrix.equals(poseMatrices.get(bone)!)) changed = true;
+        matrix.copy(this.boneCombined);
+      }
+    }
+    if (!changed && this.cachedPose) {
+      return {
+        left: this.cachedPose.left.clone(),
+        right: this.cachedPose.right.clone(),
+        thickness: this.cachedPose.thickness,
+        height: this.cachedPose.height,
+        radius: this.cachedPose.radius,
+      };
+    }
+
     this.left.makeEmpty(); this.right.makeEmpty();
-    for (const { mesh, left, right, boneMatrices } of this.vertices) {
-      // applyBoneTransform otherwise multiplies the same bone matrices again
-      // for every foot vertex. Keep its exact skinning, including morphs.
-      for (const [bone, matrix] of boneMatrices) matrix.multiplyMatrices(mesh.skeleton.bones[bone].matrixWorld, mesh.skeleton.boneInverses[bone]);
+    for (const entry of this.vertices) {
+      const { mesh, left, right, boneMatrices, poseMatrices, hasMorphs } = entry;
+      this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld).multiply(mesh.bindMatrixInverse);
+      const posAttr = mesh.geometry.getAttribute('position');
       const skinIndices = mesh.geometry.getAttribute('skinIndex');
       const skinWeights = mesh.geometry.getAttribute('skinWeight');
-      this.transform.multiplyMatrices(this.inverse, mesh.matrixWorld);
-      this.transform.multiply(mesh.bindMatrixInverse);
+      const morphs = mesh.morphTargetInfluences ?? [];
+      entry.prevMorphs = [...morphs];
+      for (const [bone, matrix] of boneMatrices) {
+        poseMatrices.get(bone)!.multiplyMatrices(this.transform, matrix).multiply(mesh.bindMatrix);
+      }
       for (const [indices, box] of [[left, this.left], [right, this.right]] as const) {
         for (const i of indices) {
-          THREE.Mesh.prototype.getVertexPosition.call(mesh, i, this.baseVertex);
+          if (hasMorphs) THREE.Mesh.prototype.getVertexPosition.call(mesh, i, this.baseVertex);
+          else this.baseVertex.fromBufferAttribute(posAttr, i);
           this.baseVertex.applyMatrix4(mesh.bindMatrix);
           this.vertex.set(0, 0, 0);
           for (let channel = 0; channel < 4; channel++) {
@@ -455,16 +507,16 @@ export class RobinFootContact {
     const center = left.clone().add(right).multiplyScalar(0.5);
     center.y = Math.min(left.y, right.y);
     left.sub(center); right.sub(center);
-    return { left, right, thickness: Math.min(this.left.max.y - this.left.min.y, this.right.max.y - this.right.min.y), height: ROBIN_HEIGHT, radius: this.radius };
+    this.cachedGroundCenter.copy(center);
+    this.cachedPose = { left, right, thickness: Math.min(this.left.max.y - this.left.min.y, this.right.max.y - this.right.min.y), height: ROBIN_HEIGHT, radius: this.radius };
+    return { left: left.clone(), right: right.clone(), thickness: this.cachedPose.thickness, height: ROBIN_HEIGHT, radius: this.radius };
   }
 
   ground(model: THREE.Object3D, content: THREE.Object3D): BirdFootPose {
     content.position.set(0, 0, 0);
     const pose = this.measure(model);
-    const center = this.left.getCenter(new THREE.Vector3()).add(this.right.getCenter(new THREE.Vector3())).multiplyScalar(0.5);
-    center.y = Math.min(this.left.min.y, this.right.min.y);
     // content is scaled but its translation is expressed in the parent/model coordinate space.
-    content.position.copy(center).negate();
+    content.position.copy(this.cachedGroundCenter).negate();
     return pose;
   }
 }

@@ -440,13 +440,13 @@ function LampOla_() {
     <group position={[MEUBLE_T_X, MEUBLE_T_Y, MEUBLE_T_Z - 10]} rotation-y={LAMP_ROT_Y}
       userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Lumière Séjour (OLA)', hoverAction: { label: name ?? 'Lumière Séjour (OLA)', actions: getObjectActionIds('lamp-ola') } }}>
       <LampOla onSize={setLampSize} actionState={{ on: lampOn, lightColor: color, brightness }} />
-      {lampSize && <pointLight
-        position={[0, lampSize.y, 0]}
-        intensity={lampOn ? 35 * 100 ** 2 * brightness : 0}
+      <pointLight
+        position={lampSize ? [0, lampSize.y, 0] : [0, 0, 0]}
+        intensity={lampSize && lampOn ? 35 * 100 ** 2 * brightness : 0}
         distance={0}
         decay={2}
         color={color}
-      />}
+      />
     </group>
   );
 }

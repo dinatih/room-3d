@@ -42,6 +42,13 @@ export function CategoryLayerGroup({
 
   const assignLayers = (root: THREE.Object3D) => {
     root.traverse(obj => {
+      // Ne jamais restreindre les lumières à un calque partiel : si la caméra principale
+      // et les caméras des miroirs voient un nombre différent de lumières, Three.js recompile
+      // tous les shaders PBR (NUM_POINT_LIGHTS) et fige l'application plusieurs secondes.
+      if ((obj as THREE.Light).isLight) {
+        obj.layers.enableAll();
+        return;
+      }
       // Ne pas écraser les masques isolés spécifiquement sur LAYER_WALKER_DETAIL (tête walker en FPV)
       if ((obj.layers.mask & (1 << LAYER_WALKER_DETAIL)) !== 0) return;
 
