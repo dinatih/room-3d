@@ -177,7 +177,7 @@ export function BathroomFurnishings() {
       {Object.entries(BATHROOM_STORAGE_ITEMS).filter(([, item]) => item.kind === 'box').map(([id, item]) => (
         <group key={id} name={id} position={item.position} rotation-y={item.rotationY + Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: item.label, hoverAction: { label: item.label, actions: SMART_OBJECTS[id].slots.map(slot => `smart-object:::${id}:::${slot.slotId}`) } }}>
           <DroneCell />
-          <group position={[7.265, -DF / 2 + 15, 0]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
+          <group position={[0.26, -DF / 2 + 15, id === 'drona-bathroom-west' ? 9.765 : -9.765]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
             <Stackstod60620144 />
           </group>
         </group>
