@@ -1,6 +1,6 @@
-import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, Suspense } from 'react';
+import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, AdaptiveDpr, PerformanceMonitor } from '@react-three/drei';
+import { Html, AdaptiveDpr, PerformanceMonitor, useProgress } from '@react-three/drei';
 import { OrbitControls } from '@features/scene/camera/OrbitControls';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
@@ -11,6 +11,7 @@ import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { CategoryLayerGroup, LayerRegistryContext } from '@features/scene/sceneLayer';
+import { SceneModelContext } from '@features/scene/useGLTFClone';
 import { CharacterGroup } from '@features/scene/character';
 import { Animals } from '@features/scene/Placements';
 import { Neighbors } from '@features/scene/Neighbors';
@@ -80,33 +81,73 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
     ];
   }, [min, max]);
 
-  // Applique les clipping planes localement sur tous les matériaux des meshes de la pièce
+  // Applique les clipping planes et masque les meshes statiques entièrement hors de la zone
+  const zoneBox = useMemo(() => new THREE.Box3(
+    new THREE.Vector3(min[0] - 10, min[1] - 10, min[2] - 10),
+    new THREE.Vector3(max[0] + 10, max[1] + 10, max[2] + 10),
+  ), [min, max]);
+
+  const applyClipping = useCallback((root: THREE.Object3D) => {
+    const group = studioGroupRef.current;
+    if (!group) return;
+    const meshBox = new THREE.Box3();
+    group.updateMatrixWorld(true);
+    root.traverse((child: THREE.Object3D) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      if (!(mesh as THREE.SkinnedMesh).isSkinnedMesh && mesh.geometry) {
+        if ((mesh as THREE.InstancedMesh).isInstancedMesh) {
+          const inst = mesh as THREE.InstancedMesh;
+          inst.computeBoundingBox();
+          if (inst.boundingBox && !inst.boundingBox.isEmpty()) {
+            meshBox.copy(inst.boundingBox).applyMatrix4(mesh.matrixWorld);
+            if (!meshBox.intersectsBox(zoneBox)) {
+              mesh.visible = false;
+              return;
+            }
+          }
+        } else {
+          if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+          if (mesh.geometry.boundingBox && !mesh.geometry.boundingBox.isEmpty()) {
+            meshBox.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
+            if (!meshBox.intersectsBox(zoneBox)) {
+              mesh.visible = false;
+              return;
+            }
+          }
+        }
+      }
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(m => {
+          m.clippingPlanes = clippingPlanes;
+          m.clipShadows = true;
+          m.needsUpdate = true;
+        });
+      } else if (mesh.material) {
+        mesh.material.clippingPlanes = clippingPlanes;
+        mesh.material.clipShadows = true;
+        mesh.material.needsUpdate = true;
+      }
+    });
+  }, [clippingPlanes, zoneBox]);
+
   useLayoutEffect(() => {
     const group = studioGroupRef.current;
     if (!group) return;
-    const applyClipping = (root: THREE.Object3D) => {
-      root.traverse((child: THREE.Object3D) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh;
-          if (Array.isArray(mesh.material)) {
-            mesh.material.forEach(m => {
-              m.clippingPlanes = clippingPlanes;
-              m.clipShadows = true;
-              m.needsUpdate = true;
-            });
-          } else if (mesh.material) {
-            mesh.material.clippingPlanes = clippingPlanes;
-            mesh.material.clipShadows = true;
-            mesh.material.needsUpdate = true;
-          }
-        }
-      });
-    };
     const onChildAdded = (event: any) => { if (event.child) applyClipping(event.child); };
     applyClipping(group);
     group.addEventListener('childadded', onChildAdded);
     return () => group.removeEventListener('childadded', onChildAdded);
-  }, [clippingPlanes]);
+  }, [applyClipping]);
+
+  // Réappliquer clipping/culling quand des sous-arbres <Suspense> tardifs finissent de charger
+  useEffect(() => {
+    return useProgress.subscribe(state => {
+      if (!state.active && studioGroupRef.current) {
+        applyClipping(studioGroupRef.current);
+      }
+    });
+  }, [applyClipping]);
 
   const smartObjects = useMemo(() => zone.getSmartObjects(), [zone]);
 
@@ -140,7 +181,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
         </PreviewCategoryLayerGroup>
         <PreviewCategoryLayerGroup layer={LAYER_DECOR} visible={layers.decor}><Decor /></PreviewCategoryLayerGroup>
         <PreviewCategoryLayerGroup layer={LAYER_ANIMALS} visible={layers.animals}><Animals /></PreviewCategoryLayerGroup>
-        <PreviewCategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrors}><MirrorReflectors /></PreviewCategoryLayerGroup>
+        <PreviewCategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrors}><MirrorReflectors showReflection={layers.mirrors} /></PreviewCategoryLayerGroup>
         {layers.neighbors && (
           <PreviewCategoryLayerGroup layer={LAYER_NEIGHBORS} visible={layers.neighbors}><Neighbors /></PreviewCategoryLayerGroup>
         )}
@@ -192,6 +233,197 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
 // FPS and render-stat updates belong to the HUD. Keep them from reconciling
 // the full apartment's furniture tree several times per second.
 const MemoizedStudioCroppedScene = memo(StudioCroppedScene);
+
+/** Canal léger permettant au warmup GPU d'informer l'overlay sans re-rendre <Canvas>. */
+class ZoneWarmupChannel {
+  progress: { pct: number; label: string } | null = null;
+  private listeners = new Set<(p: { pct: number; label: string }) => void>();
+
+  emit(pct: number, label: string) {
+    this.progress = { pct, label };
+    this.listeners.forEach(fn => fn(this.progress!));
+  }
+
+  subscribe(fn: (p: { pct: number; label: string }) => void) {
+    this.listeners.add(fn);
+    if (this.progress) fn(this.progress);
+    return () => { this.listeners.delete(fn); };
+  }
+}
+
+/** Prépare progressivement textures et shaders WebGL sans figer l'interface. */
+function ZoneGpuWarmup({
+  channel,
+  onReady,
+}: {
+  channel: ZoneWarmupChannel;
+  onReady: () => void;
+}) {
+  const { gl, scene, camera } = useThree();
+  const [compiling, setCompiling] = useState(true);
+  // Bloquer le premier rendu complet tant que le warmup progressif n'est pas terminé.
+  useFrame(() => {}, compiling ? 1 : 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const pause = () => new Promise<void>(resolve => {
+      timer = setTimeout(resolve, 0);
+    });
+
+    const waitDownloadsDone = () => new Promise<void>(resolve => {
+      if (!useProgress.getState().active) { resolve(); return; }
+      const unsub = useProgress.subscribe(state => {
+        if (!state.active) {
+          unsub();
+          resolve();
+        }
+      });
+    });
+
+    const run = async () => {
+      await waitDownloadsDone();
+      await pause();
+      if (cancelled || gl.getContext().isContextLost()) return;
+
+      const targets: THREE.Mesh[] = [];
+      const seenMaterials = new Set<THREE.Material>();
+      const seenTextures = new Set<THREE.Texture>();
+      scene.traverseVisible(object => {
+        const mesh = object as THREE.Mesh;
+        if (!mesh.isMesh || !mesh.material) return;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        let hasNewMat = false;
+        for (const mat of mats) {
+          if (!seenMaterials.has(mat)) {
+            seenMaterials.add(mat);
+            hasNewMat = true;
+            for (const val of Object.values(mat)) {
+              if (val && (val as THREE.Texture).isTexture) {
+                seenTextures.add(val as THREE.Texture);
+              }
+            }
+          }
+        }
+        if (hasNewMat) targets.push(mesh);
+      });
+
+      const textures = [...seenTextures];
+      const totalSteps = Math.max(1, textures.length + targets.length);
+      let completed = 0;
+      let sliceStart = performance.now();
+      let lastUiEmit = 0;
+
+      for (let i = 0; i < textures.length; i++) {
+        if (cancelled || gl.getContext().isContextLost()) return;
+        gl.initTexture(textures[i]);
+        completed += 1;
+        const now = performance.now();
+        if (now - lastUiEmit >= 50 || i === textures.length - 1) {
+          lastUiEmit = now;
+          channel.emit(Math.round((completed / totalSteps) * 100), `Textures GPU (${i + 1}/${textures.length})…`);
+        }
+        if (now - sliceStart >= 12) {
+          await pause();
+          sliceStart = performance.now();
+        }
+      }
+
+      const COMPILE_BATCH = 24;
+      for (let i = 0; i < targets.length; i += COMPILE_BATCH) {
+        if (cancelled || gl.getContext().isContextLost()) return;
+        const batch = targets.slice(i, i + COMPILE_BATCH);
+        const doneCount = Math.min(targets.length, i + batch.length);
+        channel.emit(
+          Math.round(((completed + doneCount) / totalSteps) * 100),
+          `Shaders 3D (${doneCount}/${targets.length})…`,
+        );
+        await Promise.all(batch.map(mesh => gl.compileAsync(mesh, camera, scene)));
+        if (cancelled) return;
+      }
+
+      await gl.compileAsync(scene, camera);
+      if (cancelled || gl.getContext().isContextLost()) return;
+      channel.emit(100, 'Finalisation du rendu 3D…');
+      gl.render(scene, camera);
+      setCompiling(false);
+      await pause();
+      if (!cancelled) onReady();
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [gl, scene, camera, channel, onReady]);
+
+  return null;
+}
+
+/** Barre de chargement affichée tant que les modèles et shaders de la zone se préparent. */
+function ZoneLoadingOverlay({
+  zoneName,
+  channel,
+}: {
+  zoneName: string;
+  channel: ZoneWarmupChannel;
+}) {
+  const [progress, setProgress] = useState(() => useProgress.getState());
+  const [warmupProgress, setWarmupProgress] = useState<{ pct: number; label: string } | null>(() => channel.progress);
+
+  useEffect(() => {
+    const update = (state: ReturnType<typeof useProgress.getState>) => setProgress(state);
+    const unsub = useProgress.subscribe(update);
+    update(useProgress.getState());
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    setWarmupProgress(channel.progress);
+    return channel.subscribe(setWarmupProgress);
+  }, [channel]);
+
+  const isDownloading = progress.active && progress.total > 0;
+  const pct = isDownloading
+    ? Math.min(100, Math.round((progress.loaded / progress.total) * 100))
+    : (warmupProgress?.pct ?? 100);
+  const fileName = progress.item.split('/').pop()?.split('?')[0] || progress.item;
+  const statusLabel = isDownloading
+    ? `Chargement des modèles : ${fileName} (${progress.loaded}/${progress.total})`
+    : (warmupProgress?.label ?? 'Préparation de la scène 3D…');
+  const indeterminate = !isDownloading && warmupProgress === null;
+
+  return (
+    <div
+      className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 z-2 p-3"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="col-11 col-sm-8 col-md-6 col-lg-5 bg-body text-body border rounded-3 shadow-lg p-3 d-flex flex-column gap-2">
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <span className="small fw-semibold text-truncate">
+            Chargement de « {zoneName} »
+          </span>
+          {!indeterminate && <span className="small text-body-secondary fw-semibold">{pct}%</span>}
+        </div>
+        <div className="progress">
+          <div
+            className={`progress-bar bg-primary ${indeterminate ? 'progress-bar-striped progress-bar-animated' : ''}`}
+            role="progressbar"
+            style={{ width: `${pct}%` }}
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
+        </div>
+        <div className="small text-body-secondary text-truncate" title={progress.item || undefined}>
+          {statusLabel}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 
 function SpatialZoneStatsCollector({ onStats }: { onStats?: (s: { triangles: number; drawCalls: number }) => void }) {
@@ -406,6 +638,10 @@ export function SpatialZonePreview({
 
   const isMobile = useIsMobile();
   const [showFpsGraph, setShowFpsGraph] = useState(() => !isMobile);
+  const [readyZoneId, setReadyZoneId] = useState<string | null>(null);
+  const sceneReady = readyZoneId === zone.id;
+  const warmupChannel = useMemo(() => new ZoneWarmupChannel(), [zone.id]);
+  const handleSceneReady = useCallback(() => setReadyZoneId(zone.id), [zone.id]);
   const showZoneUi = useSceneStore(state => state.layers.aiZones);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
 
@@ -416,6 +652,7 @@ export function SpatialZonePreview({
   return (
     <div className="inventory-preview-canvas-wrap rounded" style={{ height: height === '100%' ? undefined : height, background: '#0b1120' }}>
       <Canvas
+        dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
         camera={{ position: camPosition, fov: 42, near: 1, far: 8000 }}
         key={zone.id}
         style={{ width: '100%', height: '100%' }}
@@ -433,10 +670,13 @@ export function SpatialZonePreview({
         <directionalLight position={[-200, 300, -200]} intensity={1.0} />
 
         <Suspense fallback={null}>
-          <NavigationEnabledContext.Provider value={false}><MemoizedStudioCroppedScene zone={zone} /></NavigationEnabledContext.Provider>
+          <SceneModelContext.Provider value={true}>
+            <NavigationEnabledContext.Provider value={false}><MemoizedStudioCroppedScene zone={zone} /></NavigationEnabledContext.Provider>
+          </SceneModelContext.Provider>
+          <ZoneGpuWarmup key={`warmup-${zone.id}`} channel={warmupChannel} onReady={handleSceneReady} />
         </Suspense>
 
-        <DevToolsCollector />
+        {sceneReady && <DevToolsCollector />}
         <SpatialZoneStatsCollector onStats={onStats} />
 
         <PreviewCameraController
@@ -448,8 +688,16 @@ export function SpatialZonePreview({
         />
       </Canvas>
 
+      {!sceneReady && (
+        <ZoneLoadingOverlay
+          key={`loading-${zone.id}`}
+          zoneName={zone.name}
+          channel={warmupChannel}
+        />
+      )}
+
       <div className="position-absolute top-0 start-0 m-2 z-1 d-flex flex-column align-items-start gap-1">
-        {showFpsGraph ? (
+        {sceneReady && (showFpsGraph ? (
           <div className="inventory-mini-perf glass-card shadow-lg rounded-2 p-1 position-relative" style={{ width: 190 }}>
             <button
               type="button"
@@ -472,7 +720,7 @@ export function SpatialZonePreview({
           >
             <i className="bi bi-bar-chart-fill" style={{ fontSize: 13 }} aria-hidden="true" />
           </button>
-        )}
+        ))}
         <div className="bg-body text-body border rounded px-2 py-1 small fw-bold d-flex align-items-center gap-2 shadow-sm">
           <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
           <span>Vue Découpée : {zone.name}</span>
@@ -494,12 +742,14 @@ export function SpatialZonePreview({
         >
           🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
         </button>
-        <button
-          onClick={() => setShowFpsGraph(v => !v)}
-          className={`btn btn-sm ${showFpsGraph ? 'btn-primary' : 'btn-light border'} shadow-sm`}
-        >
-          📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
-        </button>
+        {sceneReady && (
+          <button
+            onClick={() => setShowFpsGraph(v => !v)}
+            className={`btn btn-sm ${showFpsGraph ? 'btn-primary' : 'btn-light border'} shadow-sm`}
+          >
+            📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
+          </button>
+        )}
       </div>
 
       <div className="position-absolute bottom-0 end-0 m-2 bg-body text-body-secondary border rounded px-2 py-1 small pe-none">

@@ -1,7 +1,7 @@
 import './devLog';
 import { createRoot } from 'react-dom/client';
 import './features/ui/resourceDownloadLogs';
-import { useGLTF } from '@react-three/drei';
+import './dracoSetup';
 import { Studio } from '@features/scene/Studio';
 import { HomeAssistantSync } from './features/home-assistant/HomeAssistant';
 import { completeHomeAssistantPopupCallback } from './features/home-assistant/connection';
@@ -18,8 +18,6 @@ console.warn = (...args: any[]) => {
   }
   _origWarn(...args);
 };
-
-useGLTF.setDecoderPath('/draco/');
 
 console.info(`[Room-3D] v${__APP_VERSION__} (${__COMMIT_HASH__}) - ${__BUILD_TIME__}`);
 (window as any).__ROOM_3D_BUILD__ = { version: __APP_VERSION__, commit: __COMMIT_HASH__, buildTime: __BUILD_TIME__ };
