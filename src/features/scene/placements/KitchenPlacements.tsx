@@ -12,6 +12,7 @@ import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Citronhaj40553211 } from '../items/Citronhaj40553211';
+import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Middagsmat60463714 } from '../items/Middagsmat60463714';
 import { SyckRc003a } from '../items/SyckRc003a';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
@@ -123,6 +124,11 @@ export function KitchenFurnishings() {
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}
       <group position={[KITCHEN_WEST_WALL, 0, ROOM_D]} userData={{ sceneItemRoot: true, itemName: 'Égouttoir Lillhavet' }}>
         <CuisineLillhavet />
+      </group>
+
+      {/* Tasse rouge IKEA KEJSERLIG à gauche du sèche-couvert, au bord avant du meuble haut */}
+      <group position={[KITCHEN_WEST_WALL + 44, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 27.5]} rotation-y={Math.PI / 5} userData={{ sceneItemRoot: true, itemName: 'Tasse KEJSERLIG rouge' }}>
+        <Kejserlig90511501 />
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
