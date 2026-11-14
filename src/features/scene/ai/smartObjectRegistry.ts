@@ -653,7 +653,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         offset: [150, 0, -600],
         rotY: 0,
         animationsRandom: 'dance',
-        repeatCount: 4,
+        repeatCount: 2,
         repeatVariation: false,
       }
     ]
@@ -1429,6 +1429,13 @@ export function buildSmartObjectInstructionSequence(
   return [baseInstruction];
 }
 
+type SmartObjectCacheEntry = {
+  x: number; y: number; z: number; ry: number;
+  bedDouble: number; bedPos: number;
+  value: ResolvedSmartObject;
+};
+const smartObjectCache = new Map<string, SmartObjectCacheEntry>();
+
 /**
  * Résout un SmartObject en coordonnées monde.
  * Si l'objet est lié à un objet 3D réel (itemId), sa position monde et son orientation Ry
@@ -1439,14 +1446,17 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
   const base = SMART_OBJECTS[objectId];
   if (!base) return undefined;
 
+  const bedDouble = positionState['bed-double']?.idx ?? 0;
+  const bedPos = positionState['bed-position']?.idx ?? 0;
+
   // 1. Résolution de la transformation monde via getObjectTransform
   let transform = base.itemId ? getObjectTransform(base.itemId) : undefined;
-  if (positionState['bed-double']?.idx === 1) {
+  if (bedDouble === 1) {
     if (objectId === 'interx-affection-point' || objectId === 'hugs-point') {
       // Inter-X includes travelling duos: use the existing open garden area.
       transform = { position: SMART_OBJECTS['interx-affection-garden-point'].position!, rotationY: 0 };
     } else if (objectId === 'clean-floor-living' || objectId === 'dance-mirror-south' || objectId === 'dance-bed-east-north') {
-      const bed = DOUBLE_BED_POSITIONS[positionState['bed-position']?.idx ?? 0];
+      const bed = DOUBLE_BED_POSITIONS[bedPos];
       const westDesk = getObjectTransform('desk-bollsidan-1')!;
       const eastDesk = getObjectTransform('desk-bollsidan-2')!;
       // Centre of the aisle between the double bed (83 cm per frame) and desks (36 cm deep).
@@ -1462,6 +1472,12 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
   const objY = transform ? transform.position[1] : (base.position?.[1] ?? 0);
   const objZ = transform ? transform.position[2] : (base.position?.[2] ?? 0);
   const objRy = transform ? transform.rotationY : (base.rotationY ?? 0);
+
+  const cached = smartObjectCache.get(objectId);
+  if (cached && cached.x === objX && cached.y === objY && cached.z === objZ &&
+      cached.ry === objRy && cached.bedDouble === bedDouble && cached.bedPos === bedPos) {
+    return cached.value;
+  }
 
   const cos = Math.cos(objRy);
   const sin = Math.sin(objRy);
@@ -1522,10 +1538,12 @@ export function getSmartObject(objectId: string): ResolvedSmartObject | undefine
     };
   });
 
-  return {
+  const value: ResolvedSmartObject = {
     ...base,
     position: [objX, objY, objZ],
     rotationY: objRy,
     slots: resolvedSlots,
   };
+  smartObjectCache.set(objectId, { x: objX, y: objY, z: objZ, ry: objRy, bedDouble, bedPos, value });
+  return value;
 }

@@ -6,12 +6,14 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { useSceneGlass } from '../utils/useSceneGlass';
 import type { SceneItemProps } from '@shared/types';
 
 const GLB = 'items/reolink-fe-w/reolink-fe-w.glb';
 
 export function ReolinkFeW({ onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene } = useGLTFClone(GLB, true);
+  useSceneGlass(scene);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

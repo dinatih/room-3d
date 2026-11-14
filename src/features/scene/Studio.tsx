@@ -52,7 +52,7 @@ import { LidarScan }                    from '@features/scene/LidarScan';
 import { GlbReveal }                    from '@features/scene/GlbReveal';
 import { PresenceLightController }       from './PresenceLightController';
 import { SunLight, SunSphere } from '@features/scene/SunLight';
-import { SkySphere } from './SkySphere';
+import { SkySphere, preloadCurrentSkyTexture } from './SkySphere';
 import { AIRCRAFT_MODELS, DEFAULT_PLANE_MODEL } from './aircraftModels';
 import { PlaneControls } from './PlaneControls';
 import { HornetControls } from './HornetControls';
@@ -197,6 +197,12 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       await pause();
       if (cancelled) return;
       const animsPromise = Promise.all(WARMUP_ANIM_PATHS.map(path => cacheDynamicGLTF(path)));
+      phase('⚡ Chargement de l’environnement HDRI…');
+      await preloadCurrentSkyTexture(scene).catch((err) => {
+        console.warn('Préchargement HDRI ignoré :', err);
+        return null;
+      });
+      if (cancelled) return;
       const targets: Mesh[] = [];
       const seen = new Set<Material>();
       scene.traverse(object => {
@@ -207,14 +213,18 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         materials.forEach(material => seen.add(material));
         targets.push(mesh);
       });
-      for (const [index, mesh] of targets.entries()) {
+      const COMPILE_BATCH_SIZE = 32;
+      for (let i = 0; i < targets.length; i += COMPILE_BATCH_SIZE) {
         // Éviter une temporisation de compilation ralentie par objet en arrière-plan.
         if (document.hidden) break;
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        const name = materials.map(material => material.name || material.type).join(', ');
-        phase(`⚡ Préparation 3D ${index + 1}/${targets.length} : ${name}`);
+        const batch = targets.slice(i, i + COMPILE_BATCH_SIZE);
+        const doneCount = Math.min(i + batch.length, targets.length);
+        const lastMat = batch[batch.length - 1]?.material;
+        const lastList = Array.isArray(lastMat) ? lastMat : lastMat ? [lastMat] : [];
+        const name = lastList.map(material => material.name || material.type).join(', ');
+        phase(`⚡ Préparation 3D ${doneCount}/${targets.length} : ${name}`);
         updateShaders();
-        await gl.compileAsync(mesh, camera, scene);
+        await Promise.all(batch.map(mesh => gl.compileAsync(mesh, camera, scene)));
         if (cancelled) return;
       }
       // Compléter les variantes liées aux autres objets partageant un matériau.
@@ -255,12 +265,17 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       // Préparer géométries (VBOs), textures et ombres même hors frustum initial pour éviter les gels post-chargement.
       const savedCull = new Map<any, boolean>();
       const savedReflectorForce = new Map<any, boolean>();
+      const savedMirrorGroups = new Map<any, boolean>();
       if (typeof scene?.traverse === 'function') {
         scene.traverse(object => {
           const anyObj = object as any;
           if (anyObj.isMesh) {
             savedCull.set(anyObj, anyObj.frustumCulled);
             anyObj.frustumCulled = false;
+          }
+          if (anyObj.userData?.mirrorFrustumGroup) {
+            savedMirrorGroups.set(anyObj, anyObj.visible);
+            anyObj.visible = true;
           }
           if (anyObj.isReflector && 'forceUpdate' in anyObj) {
             savedReflectorForce.set(anyObj, Boolean(anyObj.forceUpdate));
@@ -274,6 +289,7 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
       } finally {
         for (const [obj, val] of savedCull) obj.frustumCulled = val;
         for (const [obj, val] of savedReflectorForce) obj.forceUpdate = val;
+        for (const [obj, val] of savedMirrorGroups) obj.visible = val;
       }
       readyRef.current = true;
       setCompiling(false);
@@ -473,7 +489,7 @@ function SceneAmbientLight() {
   const activeHdri = getHdriById(currentHdri);
   const intensity = activeHdri.ambientIntensity ?? (activeHdri.type === 'jpg' ? 0.95 : 0.6);
   const color = activeHdri.ambientColor ?? (activeHdri.type === 'jpg' ? 0xffba90 : 0x8899bb);
-  return <ambientLight color={color} intensity={intensity} />;
+  return <ambientLight ref={(node) => { node?.layers.enableAll(); }} color={color} intensity={intensity} />;
 }
 
 export function Studio() {

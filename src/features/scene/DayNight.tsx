@@ -84,7 +84,15 @@ export function DayNight() {
     (stars.current.material as ShaderMaterial).uniforms.opacity.value = 1 - light;
   });
   return <group position={SKY_CENTER}>
-    <directionalLight name="MoonLight" ref={moonLight} color="#b9ceff" intensity={0} castShadow
+    <directionalLight
+      name="MoonLight"
+      ref={(node) => {
+        if (node) {
+          moonLight.current = node;
+          node.layers.enableAll();
+        }
+      }}
+      color="#b9ceff" intensity={0} castShadow
       shadow-mapSize={[2048, 2048]} shadow-camera-near={1} shadow-camera-far={3 * SKY_RADIUS}
       shadow-camera-left={-SKY_RADIUS} shadow-camera-right={SKY_RADIUS}
       shadow-camera-top={SKY_RADIUS} shadow-camera-bottom={-SKY_RADIUS}

@@ -4,6 +4,7 @@ import type { AnimationSource } from './animationSource';
 import type { AnimationRequest, AnimationResponse } from './animation.worker';
 import { characterRuntimeStats } from './characterRuntime';
 
+const MAX_IDLE_CLIPS = 48;
 interface RigLibrary { target: RigNode; users: number; clips: Map<string, { promise: Promise<THREE.AnimationClip>; users: number }> }
 const libraries = new Map<string, RigLibrary>();
 const jobs = new Map<number, { resolve: (clip: THREE.AnimationClip) => void; reject: (error: Error) => void }>();
@@ -26,10 +27,27 @@ export function acquireAnimationLibrary(scene: THREE.Object3D) {
   library.users++;
   const current = library;
   const retained = new Set<string>();
+  const evictIdleClips = () => {
+    let idleCount = 0;
+    for (const entry of current.clips.values()) if (entry.users === 0) idleCount++;
+    if (idleCount <= MAX_IDLE_CLIPS) return;
+    for (const [k, entry] of current.clips) {
+      if (entry.users > 0) continue;
+      current.clips.delete(k);
+      if (--idleCount <= MAX_IDLE_CLIPS) break;
+    }
+  };
   const discard = (clipKey: string) => {
     if (!retained.delete(clipKey)) return;
-    const entry = current.clips.get(clipKey)!;
-    if (--entry.users === 0) current.clips.delete(clipKey);
+    const entry = current.clips.get(clipKey);
+    if (!entry) return;
+    entry.users--;
+    if (entry.users === 0) {
+      // Déplacer en fin de Map (MRU) et n'évincer que si le budget inactif est dépassé.
+      current.clips.delete(clipKey);
+      current.clips.set(clipKey, entry);
+      evictIdleClips();
+    }
   };
   return {
     release() {
@@ -43,6 +61,8 @@ export function acquireAnimationLibrary(scene: THREE.Object3D) {
       const cached = current.clips.get(clipKey);
       if (cached) {
         if (!retained.has(clipKey)) { retained.add(clipKey); cached.users++; }
+        current.clips.delete(clipKey);
+        current.clips.set(clipKey, cached);
         return cached.promise;
       }
       if (!worker) {

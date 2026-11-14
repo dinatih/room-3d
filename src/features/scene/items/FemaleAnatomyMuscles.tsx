@@ -8,12 +8,14 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
+import { useSceneGlass } from '../utils/useSceneGlass';
 import type { SceneModelProps } from '@shared/types';
 
 const TARGET_H = 170; // 170 cm
 
 export function FemaleAnatomyMuscles({ onSize }: SceneModelProps) {
   const { scene } = useGLTFClone('models/anatomy/female_anatomy_muscles.glb');
+  useSceneGlass(scene);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);

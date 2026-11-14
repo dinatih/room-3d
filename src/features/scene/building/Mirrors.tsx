@@ -231,7 +231,7 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
     <>
       {showReflection && (
         <>
-          <group ref={reflectorRef} visible={false}>
+          <group ref={reflectorRef} visible={false} userData={{ mirrorFrustumGroup: true }}>
             <MergedReflector planes={planes} position={[0, 0, mirZ]} rotationY={Math.PI} />
           </group>
           <group ref={ambientRef} visible={true}>
@@ -297,7 +297,7 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
     <>
       {showReflection && (
         <>
-          <group ref={reflectorRef} visible={false}>
+          <group ref={reflectorRef} visible={false} userData={{ mirrorFrustumGroup: true }}>
             <MergedReflector planes={planes} position={[mirX, 0, 0]} rotationY={Math.PI / 2} />
           </group>
           <group ref={ambientRef} visible={true}>
@@ -369,7 +369,7 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
 
   return (
     <>
-      <group ref={reflectorRef} visible={false}>
+      <group ref={reflectorRef} visible={false} userData={{ mirrorFrustumGroup: true }}>
         <ReflectorMirror
           w={mirrorW} h={mirrorH}
           position={pos}

@@ -11,7 +11,7 @@ export const ANIMATION_LOADING_IDLE = resolveAnimationId('thinking');
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/draco/');
-const MAX_DYNAMIC_GLTF_CACHE = 8;
+const MAX_DYNAMIC_GLTF_CACHE = 64;
 const RESERVED_WALK_ANIMATIONS = ['walking', 'female-walk'];
 const reservedWalkPaths = new Set(RESERVED_WALK_ANIMATIONS.map(resolveAnimationPath));
 const reservedWalkGLTFCache = new Map<string, Promise<AnimationSource>>();

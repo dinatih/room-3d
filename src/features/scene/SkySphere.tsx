@@ -25,8 +25,53 @@ const EXTERIOR_FADE_START = SKY_RADIUS * 0.98;
 const EXTERIOR_FADE_END = SKY_RADIUS * 1.22;
 
 const textureCache = new Map<string, THREE.Texture>();
+const pendingTextureLoads = new Map<string, Promise<THREE.Texture>>();
 const hdrLoader = new HDRLoader();
 const textureLoader = new THREE.TextureLoader();
+
+function loadSkyTextureByUrl(url: string, type: 'hdr' | 'jpg'): Promise<THREE.Texture> {
+  const cached = textureCache.get(url);
+  if (cached) return Promise.resolve(cached);
+  const existing = pendingTextureLoads.get(url);
+  if (existing) return existing;
+  const loader = type === 'hdr' ? hdrLoader : textureLoader;
+  const pending = new Promise<THREE.Texture>((resolve, reject) => {
+    loader.load(url, (loadedTexture) => {
+      loadedTexture.mapping = THREE.EquirectangularReflectionMapping;
+      if (type === 'jpg') loadedTexture.colorSpace = THREE.SRGBColorSpace;
+      if (textureCache.size >= 2) {
+        const oldestUrl = textureCache.keys().next().value;
+        if (oldestUrl && oldestUrl !== url) {
+          const oldTex = textureCache.get(oldestUrl);
+          oldTex?.dispose();
+          textureCache.delete(oldestUrl);
+        }
+      }
+      textureCache.set(url, loadedTexture);
+      pendingTextureLoads.delete(url);
+      resolve(loadedTexture);
+    }, undefined, (error) => {
+      pendingTextureLoads.delete(url);
+      reject(error);
+    });
+  });
+  pendingTextureLoads.set(url, pending);
+  return pending;
+}
+
+export function preloadCurrentSkyTexture(scene?: THREE.Scene): Promise<THREE.Texture | null> {
+  const { currentHdri, hdriResolution } = useSceneStore.getState();
+  const hdri = getHdriById(currentHdri);
+  const url = getHdriUrl(hdri, hdriResolution);
+  const envIntensity = hdri.environmentIntensity ?? (hdri.type === 'jpg' ? 3.2 : 1.0);
+  return loadSkyTextureByUrl(url, hdri.type).then((tex) => {
+    if (scene) {
+      scene.environment = tex;
+      scene.environmentIntensity = envIntensity;
+    }
+    return tex;
+  });
+}
 
 export function getLoadedSkyTexture(id?: string): THREE.Texture | null {
   const { currentHdri, hdriResolution } = useSceneStore.getState();
@@ -59,33 +104,16 @@ export function SkySphere({ envOnly = false, showSpaceBackdrop = true }: { envOn
     }
 
     let isMounted = true;
-    const onLoad = (loadedTexture: THREE.Texture) => {
-      loadedTexture.mapping = THREE.EquirectangularReflectionMapping;
-      if (hdri.type === 'jpg') {
-        loadedTexture.colorSpace = THREE.SRGBColorSpace;
-      }
-      if (textureCache.size >= 2) {
-        const oldestUrl = textureCache.keys().next().value;
-        if (oldestUrl && oldestUrl !== url) {
-          const oldTex = textureCache.get(oldestUrl);
-          oldTex?.dispose();
-          textureCache.delete(oldestUrl);
-        }
-      }
-      textureCache.set(url, loadedTexture);
+    void loadSkyTextureByUrl(url, hdri.type).then((loadedTexture) => {
       if (isMounted) {
         setTexture(loadedTexture);
         scene.environment = loadedTexture;
         scene.environmentIntensity = envIntensity;
         invalidate();
       }
-    };
-
-    if (hdri.type === 'hdr') {
-      hdrLoader.load(url, onLoad);
-    } else {
-      textureLoader.load(url, onLoad);
-    }
+    }).catch((err) => {
+      console.error(`Échec du chargement HDRI "${url}" :`, err);
+    });
 
     return () => {
       isMounted = false;

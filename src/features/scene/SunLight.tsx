@@ -38,7 +38,12 @@ export function SunLight() {
   return (
     <directionalLight
       name="SunLight"
-      ref={lightRef}
+      ref={(node) => {
+        if (node) {
+          lightRef.current = node;
+          node.layers.enableAll();
+        }
+      }}
       intensity={0}
       castShadow
       shadow-mapSize={[2048, 2048]}
