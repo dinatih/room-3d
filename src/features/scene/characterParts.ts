@@ -102,6 +102,7 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   });
   targetHairBones.sort((a, b) => a.depth - b.depth);
   targetHairBones.forEach((hb, idx) => {
+    hb.bone.userData.originalBoneName ??= hb.bone.name;
     hb.bone.name = `hair_${idx + 1}`;
   });
 

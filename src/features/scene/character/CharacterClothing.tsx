@@ -43,6 +43,10 @@ export function CharacterClothing({
     laraScene.traverse((obj) => {
       if ((obj as THREE.Bone).isBone && obj.name) {
         laraBonesByName.set(obj.name, obj as THREE.Bone);
+        const originalName = obj.userData?.originalBoneName;
+        if (typeof originalName === 'string' && originalName) {
+          laraBonesByName.set(originalName, obj as THREE.Bone);
+        }
       }
     });
 
