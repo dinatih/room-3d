@@ -153,4 +153,25 @@ describe('Receveurs d’ombres', () => {
             bone.position.x = x; mesh.morphTargetInfluences[0] = morph; compare(scene, camera);
         }
     });
+    it('recalcule la sphère englobante après réassignation du squelette sur un vêtement', () => {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute([-0.2, 0, 0, 0.2, 0, 0, 0, 1, 0], 3));
+        geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(Array(12).fill(0), 4));
+        geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], 4));
+        const oldBone = new THREE.Bone(), liveBone = new THREE.Bone();
+        const mesh = new THREE.SkinnedMesh(geo, material);
+        oldBone.updateMatrixWorld(true);
+        mesh.bind(new THREE.Skeleton([oldBone]));
+        enableAnimatedFrustumCulling(mesh);
+
+        liveBone.position.set(150, 2200, -300);
+        liveBone.updateMatrixWorld(true);
+        mesh.bind(new THREE.Skeleton([liveBone], [new THREE.Matrix4()]), mesh.bindMatrix.clone());
+        enableAnimatedFrustumCulling(mesh);
+
+        const worldBounds = new THREE.Box3();
+        meshWorldBounds(mesh, worldBounds);
+        assert.ok(worldBounds.min.y > 2190 && worldBounds.max.y < 2210, `expected live bone Y~2200, got ${worldBounds.min.y}..${worldBounds.max.y}`);
+        assert.ok(mesh.boundingSphere.center.distanceTo(new THREE.Vector3(150, 2200.5, -300)) < 1);
+    });
 });
