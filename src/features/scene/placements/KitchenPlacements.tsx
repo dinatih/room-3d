@@ -126,9 +126,11 @@ export function KitchenFurnishings() {
         <CuisineLillhavet />
       </group>
 
-      {/* Tasse rouge IKEA KEJSERLIG à gauche du sèche-couvert, au bord avant du meuble haut */}
+      {/* Tasse rouge IKEA KEJSERLIG retournée à gauche du sèche-couvert, au bord avant du meuble haut */}
       <group position={[KITCHEN_WEST_WALL + 6.5, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 27.5]} rotation-y={Math.PI / 5} userData={{ sceneItemRoot: true, itemName: 'Tasse KEJSERLIG rouge' }}>
-        <Kejserlig90511501 />
+        <group position={[0, 9.5, 0]} rotation={[Math.PI, 0, 0]}>
+          <Kejserlig90511501 />
+        </group>
       </group>
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
