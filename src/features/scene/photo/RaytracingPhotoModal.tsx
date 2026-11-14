@@ -1336,12 +1336,20 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
       const size = rendererRef.current.getSize(new THREE.Vector2());
       const cameraJson = c.toJSON();
       cameraJson.object.type = c instanceof PhysicalCamera ? 'PerspectiveCamera' : 'OrthographicCamera';
-      const response = await fetch('http://127.0.0.1:5174/api/render-jobs', {
-        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' },
-        body: packRenderArchive({ scene: serializeRenderScene(scene), camera: cameraJson, width: size.x, height: size.y,
-          samples: targetSamples, bounces, exposure, focusDistance, fStop,
-          bokehSize: c instanceof PhysicalCamera ? c.bokehSize : 0, denoise: enableDenoise }),
+      const archive = packRenderArchive({ scene: serializeRenderScene(scene), camera: cameraJson, width: size.x, height: size.y,
+        samples: targetSamples, bounces, exposure, focusDistance, fStop,
+        bokehSize: c instanceof PhysicalCamera ? c.bokehSize : 0, denoise: enableDenoise });
+      const postJob = () => fetch('http://127.0.0.1:5174/api/render-jobs', {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: archive,
       });
+      let response: Response;
+      try {
+        response = await postJob();
+      } catch {
+        const startResponse = await fetch('/api/render-service/start', { method: 'POST' });
+        if (!startResponse.ok) throw new Error(await startResponse.text());
+        response = await postJob();
+      }
       if (!response.ok) throw new Error(await response.text());
       const job = await response.json();
       alert(`Rendu ${job.id} envoyé. Résultat dans renders/. Suivi : http://127.0.0.1:5174/render-jobs.html`);

@@ -4,6 +4,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import pkg from './package.json' with { type: 'json' };
 import { devLogPlugin } from './scripts/dev-log-plugin.ts';
+import { renderServicePlugin } from './scripts/render-service-plugin.ts';
 
 const commitHash = (() => {
   try {
@@ -17,7 +18,7 @@ const commitHash = (() => {
 const buildTime = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 
 export default defineConfig({
-  plugins: [react(), devLogPlugin()],
+  plugins: [react(), devLogPlugin(), renderServicePlugin()],
   base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
