@@ -301,6 +301,14 @@ export function CharacterSection({
             value={layers[key]} onChange={event => useSceneStore.getState().setLaraClothing(key, event.target.value as LaraClothing)}>
             <option value="native">Native</option>
             <option value="bikini">Bikini</option>
+            {key === 'laraTop' ? (
+              <option value="hoodie">Sweat zippé</option>
+            ) : (
+              <>
+                <option value="legging">Legging</option>
+                <option value="sweatpants">Jogging</option>
+              </>
+            )}
             <option value="none">Aucun</option>
           </select>
         </label>

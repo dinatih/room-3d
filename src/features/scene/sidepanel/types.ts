@@ -1,4 +1,4 @@
-export type LaraClothing = 'native' | 'bikini' | 'none';
+export type LaraClothing = 'native' | 'bikini' | 'legging' | 'sweatpants' | 'hoodie' | 'none';
 
 import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../characterConfig';

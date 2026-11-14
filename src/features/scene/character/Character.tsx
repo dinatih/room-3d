@@ -2,7 +2,7 @@
  * Character.tsx — Personnages (Characters).
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
-import { useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
+import { Suspense, useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
@@ -14,6 +14,7 @@ import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
+import { CharacterClothing } from './CharacterClothing';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
@@ -903,6 +904,11 @@ export function Character({
       applyClothingAndAccessoriesVisibility(parts, { laraTop, laraBottom, laraShoes, laraGlasses, showAccessories, laraPistols, equipment, animationEquipment });
       const cap = scene.getObjectByName('character_baseball_cap_attachment');
       if (cap) cap.visible = animationEquipment !== 'shower';
+      scene.traverse((child) => {
+        if (child.userData?.isCustomClothingRoot) {
+          child.visible = animationEquipment !== 'shower';
+        }
+      });
     }
 
     if (isTPose) {
@@ -1351,6 +1357,31 @@ export function Character({
         shadows={characterShadows}
         resetKey={`${isPreview}:${characterGrid}`}
       />}
+
+      {isLara && laraTop === 'hoodie' && (
+        <Suspense fallback={null}>
+          <CharacterClothing
+            clothingId="hoodie"
+            laraScene={scene}
+            shadows={characterShadows}
+            showWallhack={showWallhack}
+            wireframe={characterWireframe}
+            visible={animationEquipmentRef.current !== 'shower'}
+          />
+        </Suspense>
+      )}
+      {isLara && (laraBottom === 'legging' || laraBottom === 'sweatpants') && (
+        <Suspense fallback={null}>
+          <CharacterClothing
+            clothingId={laraBottom}
+            laraScene={scene}
+            shadows={characterShadows}
+            showWallhack={showWallhack}
+            wireframe={characterWireframe}
+            visible={animationEquipmentRef.current !== 'shower'}
+          />
+        </Suspense>
+      )}
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />

@@ -1,0 +1,1491 @@
+"""
+Generate custom-tailored separate GLB garments for Lara from lara_perfect.blend:
+  1. public/characters/clothing/lara_legging.glb      (fitted high-waisted cotton-elastane legging)
+  2. public/characters/clothing/lara_hoodie_zip.glb   (basic cotton fleece zipped hoodie with hood & pockets)
+  3. public/characters/clothing/lara_sweatpants.glb   (matching basic cotton fleece sweatpants / joggers)
+
+Each GLB is self-contained with:
+  - Lara's Armature + exact glTF 4-bone normalized skin weights transferred from Lara's body
+  - Procedural cotton knit / rib knit / fleece textures (BaseColor + Normal) packed in the GLB
+  - Clean quad-based garment topology, seam ridges, tucked hems, drawstrings, and metal zipper details
+"""
+
+import math
+import os
+import bpy
+import bmesh
+from mathutils import Vector, Matrix
+from mathutils.bvhtree import BVHTree
+import numpy as np
+
+BLEND_PATH = os.path.abspath("sources_backup/characters/lara/lara_perfect.blend")
+OUT_DIR = os.path.abspath("public/characters/clothing")
+
+
+# ---------------------------------------------------------------------------
+# Procedural Texture Generation (Cotton Jersey, Fleece, 1x1 Rib Knit, Cord)
+# ---------------------------------------------------------------------------
+def _make_image(name: str, rgba: np.ndarray, colorspace: str = "sRGB") -> bpy.types.Image:
+    h, w, _ = rgba.shape
+    img = bpy.data.images.new(name, width=w, height=h, alpha=False)
+    img.colorspace_settings.name = colorspace
+    img.pixels.foreach_set(rgba.ravel().astype(np.float32))
+    img.pack()
+    return img
+
+
+def _height_to_normal_rgba(height: np.ndarray, strength: float = 1.0) -> np.ndarray:
+    dx = np.roll(height, -1, axis=1) - np.roll(height, 1, axis=1)
+    dy = np.roll(height, -1, axis=0) - np.roll(height, 1, axis=0)
+    nx = -dx * strength
+    ny = -dy * strength
+    nz = np.ones_like(height)
+    inv_len = 1.0 / np.sqrt(nx * nx + ny * ny + nz * nz + 1e-8)
+    nx *= inv_len
+    ny *= inv_len
+    nz *= inv_len
+    h, w = height.shape
+    rgba = np.ones((h, w, 4), dtype=np.float32)
+    rgba[..., 0] = np.clip(nx * 0.5 + 0.5, 0.0, 1.0)
+    rgba[..., 1] = np.clip(ny * 0.5 + 0.5, 0.0, 1.0)
+    rgba[..., 2] = np.clip(nz * 0.5 + 0.5, 0.0, 1.0)
+    return rgba
+
+
+def _generate_cotton_textures():
+    rng = np.random.default_rng(42)
+    size = 512
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+
+    u = xx / size * 128.0 * 2.0 * math.pi
+    v = yy / size * 160.0 * 2.0 * math.pi
+    knit_v = np.sin(v + 0.65 * np.abs(np.sin(u * 0.5))) * 0.5 + np.cos(u) * 0.35
+
+    low_noise = rng.normal(0.0, 1.0, (size // 4, size // 4)).astype(np.float32)
+    low_noise = np.repeat(np.repeat(low_noise, 4, axis=0), 4, axis=1)
+    fine_noise = rng.normal(0.0, 0.35, (size, size)).astype(np.float32)
+    fleece_h = knit_v * 0.38 + low_noise * 0.25 + fine_noise * 0.22
+
+    rib_u = xx / size * 96.0 * 2.0 * math.pi
+    rib_v = yy / size * 160.0 * 2.0 * math.pi
+    rib_h = np.cos(rib_u) * 0.85 + np.sin(rib_v) * 0.18 + fine_noise * 0.14
+
+    # 1. Heather Grey Cotton Fleece (Tracksuit)
+    base_grey = np.array([0.56, 0.58, 0.61], dtype=np.float32)
+    melange = np.clip(1.0 + low_noise * 0.055 + fine_noise * 0.045 + knit_v * 0.015, 0.80, 1.18)
+    grey_rgb = np.clip(base_grey[None, None, :] * melange[..., None], 0.0, 1.0)
+    grey_rgba = np.ones((size, size, 4), dtype=np.float32)
+    grey_rgba[..., :3] = grey_rgb
+    img_grey_col = _make_image("tex_cotton_grey_col", grey_rgba, "sRGB")
+    img_fleece_nrm = _make_image("tex_cotton_fleece_nrm", _height_to_normal_rgba(fleece_h, 0.85), "Non-Color")
+    img_rib_nrm = _make_image("tex_cotton_rib_nrm", _height_to_normal_rgba(rib_h, 1.15), "Non-Color")
+
+    # 2. Anthracite / Charcoal Cotton-Elastane (Legging)
+    base_dark = np.array([0.075, 0.082, 0.098], dtype=np.float32)
+    dark_melange = np.clip(1.0 + low_noise * 0.06 + fine_noise * 0.05 + knit_v * 0.025, 0.78, 1.22)
+    dark_rgb = np.clip(base_dark[None, None, :] * dark_melange[..., None], 0.0, 1.0)
+    dark_rgba = np.ones((size, size, 4), dtype=np.float32)
+    dark_rgba[..., :3] = dark_rgb
+    img_dark_col = _make_image("tex_legging_dark_col", dark_rgba, "sRGB")
+    img_jersey_nrm = _make_image("tex_legging_jersey_nrm", _height_to_normal_rgba(knit_v * 0.6 + fine_noise * 0.15, 0.55), "Non-Color")
+
+    # 3. Braided Cotton Drawstring Cord
+    cord_u = xx / size * 24.0 * 2.0 * math.pi
+    cord_v = yy / size * 48.0 * 2.0 * math.pi
+    cord_h = np.sin(cord_u + cord_v) * 0.6 + np.sin(cord_u - cord_v) * 0.4
+    cord_col = np.ones((size, size, 4), dtype=np.float32)
+    cord_col[..., 0] = np.clip(0.84 + cord_h * 0.04, 0.0, 1.0)
+    cord_col[..., 1] = np.clip(0.82 + cord_h * 0.04, 0.0, 1.0)
+    cord_col[..., 2] = np.clip(0.77 + cord_h * 0.04, 0.0, 1.0)
+    img_cord_col = _make_image("tex_cord_col", cord_col, "sRGB")
+    img_cord_nrm = _make_image("tex_cord_nrm", _height_to_normal_rgba(cord_h, 1.2), "Non-Color")
+
+    return {
+        "grey_col": img_grey_col,
+        "fleece_nrm": img_fleece_nrm,
+        "rib_nrm": img_rib_nrm,
+        "dark_col": img_dark_col,
+        "jersey_nrm": img_jersey_nrm,
+        "cord_col": img_cord_col,
+        "cord_nrm": img_cord_nrm,
+    }
+
+
+def _make_pbr_material(
+    name: str,
+    base_color=(0.5, 0.5, 0.5, 1.0),
+    roughness: float = 0.88,
+    metallic: float = 0.0,
+    color_img=None,
+    normal_img=None,
+    normal_strength: float = 0.45,
+    uv_scale: float = 1.0,
+) -> bpy.types.Material:
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    mat.use_backface_culling = False
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    nodes.clear()
+
+    out = nodes.new("ShaderNodeOutputMaterial")
+    out.location = (400, 0)
+    bsdf = nodes.new("ShaderNodeBsdfPrincipled")
+    bsdf.location = (100, 0)
+    bsdf.inputs["Base Color"].default_value = base_color
+    bsdf.inputs["Roughness"].default_value = roughness
+    bsdf.inputs["Metallic"].default_value = metallic
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.25 if metallic == 0.0 else 0.5
+    links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+
+    if color_img is not None or normal_img is not None:
+        uv = nodes.new("ShaderNodeTexCoord")
+        uv.location = (-750, 0)
+        mapping = nodes.new("ShaderNodeMapping")
+        mapping.location = (-550, 0)
+        mapping.inputs["Scale"].default_value = (uv_scale, uv_scale, 1.0)
+        links.new(uv.outputs["UV"], mapping.inputs["Vector"])
+
+        if color_img is not None:
+            tex_c = nodes.new("ShaderNodeTexImage")
+            tex_c.location = (-280, 160)
+            tex_c.image = color_img
+            links.new(mapping.outputs["Vector"], tex_c.inputs["Vector"])
+            links.new(tex_c.outputs["Color"], bsdf.inputs["Base Color"])
+
+        if normal_img is not None:
+            tex_n = nodes.new("ShaderNodeTexImage")
+            tex_n.location = (-280, -160)
+            tex_n.image = normal_img
+            links.new(mapping.outputs["Vector"], tex_n.inputs["Vector"])
+            nrm = nodes.new("ShaderNodeNormalMap")
+            nrm.location = (-40, -160)
+            nrm.inputs["Strength"].default_value = normal_strength
+            links.new(tex_n.outputs["Color"], nrm.inputs["Color"])
+            links.new(nrm.outputs["Normal"], bsdf.inputs["Normal"])
+
+    return mat
+
+
+# ---------------------------------------------------------------------------
+# Clean Region-Separated Body BVHs & Slice Centroids
+# ---------------------------------------------------------------------------
+def _build_filtered_bvh(obj_names, face_filter=None):
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    bm = bmesh.new()
+    for name in obj_names:
+        src = bpy.data.objects.get(name)
+        if not src:
+            raise RuntimeError(f"Missing Lara reference mesh: {name}")
+        tmp_mesh = bpy.data.meshes.new_from_object(src.evaluated_get(depsgraph))
+        bm.from_mesh(tmp_mesh)
+        bpy.data.meshes.remove(tmp_mesh)
+
+    if face_filter is not None:
+        to_del = [f for f in bm.faces if not face_filter(f)]
+        if to_del:
+            bmesh.ops.delete(bm, geom=to_del, context="FACES")
+        loose_verts = [v for v in bm.verts if not v.link_faces]
+        if loose_verts:
+            bmesh.ops.delete(bm, geom=loose_verts, context="VERTS")
+
+    verts = [v.co.copy() for v in bm.verts]
+    bvh = BVHTree.FromBMesh(bm)
+    bm.free()
+    return bvh, verts
+
+
+def _slice_centroid_z(verts, z: float, tol: float = 0.025, fallback=Vector((0.0, 0.0, 0.0))):
+    pts = [p for p in verts if abs(p.z - z) <= tol]
+    if not pts:
+        pts = [p for p in verts if abs(p.z - z) <= tol * 2.5]
+    if not pts:
+        return Vector((fallback.x, fallback.y, z))
+    cx = 0.5 * (min(p.x for p in pts) + max(p.x for p in pts))
+    cy = 0.5 * (min(p.y for p in pts) + max(p.y for p in pts))
+    return Vector((cx, cy, z))
+
+
+def _slice_centroid_x(verts, x: float, tol: float = 0.025):
+    pts = [p for p in verts if abs(p.x - x) <= tol]
+    if not pts:
+        pts = [p for p in verts if abs(p.x - x) <= tol * 2.5]
+    if not pts:
+        return Vector((x, 0.004, 1.425))
+    cy = 0.5 * (min(p.y for p in pts) + max(p.y for p in pts))
+    cz = 0.5 * (min(p.z for p in pts) + max(p.z for p in pts))
+    return Vector((x, cy, cz))
+
+
+def _radial_surface_radius(bvh: BVHTree, center: Vector, d: Vector, max_r: float = 0.25) -> float:
+    dn = d.normalized()
+    best_r = None
+    hit_in, _, _, _ = bvh.ray_cast(center + dn * max_r, -dn, max_r * 1.1)
+    if hit_in is not None:
+        r_in = (hit_in - center).dot(dn)
+        if r_in > 0.005:
+            best_r = r_in
+
+    hit_out, _, _, _ = bvh.ray_cast(center, dn, max_r)
+    if hit_out is not None:
+        r_out = (hit_out - center).dot(dn)
+        if r_out > 0.005 and (best_r is None or r_out > best_r):
+            best_r = r_out
+
+    if best_r is not None:
+        return best_r
+
+    loc, _, _, _ = bvh.find_nearest(center + dn * 0.06)
+    if loc is not None:
+        return max(0.020, (loc - center).dot(dn))
+    return 0.05
+
+
+def _ensure_radial_clearance(p: Vector, center: Vector, bvh: BVHTree, min_clear: float, max_r: float = 0.28) -> Vector:
+    diff = p - center
+    r = diff.length
+    if r < 1e-6:
+        return p
+    d = diff / r
+    r_surf = _radial_surface_radius(bvh, center, d, max_r=max_r)
+    if r < r_surf + min_clear:
+        return center + d * (r_surf + min_clear)
+    return p
+
+
+def _ensure_z_plane_clearance(p: Vector, center_xy: Vector, bvh: BVHTree, min_clear: float, max_r: float = 0.28) -> Vector:
+    d = Vector((p.x - center_xy.x, p.y - center_xy.y, 0.0))
+    r = d.length
+    if r < 1e-6:
+        return p
+    dn = d / r
+    c = Vector((center_xy.x, center_xy.y, p.z))
+    r_surf = _radial_surface_radius(bvh, c, dn, max_r=max_r)
+    if r < r_surf + min_clear:
+        return c + dn * (r_surf + min_clear)
+    return p
+
+
+def _bridge_convex_radii(radii: list[float], max_dip: float = 0.0020, passes: int = 5) -> list[float]:
+    n = len(radii)
+    r = list(radii)
+    for _ in range(passes):
+        nxt = list(r)
+        for i in range(n):
+            avg = 0.5 * (r[(i - 1) % n] + r[(i + 1) % n])
+            if r[i] < avg - max_dip:
+                nxt[i] = avg - max_dip * 0.35
+        r = nxt
+    return r
+
+
+def _smooth_ring_radii(radii: list[float], passes: int = 2) -> list[float]:
+    n = len(radii)
+    r = list(radii)
+    for _ in range(passes):
+        r = [0.25 * r[(i - 1) % n] + 0.5 * r[i] + 0.25 * r[(i + 1) % n] for i in range(n)]
+    return r
+
+
+def _add_tucked_edge(bm: bmesh.types.BMesh, edge_loop_verts, center: Vector, radial_inset: float, axial_offset: Vector):
+    n = len(edge_loop_verts)
+    inner_verts = []
+    for v in edge_loop_verts:
+        d = Vector((v.co.x - center.x, v.co.y - center.y, 0.0))
+        if d.length > 1e-5:
+            d.normalize()
+        else:
+            d = Vector((0.0, 0.0, 0.0))
+        iv = bm.verts.new(v.co - d * radial_inset + axial_offset)
+        inner_verts.append(iv)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new((edge_loop_verts[i], edge_loop_verts[j], inner_verts[j], inner_verts[i]))
+    return inner_verts
+
+
+# ---------------------------------------------------------------------------
+# Deterministic Skinning / Weight Transfer & GLB Export
+# ---------------------------------------------------------------------------
+def _build_donor_bvh(source_objs, bone_names: set[str], bone_attenuation: dict[str, float] | None):
+    donor_bm = bmesh.new()
+    vert_weights = []
+    for s in source_objs:
+        vg_names = [vg.name for vg in s.vertex_groups]
+        for v in s.data.vertices:
+            wmap = {}
+            for g in v.groups:
+                bname = vg_names[g.group]
+                if bname in bone_names and g.weight > 1e-4:
+                    w = g.weight
+                    if bone_attenuation and bname in bone_attenuation:
+                        w *= bone_attenuation[bname]
+                    if w > 1e-4:
+                        wmap[bname] = w
+            vert_weights.append(wmap)
+        tmp_bm = bmesh.new()
+        tmp_bm.from_mesh(s.data)
+        tmp_bm.verts.ensure_lookup_table()
+        new_verts = [donor_bm.verts.new(v.co) for v in tmp_bm.verts]
+        for f in tmp_bm.faces:
+            try:
+                donor_bm.faces.new([new_verts[v.index] for v in f.verts])
+            except ValueError:
+                pass
+        tmp_bm.free()
+
+    donor_bm.verts.ensure_lookup_table()
+    donor_bm.faces.ensure_lookup_table()
+    donor_bvh = BVHTree.FromBMesh(donor_bm)
+    return donor_bm, donor_bvh, vert_weights
+
+
+def _bind_and_transfer_weights(
+    garment_obj,
+    source_objs,
+    armature_obj,
+    bone_attenuation: dict[str, float] | None = None,
+    smooth_passes: int = 1,
+    region_selector=None,
+):
+    """
+    Transfer bone weights from Lara's native body meshes directly via BVHTree
+    nearest-triangle vertex interpolation + topological smoothing, ensuring
+    every vertex has <= 4 normalized influences matching Armature bones.
+    """
+    garment_obj.vertex_groups.clear()
+    bone_names = {b.name for b in armature_obj.data.bones}
+
+    donor_cache = {}
+    def _get_donor(objs):
+        key = tuple(id(o) for o in objs)
+        if key not in donor_cache:
+            donor_cache[key] = _build_donor_bvh(objs, bone_names, bone_attenuation)
+        return donor_cache[key]
+
+    _get_donor(source_objs)
+
+    # Interpolate weights per garment vertex from nearest donor face vertices
+    g_verts = garment_obj.data.vertices
+    n_gv = len(g_verts)
+    raw_weights = []
+    for v in g_verts:
+        objs = region_selector(v.co) if region_selector is not None else source_objs
+        donor_bm, donor_bvh, vert_weights = _get_donor(objs)
+        loc, _, f_idx, _ = donor_bvh.find_nearest(v.co)
+        w_acc = {}
+        if f_idx is not None:
+            face = donor_bm.faces[f_idx]
+            inv_d_sum = 0.0
+            for fv in face.verts:
+                d = (fv.co - loc).length
+                inv_d = 1.0 / (d + 1e-4)
+                inv_d_sum += inv_d
+                for bname, bw in vert_weights[fv.index].items():
+                    w_acc[bname] = w_acc.get(bname, 0.0) + bw * inv_d
+            if inv_d_sum > 0.0:
+                for bname in w_acc:
+                    w_acc[bname] /= inv_d_sum
+        if not w_acc:
+            w_acc = {"spine_lower": 1.0}
+        raw_weights.append(w_acc)
+
+    for donor_bm, _, _ in donor_cache.values():
+        donor_bm.free()
+
+    # Topological smoothing across garment edges for silky bending across joints
+    adj = [[] for _ in range(n_gv)]
+    for e in garment_obj.data.edges:
+        adj[e.vertices[0]].append(e.vertices[1])
+        adj[e.vertices[1]].append(e.vertices[0])
+
+    for _ in range(smooth_passes):
+        smoothed = []
+        for vi in range(n_gv):
+            nbrs = adj[vi]
+            if not nbrs:
+                smoothed.append(raw_weights[vi])
+                continue
+            acc = {}
+            for bname, bw in raw_weights[vi].items():
+                acc[bname] = acc.get(bname, 0.0) + bw * 0.60
+            nbr_factor = 0.40 / len(nbrs)
+            for ni in nbrs:
+                for bname, bw in raw_weights[ni].items():
+                    acc[bname] = acc.get(bname, 0.0) + bw * nbr_factor
+            smoothed.append(acc)
+        raw_weights = smoothed
+
+    # Create only used vertex groups and assign top-4 normalized weights
+    vg_cache = {}
+    for vi, wmap in enumerate(raw_weights):
+        top4 = sorted(wmap.items(), key=lambda kv: kv[1], reverse=True)[:4]
+        s = sum(w for _, w in top4)
+        if s <= 1e-6:
+            top4 = [("spine_lower", 1.0)]
+            s = 1.0
+        for bname, w in top4:
+            nw = w / s
+            if nw < 1e-4:
+                continue
+            vg = vg_cache.get(bname)
+            if vg is None:
+                vg = garment_obj.vertex_groups.new(name=bname)
+                vg_cache[bname] = vg
+            vg.add([vi], nw, "REPLACE")
+
+    # Unhide Armature so glTF export includes it!
+    armature_obj.hide_set(False)
+    armature_obj.hide_viewport = False
+    garment_obj.parent = armature_obj
+    arm_mod = garment_obj.modifiers.new("Armature", "ARMATURE")
+    arm_mod.object = armature_obj
+
+
+def _export_garment_glb(garment_objs, armature_obj, out_filename: str):
+    armature_obj.hide_set(False)
+    armature_obj.hide_viewport = False
+    bpy.ops.object.select_all(action="DESELECT")
+    armature_obj.select_set(True)
+    for obj in garment_objs:
+        obj.hide_set(False)
+        obj.hide_viewport = False
+        obj.select_set(True)
+    bpy.context.view_layer.objects.active = armature_obj
+
+    out_path = os.path.join(OUT_DIR, out_filename)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    bpy.ops.export_scene.gltf(
+        filepath=out_path,
+        export_format="GLB",
+        use_selection=True,
+        export_apply=False,
+        export_skins=True,
+        export_all_influences=False,
+        export_def_bones=False,
+        export_materials="EXPORT",
+        export_normals=True,
+        export_texcoords=True,
+        export_tangents=False,
+        export_draco_mesh_compression_enable=True,
+        export_draco_mesh_compression_level=6,
+    )
+    print(f"Exported {out_path} ({os.path.getsize(out_path)} bytes)")
+
+
+# ---------------------------------------------------------------------------
+# Trouser Mesh Generator (Legging & Sweatpants)
+# ---------------------------------------------------------------------------
+def build_trousers(
+    name: str,
+    bvh_left_leg: BVHTree,
+    verts_left_leg,
+    bvh_right_leg: BVHTree,
+    verts_right_leg,
+    bvh_pelvis: BVHTree,
+    verts_pelvis,
+    z_ankle: float,
+    z_cuff_top: float,
+    z_crotch: float,
+    z_waist_band_bot: float,
+    z_waist_top: float,
+    clearance_leg: callable,
+    clearance_pelvis: callable,
+    max_dip_pelvis: float,
+    n_leg: int = 32,
+    mat_main=None,
+    mat_band=None,
+    add_waistband_ribs: bool = False,
+    add_side_seam_ridge: bool = False,
+    add_pocket_welts: bool = False,
+    add_drawstrings: bool = False,
+    mat_cord=None,
+    mat_metal=None,
+    mat_trim=None,
+):
+    bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.new("UVMap")
+
+    leg_zs = []
+    for i in range(5):
+        leg_zs.append(z_ankle + (z_cuff_top - z_ankle) * (i / 4.0))
+    n_upper_leg = 22
+    for i in range(1, n_upper_leg + 1):
+        leg_zs.append(z_cuff_top + (z_crotch - z_crotch * 0.0 - z_cuff_top) * (i / n_upper_leg))
+
+    leg_rings = {1: [], -1: []}
+    leg_data = {
+        1: (bvh_left_leg, verts_left_leg, Vector((0.072, 0.0, 0.5))),
+        -1: (bvh_right_leg, verts_right_leg, Vector((-0.072, 0.0, 0.5))),
+    }
+
+    for side in (1, -1):
+        bvh_l, verts_l, fb = leg_data[side]
+        for zi, z in enumerate(leg_zs):
+            c = _slice_centroid_z(verts_l, z, tol=0.025, fallback=fb)
+            radii = []
+            dirs = []
+            for k in range(n_leg):
+                ang = (k / n_leg) * 2.0 * math.pi
+                dx = -side * math.cos(ang)
+                dy = math.sin(ang)
+                d = Vector((dx, dy, 0.0))
+                r = _radial_surface_radius(bvh_l, c, d, max_r=0.14)
+                radii.append(r)
+                dirs.append(d)
+
+            radii = _bridge_convex_radii(radii, max_dip=0.0020, passes=2)
+            radii = _smooth_ring_radii(radii, passes=1)
+
+            ring_verts = []
+            for k in range(n_leg):
+                ang = (k / n_leg) * 2.0 * math.pi
+                clr = clearance_leg(z, ang, zi)
+                if add_side_seam_ridge and (k == n_leg // 2 or k == 0):
+                    clr += 0.0009
+                p = c + dirs[k] * (radii[k] + clr)
+                if side == 1 and p.x < 0.0025:
+                    p.x = 0.0025
+                elif side == -1 and p.x > 0.0018:
+                    p.x = 0.0018
+                ring_verts.append(bm.verts.new(p))
+            leg_rings[side].append(ring_verts)
+
+    for side in (1, -1):
+        rings = leg_rings[side]
+        for zi in range(len(rings) - 1):
+            r0 = rings[zi]
+            r1 = rings[zi + 1]
+            for k in range(n_leg):
+                kn = (k + 1) % n_leg
+                if side == -1:
+                    bm.faces.new((r0[k], r0[kn], r1[kn], r1[k]))
+                else:
+                    bm.faces.new((r0[k], r1[k], r1[kn], r0[kn]))
+
+    for side in (1, -1):
+        _, verts_l, fb = leg_data[side]
+        c_ank = _slice_centroid_z(verts_l, z_ankle, tol=0.025, fallback=fb)
+        _add_tucked_edge(bm, leg_rings[side][0], c_ank, 0.0045, Vector((0.0, 0.0, 0.008)))
+
+    # Crotch Saddle Bridge + Pelvis / Waist Rings
+    l_top = leg_rings[1][-1]
+    r_top = leg_rings[-1][-1]
+
+    v_crotch_mid = bm.verts.new(Vector((0.0022, 0.005, z_crotch - 0.005)))
+    v_crotch_front = bm.verts.new(Vector((0.0022, -0.048, z_crotch + 0.022)))
+    v_crotch_back = bm.verts.new(Vector((0.0022, 0.056, z_crotch + 0.022)))
+
+    bm.faces.new((l_top[0], v_crotch_mid, v_crotch_front, l_top[n_leg - 1]))
+    bm.faces.new((r_top[0], r_top[n_leg - 1], v_crotch_front, v_crotch_mid))
+    bm.faces.new((l_top[0], l_top[1], v_crotch_back, v_crotch_mid))
+    bm.faces.new((r_top[0], v_crotch_mid, v_crotch_back, r_top[1]))
+
+    pelvis_loop_0 = (
+        [v_crotch_front]
+        + [l_top[n_leg - 1 - i] for i in range(n_leg - 1)]
+        + [v_crotch_back]
+        + [r_top[1 + i] for i in range(n_leg - 1)]
+    )
+    n_pelvis = len(pelvis_loop_0)
+
+    pelvis_zs = []
+    n_hip_rings = 11
+    for i in range(1, n_hip_rings + 1):
+        pelvis_zs.append(z_crotch + (z_waist_band_bot - z_crotch) * (i / n_hip_rings))
+    n_band_rings = 6
+    for i in range(1, n_band_rings + 1):
+        pelvis_zs.append(z_waist_band_bot + (z_waist_top - z_waist_band_bot) * (i / n_band_rings))
+
+    pelvis_rings = [pelvis_loop_0]
+    for zi, z in enumerate(pelvis_zs):
+        c = _slice_centroid_z(verts_pelvis, z, tol=0.025, fallback=Vector((0.0022, 0.0, z)))
+        radii = []
+        dirs = []
+        thetas = []
+        for pi in range(n_pelvis):
+            theta = -0.5 * math.pi + (pi / n_pelvis) * 2.0 * math.pi
+            d = Vector((math.cos(theta), math.sin(theta), 0.0))
+            r = _radial_surface_radius(bvh_pelvis, c, d, max_r=0.25)
+            radii.append(r)
+            dirs.append(d)
+            thetas.append(theta)
+
+        radii = _bridge_convex_radii(radii, max_dip=max_dip_pelvis, passes=6)
+        radii = _smooth_ring_radii(radii, passes=2)
+
+        is_band = z >= z_waist_band_bot - 1e-4
+        band_t = (z - z_waist_band_bot) / max(1e-5, (z_waist_top - z_waist_band_bot)) if is_band else 0.0
+        rib_bump = 0.0012 * math.sin(band_t * math.pi * 6.0) if (is_band and add_waistband_ribs) else 0.0
+
+        ring_verts = []
+        for pi in range(n_pelvis):
+            clr = clearance_pelvis(z, thetas[pi], is_band, band_t) + rib_bump
+            if add_side_seam_ridge and (pi == n_pelvis // 4 or pi == 3 * n_pelvis // 4):
+                clr += 0.0009
+            p = c + dirs[pi] * (radii[pi] + clr)
+            if zi < 2:
+                prev_p = pelvis_rings[-1][pi].co
+                blend = 0.42 if zi == 0 else 0.78
+                p = prev_p.lerp(p, blend)
+                if z >= 0.805:
+                    p = _ensure_z_plane_clearance(p, Vector((c.x, c.y)), bvh_pelvis, 0.0035, max_r=0.25)
+            ring_verts.append(bm.verts.new(p))
+        pelvis_rings.append(ring_verts)
+
+    for zi in range(len(pelvis_rings) - 1):
+        r0 = pelvis_rings[zi]
+        r1 = pelvis_rings[zi + 1]
+        for pi in range(n_pelvis):
+            pn = (pi + 1) % n_pelvis
+            bm.faces.new((r0[pi], r0[pn], r1[pn], r1[pi]))
+
+    c_waist = _slice_centroid_z(verts_pelvis, z_waist_top, tol=0.025, fallback=Vector((0.0022, 0.0, z_waist_top)))
+    _add_tucked_edge(bm, pelvis_rings[-1], c_waist, 0.0045, Vector((0.0, 0.0, -0.007)))
+
+    welt_faces = set()
+    if add_pocket_welts:
+        for side in (1, -1):
+            welt_top = []
+            welt_bot = []
+            for s in range(8):
+                t = s / 7.0
+                z_p = 1.005 - 0.135 * t
+                theta_p = (-0.08 if side == 1 else math.pi + 0.08) - side * 0.36 * (1.0 - t)
+                c_p = _slice_centroid_z(verts_pelvis, z_p, tol=0.025, fallback=Vector((0.0022, 0.0, z_p)))
+                d_p = Vector((math.cos(theta_p), math.sin(theta_p), 0.0))
+                r_p = _radial_surface_radius(bvh_pelvis, c_p, d_p, max_r=0.25)
+                clr_w = clearance_pelvis(z_p, theta_p, False, 0.0)
+                p_out = c_p + d_p * (r_p + clr_w + 0.0032)
+                p_in = c_p + d_p * (r_p + clr_w - 0.0022) + Vector((0.006 * side, -0.006, 0.0))
+                welt_top.append(bm.verts.new(p_out))
+                welt_bot.append(bm.verts.new(p_in))
+            for s in range(7):
+                if side == 1:
+                    f = bm.faces.new((welt_top[s], welt_bot[s], welt_bot[s + 1], welt_top[s + 1]))
+                else:
+                    f = bm.faces.new((welt_top[s], welt_top[s + 1], welt_bot[s + 1], welt_bot[s]))
+                welt_faces.add(f)
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    for f in bm.faces:
+        for loop in f.loops:
+            co = loop.vert.co
+            ang = math.atan2(co.y, co.x - (0.068 if co.x > 0.02 else (-0.068 if co.x < -0.02 else 0.0)))
+            loop[uv_layer].uv = ((ang / (2.0 * math.pi) + 0.5) * 1.6, co.z * 2.2)
+
+    # Material indices: 0=main, 1=band (if any), 2=trim (if any)
+    for f in bm.faces:
+        if mat_trim is not None and f in welt_faces:
+            f.material_index = 2 if (mat_band is not None and mat_band != mat_main) else 1
+        else:
+            f.material_index = 0
+
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+
+    obj.data.materials.append(mat_main)
+    idx_band = 0
+    if mat_band is not None and mat_band != mat_main:
+        obj.data.materials.append(mat_band)
+        idx_band = len(obj.data.materials) - 1
+    if mat_trim is not None:
+        obj.data.materials.append(mat_trim)
+
+    if idx_band > 0:
+        for poly in obj.data.polygons:
+            if poly.material_index == 0:
+                z_avg = sum(obj.data.vertices[vi].co.z for vi in poly.vertices) / len(poly.vertices)
+                if z_avg >= z_waist_band_bot - 0.002 or z_avg <= z_cuff_top + 0.002:
+                    poly.material_index = idx_band
+
+    sub = obj.modifiers.new("Subsurf", "SUBSURF")
+    sub.levels = 1
+    sub.render_levels = 1
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=sub.name)
+
+    for v in obj.data.vertices:
+        z = v.co.z
+        if z >= 0.805:
+            c_p = _slice_centroid_z(verts_pelvis, z, tol=0.03, fallback=Vector((0.0022, 0.0, z)))
+            clr_p = 0.0068 if (v.co.y > 0.02 and 0.805 <= z <= 0.98) else 0.0052
+            v.co = _ensure_z_plane_clearance(v.co, Vector((c_p.x, c_p.y)), bvh_pelvis, clr_p, max_r=0.25)
+        elif v.co.x > 0.008:
+            c_l = _slice_centroid_z(verts_left_leg, z, tol=0.03, fallback=Vector((0.072, 0.0, z)))
+            clr_min = 0.0062 if 0.46 < z < 0.62 else 0.0046
+            v.co = _ensure_z_plane_clearance(v.co, Vector((c_l.x, c_l.y)), bvh_left_leg, clr_min, max_r=0.14)
+        elif v.co.x < -0.004:
+            c_r = _slice_centroid_z(verts_right_leg, z, tol=0.03, fallback=Vector((-0.072, 0.0, z)))
+            clr_min = 0.0062 if 0.46 < z < 0.62 else 0.0046
+            v.co = _ensure_z_plane_clearance(v.co, Vector((c_r.x, c_r.y)), bvh_right_leg, clr_min, max_r=0.14)
+
+    if add_drawstrings and mat_cord is not None:
+        cords_obj = _build_drawstrings(
+            f"{name}_drawstrings",
+            bvh_pelvis,
+            verts_pelvis,
+            eyelets=[(-0.014, 1.054), (0.018, 1.054)],
+            z_end=0.955,
+            mat_cord=mat_cord,
+            mat_metal=mat_metal,
+            extra_y=-0.015,
+        )
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select_set(True)
+        cords_obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.join()
+
+    return obj
+
+
+# ---------------------------------------------------------------------------
+# Drawstrings Helper
+# ---------------------------------------------------------------------------
+def _build_drawstrings(name: str, bvh_front: BVHTree, verts_front, eyelets, z_end: float, mat_cord, mat_metal=None, extra_y: float = -0.016):
+    bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.new("UVMap")
+    aglet_faces = set()
+
+    for side_idx, (ex, ez) in enumerate(eyelets):
+        sign = -1.0 if side_idx == 0 else 1.0
+        pts = []
+        n_steps = 14
+        for i in range(n_steps):
+            t = i / (n_steps - 1)
+            z = ez - (ez - z_end) * t
+            x = ex + sign * 0.010 * math.sin(t * math.pi * 0.75) + sign * 0.004 * t
+            c = _slice_centroid_z(verts_front, z, tol=0.03, fallback=Vector((0.0022, 0.0, z)))
+            r_surf = _radial_surface_radius(bvh_front, Vector((x, c.y, z)), Vector((0.0, -1.0, 0.0)), max_r=0.22)
+            y = c.y - r_surf + extra_y - 0.004 * math.sin(t * math.pi)
+            pts.append(Vector((x, y, z)))
+
+        n_rad = 8
+        radius = 0.0025
+        rings = []
+        for i, p in enumerate(pts):
+            if i == 0:
+                tang = (pts[1] - pts[0]).normalized()
+            elif i == len(pts) - 1:
+                tang = (pts[-1] - pts[-2]).normalized()
+            else:
+                tang = (pts[i + 1] - pts[i - 1]).normalized()
+            up_ref = Vector((1.0, 0.0, 0.0)) if abs(tang.x) < 0.8 else Vector((0.0, 1.0, 0.0))
+            b1 = tang.cross(up_ref).normalized()
+            b2 = tang.cross(b1).normalized()
+            r_cur = radius * (1.18 if i >= n_steps - 2 else 1.0)
+            rv = []
+            for k in range(n_rad):
+                a = (k / n_rad) * 2.0 * math.pi
+                rv.append(bm.verts.new(p + (b1 * math.cos(a) + b2 * math.sin(a)) * r_cur))
+            rings.append(rv)
+
+        for i in range(len(rings) - 1):
+            for k in range(n_rad):
+                kn = (k + 1) % n_rad
+                f = bm.faces.new((rings[i][k], rings[i][kn], rings[i + 1][kn], rings[i + 1][k]))
+                if i >= len(rings) - 3:
+                    aglet_faces.add(f)
+        aglet_faces.add(bm.faces.new(rings[-1]))
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    for f in bm.faces:
+        for loop in f.loops:
+            loop[uv_layer].uv = (loop.vert.co.x * 18.0, loop.vert.co.z * 18.0)
+
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for p in mesh.polygons:
+        p.use_smooth = True
+
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.data.materials.append(mat_cord)
+    if mat_metal is not None:
+        obj.data.materials.append(mat_metal)
+        for poly in obj.data.polygons:
+            z_avg = sum(obj.data.vertices[vi].co.z for vi in poly.vertices) / len(poly.vertices)
+            if z_avg <= z_end + 0.015:
+                poly.material_index = 1
+    return obj
+
+
+# ---------------------------------------------------------------------------
+# Zipped Cotton Hoodie Generator (lara_hoodie_zip.glb)
+# ---------------------------------------------------------------------------
+def build_zip_hoodie(
+    name: str,
+    bvh_torso: BVHTree,
+    verts_torso,
+    bvh_left_arm: BVHTree,
+    verts_left_arm,
+    bvh_right_arm: BVHTree,
+    verts_right_arm,
+    mat_fleece,
+    mat_rib,
+    mat_lining,
+    mat_zip_tape,
+    mat_zip_metal,
+    mat_cord,
+):
+    bm = bmesh.new()
+    uv_layer = bm.loops.layers.uv.new("UVMap")
+
+    z_hem_bot = 0.960
+    z_hem_top = 1.015
+    z_collar = 1.476
+    n_theta = 48
+
+    zs = []
+    for i in range(5):
+        zs.append(z_hem_bot + (z_hem_top - z_hem_bot) * (i / 4.0))
+    n_body_z = 30
+    for i in range(1, n_body_z + 1):
+        zs.append(z_hem_top + (z_collar - z_hem_top) * (i / n_body_z))
+    n_rings = len(zs)
+
+    torso_grid = []
+    torso_centers = []
+    for zi, z in enumerate(zs):
+        c = _slice_centroid_z(verts_torso, z, tol=0.028, fallback=Vector((0.0022, -0.010, z)))
+        torso_centers.append(c)
+        is_hem = z <= z_hem_top + 1e-4
+        radii = []
+        dirs = []
+        thetas = []
+        for j in range(n_theta):
+            t = j / (n_theta - 1)
+            gap_ang = 0.065 if z < 1.38 else (0.065 + 0.14 * ((z - 1.38) / (z_collar - 1.38)) ** 2)
+            theta = (-0.5 * math.pi + gap_ang) + t * (2.0 * math.pi - 2.0 * gap_ang)
+            d = Vector((math.cos(theta), math.sin(theta), 0.0))
+            r = _radial_surface_radius(bvh_torso, c, d, max_r=0.22)
+            radii.append(r)
+            dirs.append(d)
+            thetas.append(theta)
+
+        radii = _bridge_convex_radii(radii, max_dip=0.0018, passes=8)
+        radii = _smooth_ring_radii(radii, passes=3)
+
+        ring_verts = []
+        for j in range(n_theta):
+            th = thetas[j]
+            if is_hem:
+                clr = 0.0085
+            elif z < 1.24:
+                clr = 0.0155 + 0.003 * math.sin(th * 2.0) ** 2
+            elif z < 1.40:
+                clr = 0.0125
+            else:
+                # Extra vertical shoulder cap ease so deltoids never poke through
+                shoulder_ease = 0.004 * (math.cos(th) ** 2)
+                clr = 0.0105 + shoulder_ease - 0.002 * ((z - 1.40) / (z_collar - 1.40))
+
+            p = c + dirs[j] * (radii[j] + clr)
+            p = _ensure_z_plane_clearance(p, Vector((c.x, c.y)), bvh_torso, 0.0080, max_r=0.22)
+            ring_verts.append(bm.verts.new(p))
+        torso_grid.append(ring_verts)
+
+    zi_arm_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.335))
+    zi_arm_top = min(n_rings - 1, max(zi_arm_bot + 6, min(range(n_rings), key=lambda i: abs(zs[i] - 1.464))))
+
+    j_left_mid = n_theta // 4
+    j_right_mid = (3 * n_theta) // 4
+    arm_windows = {
+        1: (zi_arm_bot, zi_arm_top, j_left_mid - 3, j_left_mid + 3),
+        -1: (zi_arm_bot, zi_arm_top, j_right_mid - 3, j_right_mid + 3),
+    }
+
+    def _in_armhole(zi, j):
+        for z0, z1, j0, j1 in arm_windows.values():
+            if z0 <= zi < z1 and j0 <= j < j1:
+                return True
+        return False
+
+    hem_faces = []
+    for zi in range(n_rings - 1):
+        is_hem = zi < 4
+        for j in range(n_theta - 1):
+            if _in_armhole(zi, j):
+                continue
+            f = bm.faces.new((
+                torso_grid[zi][j],
+                torso_grid[zi][j + 1],
+                torso_grid[zi + 1][j + 1],
+                torso_grid[zi + 1][j],
+            ))
+            if is_hem:
+                hem_faces.append(f)
+
+    c0 = torso_centers[0]
+    for j in range(n_theta - 1):
+        v0 = torso_grid[0][j]
+        v1 = torso_grid[0][j + 1]
+        d0 = Vector((v0.co.x - c0.x, v0.co.y - c0.y, 0.0)).normalized()
+        d1 = Vector((v1.co.x - c0.x, v1.co.y - c0.y, 0.0)).normalized()
+        iv0 = bm.verts.new(v0.co - d0 * 0.005 + Vector((0.0, 0.0, 0.008)))
+        iv1 = bm.verts.new(v1.co - d1 * 0.005 + Vector((0.0, 0.0, 0.008)))
+        hem_faces.append(bm.faces.new((v0, iv0, iv1, v1)))
+
+    # -----------------------------------------------------------------------
+    # Sleeves (with generous shoulder cap clearance + ribbed wrist cuffs)
+    # -----------------------------------------------------------------------
+    cuff_faces = []
+    arm_data = {
+        1: (bvh_left_arm, verts_left_arm),
+        -1: (bvh_right_arm, verts_right_arm),
+    }
+    for side, (z0, z1, j0, j1) in arm_windows.items():
+        bvh_arm, verts_arm = arm_data[side]
+        hole_verts = []
+        for j in range(j0, j1):
+            hole_verts.append(torso_grid[z0][j])
+        for zi in range(z0, z1):
+            hole_verts.append(torso_grid[zi][j1])
+        for j in range(j1, j0, -1):
+            hole_verts.append(torso_grid[z1][j])
+        for zi in range(z1, z0, -1):
+            hole_verts.append(torso_grid[zi][j0])
+        n_sl = len(hole_verts)
+
+        x_start = sum(v.co.x for v in hole_verts) / n_sl
+        c_sh = _slice_centroid_x(verts_arm, x_start, tol=0.03)
+        x_wrist = side * 0.558
+        x_cuff_start = side * 0.508
+
+        hole_angles = [math.atan2(v.co.z - c_sh.z, v.co.y - c_sh.y) for v in hole_verts]
+
+        sleeve_xs = []
+        n_sl_body = 14
+        for si in range(1, n_sl_body + 1):
+            sleeve_xs.append(x_start + (x_cuff_start - x_start) * (si / n_sl_body))
+        n_sl_cuff = 4
+        for si in range(1, n_sl_cuff + 1):
+            sleeve_xs.append(x_cuff_start + (x_wrist - x_cuff_start) * (si / n_sl_cuff))
+
+        sleeve_rings = [hole_verts]
+        for si, x in enumerate(sleeve_xs):
+            is_cuff = abs(x) >= abs(x_cuff_start) - 1e-4
+            c_arm = _slice_centroid_x(verts_arm, x, tol=0.025)
+            t_arm = max(0.0, min(1.0, (abs(x) - 0.13) / (0.56 - 0.13)))
+
+            ring_v = []
+            for k in range(n_sl):
+                ang = hole_angles[k]
+                d = Vector((0.0, math.cos(ang), math.sin(ang)))
+                r = _radial_surface_radius(bvh_arm, c_arm, d, max_r=0.11)
+                if is_cuff:
+                    clr = 0.0065
+                else:
+                    under_drape = 0.0045 * max(0.0, -math.sin(ang))
+                    sh_ease = 0.0045 * max(0.0, 1.0 - t_arm / 0.25)
+                    clr = 0.0135 + 0.0025 * math.sin(t_arm * math.pi) + under_drape + sh_ease
+                p = c_arm + d * (r + clr)
+                if si < 2:
+                    blend = 0.65 if si == 0 else 0.88
+                    p = hole_verts[k].co.lerp(p, blend)
+                    p.x = x
+                    p = _ensure_radial_clearance(p, c_arm, bvh_arm, 0.0125, max_r=0.11)
+                ring_v.append(bm.verts.new(p))
+            sleeve_rings.append(ring_v)
+
+        for si in range(len(sleeve_rings) - 1):
+            r0 = sleeve_rings[si]
+            r1 = sleeve_rings[si + 1]
+            is_cuff_seg = si >= n_sl_body
+            for k in range(n_sl):
+                kn = (k + 1) % n_sl
+                if side == 1:
+                    f = bm.faces.new((r0[k], r0[kn], r1[kn], r1[k]))
+                else:
+                    f = bm.faces.new((r0[k], r1[k], r1[kn], r0[kn]))
+                if is_cuff_seg:
+                    cuff_faces.append(f)
+
+        wrist_ring = sleeve_rings[-1]
+        c_wrist = _slice_centroid_x(verts_arm, x_wrist, tol=0.025)
+        inner_wrist = []
+        for v in wrist_ring:
+            d_in = Vector((0.0, v.co.y - c_wrist.y, v.co.z - c_wrist.z)).normalized()
+            iv = bm.verts.new(v.co - d_in * 0.0045 + Vector((-side * 0.008, 0.0, 0.0)))
+            inner_wrist.append(iv)
+        for k in range(n_sl):
+            kn = (k + 1) % n_sl
+            if side == 1:
+                f = bm.faces.new((wrist_ring[k], wrist_ring[kn], inner_wrist[kn], inner_wrist[k]))
+            else:
+                f = bm.faces.new((wrist_ring[k], inner_wrist[k], inner_wrist[kn], wrist_ring[kn]))
+            cuff_faces.append(f)
+
+    # -----------------------------------------------------------------------
+    # Split Kangaroo Pockets (with subtle darker entry welt trim)
+    # -----------------------------------------------------------------------
+    pocket_trim_faces = []
+    zi_pkt_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.018))
+    zi_pkt_top = min(range(n_rings), key=lambda i: abs(zs[i] - 1.158))
+    for side in (1, -1):
+        j_range = list(range(1, 8) if side == 1 else range(n_theta - 8, n_theta - 1))
+        pkt_grid = []
+        for zi in range(zi_pkt_bot, zi_pkt_top + 1):
+            t_z = (zi - zi_pkt_bot) / max(1, zi_pkt_top - zi_pkt_bot)
+            c_z = torso_centers[zi]
+            row = []
+            for idx_j, j in enumerate(j_range):
+                base_p = torso_grid[zi][j].co
+                t_x = idx_j / (len(j_range) - 1)
+                is_outer = t_x if side == 1 else (1.0 - t_x)
+                out_dir = Vector((base_p.x - c_z.x, base_p.y - c_z.y, 0.0)).normalized()
+                edge_fade = math.sin(min(1.0, max(0.0, (1.0 - is_outer) * 1.15)) * math.pi * 0.5)
+                lift = 0.0018 if (t_z < 0.10 or t_z > 0.92) else 0.0062 * (0.55 + 0.45 * edge_fade)
+                z_adj = -0.032 * (is_outer - 0.50) * (t_z - 0.20) if (is_outer > 0.50 and t_z > 0.20) else 0.0
+                row.append(bm.verts.new(base_p + out_dir * lift + Vector((0.0, 0.0, z_adj))))
+            pkt_grid.append(row)
+
+        nr_p = len(pkt_grid)
+        nc_p = len(pkt_grid[0])
+        for r in range(nr_p - 1):
+            for c_i in range(nc_p - 1):
+                f = bm.faces.new((pkt_grid[r][c_i], pkt_grid[r][c_i + 1], pkt_grid[r + 1][c_i + 1], pkt_grid[r + 1][c_i]))
+                # Outer pocket entry lip strip gets subtle trim shade
+                is_outer_col = (c_i == nc_p - 2) if side == 1 else (c_i == 0)
+                if is_outer_col and r >= 2:
+                    pocket_trim_faces.append(f)
+        for r in range(nr_p - 1):
+            j_in = j_range[0] if side == 1 else j_range[-1]
+            c_in = 0 if side == 1 else (nc_p - 1)
+            v_b0 = torso_grid[zi_pkt_bot + r][j_in]
+            v_b1 = torso_grid[zi_pkt_bot + r + 1][j_in]
+            if side == 1:
+                bm.faces.new((v_b0, pkt_grid[r][c_in], pkt_grid[r + 1][c_in], v_b1))
+            else:
+                bm.faces.new((v_b0, v_b1, pkt_grid[r + 1][c_in], pkt_grid[r][c_in]))
+        for c_i in range(nc_p - 1):
+            j_a = j_range[c_i]
+            j_b = j_range[c_i + 1]
+            bm.faces.new((pkt_grid[-1][c_i], torso_grid[zi_pkt_top][j_a], torso_grid[zi_pkt_top][j_b], pkt_grid[-1][c_i + 1]))
+            bm.faces.new((torso_grid[zi_pkt_bot][j_a], pkt_grid[0][c_i], pkt_grid[0][c_i + 1], torso_grid[zi_pkt_bot][j_b]))
+
+    # -----------------------------------------------------------------------
+    # Wide Rounded Draped Hood (U-shape across upper back, below Z=1.474!)
+    # -----------------------------------------------------------------------
+    hood_col_indices = list(range(4, n_theta - 4))
+    n_hc = len(hood_col_indices)
+    hood_outer_rings = [[torso_grid[-1][j] for j in hood_col_indices]]
+    hood_inner_rings = []
+
+    # Stations widen cleanly across upper shoulders/back into a broad rounded drape
+    stations = [
+        (0.016, +0.008, 0.020, 0.006),
+        (0.042, +0.008, 0.042, 0.007),
+        (0.074, -0.004, 0.064, 0.008),
+        (0.102, -0.028, 0.078, 0.009),
+        (0.120, -0.068, 0.084, 0.009),
+        (0.122, -0.110, 0.076, 0.008),
+        (0.108, -0.144, 0.062, 0.007),
+        (0.086, -0.156, 0.044, 0.005),
+    ]
+    for st_idx, (dy_b, dz_o, exp_x, thick) in enumerate(stations):
+        ring_out = []
+        ring_in = []
+        t_st = (st_idx + 1) / len(stations)
+        for idx, j in enumerate(hood_col_indices):
+            base = torso_grid[-1][j].co
+            t_side = idx / (n_hc - 1)
+            back_weight = math.sin(t_side * math.pi) ** 0.85
+            # Natural draped hood folds across upper back
+            fold_wave = 0.0055 * math.cos(t_side * math.pi * 4.0) * math.sin(t_st * math.pi)
+            # t_side=0 is Left (+X), t_side=1 is Right (-X): keep Left +X and Right -X uncrossed!
+            spread_x = (0.5 - t_side) * 2.0 * exp_x * (0.65 + 0.35 * t_st)
+            p_out = Vector((
+                base.x * 0.65 + spread_x,
+                base.y + dy_b * (0.28 + 0.72 * back_weight) + fold_wave,
+                min(1.473, base.z + dz_o * (0.22 + 0.78 * back_weight)),
+            ))
+            c_ref = _slice_centroid_z(verts_torso, p_out.z, tol=0.03, fallback=Vector((0.0022, 0.0, p_out.z)))
+            p_out = _ensure_z_plane_clearance(p_out, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.012, max_r=0.22)
+            if p_out.y > 0.040:
+                p_out.z = min(p_out.z, 1.473)
+            sx = math.copysign(1.0, p_out.x - 0.0022) if abs(p_out.x - 0.0022) > 0.005 else 0.0
+            p_in = p_out + Vector((-sx * thick * 0.4, -thick * 0.85, thick * 0.35))
+            p_in = _ensure_z_plane_clearance(p_in, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.008, max_r=0.22)
+            ring_out.append(bm.verts.new(p_out))
+            ring_in.append(bm.verts.new(p_in))
+        hood_outer_rings.append(ring_out)
+        hood_inner_rings.append(ring_in)
+
+    lining_faces = []
+    for r in range(len(hood_outer_rings) - 1):
+        r0 = hood_outer_rings[r]
+        r1 = hood_outer_rings[r + 1]
+        for k in range(n_hc - 1):
+            bm.faces.new((r0[k], r0[k + 1], r1[k + 1], r1[k]))
+    for r in range(len(hood_inner_rings) - 1):
+        r0 = hood_inner_rings[r]
+        r1 = hood_inner_rings[r + 1]
+        for k in range(n_hc - 1):
+            lining_faces.append(bm.faces.new((r0[k], r1[k], r1[k + 1], r0[k + 1])))
+    for k in range(n_hc - 1):
+        lining_faces.append(bm.faces.new((hood_outer_rings[-1][k], hood_outer_rings[-1][k + 1], hood_inner_rings[-1][k + 1], hood_inner_rings[-1][k])))
+        lining_faces.append(bm.faces.new((hood_outer_rings[0][k], hood_inner_rings[0][k], hood_inner_rings[0][k + 1], hood_outer_rings[0][k + 1])))
+    for r in range(len(hood_inner_rings) - 1):
+        o0, o1 = hood_outer_rings[r + 1][0], hood_outer_rings[r + 2][0] if r + 2 < len(hood_outer_rings) else hood_outer_rings[-1][0]
+        i0, i1 = hood_inner_rings[r][0], hood_inner_rings[r + 1][0]
+        if o0 != o1:
+            bm.faces.new((o0, i0, i1, o1))
+        o0r, o1r = hood_outer_rings[r + 1][-1], hood_outer_rings[r + 2][-1] if r + 2 < len(hood_outer_rings) else hood_outer_rings[-1][-1]
+        i0r, i1r = hood_inner_rings[r][-1], hood_inner_rings[r + 1][-1]
+        if o0r != o1r:
+            bm.faces.new((o0r, o1r, i1r, i0r))
+
+    # -----------------------------------------------------------------------
+    # Full-Length Front Zipper Tape + Metallic Teeth + Slider & Pull Tab
+    # -----------------------------------------------------------------------
+    zip_tape_faces = []
+    zip_metal_faces = []
+    z_zip_top = 1.430
+    zip_rows_tape = []
+    zip_rows_teeth = []
+    for zi in range(n_rings):
+        if zs[zi] > z_zip_top + 0.015:
+            continue
+        vL = torso_grid[zi][0].co
+        vR = torso_grid[zi][-1].co
+        mid = 0.5 * (vL + vR)
+        tL = bm.verts.new(vL + Vector((-0.001, 0.0005, 0.0)))
+        tML = bm.verts.new(mid + Vector((-0.0032, -0.0008, 0.0)))
+        tMR = bm.verts.new(mid + Vector((+0.0032, -0.0008, 0.0)))
+        tR = bm.verts.new(vR + Vector((+0.001, 0.0005, 0.0)))
+        zip_rows_tape.append((tL, tML, tMR, tR))
+
+        mL = bm.verts.new(mid + Vector((-0.0028, -0.0028, 0.0)))
+        mR = bm.verts.new(mid + Vector((+0.0028, -0.0028, 0.0)))
+        zip_rows_teeth.append((tML, mL, mR, tMR))
+
+    for r in range(len(zip_rows_tape) - 1):
+        a0, a1, a2, a3 = zip_rows_tape[r]
+        b0, b1, b2, b3 = zip_rows_tape[r + 1]
+        zip_tape_faces.append(bm.faces.new((a0, b0, b1, a1)))
+        zip_tape_faces.append(bm.faces.new((a2, b2, b3, a3)))
+        zip_tape_faces.append(bm.faces.new((a1, b1, b2, a2)))
+
+        c0, c1, c2, c3 = zip_rows_teeth[r]
+        d0, d1, d2, d3 = zip_rows_teeth[r + 1]
+        zip_metal_faces.append(bm.faces.new((c0, d0, d1, c1)))
+        zip_metal_faces.append(bm.faces.new((c1, d1, d2, c2)))
+        zip_metal_faces.append(bm.faces.new((c2, d2, d3, c3)))
+
+    top_mid = 0.5 * (zip_rows_teeth[-1][1].co + zip_rows_teeth[-1][2].co)
+    slider_mat_loc = Matrix.Translation(top_mid + Vector((0.0, -0.0025, 0.0)))
+    res_sl = bmesh.ops.create_cube(bm, size=1.0)
+    for v in res_sl["verts"]:
+        v.co = slider_mat_loc @ Vector((v.co.x * 0.009, v.co.y * 0.0055, v.co.z * 0.013))
+        for f in v.link_faces:
+            zip_metal_faces.append(f)
+
+    pull_mat_loc = Matrix.Translation(top_mid + Vector((0.0, -0.0065, -0.013))) @ Matrix.Rotation(-0.18, 4, "X")
+    res_pl = bmesh.ops.create_cube(bm, size=1.0)
+    for v in res_pl["verts"]:
+        v.co = pull_mat_loc @ Vector((v.co.x * 0.0065, v.co.y * 0.0022, v.co.z * 0.017))
+        for f in v.link_faces:
+            zip_metal_faces.append(f)
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    for f in bm.faces:
+        for loop in f.loops:
+            co = loop.vert.co
+            if abs(co.x) > 0.165:
+                ang = math.atan2(co.z - 1.42, co.y)
+                loop[uv_layer].uv = ((ang / (2.0 * math.pi) + 0.5) * 1.4, abs(co.x) * 2.2)
+            else:
+                ang = math.atan2(co.y, co.x)
+                loop[uv_layer].uv = ((ang / (2.0 * math.pi) + 0.5) * 1.8, co.z * 2.2)
+
+    hem_set = set(hem_faces)
+    cuff_set = set(cuff_faces)
+    lining_set = set(lining_faces)
+    tape_set = set(zip_tape_faces) | set(pocket_trim_faces)
+    metal_set = set(zip_metal_faces)
+
+    for f in bm.faces:
+        if f in metal_set:
+            f.material_index = 4
+        elif f in tape_set:
+            f.material_index = 3
+        elif f in lining_set:
+            f.material_index = 2
+        elif f in hem_set or f in cuff_set:
+            f.material_index = 1
+        else:
+            f.material_index = 0
+
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for p in mesh.polygons:
+        p.use_smooth = True
+
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    for m in (mat_fleece, mat_rib, mat_lining, mat_zip_tape, mat_zip_metal):
+        obj.data.materials.append(m)
+
+    sub = obj.modifiers.new("Subsurf", "SUBSURF")
+    sub.levels = 1
+    sub.render_levels = 1
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=sub.name)
+
+    for v in obj.data.vertices:
+        if v.co.x > 0.165 and v.co.z > 1.30:
+            c_a = _slice_centroid_x(verts_left_arm, v.co.x, tol=0.03)
+            clr_a = 0.0110 if v.co.x < 0.25 else 0.0055
+            v.co = _ensure_radial_clearance(v.co, c_a, bvh_left_arm, clr_a, max_r=0.11)
+        elif v.co.x < -0.165 and v.co.z > 1.30:
+            c_a = _slice_centroid_x(verts_right_arm, v.co.x, tol=0.03)
+            clr_a = 0.0110 if v.co.x > -0.25 else 0.0055
+            v.co = _ensure_radial_clearance(v.co, c_a, bvh_right_arm, clr_a, max_r=0.11)
+        else:
+            c_t = _slice_centroid_z(verts_torso, v.co.z, tol=0.03, fallback=Vector((0.0022, -0.01, v.co.z)))
+            v.co = _ensure_z_plane_clearance(v.co, Vector((c_t.x, c_t.y)), bvh_torso, 0.0065, max_r=0.22)
+
+    cords_obj = _build_drawstrings(
+        f"{name}_hood_cords",
+        bvh_torso,
+        verts_torso,
+        eyelets=[(-0.026, 1.448), (0.030, 1.448)],
+        z_end=1.305,
+        mat_cord=mat_cord,
+        mat_metal=mat_zip_metal,
+        extra_y=-0.016,
+    )
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    cords_obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.join()
+
+    return obj
+
+
+# ---------------------------------------------------------------------------
+# Main Build Entry Point
+# ---------------------------------------------------------------------------
+def main():
+    bpy.ops.wm.open_mainfile(filepath=BLEND_PATH)
+    armature = bpy.data.objects["Armature"]
+
+    textures = _generate_cotton_textures()
+
+    mat_legging = _make_pbr_material(
+        "Legging_Cotton_Anthracite",
+        base_color=(0.08, 0.09, 0.11, 1.0),
+        roughness=0.86,
+        metallic=0.0,
+        color_img=textures["dark_col"],
+        normal_img=textures["jersey_nrm"],
+        normal_strength=0.40,
+        uv_scale=2.2,
+    )
+    mat_fleece = _make_pbr_material(
+        "Cotton_Fleece_HeatherGrey",
+        base_color=(0.56, 0.58, 0.61, 1.0),
+        roughness=0.90,
+        metallic=0.0,
+        color_img=textures["grey_col"],
+        normal_img=textures["fleece_nrm"],
+        normal_strength=0.50,
+        uv_scale=2.0,
+    )
+    mat_rib = _make_pbr_material(
+        "Cotton_Rib_HeatherGrey",
+        base_color=(0.52, 0.54, 0.57, 1.0),
+        roughness=0.90,
+        metallic=0.0,
+        color_img=textures["grey_col"],
+        normal_img=textures["rib_nrm"],
+        normal_strength=0.65,
+        uv_scale=2.5,
+    )
+    mat_lining = _make_pbr_material(
+        "Cotton_Hood_Lining",
+        base_color=(0.64, 0.66, 0.69, 1.0),
+        roughness=0.92,
+        metallic=0.0,
+        normal_img=textures["jersey_nrm"],
+        normal_strength=0.30,
+        uv_scale=2.0,
+    )
+    mat_zip_tape = _make_pbr_material(
+        "Zipper_Tape_Grey",
+        base_color=(0.38, 0.40, 0.43, 1.0),
+        roughness=0.88,
+        metallic=0.0,
+    )
+    mat_zip_metal = _make_pbr_material(
+        "Zipper_Metal_Nickel",
+        base_color=(0.76, 0.78, 0.81, 1.0),
+        roughness=0.28,
+        metallic=0.88,
+    )
+    mat_cord = _make_pbr_material(
+        "Cotton_Drawstring_Cream",
+        base_color=(0.84, 0.82, 0.77, 1.0),
+        roughness=0.92,
+        metallic=0.0,
+        color_img=textures["cord_col"],
+        normal_img=textures["cord_nrm"],
+        normal_strength=0.55,
+        uv_scale=1.0,
+    )
+
+    bvh_left_leg, verts_left_leg = _build_filtered_bvh(
+        ["body_nude_feet", "body_nude_legs"],
+        face_filter=lambda f: f.calc_center_median().x > 0.0022 and f.calc_center_median().z < 0.86,
+    )
+    bvh_right_leg, verts_right_leg = _build_filtered_bvh(
+        ["body_nude_feet", "body_nude_legs"],
+        face_filter=lambda f: f.calc_center_median().x <= 0.0022 and f.calc_center_median().z < 0.86,
+    )
+    bvh_pelvis, verts_pelvis = _build_filtered_bvh(
+        ["body_nude_legs", "body_nude_panties", "body_nude_torso"],
+        face_filter=lambda f: 0.77 <= f.calc_center_median().z <= 1.15,
+    )
+    bvh_torso, verts_torso = _build_filtered_bvh(
+        ["body_nude_legs", "body_nude_panties", "body_nude_torso"],
+        face_filter=lambda f: 0.90 <= f.calc_center_median().z <= 1.50,
+    )
+    bvh_left_arm, verts_left_arm = _build_filtered_bvh(
+        ["arms"],
+        face_filter=lambda f: f.calc_center_median().x > 0.0,
+    )
+    bvh_right_arm, verts_right_arm = _build_filtered_bvh(
+        ["arms"],
+        face_filter=lambda f: f.calc_center_median().x < 0.0,
+    )
+
+    donor_legs = [
+        bpy.data.objects["body_nude_feet"],
+        bpy.data.objects["body_nude_legs"],
+        bpy.data.objects["body_nude_panties"],
+        bpy.data.objects["body_nude_torso"],
+    ]
+    donor_torso_only = [
+        bpy.data.objects["body_nude_torso"],
+        bpy.data.objects["body_nude_panties"],
+    ]
+    donor_arms_only = [
+        bpy.data.objects["arms"],
+    ]
+    donor_top = donor_torso_only + donor_arms_only
+
+    # 1. Legging
+    legging = build_trousers(
+        name="lara_legging",
+        bvh_left_leg=bvh_left_leg,
+        verts_left_leg=verts_left_leg,
+        bvh_right_leg=bvh_right_leg,
+        verts_right_leg=verts_right_leg,
+        bvh_pelvis=bvh_pelvis,
+        verts_pelvis=verts_pelvis,
+        z_ankle=0.145,
+        z_cuff_top=0.175,
+        z_crotch=0.778,
+        z_waist_band_bot=1.045,
+        z_waist_top=1.095,
+        clearance_leg=lambda z, ang, zi: 0.0055 + (0.0018 if 0.46 < z < 0.62 else 0.0),
+        clearance_pelvis=lambda z, th, is_band, bt: (
+            0.0074 if is_band else (0.0086 if (math.sin(th) > 0.15 and 0.80 < z < 0.98) else 0.0058)
+        ),
+        max_dip_pelvis=0.0018,
+        n_leg=32,
+        mat_main=mat_legging,
+        mat_band=mat_legging,
+        add_waistband_ribs=False,
+        add_side_seam_ridge=True,
+        add_pocket_welts=False,
+        add_drawstrings=False,
+    )
+    _bind_and_transfer_weights(legging, donor_legs, armature, smooth_passes=1)
+    _export_garment_glb([legging], armature, "lara_legging.glb")
+
+    # 2. Sweatpants (Cotton Tracksuit Bottom)
+    def _sweat_leg_clr(z: float, ang: float, zi: int) -> float:
+        if z <= 0.225:
+            base = 0.0055 + 0.0105 * max(0.0, min(1.0, (z - 0.185) / 0.04))
+        else:
+            base = 0.0155 + 0.0038 * math.sin((z - 0.22) / 0.56 * math.pi) + 0.0016 * math.cos(ang * 3.0)
+        # Keep high inner thigh slim near crotch so legs stay cleanly separated when stepping forward
+        if z > 0.60 and math.cos(ang) > 0.0:
+            inner_t = max(0.0, min(1.0, (z - 0.60) / 0.18)) * math.cos(ang)
+            return base * (1.0 - 0.62 * inner_t)
+        return base
+
+    sweatpants = build_trousers(
+        name="lara_sweatpants",
+        bvh_left_leg=bvh_left_leg,
+        verts_left_leg=verts_left_leg,
+        bvh_right_leg=bvh_right_leg,
+        verts_right_leg=verts_right_leg,
+        bvh_pelvis=bvh_pelvis,
+        verts_pelvis=verts_pelvis,
+        z_ankle=0.155,
+        z_cuff_top=0.205,
+        z_crotch=0.778,
+        z_waist_band_bot=1.022,
+        z_waist_top=1.080,
+        clearance_leg=_sweat_leg_clr,
+        clearance_pelvis=lambda z, th, is_band, bt: 0.0082 if is_band else 0.0145,
+        max_dip_pelvis=0.0012,
+        n_leg=32,
+        mat_main=mat_fleece,
+        mat_band=mat_rib,
+        add_waistband_ribs=True,
+        add_side_seam_ridge=True,
+        add_pocket_welts=False,
+        add_drawstrings=True,
+        mat_cord=mat_cord,
+        mat_metal=mat_zip_metal,
+        mat_trim=mat_zip_tape,
+    )
+    _bind_and_transfer_weights(sweatpants, donor_legs, armature, smooth_passes=1)
+    _export_garment_glb([sweatpants], armature, "lara_sweatpants.glb")
+
+    # 3. Zipped Cotton Hoodie (Cotton Tracksuit Top)
+    hoodie = build_zip_hoodie(
+        name="lara_hoodie_zip",
+        bvh_torso=bvh_torso,
+        verts_torso=verts_torso,
+        bvh_left_arm=bvh_left_arm,
+        verts_left_arm=verts_left_arm,
+        bvh_right_arm=bvh_right_arm,
+        verts_right_arm=verts_right_arm,
+        mat_fleece=mat_fleece,
+        mat_rib=mat_rib,
+        mat_lining=mat_lining,
+        mat_zip_tape=mat_zip_tape,
+        mat_zip_metal=mat_zip_metal,
+        mat_cord=mat_cord,
+    )
+    _bind_and_transfer_weights(
+        hoodie,
+        donor_top,
+        armature,
+        bone_attenuation={"breast_left_base": 0.45, "breast_right_base": 0.45},
+        smooth_passes=1,
+        region_selector=lambda vco: donor_arms_only if (abs(vco.x) > 0.145 and vco.z > 1.325) else donor_torso_only,
+    )
+    _export_garment_glb([hoodie], armature, "lara_hoodie_zip.glb")
+
+    print("All 3 Lara garments generated successfully!")
+
+
+if __name__ == "__main__":
+    main()
