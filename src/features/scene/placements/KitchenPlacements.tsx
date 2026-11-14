@@ -11,6 +11,7 @@ import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kalla
 import { TrashBin } from '../items/TrashBin';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
+import { Citronhaj40553211 } from '../items/Citronhaj40553211';
 import { Middagsmat60463714 } from '../items/Middagsmat60463714';
 import { SyckRc003a } from '../items/SyckRc003a';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
@@ -42,6 +43,7 @@ const IKEA365_JARS: readonly { contents: Ikea365Contents; fillLevel: number }[] 
 const IKEA365_COUNT = IKEA365_JARS.length;
 const IKEA365_LENGTH = 17;
 const HOOD_SHELF_TOP = 166.9; // face supérieure du montant METOD couché : 173 - 7 + 0.9
+const HOOD_CABINET_BOTTOM_TOP = 154.8; // planche du bas du meuble haut METOD (153 + 1.8)
 
 export function KitchenEquipment() {
   return (
@@ -131,6 +133,14 @@ export function KitchenFurnishings() {
       {/* Cuiseur à riz Senya SYCK-RC003/A — sur les plaques contre le mur sud */}
       <group position={[KITCHEN_WEST_WALL + 70, 93.8, KITCHEN_SOUTH_WALL - 11]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
         <SyckRc003a actionState={as} />
+      </group>
+
+      {/* Deux CITRONHAJ 8 cm (sel & poivre) sur la planche du bas du meuble haut, devant la hotte. */}
+      <group position={[KITCHEN_WEST_WALL + 67, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Sel 8 cm' }}>
+        <Citronhaj40553211 contents="salt" />
+      </group>
+      <group position={[KITCHEN_WEST_WALL + 73, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Poivre 8 cm' }}>
+        <Citronhaj40553211 contents="pepper" />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}
