@@ -5,7 +5,6 @@
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
 import { useLayoutEffect, useRef } from 'react';
-import { RoundedBox } from '@react-three/drei';
 import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial, glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
@@ -14,16 +13,42 @@ import type { SceneModelProps } from '@shared/types';
 import { Anneland70481722 } from './Anneland70481722';
 import { Vestmarka90470195 } from './Vestmarka90470195';
 
-const BAS_GLB  = 'items/utaker00360484/Utaker00360484-1.glb';
-const HAUT_GLB = 'items/utaker00360484/Utaker00360484-2.glb';
+const BAS_GLB   = 'items/utaker00360484/Utaker00360484-1.glb';
+const HAUT_GLB  = 'items/utaker00360484/Utaker00360484-2.glb';
+const DUVET_GLB = 'models/bed-duvet.glb';
+
+function makeFabricWeaveMap(): THREE.CanvasTexture {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, size, size);
+  for (let y = 0; y < size; y += 2) {
+    for (let x = 0; x < size; x += 2) {
+      const warp = ((x + y) & 2) === 0 ? 22 : -18;
+      const v = 128 + warp;
+      ctx.fillStyle = `rgb(${v},${v},${v})`;
+      ctx.fillRect(x, y, 2, 2);
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(14, 14);
+  return tex;
+}
 
 const redFabricMat = new THREE.MeshPhysicalMaterial({
-  color: 0x991111,
+  color: 0xa21616,
+  vertexColors: true,
   roughness: 0.9,
+  bumpMap: typeof document !== 'undefined' ? makeFabricWeaveMap() : null,
+  bumpScale: 0.35,
   clearcoat: 0.0,
   sheen: 1.0,
-  sheenColor: new THREE.Color(0xff5555),
-  sheenRoughness: 0.6,
+  sheenColor: new THREE.Color(0xff6666),
+  sheenRoughness: 0.65,
   polygonOffset: true,
   polygonOffsetFactor: -1,
   polygonOffsetUnits: -1,
@@ -45,16 +70,23 @@ function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: nu
 }
 
 function RealisticDuvet({ topY, drop }: { topY: number; drop: number }) {
-  const len = 150; 
-  const wid = 82;
+  const { scene } = useGLTFClone(DUVET_GLB);
+  useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
+    scene.traverse(obj => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.material = redFabricMat;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+    });
+  }, [scene]);
+
   return (
-    <group position={[25, topY + 1, 0]}>
-      <RoundedBox args={[len, 2, wid]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
-      <RoundedBox args={[len, drop, 2]} position={[0, -drop/2 + 0.5, wid/2]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
-      <RoundedBox args={[len, drop, 2]} position={[0, -drop/2 + 0.5, -wid/2]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
-      <RoundedBox args={[2, drop, wid - 2]} position={[len/2, -drop/2 + 0.5, 0]} radius={0.8} smoothness={4} castShadow receiveShadow material={redFabricMat} />
-      {/* Pliure décorative en haut de la couette */}
-      <RoundedBox args={[6, 3.5, wid]} position={[-len/2 + 3, 1, 0]} radius={1.7} smoothness={4} castShadow receiveShadow material={redFabricMat} />
+    <group position={[25, topY, 0]} scale={[100, 100 * (drop / 20), 100]}>
+      <primitive object={scene} />
     </group>
   );
 }
@@ -118,3 +150,4 @@ export function UtakerFrame({ upper: isUpper = false, onSize, hasTopper: explici
 
 preloadSceneGLTF(BAS_GLB);
 preloadSceneGLTF(HAUT_GLB);
+preloadSceneGLTF(DUVET_GLB);
