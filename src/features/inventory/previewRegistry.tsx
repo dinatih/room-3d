@@ -87,7 +87,6 @@ import { MeubleT }                                    from '@features/scene/item
 import { UtakerStack }                                from '@features/scene/items/UtakerStack';
 import { Bollsidan30574370 }                          from '@features/scene/items/Bollsidan30574370';
 import { MannequinHead, LaraWigBust }                 from '@features/scene/items/MannequinHead';
-import { Backpack }                                   from '@features/scene/items/Backpack';
 import { BaseballCap }                                from '@features/scene/items/BaseballCap';
 import { Kejserlig90511501 }                          from '@features/scene/items/Kejserlig90511501';
 import { Counter }                                    from '@features/scene/items/Counter';
@@ -236,7 +235,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'desk-bollsidan':         Bollsidan30574370,
   'bollsidan30574370':      Bollsidan30574370,
   'mannequin-head':         MannequinHead,
-  'backpack':               Backpack,
   'baseball-cap':           BaseballCap,
   'mug':                    Kejserlig90511501,
   'kejserlig90511501':      Kejserlig90511501,

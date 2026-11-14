@@ -1,11 +1,11 @@
-"""Generate a detailed, realistic 3D GLB of the red roll-top backpack (Temu / LIVING TRAVELING SHARE)."""
+"""Generate a detailed, realistic 3D GLB of the red roll-top backpack (Temu)."""
 import math
 import os
 import tempfile
 import bpy
 import bmesh
 from mathutils import Euler, Matrix, Vector
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 OUT_PATH = "/home/dinatih/Projects/room-3d/public/items/backpack/Backpack.glb"
 os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
@@ -18,60 +18,6 @@ TEX_DIR = tempfile.mkdtemp(prefix="backpack_tex_")
 # ---------------------------------------------------------------------------
 # Procedural Textures (packed into GLB)
 # ---------------------------------------------------------------------------
-def build_label_texture():
-    """Create crisp woven label texture: LIVING TRAVELING SHARE / FROM YOURS / NICE TO MEET YOU."""
-    w, h = 512, 320
-    img = Image.new("RGB", (w, h), (15, 15, 17))
-    draw = ImageDraw.Draw(img)
-
-    for y in range(0, h, 2):
-        shade = 13 if (y // 2) % 2 == 0 else 19
-        draw.line([(0, y), (w, y)], fill=(shade, shade, shade + 1), width=1)
-
-    draw.rectangle([10, 10, w - 11, h - 11], outline=(32, 32, 36), width=2)
-
-    def load_font(size, serif=True):
-        candidates = (
-            [
-                "/usr/share/fonts/noto/NotoSerif-Regular.ttf",
-                "/usr/share/fonts/noto/NotoSerif-SemiBold.ttf",
-            ]
-            if serif
-            else [
-                "/usr/share/fonts/noto/NotoSans-Regular.ttf",
-                "/usr/share/fonts/noto/NotoSans-Medium.ttf",
-            ]
-        )
-        for p in candidates:
-            if os.path.exists(p):
-                return ImageFont.truetype(p, size)
-        raise RuntimeError("No Noto TTF font found for label texture")
-
-    font_big = load_font(58, serif=True)
-    font_small = load_font(20, serif=False)
-    text_col = (234, 230, 224)
-
-    y_cur = 24
-    for line in ["LIVING", "TRAVELING", "SHARE"]:
-        bbox = draw.textbbox((0, 0), line, font=font_big)
-        tw = bbox[2] - bbox[0]
-        draw.text(((w - tw) / 2, y_cur), line, fill=text_col, font=font_big)
-        y_cur += 62
-
-    y_cur += 22
-    for line in ["FROM YOURS", "NICE TO MEET YOU"]:
-        bbox = draw.textbbox((0, 0), line, font=font_small)
-        tw = bbox[2] - bbox[0]
-        draw.text(((w - tw) / 2, y_cur), line, fill=text_col, font=font_small)
-        y_cur += 26
-
-    path = os.path.join(TEX_DIR, "label_patch.png")
-    img.save(path)
-    b_img = bpy.data.images.load(path)
-    b_img.pack()
-    return b_img
-
-
 def build_oxford_weave_normal():
     """Create a tileable subtle Oxford nylon fabric normal map."""
     size = 128
@@ -123,7 +69,6 @@ def build_webbing_normal():
     return b_img
 
 
-img_label = build_label_texture()
 img_oxford_nrm = build_oxford_weave_normal()
 img_webbing_nrm = build_webbing_normal()
 
@@ -154,19 +99,6 @@ def make_fabric_mat(name, base_color, roughness=0.78, metallic=0.0, normal_img=N
     return mat
 
 
-def make_label_mat():
-    mat = bpy.data.materials.new(name="LabelPatch")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    bsdf = nt.nodes.get("Principled BSDF")
-    bsdf.inputs["Roughness"].default_value = 0.72
-    bsdf.inputs["Metallic"].default_value = 0.0
-    tex = nt.nodes.new("ShaderNodeTexImage")
-    tex.image = img_label
-    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    return mat
-
-
 # Saturated deep crimson/cardinal red Oxford cloth matching photo & Drona palette
 mat_fabric_red = make_fabric_mat(
     "BackpackFabricRed", (0.40, 0.0018, 0.0032), roughness=0.78,
@@ -188,8 +120,6 @@ mat_buckle_black = make_fabric_mat("BackpackBuckleBlack", (0.018, 0.018, 0.020),
 mat_zipper_track = make_fabric_mat("BackpackZipperTrack", (0.035, 0.006, 0.008), roughness=0.62, metallic=0.12)
 # Brushed chrome/silver zipper pulls
 mat_metal_silver = make_fabric_mat("BackpackZipperSilver", (0.76, 0.78, 0.81), roughness=0.22, metallic=0.92)
-# Woven brand patch
-mat_patch_label = make_label_mat()
 
 
 # ---------------------------------------------------------------------------
@@ -666,32 +596,6 @@ def build_front_pocket():
         rot=(0.14, 0.0, 0.0),
     )
     finish_mesh("FrontPocket", bm, mat_fabric_red, smooth=True)
-
-    # Woven Label Patch ("LIVING TRAVELING SHARE") at bottom-right of front pocket
-    bm_lbl = bmesh.new()
-    lw, lh, ld = 0.056, 0.036, 0.0020
-    lx, lz = 0.068, 0.058
-    ly = body_front_y(0.0, lz) - pd - 0.0018
-    v0 = bm_lbl.verts.new((lx - lw * 0.5, ly - ld, lz - lh * 0.5))
-    v1 = bm_lbl.verts.new((lx + lw * 0.5, ly - ld, lz - lh * 0.5))
-    v2 = bm_lbl.verts.new((lx + lw * 0.5, ly - ld, lz + lh * 0.5))
-    v3 = bm_lbl.verts.new((lx - lw * 0.5, ly - ld, lz + lh * 0.5))
-    b0 = bm_lbl.verts.new((lx - lw * 0.5, ly + 0.001, lz - lh * 0.5))
-    b1 = bm_lbl.verts.new((lx + lw * 0.5, ly + 0.001, lz - lh * 0.5))
-    b2 = bm_lbl.verts.new((lx + lw * 0.5, ly + 0.001, lz + lh * 0.5))
-    b3 = bm_lbl.verts.new((lx - lw * 0.5, ly + 0.001, lz + lh * 0.5))
-
-    uv_layer = bm_lbl.loops.layers.uv.verify()
-    f_front = bm_lbl.faces.new((v0, v1, v2, v3))
-    f_front.loops[0][uv_layer].uv = (0.0, 0.0)
-    f_front.loops[1][uv_layer].uv = (1.0, 0.0)
-    f_front.loops[2][uv_layer].uv = (1.0, 1.0)
-    f_front.loops[3][uv_layer].uv = (0.0, 1.0)
-    for verts in [(b0, b3, b2, b1), (v0, v3, b3, b0), (v1, b1, b2, v2), (v3, v2, b2, b3), (v0, b0, b1, v1)]:
-        fe = bm_lbl.faces.new(verts)
-        for lp in fe.loops:
-            lp[uv_layer].uv = (0.02, 0.02)
-    finish_mesh("BrandPatch", bm_lbl, mat_patch_label, smooth=False)
 
 
 # ---------------------------------------------------------------------------
