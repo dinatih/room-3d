@@ -910,7 +910,9 @@ def build_zip_hoodie(
                 return True
         return False
 
+    torso_shell_faces = []
     hem_faces = []
+    hem_return_faces = []
     for zi in range(n_rings - 1):
         is_hem = zi < 4
         for j in range(n_theta - 1):
@@ -922,6 +924,7 @@ def build_zip_hoodie(
                 torso_grid[zi + 1][j + 1],
                 torso_grid[zi + 1][j],
             ))
+            torso_shell_faces.append(f)
             if is_hem:
                 hem_faces.append(f)
 
@@ -933,12 +936,16 @@ def build_zip_hoodie(
         d1 = Vector((v1.co.x - c0.x, v1.co.y - c0.y, 0.0)).normalized()
         iv0 = bm.verts.new(v0.co - d0 * 0.005 + Vector((0.0, 0.0, 0.008)))
         iv1 = bm.verts.new(v1.co - d1 * 0.005 + Vector((0.0, 0.0, 0.008)))
-        hem_faces.append(bm.faces.new((v0, iv0, iv1, v1)))
+        rf = bm.faces.new((v0, iv0, iv1, v1))
+        hem_faces.append(rf)
+        hem_return_faces.append(rf)
 
     # -----------------------------------------------------------------------
     # Sleeves (with generous shoulder cap clearance + ribbed wrist cuffs)
     # -----------------------------------------------------------------------
     cuff_faces = []
+    sleeve_shell_faces = {1: [], -1: []}
+    cuff_return_faces = {1: [], -1: []}
     arm_data = {
         1: (bvh_left_arm, verts_left_arm),
         -1: (bvh_right_arm, verts_right_arm),
@@ -1000,6 +1007,7 @@ def build_zip_hoodie(
         for si in range(len(sleeve_rings) - 1):
             r0 = sleeve_rings[si]
             r1 = sleeve_rings[si + 1]
+            c_seg = (sum((v.co for v in r0), Vector()) + sum((v.co for v in r1), Vector())) / (2.0 * n_sl)
             is_cuff_seg = si >= n_sl_body
             for k in range(n_sl):
                 kn = (k + 1) % n_sl
@@ -1007,6 +1015,7 @@ def build_zip_hoodie(
                     f = bm.faces.new((r0[k], r0[kn], r1[kn], r1[k]))
                 else:
                     f = bm.faces.new((r0[k], r1[k], r1[kn], r0[kn]))
+                sleeve_shell_faces[side].append((f, c_seg))
                 if is_cuff_seg:
                     cuff_faces.append(f)
 
@@ -1024,11 +1033,14 @@ def build_zip_hoodie(
             else:
                 f = bm.faces.new((wrist_ring[k], inner_wrist[k], inner_wrist[kn], wrist_ring[kn]))
             cuff_faces.append(f)
+            cuff_return_faces[side].append(f)
 
     # -----------------------------------------------------------------------
     # Split Kangaroo Pockets (with subtle darker entry welt trim)
     # -----------------------------------------------------------------------
     pocket_trim_faces = []
+    pocket_front_faces = []
+    pocket_seam_faces = []
     zi_pkt_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.018))
     zi_pkt_top = min(range(n_rings), key=lambda i: abs(zs[i] - 1.158))
     for side in (1, -1):
@@ -1054,6 +1066,7 @@ def build_zip_hoodie(
         for r in range(nr_p - 1):
             for c_i in range(nc_p - 1):
                 f = bm.faces.new((pkt_grid[r][c_i], pkt_grid[r][c_i + 1], pkt_grid[r + 1][c_i + 1], pkt_grid[r + 1][c_i]))
+                pocket_front_faces.append(f)
                 # Outer pocket entry lip strip gets subtle trim shade
                 is_outer_col = (c_i == nc_p - 2) if side == 1 else (c_i == 0)
                 if is_outer_col and r >= 2:
@@ -1064,86 +1077,132 @@ def build_zip_hoodie(
             v_b0 = torso_grid[zi_pkt_bot + r][j_in]
             v_b1 = torso_grid[zi_pkt_bot + r + 1][j_in]
             if side == 1:
-                bm.faces.new((v_b0, pkt_grid[r][c_in], pkt_grid[r + 1][c_in], v_b1))
+                sf = bm.faces.new((v_b0, pkt_grid[r][c_in], pkt_grid[r + 1][c_in], v_b1))
             else:
-                bm.faces.new((v_b0, v_b1, pkt_grid[r + 1][c_in], pkt_grid[r][c_in]))
+                sf = bm.faces.new((v_b0, v_b1, pkt_grid[r + 1][c_in], pkt_grid[r][c_in]))
+            pocket_seam_faces.append((sf, "in", side))
         for c_i in range(nc_p - 1):
             j_a = j_range[c_i]
             j_b = j_range[c_i + 1]
-            bm.faces.new((pkt_grid[-1][c_i], torso_grid[zi_pkt_top][j_a], torso_grid[zi_pkt_top][j_b], pkt_grid[-1][c_i + 1]))
-            bm.faces.new((torso_grid[zi_pkt_bot][j_a], pkt_grid[0][c_i], pkt_grid[0][c_i + 1], torso_grid[zi_pkt_bot][j_b]))
+            pocket_seam_faces.append((bm.faces.new((pkt_grid[-1][c_i], torso_grid[zi_pkt_top][j_a], torso_grid[zi_pkt_top][j_b], pkt_grid[-1][c_i + 1])), "top", side))
+            pocket_seam_faces.append((bm.faces.new((torso_grid[zi_pkt_bot][j_a], pkt_grid[0][c_i], pkt_grid[0][c_i + 1], torso_grid[zi_pkt_bot][j_b])), "bot", side))
 
     # -----------------------------------------------------------------------
-    # Wide Rounded Draped Hood (U-shape across upper back, below Z=1.474!)
+    # Cupped Watertight Draped Hood (2-manifold closed pouch flush on collar)
     # -----------------------------------------------------------------------
-    hood_col_indices = list(range(4, n_theta - 4))
+    # Kept strictly disconnected (2-manifold watertight pouch) from torso_grid[-1]
+    # so there are zero 3-way non-manifold seams while kissing the collar line seamlessly.
+    hood_col_indices = list(range(5, n_theta - 5))
     n_hc = len(hood_col_indices)
-    hood_outer_rings = [[torso_grid[-1][j] for j in hood_col_indices]]
-    hood_inner_rings = []
 
-    # Stations widen cleanly across upper shoulders/back into a broad rounded drape
-    stations = [
-        (0.016, +0.008, 0.020, 0.006),
-        (0.042, +0.008, 0.042, 0.007),
-        (0.074, -0.004, 0.064, 0.008),
-        (0.102, -0.028, 0.078, 0.009),
-        (0.120, -0.068, 0.084, 0.009),
-        (0.122, -0.110, 0.076, 0.008),
-        (0.108, -0.144, 0.062, 0.007),
-        (0.086, -0.156, 0.044, 0.005),
+    # 16-station non-self-intersecting CCW cross-section in (u_frac, v_frac):
+    # 0..3: underside wall resting cleanly on upper back; 4: bottom U-fold hem;
+    # 5..8: plump outer fleece shell (+Y); 9: soft slumped top hood rim;
+    # 10..15: concave inner lining bowl returning seamlessly to the inner collar lip.
+    hood_profile = [
+        (0.00,  0.00),   # 0: seam outer lip anchored directly on torso collar
+        (0.02, -0.35),   # 1: underside wall upper
+        (0.05, -0.70),   # 2: underside wall lower
+        (0.18, -0.96),   # 3: bottom U-fold under-bend
+        (0.50, -1.02),   # 4: bottom U-fold hem
+        (0.84, -0.88),   # 5: outer fleece lower swell
+        (1.00, -0.58),   # 6: outer fleece max plumpness (+Y)
+        (0.96, -0.32),   # 7: outer fleece upper slope
+        (0.82, -0.14),   # 8: outer fleece upper slumped crest
+        (0.66, -0.08),   # 9: rolled upper opening rim
+        (0.62, -0.22),   # 10: inner lining outer-wall upper
+        (0.66, -0.52),   # 11: inner lining outer-wall lower
+        (0.46, -0.80),   # 12: inner lining pocket floor
+        (0.24, -0.52),   # 13: inner lining collar-side slope
+        (0.14, -0.20),   # 14: inner lining throat curve
+        (0.10, +0.01),   # 15: inner lining collar lip (flush inside collar)
     ]
-    for st_idx, (dy_b, dz_o, exp_x, thick) in enumerate(stations):
-        ring_out = []
-        ring_in = []
-        t_st = (st_idx + 1) / len(stations)
-        for idx, j in enumerate(hood_col_indices):
-            base = torso_grid[-1][j].co
-            t_side = idx / (n_hc - 1)
-            back_weight = math.sin(t_side * math.pi) ** 0.85
-            # Natural draped hood folds across upper back
-            fold_wave = 0.0055 * math.cos(t_side * math.pi * 4.0) * math.sin(t_st * math.pi)
-            # t_side=0 is Left (+X), t_side=1 is Right (-X): keep Left +X and Right -X uncrossed!
-            spread_x = (0.5 - t_side) * 2.0 * exp_x * (0.65 + 0.35 * t_st)
-            p_out = Vector((
-                base.x * 0.65 + spread_x,
-                base.y + dy_b * (0.28 + 0.72 * back_weight) + fold_wave,
-                min(1.473, base.z + dz_o * (0.22 + 0.78 * back_weight)),
-            ))
-            c_ref = _slice_centroid_z(verts_torso, p_out.z, tol=0.03, fallback=Vector((0.0022, 0.0, p_out.z)))
-            p_out = _ensure_z_plane_clearance(p_out, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.012, max_r=0.22)
-            if p_out.y > 0.040:
-                p_out.z = min(p_out.z, 1.473)
-            sx = math.copysign(1.0, p_out.x - 0.0022) if abs(p_out.x - 0.0022) > 0.005 else 0.0
-            p_in = p_out + Vector((-sx * thick * 0.4, -thick * 0.85, thick * 0.35))
-            p_in = _ensure_z_plane_clearance(p_in, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.008, max_r=0.22)
-            ring_out.append(bm.verts.new(p_out))
-            ring_in.append(bm.verts.new(p_in))
-        hood_outer_rings.append(ring_out)
-        hood_inner_rings.append(ring_in)
+    n_hp = len(hood_profile)
+    c_collar = torso_centers[-1]
+    hood_rings = []
+    for idx, j in enumerate(hood_col_indices):
+        base = torso_grid[-1][j].co
+        t_side = idx / (n_hc - 1)
+        w = math.sin(t_side * math.pi) ** 0.78
+        drop = 0.010 + 0.155 * w
+        depth = 0.008 + 0.056 * w
+        fold_wave = 0.0030 * math.cos(t_side * math.pi * 4.0) * w
 
+        # Smooth drape axis: collar radial outward at front corners, turning cleanly
+        # straight backward (+Y) across the upper back between the shoulder blades.
+        d_rad = Vector((base.x - c_collar.x, base.y - c_collar.y, 0.0))
+        if d_rad.length > 1e-6:
+            d_rad.normalize()
+        else:
+            d_rad = Vector((0.0, 1.0, 0.0))
+        d_back_fan = Vector((0.08 * (0.5 - t_side) * 2.0, 1.0, 0.0)).normalized()
+        d_drape = d_rad.lerp(d_back_fan, 0.90 * (w ** 0.45)).normalized()
+
+        col_verts = []
+        for u_frac, v_frac in hood_profile:
+            z_pt = base.z - 0.0015 + v_frac * drop
+            if u_frac > 0.08 and w > 0.25:
+                z_pt = min(z_pt, 1.464)
+            else:
+                z_pt = min(z_pt, 1.474)
+
+            c_ref = _slice_centroid_z(verts_torso, z_pt, tol=0.03, fallback=Vector((0.0022, -0.010, z_pt)))
+            # Underside resting path starts directly on collar base and glides down/back
+            # cleanly outside the hoodie torso surface (1.65 cm clearance when v_frac < 0).
+            back_slope = 0.036 * w * min(1.0, abs(v_frac))
+            p_under = Vector((base.x, base.y, z_pt)) + d_drape * back_slope
+            if abs(v_frac) > 0.04:
+                p_under = _ensure_z_plane_clearance(
+                    p_under, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.0165, max_r=0.22
+                )
+
+            p = p_under + d_drape * (u_frac * depth + fold_wave * u_frac)
+            if w > 0.25 and p.y > 0.040 and u_frac > 0.08:
+                p.z = min(p.z, 1.464)
+            col_verts.append(bm.verts.new(p))
+        hood_rings.append(col_verts)
+
+    hood_faces = []
+    hood_outer_check_faces = []
     lining_faces = []
-    for r in range(len(hood_outer_rings) - 1):
-        r0 = hood_outer_rings[r]
-        r1 = hood_outer_rings[r + 1]
-        for k in range(n_hc - 1):
-            bm.faces.new((r0[k], r0[k + 1], r1[k + 1], r1[k]))
-    for r in range(len(hood_inner_rings) - 1):
-        r0 = hood_inner_rings[r]
-        r1 = hood_inner_rings[r + 1]
-        for k in range(n_hc - 1):
-            lining_faces.append(bm.faces.new((r0[k], r1[k], r1[k + 1], r0[k + 1])))
     for k in range(n_hc - 1):
-        lining_faces.append(bm.faces.new((hood_outer_rings[-1][k], hood_outer_rings[-1][k + 1], hood_inner_rings[-1][k + 1], hood_inner_rings[-1][k])))
-        lining_faces.append(bm.faces.new((hood_outer_rings[0][k], hood_inner_rings[0][k], hood_inner_rings[0][k + 1], hood_outer_rings[0][k + 1])))
-    for r in range(len(hood_inner_rings) - 1):
-        o0, o1 = hood_outer_rings[r + 1][0], hood_outer_rings[r + 2][0] if r + 2 < len(hood_outer_rings) else hood_outer_rings[-1][0]
-        i0, i1 = hood_inner_rings[r][0], hood_inner_rings[r + 1][0]
-        if o0 != o1:
-            bm.faces.new((o0, i0, i1, o1))
-        o0r, o1r = hood_outer_rings[r + 1][-1], hood_outer_rings[r + 2][-1] if r + 2 < len(hood_outer_rings) else hood_outer_rings[-1][-1]
-        i0r, i1r = hood_inner_rings[r][-1], hood_inner_rings[r + 1][-1]
-        if o0r != o1r:
-            bm.faces.new((o0r, o1r, i1r, i0r))
+        c0 = hood_rings[k]
+        c1 = hood_rings[k + 1]
+        for s in range(n_hp):
+            sn = (s + 1) % n_hp
+            f = bm.faces.new((c0[s], c0[sn], c1[sn], c1[s]))
+            hood_faces.append(f)
+            if 9 <= s <= 14:
+                lining_faces.append(f)
+            elif 5 <= s <= 7 and 0.25 <= (k / (n_hc - 1)) <= 0.75:
+                hood_outer_check_faces.append(f)
+
+    # Watertight U-wall end-caps at left (k=0) and right (k=n_hc-1) collar ends
+    # Partition the 16-gon strictly inside the fabric thickness so no chord crosses the open mouth.
+    end_cap_specs = [
+        (0, 1, 14, 15),
+        (1, 2, 13, 14),
+        (2, 3, 12, 13),
+        (3, 4, 12),
+        (4, 5, 12),
+        (5, 11, 12),
+        (5, 6, 11),
+        (6, 7, 10, 11),
+        (7, 8, 9, 10),
+    ]
+    for cap_idx, flip_cap in ((0, True), (n_hc - 1, False)):
+        ring = hood_rings[cap_idx]
+        for spec in end_cap_specs:
+            verts_cap = [ring[i] for i in (reversed(spec) if flip_cap else spec)]
+            hood_faces.append(bm.faces.new(verts_cap))
+
+    # Orient the watertight 2-manifold hood unit outward & verify back outer faces point +Y
+    bmesh.ops.recalc_face_normals(bm, faces=hood_faces)
+    if hood_outer_check_faces:
+        bm.normal_update()
+        avg_outer_ny = sum(f.normal.y for f in hood_outer_check_faces) / len(hood_outer_check_faces)
+        if avg_outer_ny < 0.0:
+            bmesh.ops.reverse_faces(bm, faces=hood_faces)
 
     # -----------------------------------------------------------------------
     # Full-Length Front Zipper Tape + Metallic Teeth + Slider & Pull Tab
@@ -1182,23 +1241,74 @@ def build_zip_hoodie(
         zip_metal_faces.append(bm.faces.new((c1, d1, d2, c2)))
         zip_metal_faces.append(bm.faces.new((c2, d2, d3, c3)))
 
+    slider_faces = []
     top_mid = 0.5 * (zip_rows_teeth[-1][1].co + zip_rows_teeth[-1][2].co)
     slider_mat_loc = Matrix.Translation(top_mid + Vector((0.0, -0.0025, 0.0)))
     res_sl = bmesh.ops.create_cube(bm, size=1.0)
     for v in res_sl["verts"]:
         v.co = slider_mat_loc @ Vector((v.co.x * 0.009, v.co.y * 0.0055, v.co.z * 0.013))
         for f in v.link_faces:
-            zip_metal_faces.append(f)
+            if f not in slider_faces:
+                slider_faces.append(f)
+    zip_metal_faces.extend(slider_faces)
+    bmesh.ops.recalc_face_normals(bm, faces=slider_faces)
 
+    pull_faces = []
     pull_mat_loc = Matrix.Translation(top_mid + Vector((0.0, -0.0065, -0.013))) @ Matrix.Rotation(-0.18, 4, "X")
     res_pl = bmesh.ops.create_cube(bm, size=1.0)
     for v in res_pl["verts"]:
         v.co = pull_mat_loc @ Vector((v.co.x * 0.0065, v.co.y * 0.0022, v.co.z * 0.017))
         for f in v.link_faces:
-            zip_metal_faces.append(f)
+            if f not in pull_faces:
+                pull_faces.append(f)
+    zip_metal_faces.extend(pull_faces)
+    bmesh.ops.recalc_face_normals(bm, faces=pull_faces)
 
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    # Explicitly orient each tracked garment sub-part (never guess by X coordinate)
+    bm.normal_update()
+    for f in torso_shell_faces:
+        fc = f.calc_center_median()
+        c_t = _slice_centroid_z(verts_torso, fc.z, tol=0.03, fallback=Vector((0.0022, -0.010, fc.z)))
+        rad = Vector((fc.x - c_t.x, fc.y - c_t.y, 0.03 if fc.z > 1.445 else 0.0))
+        if rad.length > 1e-6 and rad.dot(f.normal) < 0.0:
+            f.normal_flip()
+    for f in hem_return_faces:
+        if f.normal.z > 0.0:
+            f.normal_flip()
+    for side in (1, -1):
+        for f, c_seg in sleeve_shell_faces[side]:
+            fc = f.calc_center_median()
+            rad = Vector((0.0, fc.y - c_seg.y, fc.z - c_seg.z))
+            if rad.length > 1e-6 and rad.dot(f.normal) < 0.0:
+                f.normal_flip()
+        for f in cuff_return_faces[side]:
+            if f.normal.x * side < 0.0:
+                f.normal_flip()
+    for f in pocket_front_faces:
+        fc = f.calc_center_median()
+        c_t = _slice_centroid_z(verts_torso, fc.z, tol=0.03, fallback=Vector((0.0022, -0.010, fc.z)))
+        rad = Vector((fc.x - c_t.x, fc.y - c_t.y, 0.0))
+        if rad.length > 1e-6 and rad.dot(f.normal) < 0.0:
+            f.normal_flip()
+    for f, kind, side in pocket_seam_faces:
+        if kind == "top" and f.normal.z < 0.0:
+            f.normal_flip()
+        elif kind == "bot" and f.normal.z > 0.0:
+            f.normal_flip()
+        elif kind == "in" and Vector((-side, -0.35, 0.0)).dot(f.normal) < 0.0:
+            f.normal_flip()
+    slider_pull_set = set(slider_faces) | set(pull_faces)
+    for f in set(zip_tape_faces) | (set(zip_metal_faces) - slider_pull_set):
+        if f.normal.y > 0.0:
+            f.normal_flip()
+
+    hood_face_set = set(hood_faces)
     for f in bm.faces:
+        if f in hood_face_set:
+            for loop in f.loops:
+                co = loop.vert.co
+                loop[uv_layer].uv = (co.x * 3.2 + 0.5, co.z * 2.5)
+            continue
         for loop in f.loops:
             co = loop.vert.co
             if abs(co.x) > 0.165:
@@ -1316,12 +1426,13 @@ def main():
     )
     mat_lining = _make_pbr_material(
         "Cotton_Hood_Lining",
-        base_color=(0.64, 0.66, 0.69, 1.0),
-        roughness=0.92,
+        base_color=(0.48, 0.50, 0.53, 1.0),
+        roughness=0.95,
         metallic=0.0,
+        color_img=textures["grey_col"],
         normal_img=textures["jersey_nrm"],
-        normal_strength=0.30,
-        uv_scale=2.0,
+        normal_strength=0.35,
+        uv_scale=2.2,
     )
     mat_zip_tape = _make_pbr_material(
         "Zipper_Tape_Grey",
