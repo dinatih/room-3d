@@ -28,6 +28,7 @@ import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell, DF } from '../items/Drona';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { Wy0083 } from '../items/Wy0083';
+import { TowelFoldedRed, TowelHangingLargeRed, TowelHangingSmallRed } from '../items/TowelSetRed';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
@@ -187,6 +188,21 @@ export function BathroomFurnishings() {
       {/* Porte-serviettes WY008-3 sur le mur Ouest SDB (à 111 cm du sol, 64 cm du mur Nord) */}
       <group position={[BATH_WEST_WALL + 11, 111, BATH_NORTH_WALL + 64 + 20.1]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
         <Wy0083 />
+        {/* Grande serviette pliée sur l'étage haut */}
+        <group position={[0, 21.6, -0.7]} userData={{ sceneItemRoot: true, itemName: 'Grande serviette rouge pliée' }}>
+          <TowelFoldedRed />
+        </group>
+        {/* 2 petites serviettes sur les 2 crochets les plus au nord */}
+        <group position={[-18.9, 2.4, 8.1]} userData={{ sceneItemRoot: true, itemName: 'Petite serviette rouge (crochet nord 1)' }}>
+          <TowelHangingSmallRed />
+        </group>
+        <group position={[-13.0, 2.4, 7.4]} userData={{ sceneItemRoot: true, itemName: 'Petite serviette rouge (crochet nord 2)' }}>
+          <TowelHangingSmallRed />
+        </group>
+        {/* Grande serviette suspendue à un crochet */}
+        <group position={[13.0, 2.4, 7.4]} userData={{ sceneItemRoot: true, itemName: 'Grande serviette rouge suspendue' }}>
+          <TowelHangingLargeRed />
+        </group>
       </group>
 
       {/* TACKAN douche */}
