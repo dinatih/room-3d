@@ -13,7 +13,7 @@ import './RaytracingPhotoModal.css';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { getRaytracingPreset, getDefaultRaytracingUrl } from '../camera/cameraUrlParams';
-import { clipGeometryWorldY } from './clipGeometryY';
+import { applyMagazineCut, MAGAZINE_CUT_HEIGHT } from './clipGeometryY';
 import { RAYTRACING_DEBUG_POS, PERSP_TARGET } from '../camera/cameraConstants';
 import { useSceneStore } from '../store/useSceneStore';
 import { packRenderArchive } from './renderArchive';
@@ -556,52 +556,14 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     });
 
     const isMagazine = raytracingPreset === 'magazine';
-    const MAGAZINE_CUT_HEIGHT = 135;
     if (isMagazine) {
-      const MAGAZINE_CLIP_MASK =
-        (1 << LAYER_STRUCTURE) |
-        (1 << LAYER_DOORS) |
-        (1 << LAYER_WALL_STRUCTURE) |
-        (1 << LAYER_FLOOR_COVERINGS) |
-        (1 << LAYER_MIRRORS);
-      const isMagazineCloset = (obj: THREE.Object3D): boolean => {
-        let cur: THREE.Object3D | null = obj;
-        while (cur) {
-          const itemName = cur.userData?.itemName;
-          const hoverLabel = cur.userData?.hoverAction?.label;
-          if (itemName === 'Placard Couloir' || itemName === 'Placard SDB' || hoverLabel === 'Placard couloir' || hoverLabel === 'Placard SDB') {
-            return true;
-          }
-          cur = cur.parent;
-        }
-        return false;
-      };
-      const box = new THREE.Box3();
       scene.traverse((obj) => {
-        if (!obj.visible) return;
-        if ((obj.layers.mask & (1 << LAYER_GRASS)) !== 0) {
+        if (obj.visible && (obj.layers.mask & (1 << LAYER_GRASS)) !== 0) {
           obj.visible = false;
           hidden.push(obj);
-          return;
-        }
-        if (!(obj as THREE.Mesh).isMesh) return;
-        if ((obj.layers.mask & MAGAZINE_CLIP_MASK) === 0 && !isMagazineCloset(obj)) return;
-        const mesh = obj as THREE.Mesh;
-        box.setFromObject(mesh);
-        if (box.min.y >= MAGAZINE_CUT_HEIGHT - 0.5) {
-          mesh.visible = false;
-          hidden.push(mesh);
-        } else if (box.max.y > MAGAZINE_CUT_HEIGHT + 0.5) {
-          const clipped = clipGeometryWorldY(mesh, MAGAZINE_CUT_HEIGHT);
-          if (!clipped) {
-            mesh.visible = false;
-            hidden.push(mesh);
-          } else {
-            if (!geomMap.has(mesh)) geomMap.set(mesh, mesh.geometry);
-            mesh.geometry = clipped;
-          }
         }
       });
+      applyMagazineCut(scene, MAGAZINE_CUT_HEIGHT, geomMap, hidden);
     }
 
     restoreSplitMeshesRef.current = splitMultiMaterialMeshes(scene);

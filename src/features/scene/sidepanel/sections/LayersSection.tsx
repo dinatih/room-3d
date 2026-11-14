@@ -152,6 +152,7 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}
       {layerBtn(iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
       {layerBtn(iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}
+      {layerBtn(iconLabel('bi-scissors', 'Murs coupés à 1,35 m (Magazine)'), 'cutWalls')}
       {layerBtn(iconLabel('bi-transparency', 'Portes et murs à 30 % d’opacité'), 'transparentWallsDoors')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}

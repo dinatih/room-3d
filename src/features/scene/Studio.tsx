@@ -27,6 +27,8 @@ import { PanelPopover } from './sidepanel/PanelPopover';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
+import { MagazineCutController } from './building/MagazineCutController';
+import { MAGAZINE_CUT_HEIGHT } from './photo/clipGeometryY';
 import { Neighbors }        from '@features/scene/Neighbors';
 import { CategoryLayerGroup, SceneLayerController } from '@features/scene/sceneLayer';
 import { Equipment, Furniture, Furnishings, Decor, Animals, Robots } from './Placements';
@@ -981,7 +983,7 @@ export function Studio() {
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
           <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
-            <Walls pillarsOnly={layers.pillarsOnly} cutHeight={getRaytracingPreset() === 'magazine' ? 135 : undefined} />
+            <Walls pillarsOnly={layers.pillarsOnly} cutHeight={layers.cutWalls ? MAGAZINE_CUT_HEIGHT : undefined} />
           </CategoryLayerGroup>
 
           <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
@@ -1080,6 +1082,7 @@ export function Studio() {
           )}
 
 
+          <MagazineCutController active={Boolean(layers.cutWalls)} assetsLoaded={assetsLoaded} />
         </group>
         </Suspense>
         </SceneModelContext.Provider>

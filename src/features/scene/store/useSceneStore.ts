@@ -215,7 +215,7 @@ const initialLayers: LayerState = {
     doors: true,
     pillarsOnly: false,
     transparentWallsDoors: false,
-    ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
+    ...(raytracingPreset === 'magazine' ? { cutWalls: true, neighbors: false, bermudaGrass: false } : {}),
   } : {}),
   // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
   ...parseUrlLaraClothing(),
@@ -644,6 +644,16 @@ export const useSceneStore = create<SceneStore>((set) => ({
         updateUrlLayer('wallStructure', true);
         updateUrlLayer('structure', true);
         updateUrlLayer('pillarsOnly', false);
+      }
+      if (key === 'cutWalls' && isActivating) {
+        nextLayers.wallStructure = true;
+        nextLayers.doors = true;
+        nextLayers.pillarsOnly = false;
+        nextLayers.transparentWallsDoors = false;
+        updateUrlLayer('wallStructure', true);
+        updateUrlLayer('doors', true);
+        updateUrlLayer('pillarsOnly', false);
+        updateUrlLayer('transparentWallsDoors', false);
       }
       if (key === 'mirrors' && !isActivating) nextLayers.mirrorsHD = false;
       if (key === 'mirrorsHD' && isActivating) nextLayers.mirrors = true;

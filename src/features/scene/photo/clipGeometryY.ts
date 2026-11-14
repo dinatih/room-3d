@@ -1,4 +1,38 @@
 import * as THREE from 'three';
+import {
+  LAYER_STRUCTURE,
+  LAYER_DOORS,
+  LAYER_WALL_STRUCTURE,
+  LAYER_FLOOR_COVERINGS,
+  LAYER_MIRRORS,
+} from '@config';
+
+export const MAGAZINE_CUT_HEIGHT = 135;
+
+const MAGAZINE_CLIP_MASK =
+  (1 << LAYER_STRUCTURE) |
+  (1 << LAYER_DOORS) |
+  (1 << LAYER_WALL_STRUCTURE) |
+  (1 << LAYER_FLOOR_COVERINGS) |
+  (1 << LAYER_MIRRORS);
+
+function isMagazineCloset(obj: THREE.Object3D): boolean {
+  let cur: THREE.Object3D | null = obj;
+  while (cur) {
+    const itemName = cur.userData?.itemName;
+    const hoverLabel = cur.userData?.hoverAction?.label;
+    if (
+      itemName === 'Placard Couloir' ||
+      itemName === 'Placard SDB' ||
+      hoverLabel === 'Placard couloir' ||
+      hoverLabel === 'Placard SDB'
+    ) {
+      return true;
+    }
+    cur = cur.parent;
+  }
+  return false;
+}
 
 interface ClipVertex {
   pos: THREE.Vector3;
@@ -105,4 +139,33 @@ export function clipGeometryWorldY(mesh: THREE.Mesh, maxWorldY: number): THREE.B
   clipped.computeBoundingBox();
   clipped.computeBoundingSphere();
   return clipped;
+}
+
+/** Applique la coupe Magazine (`y <= cutHeight`) aux portes, fenêtres, placards et plafonds. */
+export function applyMagazineCut(
+  root: THREE.Object3D,
+  cutHeight: number,
+  geomMap: Map<THREE.Mesh, THREE.BufferGeometry>,
+  hidden: THREE.Object3D[],
+) {
+  const box = new THREE.Box3();
+  root.traverse((obj) => {
+    if (!obj.visible || !(obj as THREE.Mesh).isMesh) return;
+    if ((obj.layers.mask & MAGAZINE_CLIP_MASK) === 0 && !isMagazineCloset(obj)) return;
+    const mesh = obj as THREE.Mesh;
+    box.setFromObject(mesh);
+    if (box.min.y >= cutHeight - 0.5) {
+      mesh.visible = false;
+      hidden.push(mesh);
+    } else if (box.max.y > cutHeight + 0.5) {
+      const clipped = clipGeometryWorldY(mesh, cutHeight);
+      if (!clipped) {
+        mesh.visible = false;
+        hidden.push(mesh);
+      } else {
+        if (!geomMap.has(mesh)) geomMap.set(mesh, mesh.geometry);
+        mesh.geometry = clipped;
+      }
+    }
+  });
 }

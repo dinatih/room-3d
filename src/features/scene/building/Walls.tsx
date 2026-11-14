@@ -161,7 +161,7 @@ export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolea
         {showLabels && <PillarLabels />}
 
         {/* ── Piliers ────────────────────────────────────────────────────────── */}
-        <MergedStaticGroup name="merged-pillars" materialOverride={materialOverride}>
+        <MergedStaticGroup key={`pillars-${effectiveWallH}`} name="merged-pillars" materialOverride={materialOverride}>
           <group name="pillars">
             {PILLAR_DEFS.map((p) => {
               const pp = p as any;
@@ -191,7 +191,7 @@ export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolea
 
         {/* ── Murs ─────────────────────────────────────────────────────────────── */}
         {!pillarsOnly && (
-          <MergedStaticGroup name="merged-walls" materialOverride={materialOverride}>
+          <MergedStaticGroup key={`walls-${effectiveWallH}`} name="merged-walls" materialOverride={materialOverride}>
             <group name="walls">
               {WALL_DEFS.filter(d => d.segKind !== 'door' && (d.yBase ?? 0) < effectiveWallH).map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];

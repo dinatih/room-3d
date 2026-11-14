@@ -25,6 +25,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   seineDebugPath: false,
   doors: true,
   transparentWallsDoors: true,
+  cutWalls: false,
   ceiling: false,
   // Contenu
   equipment: true,
@@ -101,6 +102,7 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
   ...(['montparnasseLights', 'bnfLights', 'arcLights', 'bridgeLights', 'bankLights', 'boisLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
     layerKey: key, canonicalParam: key, urlParams: [key.toLowerCase()],
   })),
+  { layerKey: 'cutWalls', canonicalParam: 'cutWalls', urlParams: ['cutwalls', 'magazine', 'murscoupes'] },
   { layerKey: 'transparentWallsDoors', canonicalParam: 'transparentWallsDoors', urlParams: ['transparentwallsdoors'] },
   { layerKey: 'wigGrid', canonicalParam: 'wigGrid', urlParams: ['wiggrid'] },
   { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
