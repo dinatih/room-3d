@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { PointLight } from 'three';
 import { OccupancyManager } from '../ai/occupancyManager';
@@ -46,6 +46,9 @@ function SinkLight() {
   const light = useRef<PointLight>(null!);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
   const on = useSceneStore(state => !!state.furniture.lampSink);
+  useEffect(() => {
+    if (light.current) light.current.intensity = on ? 6 * 100 ** 2 : 0;
+  }, [on]);
   useFrame(() => {
     const inUse = OccupancyManager.getReservations().some(({ slot, characterId }) => {
       if (!slot.startsWith('vasque-sdb:')) return false;
@@ -56,7 +59,7 @@ function SinkLight() {
   });
   return <group position={[BATH_EAST_WALL - 76, 176, BATH_NORTH_WALL - 2]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Bandeau LED Våthult', hoverAction: { label: 'Lumière Lavabo', actions: ['lamp-sink-toggle'] } }}>
     <Vathult40467548 />
-    <pointLight ref={light} position={[0, -3, 8]} color="#fff2dc" intensity={0} distance={140} decay={2} castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} shadow-camera-far={180} />
+    <pointLight ref={light} position={[0, -3, 8]} color="#fff2dc" intensity={on ? 6 * 100 ** 2 : 0} distance={140} decay={2} castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} shadow-camera-far={180} />
   </group>;
 }
 

@@ -3,6 +3,7 @@ import { entityAvailable } from './appliances';
 import { ApplianceControls } from './ApplianceControls';
 import { NameComparison } from './NameComparison';
 import { cameraState } from '../scene/cameraState';
+import { getRaytracingPreset } from '../scene/camera/cameraUrlParams';
 import { useSceneStore } from '../scene/store/useSceneStore';
 import { connectHomeAssistant, disconnectHomeAssistant, setHomeAssistantLinked, resumeHomeAssistant, stopHomeAssistant, useHomeAssistant, LIGHTS, LIGHT_KEYS } from './connection';
 
@@ -12,9 +13,12 @@ export function HomeAssistantSync() {
       if (!enabled || !linked || status !== 'connected') return;
       const furniture = { ...useSceneStore.getState().furniture };
       let changed = false;
-      for (const key of LIGHT_KEYS) {
-        const on = lights[key].on;
-        if (on !== null && furniture[key] !== on) { furniture[key] = on; changed = true; }
+      const preset = getRaytracingPreset();
+      if (preset !== 'iso' && preset !== 'magazine') {
+        for (const key of LIGHT_KEYS) {
+          const on = lights[key].on;
+          if (on !== null && furniture[key] !== on) { furniture[key] = on; changed = true; }
+        }
       }
       const cover = entities['cover.volet'];
       if (entityAvailable(cover) && typeof cover.attributes.current_position === 'number') {

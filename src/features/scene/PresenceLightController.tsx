@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { cameraState } from './cameraState';
+import { getRaytracingPreset } from './camera/cameraUrlParams';
 import { useSceneStore } from './store/useSceneStore';
 import { isHomeAssistantLinked, isHomeAssistantLight, useHomeAssistant } from '../home-assistant/connection';
 import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen, SpatialZoneManager } from './ai/SpatialZone';
@@ -45,6 +46,16 @@ export function PresenceLightController() {
   }, []);
 
   useFrame(() => {
+    const preset = getRaytracingPreset();
+    if (preset === 'iso' || preset === 'magazine' || useSceneStore.getState().isPhotoModeOpen) {
+      for (const { key } of LIGHT_ZONES) {
+        if (timersRef.current[key]) {
+          clearTimeout(timersRef.current[key]!);
+          timersRef.current[key] = null;
+        }
+      }
+      return;
+    }
     const positions = getActivePositions();
     const { furniture } = useSceneStore.getState();
 

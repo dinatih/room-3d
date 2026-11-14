@@ -26,6 +26,7 @@ import {
   updateUrlCameraTarget,
   updateUrlCameraMovement,
   getUrlParams,
+  getRaytracingPreset,
 } from '@features/scene/camera/cameraUrlParams';
 import {
   parseUrlLayerOverrides,
@@ -176,6 +177,9 @@ interface SceneStore {
   setDesk2SmartActionActive: (active: boolean) => void;
 }
 
+const raytracingPreset = getRaytracingPreset();
+const raytracingStudioLights = raytracingPreset === 'iso' || raytracingPreset === 'magazine';
+
 const initialFurniture: FurnitureState = {
   corrDoors: false,
   sdbClosetL: false,
@@ -184,15 +188,15 @@ const initialFurniture: FurnitureState = {
   cbnEast: false,
   cabinet: false,
   bedDouble: false,
-  lampOn: false,
-  lampBath: false,
-  lampCorridor: false,
-  lampKitchen: false,
-  lampGardenStrips: false,
-  lampWindow: false,
-  socketGarden: false,
+  lampOn: raytracingStudioLights,
+  lampBath: raytracingStudioLights,
+  lampCorridor: raytracingStudioLights,
+  lampKitchen: raytracingStudioLights,
+  lampGardenStrips: raytracingStudioLights,
+  lampWindow: raytracingStudioLights,
+  socketGarden: raytracingStudioLights,
   lampGardenStrip: true,
-  lampSink: false,
+  lampSink: raytracingStudioLights,
   freezerOpen: false,
   fridge: false,
   tvOn: false,
@@ -205,6 +209,14 @@ const initialFurniture: FurnitureState = {
 const initialLayers: LayerState = {
   // Booléens depuis LAYER_DEFAULTS (source unique de vérité)
   ...(LAYER_DEFAULTS as unknown as LayerState),
+  ...(raytracingStudioLights ? {
+    wallStructure: true,
+    structure: true,
+    doors: true,
+    pillarsOnly: false,
+    transparentWallsDoors: false,
+    ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
+  } : {}),
   // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
   ...parseUrlLaraClothing(),
   laraCount: parseUrlCharacterCount(),

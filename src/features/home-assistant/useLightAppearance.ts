@@ -1,9 +1,12 @@
 import { useMemo } from 'react';
 import { Color, SRGBColorSpace } from 'three';
+import { getRaytracingPreset } from '../scene/camera/cameraUrlParams';
 import { isHomeAssistantLinked, useHomeAssistant, type LightKey } from './connection';
 
 export function useLightAppearance(key: LightKey, defaultColor: number) {
-  const remote = useHomeAssistant(isHomeAssistantLinked);
+  const preset = getRaytracingPreset();
+  const forceStudioLights = preset === 'iso' || preset === 'magazine';
+  const remote = useHomeAssistant(isHomeAssistantLinked) && !forceStudioLights;
   const light = useHomeAssistant(state => state.lights[key]);
   const color = useMemo(() => {
     const result = new Color(defaultColor);
