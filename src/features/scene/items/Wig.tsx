@@ -293,8 +293,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
 
   useLayoutEffect(() => {
     if (attachTo && scene) {
-      // Remove any previously attached hair armatures to prevent duplicate wigs
-      const existingWigs = attachTo.children.filter((c: any) => c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_'));
+      // Remove any previously attached hair armatures to prevent duplicate wigs (never delete native bones like hair_1)
+      const existingWigs = attachTo.children.filter(
+        (c: any) => !c.isBone && (c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_')),
+      );
       
       if (existingWigs.length > 0) {
         existingWigs.forEach((w: any) => {

@@ -1,5 +1,6 @@
 import { isRobotSubjectVisible, useRobotVisibility } from './store/useRobotVisibility';
-import { CAMERA_SUBJECTS, selectAnimalCameraTarget, selectSceneSubject } from './camera/cameraSubjects';
+import { CAMERA_SUBJECTS, selectAnimalCameraTarget } from './camera/cameraSubjects';
+import { selectSceneSubject } from './camera/selectSceneSubject';
 import { cameraState } from './cameraState';
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';

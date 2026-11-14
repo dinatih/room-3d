@@ -1,4 +1,3 @@
-import { useSceneStore } from '../store/useSceneStore';
 import type { CameraMode, CameraTarget } from './types';
 
 export const CHARACTER_CONTROL_ANIMATIONS = {
@@ -39,9 +38,4 @@ export function selectAnimalCameraTarget({ cameraMode, cameraTarget }: { cameraM
   if (cameraMode !== 'follow' && cameraMode !== 'fpv') return null;
   const subject = resolveCameraSubject(cameraTarget);
   return subject && subject !== 'character' ? subject : null;
-}
-
-export function selectSceneSubject(id: string, cameraSubject: string) {
-  if (cameraSubject === 'character') useSceneStore.getState().setActiveCharacterId(id);
-  document.dispatchEvent(new CustomEvent('camera-subject', { detail: cameraSubject }));
 }
