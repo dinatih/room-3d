@@ -502,8 +502,8 @@ export function LivingRoomFurniture() {
         </group>
       ))}
 
-      {/* Grand tapis sous la baie vitrée (côté droit) */}
-      <group position={[230, 0.2, 70]} userData={{ sceneItemRoot: true, itemName: 'Grand tapis rouge' }}>
+      {/* Grand tapis sous la baie vitrée (côté droit, dans la longueur) */}
+      <group position={[200, 0.2, 35]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Grand tapis rouge' }}>
         <RugLarge />
       </group>
 
@@ -684,7 +684,7 @@ export function LivingRoomDecor() {
         <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
           {/* Tapette électrique sur l'étage supérieur, à droite des porte-chapeaux */}
-          <group position={[48, 54.5, 13]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Tapette électrique' }}>
+          <group position={[57.5, 54.5, 13]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Tapette électrique' }}>
             <ElectricSwatter />
           </group>
         </group>
