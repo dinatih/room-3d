@@ -2,23 +2,16 @@ import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 /**
  * ToolbarPanelsRow.tsx
  *
- * Première ligne de la barre de contrôle contenant les popovers HTML natifs
- * (Plan 2D, Perf, Profil, Inventaire, Calques, Interactif, Personnages, NPCs).
+ * Actions et panneaux secondaires regroupés dans le menu `+`.
  *
  * Composant HTML pur rendu hors du Canvas R3F.
  */
-import { useState, useEffect, useRef } from 'react';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { useSceneStore } from './store/useSceneStore';
-import { WIGS_ITEMS } from '../inventory/inventoryData';
 
-import {
-  ALL_HAIR_COLORS,
-  type ToolbarPanelsProps,
-} from './sidepanel/types';
+import { type ToolbarPanelsProps } from './sidepanel/types';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { InteractiveSection } from './sidepanel/sections/InteractiveSection';
-import { CharacterSection } from './sidepanel/sections/CharacterSection';
 
 export type { ToolbarPanelsProps };
 
@@ -40,83 +33,10 @@ export function ToolbarPanelsRow({
   showLandingStrips = false,
   onToggleLandingStrips,
   hideUI = false,
-  onOpenInventory,
   prefix: _prefix,
   asVerticalList = false,
 }: ToolbarPanelsRowProps) {
   const isMobile = useIsMobile();
-  const npcGridActive = useSceneStore(state => state.layers.characterGrid);
-
-  const [globalHaircut, setGlobalHaircut] = useState<string>('original');
-  const [globalHairColor, setGlobalHairColor] = useState<string>('rose');
-  const lastWigRef = useRef<string>('hair_101');
-
-  const handleRandomHairColor = () => {
-    const otherColors = ALL_HAIR_COLORS.filter((c: string) => c !== globalHairColor);
-    const newColor = otherColors[Math.floor(Math.random() * otherColors.length)];
-    setGlobalHairColor(newColor);
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircolor', value: newColor } }));
-  };
-
-  const handleRandomHaircut = () => {
-    const allHaircuts = ['original', ...WIGS_ITEMS.map(w => w.id)];
-    const otherHaircuts = allHaircuts.filter(h => h !== globalHaircut);
-    const newHaircut = otherHaircuts[Math.floor(Math.random() * otherHaircuts.length)];
-    setGlobalHaircut(newHaircut);
-    if (newHaircut !== 'original') lastWigRef.current = newHaircut;
-    document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: newHaircut } }));
-  };
-
-  const handleRandomHaircutAndColor = () => {
-    handleRandomHaircut();
-    handleRandomHairColor();
-  };
-
-  useEffect(() => {
-    const onToggle = (e: any) => {
-      if (e.detail?.key === 'lara-haircut') {
-        if (e.detail.value) setGlobalHaircut(e.detail.value);
-      }
-    };
-    document.addEventListener('furniture-toggle', onToggle);
-    return () => document.removeEventListener('furniture-toggle', onToggle);
-  }, []);
-
-  useEffect(() => {
-    const handleToggleHaircut = () => {
-      setGlobalHaircut(prev => {
-        if (prev === 'original') {
-          const wigIds = WIGS_ITEMS.map(w => w.id);
-          const next = wigIds[Math.floor(Math.random() * wigIds.length)];
-          lastWigRef.current = next;
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: next } }));
-          return next;
-        } else {
-          lastWigRef.current = prev;
-          document.dispatchEvent(new CustomEvent('furniture-toggle', { detail: { key: 'lara-haircut', value: 'original' } }));
-          return 'original';
-        }
-      });
-    };
-    document.addEventListener('toggle-lara-haircut', handleToggleHaircut as any);
-    return () => document.removeEventListener('toggle-lara-haircut', handleToggleHaircut as any);
-  }, []);
-
-  const personnageHeaderButtons = (
-    <div className="d-flex align-items-center gap-1" onClick={e => e.stopPropagation()}>
-      <button
-        type="button"
-        className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold small rounded"
-        title="Coupe et couleur de cheveux aléatoires"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleRandomHaircutAndColor();
-        }}
-      >
-        <i className="bi bi-shuffle" aria-hidden="true" />
-      </button>
-    </div>
-  );
 
   const interactiveSectionContent = (
     <InteractiveSection
@@ -127,21 +47,6 @@ export function ToolbarPanelsRow({
       onToggleAutopilot={onToggleAutopilot}
       showLandingStrips={showLandingStrips}
       onToggleLandingStrips={onToggleLandingStrips}
-    />
-  );
-
-  const characterSectionContent = (
-    <CharacterSection
-      layers={layers}
-      onToggleLayer={onToggleLayer}
-      isMobile={isMobile}
-      globalHairColor={globalHairColor}
-      setGlobalHairColor={setGlobalHairColor}
-      globalHaircut={globalHaircut}
-      setGlobalHaircut={setGlobalHaircut}
-      lastWigRef={lastWigRef}
-      handleRandomHairColor={handleRandomHairColor}
-      handleRandomHaircut={handleRandomHaircut}
     />
   );
 
@@ -157,52 +62,7 @@ export function ToolbarPanelsRow({
         {interactiveSectionContent}
       </PanelPopover>
 
-      {/* 2. Config User / Personnages */}
-      <PanelPopover
-        icon={
-          <span className="d-inline-flex align-items-center gap-1">
-            <i className="bi bi-person-fill" aria-hidden="true" />
-            <i className="bi bi-gear-fill" aria-hidden="true" />
-          </span>
-        }
-        label="Personnages"
-        title="Configuration utilisateur & Personnages"
-        headerExtra={personnageHeaderButtons}
-        hideUI={hideUI}
-      >
-        {characterSectionContent}
-      </PanelPopover>
-
-      {/* 4. Inventaire */}
-      {onOpenInventory && (
-        <button
-          type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--red`}
-          onClick={onOpenInventory}
-          title="Ouvrir l'inventaire (I) · Studio animations (Maj+I)"
-          aria-label="Ouvrir l'inventaire (I)"
-        >
-          <i className="bi bi-box-seam-fill" aria-hidden="true" />
-          <span className="fw-semibold">Mon Inventaire</span>
-        </button>
-      )}
-
-      {/* 5. Grille / Vitrine Personnages */}
-      <button
-        type="button"
-        className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
-        onClick={() => {
-          document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
-        }}
-        title="Afficher ou quitter la grille / vitrine des Personnages (G)"
-        aria-label="Afficher ou quitter la grille des Personnages (G)"
-        aria-pressed={npcGridActive}
-      >
-        <i className="bi bi-people-fill" aria-hidden="true" />
-        <span className="fw-semibold">Grille Personnages</span>
-      </button>
-
-      {/* 6. Grille inventaire */}
+      {/* 2. Grille inventaire */}
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${layers.inventoryGrid ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
@@ -217,6 +77,8 @@ export function ToolbarPanelsRow({
         <i className="bi bi-box-seam" aria-hidden="true" />
         <span className="fw-semibold">Grille Inventaire</span>
       </button>
+
+      {/* 3. Grille perruques */}
       <button
         type="button"
         className={`${TOOLBAR_BUTTON_CLASS} ${layers.wigGrid ? 'btn-danger text-white' : 'btn-outline-secondary'}`}

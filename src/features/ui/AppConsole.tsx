@@ -203,17 +203,22 @@ export function AppConsole({
   hidden = false,
   hideUI = false,
   onToggleHideUI,
+  onOpenInventory,
   layersMenu,
+  characterMenu,
   actionsMenu,
 }: {
   hidden?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
+  onOpenInventory?: () => void;
   layersMenu?: ReactNode;
+  characterMenu?: ReactNode;
   actionsMenu?: ReactNode;
 }) {
   const isMobile = useIsMobile();
   const activeCharacterId = useSceneStore(state => state.activeCharacterId);
+  const npcGridActive = useSceneStore(state => state.layers.characterGrid);
   const activeChar = findCharacter(activeCharacterId);
   const isIdle = useAppIdle();
 
@@ -751,8 +756,32 @@ export function AppConsole({
           <PresetButton hideUI={hideUI} />
         </div>
 
-        {/* 5. Calques & + Chevrons (à la suite du btn Preset) */}
+        {/* 5. Calques, Personnages, Inventaire, Grille Personnages & + Chevrons (à la suite du btn Preset) */}
         {layersMenu}
+        {characterMenu}
+        {onOpenInventory && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} btn-outline-secondary view-control-bar__outline--red`}
+            onClick={onOpenInventory}
+            title="Ouvrir l'inventaire (I) · Studio animations (Maj+I)"
+            aria-label="Ouvrir l'inventaire (I)"
+          >
+            <i className="bi bi-box-seam-fill" aria-hidden="true" />
+          </button>
+        )}
+        <button
+          type="button"
+          className={`${TOOLBAR_BUTTON_CLASS} ${npcGridActive ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('camera-mode', { detail: 'toggle-npc-grid' }));
+          }}
+          title="Afficher ou quitter la grille / vitrine des Personnages (G)"
+          aria-label="Afficher ou quitter la grille des Personnages (G)"
+          aria-pressed={npcGridActive}
+        >
+          <i className="bi bi-people-fill" aria-hidden="true" />
+        </button>
         {actionsMenu}
 
         {/* 6. Hide UI */}

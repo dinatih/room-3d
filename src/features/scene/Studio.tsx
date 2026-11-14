@@ -23,6 +23,7 @@ import { parseUrlInventory, updateUrlInventory } from '@features/inventory/inven
 import type { LidarMode } from './sidepanel/types';
 import { ToolbarPanelsRow } from './ToolbarPanelsRow';
 import { LayersButton } from './LayersButton';
+import { CharacterButton } from './CharacterButton';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
@@ -1153,6 +1154,10 @@ export function Studio() {
         hidden={showInventory || planeMode}
         hideUI={hideUI}
         onToggleHideUI={toggleHideUI}
+        onOpenInventory={() => {
+          setInventoryInitialCat('all');
+          setShowInventory(true);
+        }}
         layersMenu={
           <LayersButton
             layers={layers}
@@ -1161,6 +1166,13 @@ export function Studio() {
             onCycleLidar={onCycleLidar}
             lidarOpacity={lidarOpacity}
             onToggleLidarOpacity={onToggleLidarOpacity}
+            hideUI={hideUI || planeMode || (isMobile && showInventory)}
+          />
+        }
+        characterMenu={
+          <CharacterButton
+            layers={layers}
+            onToggleLayer={toggleLayer}
             hideUI={hideUI || planeMode || (isMobile && showInventory)}
           />
         }
@@ -1203,10 +1215,6 @@ export function Studio() {
                   });
                 }}
                 hideUI={hideUI || planeMode || (isMobile && showInventory)}
-                onOpenInventory={() => {
-                  setInventoryInitialCat('all');
-                  setShowInventory(true);
-                }}
                 asVerticalList
               />
               {!isMobile && (

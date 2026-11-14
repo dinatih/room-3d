@@ -204,7 +204,6 @@ export interface ToolbarPanelsProps {
   showLandingStrips?:      boolean;
   onToggleLandingStrips?:  () => void;
   hideUI?:                 boolean;
-  onOpenInventory?:        () => void;
   prefix?:                 React.ReactNode;
 }
 
