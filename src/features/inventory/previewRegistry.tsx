@@ -399,3 +399,9 @@ import { SyckRc003a } from '@features/scene/items/SyckRc003a';
 
 SCENE_REGISTRY['blaskata50569513'] = Blaskata50569513;
 SCENE_REGISTRY['syck-rc003a'] = SyckRc003a;
+
+import { Citronhaj00553227 } from '@features/scene/items/Citronhaj00553227';
+import { Citronhaj40553211 } from '@features/scene/items/Citronhaj40553211';
+
+SCENE_REGISTRY['citronhaj00553227'] = Citronhaj00553227;
+SCENE_REGISTRY['citronhaj40553211'] = Citronhaj40553211;
