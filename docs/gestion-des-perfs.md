@@ -404,3 +404,44 @@ node scripts/profile-studio-draws.cjs --hardware-gpu --read-pixels
 ```
 
 Cette option de diagnostic, désactivée par défaut, conserve dimensions, horodatage, durée et pile JavaScript dans `submissions.json`, puis affiche le nombre d'appels tracés dans la page et pendant la capture. Le lanceur continue à conserver les messages Chromium ; ils ne sont pas masqués.
+
+## Reprise après les changements du 14 novembre 2026
+
+Les mesures historiques ci-dessus décrivent leurs commits et leurs conditions, pas les performances de la scène actuelle. Les changements de vêtements, de drones, de chargement et de matériaux intervenus depuis demandent une nouvelle référence. Aucun gain global de FPS n'est déduit de la seule lecture de ces changements.
+
+### État intégré de la scène
+
+| Partie | Comportement actuel | Conséquence pour le suivi |
+| --- | --- | --- |
+| Ombres des acteurs | `BlobShadow` dessine une ellipse transparente au sol ; `CharacterShadow` suit les hanches, les drones utilisent le mode sol monde. Les lots rigides des robots et plusieurs animaux/drones ne projettent plus leurs meshes en scène ; les previews conservent leurs projections. | Conserver les ombres de contact rétablies. Distinguer leur dessin transparent des passes de shadow map ; les options des personnages restent distinctes. |
+| Vitrage | L'optimisation existante est aussi appelée sur la caméra Reolink et les modèles anatomiques. | Vérifier les matériaux transmissifs réellement présents après chargement avant d'attribuer un coût à la passe de transmission. |
+| Préparation GPU | Chargement HDRI avant compilation, compilation par lots de matériaux puis de la scène, initialisation des textures et rendu avec culling temporairement désactivé. Les groupes miroirs et leur mise à jour sont restaurés ensuite. | Séparer durée de démarrage et cadence stabilisée. Le rendu de préparation élargit volontairement le travail initial aux objets hors caméra. |
+| Lumières et miroirs | Les lumières voient tous les calques pour stabiliser les variantes de shaders ; miroirs avec culling de groupe et sans multisampling de leur cible. | Contrôler les recompilations lors des changements de vue et comparer aussi les reflets visuellement. |
+| Animations | Cache des sources dynamiques porté à 64 entrées ; jusqu'à 48 clips inactifs conservés par bibliothèque de rig, en plus des clips utilisés. | Compromis mémoire/préparation : suivre la mémoire pendant une session longue et les changements de vêtements, sans considérer ces caches comme une réduction automatique de RAM. |
+| Calcul CPU | Partage des boîtes par os, transformation affine des volumes, cache des objets d'interaction, réduction de calculs de contact des oiseaux et du travail de journalisation. | Mesurer le temps CPU réel ; une baisse du nombre d'opérations ne suffit pas à annoncer des FPS supplémentaires. |
+
+Les modifications précédemment préparées par Codex ont été intégrées, notamment dans `05205410`. Ne pas les réappliquer : les ombres de contact ajoutées ensuite complètent cette politique.
+
+### Correction du cache des volumes animés
+
+Le cache introduit dans `173cd44a` conservait une entrée pour chaque combinaison de poids de morphing rencontrée. Des poids animés continuellement pouvaient donc accumuler des boîtes et matrices sur la durée de vie de la géométrie. Le cache partagé ne conserve désormais que les poses de morphing neutres ; chaque mesh garde ses boîtes courantes pour les poids non nuls, sans retenir l'historique. Le retour à des influences absentes invalide également les bornes.
+
+Le test de régression parcourt 120 poids différents et vérifie une seule entrée partagée, des volumes toujours déplacés correctement et le retour au volume neutre. Il contrôle aussi les bornes avec rotations, échelles négatives et matrice de bind inverse. Cela corrige une rétention potentielle, sans annoncer un gain FPS ou une quantité de RAM récupérée dans le Studio sans mesure.
+
+Les tests de préparation GPU ont été adaptés à la séquence actuelle : attente HDRI/shaders/animations, restauration des miroirs et du culling après le rendu, annulation au démontage et remontée des erreurs d'animation.
+
+### Scénarios à conserver pour la prochaine référence
+
+- `studio-only-mid-day` / `studio-only-mid-night` : décor seul, sans personnages, animaux ni robots.
+- `studio-9-mid-day-presentation` / `studio-9-mid-night-presentation` : neuf personnages, animaux et les deux drones `black-hornet-drone` et `ring-drone-cam`, sans les autres robots.
+- `studio-9-mid-day` / `studio-9-mid-night` : scénario historique complet, utile pour suivre les extras séparément.
+
+La priorité produit reste le décor du studio, les Laras, les chiens et les drones de présentation. Les autres robots, poissons et étoiles de mer viennent ensuite. Les anciennes valeurs par objet du 12 novembre ne décrivent plus automatiquement leurs passes actuelles.
+
+Avant une campagne complète, préférer les tests unitaires et une seule session GPU ciblée, avec variantes changées en mémoire. Une nouvelle référence de comparaison demande les mêmes dimensions de rendu, DPR, scénario, alimentation et absence de contention ; conserver les diagnostics mémoire/swap et ne pas mélanger secteur et batterie dans une conclusion de FPS.
+
+### Validation de cette reprise
+
+`npx tsc --noEmit` et les 19 tests ciblés (cache animé, préparation GPU, receveurs et politique d'ombres) passent. Avec l'ancien calcul de volumes, les deux nouveaux tests de régression échouent : 121 entrées sont retenues pour 120 poids, et la suppression des influences conserve une sphère périmée. Après correction, une seule entrée reste et la sphère retrouve sa position neutre.
+
+La suite complète exécutée pendant cette reprise donne 551 réussites et huit échecs. Sept se reproduisent dans le sous-ensemble concerné avec l'ancien calcul de volumes : télévision/vidéo, `EXTERIOR_GROUND` dans le test des spécialités, marche Miley, deux tests qui n'injectent plus `smartObjectCache`, mock du renderer des miroirs et import du tissu dans le test UTÅKER. L'échec du profil de navigation des robots apparaît dans la suite complète mais pas dans ce sous-ensemble ; une dépendance à l'état laissé par d'autres tests reste à examiner. Ces échecs ne sont pas masqués et la suite globale n'est pas déclarée verte. Cette passe ne mesure pas de nouveaux FPS GPU.

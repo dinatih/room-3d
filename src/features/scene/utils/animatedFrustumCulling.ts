@@ -119,11 +119,14 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
     }
     morphWeights = [...(influences ?? [])];
     activeBones = boneBoxes.flatMap((bounds, bone) => bounds.isEmpty() ? [] : [bone]);
-    const boneInverses: THREE.Matrix4[] = [];
     for (const bone of activeBones) {
       boneMatrices[bone] ??= new THREE.Matrix4();
-      boneInverses[bone] = skeleton.boneInverses[bone].clone();
     }
+    // Animated morph weights can take a new value every frame. Keep their
+    // current boxes on this mesh only; the shared cache retains neutral poses.
+    if (influences?.some(weight => weight !== 0)) return;
+    const boneInverses: THREE.Matrix4[] = [];
+    for (const bone of activeBones) boneInverses[bone] = skeleton.boneInverses[bone].clone();
     const list = entries ?? [];
     list.push({
       posVersion: posVer,
@@ -140,7 +143,7 @@ export function enableAnimatedFrustumCulling(mesh: THREE.Mesh) {
   computeOrReuseBoneBoxes();
 
   skinned.computeBoundingSphere = () => {
-    if (skinned.morphTargetInfluences?.some((weight, index) => weight !== morphWeights[index])) {
+    if (!morphsEqual(skinned.morphTargetInfluences, morphWeights)) {
       computeOrReuseBoneBoxes();
       hasBounds = false;
     }

@@ -1,6 +1,7 @@
 const { it } = require('node:test');
 const assert = require('node:assert/strict');
 const ts = require('typescript');
+const THREE = require('three');
 const { load } = require('../support/load-ts.cjs');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
@@ -11,74 +12,108 @@ function deferred() {
 }
 
 function warmup() {
-  const shaders = deferred(), animation = deferred(), frames = new Map();
-  let effect, error = null, nextId = 0, ready = 0, invalidations = 0, compilations = 0;
-  const elements = { 'loading-bar': { style: {} }, 'loading-item': {} };
+  const shaders = deferred(), animation = deferred(), sky = deferred(), timers = new Map();
+  let effect, error = null, nextId = 0, ready = 0, invalidations = 0, compilations = 0, renders = 0, hook = 0;
+  const elements = { 'loading-bar': { style: {}, classList: { add() {} } }, 'loading-item': {} };
+  const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
+  const mirror = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial());
+  mirror.isReflector = true;
+  mirror.forceUpdate = false;
+  const group = new THREE.Group();
+  group.userData.mirrorFrustumGroup = true;
+  group.visible = false;
+  group.add(mirror); scene.add(group);
   const { GpuWarmup } = load('src/features/scene/Studio.tsx', {
-    react: { useRef: value => ({ current: value }), useState: () => [error, value => { error = value; }], useEffect: fn => { effect = fn; } },
-    '@react-three/fiber': { useThree: () => ({
-      gl: { compileAsync: () => { compilations++; return shaders.promise; }, shadowMap: {} }, scene: {}, camera: {},
-      invalidate: () => invalidations++,
+    react: {
+      useRef: value => ({ current: value }),
+      useState: initial => hook++ === 0 ? [initial, () => {}] : [error, value => { error = value; }],
+      useLayoutEffect: fn => { effect = fn; },
+    },
+    '@react-three/fiber': { useFrame() {}, useThree: () => ({
+      gl: {
+        compileAsync: () => { compilations++; return shaders.promise; }, shadowMap: {}, info: { programs: [] },
+        render() {
+          renders++;
+          assert.equal(mirror.frustumCulled, false);
+          assert.equal(mirror.forceUpdate, true);
+          assert.equal(group.visible, true);
+        },
+      }, scene, camera, invalidate: () => invalidations++,
     }) },
+    './SkySphere': { preloadCurrentSkyTexture: () => sky.promise },
     './character/useCharacterAnimations': { cacheDynamicGLTF: () => animation.promise },
     'test-frame': {
-      document: { getElementById: id => elements[id] },
-      requestAnimationFrame: fn => { frames.set(++nextId, fn); return nextId; },
-      cancelAnimationFrame: id => frames.delete(id),
+      document: { hidden: false, getElementById: id => elements[id] },
+      setTimeout: fn => { timers.set(++nextId, fn); return nextId; },
+      clearTimeout: id => timers.delete(id),
     },
   }, source => {
     const file = ts.createSourceFile('Studio.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const component = file.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'GpuWarmup');
-    return `import { useEffect, useRef, useState } from 'react';
-      import { useThree } from '@react-three/fiber';
+    return `import { useLayoutEffect, useRef, useState } from 'react';
+      import { useThree, useFrame } from '@react-three/fiber';
+      import { preloadCurrentSkyTexture } from './SkySphere';
       import { cacheDynamicGLTF } from './character/useCharacterAnimations';
-      import { document, requestAnimationFrame, cancelAnimationFrame } from 'test-frame';
+      import { document, setTimeout, clearTimeout } from 'test-frame';
       const WARMUP_ANIM_PATHS = ['/walk.glb'];
       export ${component.getText(file)}`;
   });
-  const render = () => GpuWarmup({ active: true, onReady: () => ready++ });
+  const render = () => { hook = 0; return GpuWarmup({ active: true, onReady: () => ready++ }); };
   render();
   return {
-    shaders, animation, frames, render, elements, start: () => effect(),
-    get compilations() { return compilations; },
+    shaders, animation, sky, timers, render, elements, mirror, group, start: () => effect(),
+    get compilations() { return compilations; }, get renders() { return renders; },
     get ready() { return ready; }, get invalidations() { return invalidations; },
-    frame() { const callbacks = [...frames.values()]; frames.clear(); callbacks.forEach(fn => fn()); },
+    async timer() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(fn => fn()); await tick(); },
   };
 }
 
-it('attend shaders et animations puis chauffe sur sept images, sans temporisation fixe', async () => {
+it('attend HDRI, shaders et animations puis prépare un rendu et restaure les miroirs', async () => {
   const test = warmup(), stop = test.start();
+  assert.equal(test.compilations, 0);
+  await test.timer();
+  assert.match(test.elements['loading-item'].textContent, /HDRI/);
+  test.sky.resolve(); await tick();
   assert.equal(test.compilations, 1);
-  assert.match(test.elements['loading-item'].textContent, /Compilation/);
   test.shaders.resolve(); await tick();
-  assert.equal(test.frames.size, 0);
+  assert.equal(test.compilations, 2);
+  assert.equal(test.timers.size, 0);
   test.animation.resolve(); await tick();
   assert.match(test.elements['loading-item'].textContent, /Initialisation du rendu 3D/);
-  for (let i = 0; i < 6; i++) { test.frame(); assert.equal(test.ready, 0); }
-  test.frame();
-  assert.equal(test.invalidations, 7);
+  assert.equal(test.ready, 0);
+  await test.timer();
+  assert.equal(test.renders, 1);
+  assert.equal(test.invalidations, 1);
   assert.equal(test.ready, 1);
-  assert.equal(test.frames.size, 0);
+  assert.equal(test.mirror.frustumCulled, true);
+  assert.equal(test.mirror.forceUpdate, false);
+  assert.equal(test.group.visible, false);
   stop();
 });
 
-it('annule le warm-up au démontage, pendant le chargement ou entre deux images', async () => {
-  for (const beforeAssets of [true, false]) {
+it('annule la préparation au démontage, pendant le chargement ou avant le rendu', async () => {
+  for (const phase of ['pause', 'assets', 'render']) {
     const test = warmup(), stop = test.start();
-    if (beforeAssets) stop();
-    test.shaders.resolve(); test.animation.resolve(); await tick();
-    if (!beforeAssets) { assert.equal(test.frames.size, 1); stop(); }
-    assert.equal(test.frames.size, 0);
-    test.frame();
+    if (phase !== 'pause') await test.timer();
+    if (phase === 'render') {
+      test.sky.resolve(); test.shaders.resolve(); test.animation.resolve(); await tick();
+      assert.equal(test.timers.size, 1);
+    }
+    stop();
+    test.sky.resolve(); test.shaders.resolve(); test.animation.resolve(); await tick();
+    assert.equal(test.timers.size, 0);
     assert.equal(test.ready, 0);
+    assert.equal(test.renders, 0);
   }
 });
 
 it('remonte les erreurs de chargement au lieu de lancer une scène incomplète', async () => {
   const test = warmup(), stop = test.start(), error = new Error('animation indisponible');
+  await test.timer();
+  test.sky.resolve(); test.shaders.resolve(); await tick();
   test.animation.reject(error); await tick();
   assert.throws(test.render, value => value === error);
   assert.equal(test.ready, 0);
-  assert.equal(test.frames.size, 0);
+  assert.equal(test.timers.size, 0);
   stop();
 });
