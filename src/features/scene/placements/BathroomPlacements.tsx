@@ -27,6 +27,7 @@ import { OralBToothbrush } from '../items/OralBToothbrush';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell, DF } from '../items/Drona';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
+import { Wy0083 } from '../items/Wy0083';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
@@ -182,6 +183,11 @@ export function BathroomFurnishings() {
           </group>
         </group>
       ))}
+
+      {/* Porte-serviettes WY008-3 sur le mur Ouest SDB (à 111 cm du sol, 64 cm du mur Nord) */}
+      <group position={[BATH_WEST_WALL + 9.6, 111, BATH_NORTH_WALL + 64 + 18.9]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
+        <Wy0083 />
+      </group>
 
       {/* TACKAN douche */}
       <group position={[BATH_WEST_WALL + 40, 92.5, SHOWER_SOUTH_WALL - 5.6]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Douche' }}>
