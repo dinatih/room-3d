@@ -211,6 +211,8 @@ export function RingDroneCam({
     invalidate();
 
     return () => {
+      // The next layout effect measures these objects from the cloned GLB.
+      scene.add(dockObj, droneObj);
       if (rechargeTimerRef.current !== null) {
         window.clearTimeout(rechargeTimerRef.current);
         rechargeTimerRef.current = null;

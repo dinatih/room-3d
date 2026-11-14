@@ -500,3 +500,56 @@ Dans les états équipés, cela représente deux dessins principaux et un dessin
 Les triangles sont conservés. Sur les 54 paires d'images, l'écart maximal est d'une unité sur 255 ; au maximum 68 composantes sur 1638400 diffèrent dans une paire, et 235 au total sur l'ensemble des comparaisons. Ce contrôle borne les différences observées sur ces vues, sans prétendre couvrir toutes les poses possibles.
 
 Les tests unitaires comparent les positions skinnées avant/après pour plusieurs poses, vérifient le renouvellement des bornes, le partage des géométries sans partage de matériaux/squelettes entre personnages, les erreurs d'incompatibilité, les modes d'équipement, les ombres et les calques FPV. Le gain global de FPS reste à mesurer dans une campagne comparable ; le nombre de triangles et la résolution des textures n'ont pas été réduits.
+
+## Audit des grandes passes — 14 novembre 2026
+
+```bash
+node scripts/profile-studio-passes.cjs --hardware-gpu
+# Même diagnostic nocturne : ajouter --night.
+```
+
+Le diagnostic charge une seule fois le Studio complet à neuf personnages, Mid, 1362 × 810, DPR 1, environnement fixé, repère BNF masqué pour rester hors ligne. Il compare successivement 60 paires à pose identique, avec ordre de rendu alterné, après 12 images de chauffe par diagnostic :
+
+- `shadow-update-off` : cartes d'ombres figées, lecture des cartes conservée ;
+- `shadows-off` : production et utilisation des shadow maps désactivées ;
+- `mirror-update-off` : image des miroirs figée, surface conservée ;
+- `transmission-off` : transmission ramenée à zéro sur les matériaux concernés ;
+- `actors-draw-off` : groupes des Laras masqués pendant le rendu, simulation et animation CPU conservées.
+
+Un timer GPU englobe chaque rendu principal et ses passes imbriquées. Les requêtes ne sont pas imbriquées ; les résultats disjoints et les paires créant des programmes pendant la mesure sont écartés et dénombrés. Les compteurs distinguent image principale, ombres, reflets et autres cibles hors écran. Les rendus secondaires exécutés avant le rendu principal sont tracés séparément. Les blocs de cadence ajoutent leur suppression si de tels rendus sont observés.
+
+Les paires rendent deux images par frame R3F et ne donnent donc pas la cadence normale. Le script sélectionne ensuite le diagnostic ayant réduit les soumissions et économisé le plus de temps GPU médian, puis exécute des blocs normaux de huit secondes après deux secondes de chauffe : référence, diagnostic, résolution à 70 % par axe, puis ordre inverse jusqu'à la référence finale. Les paramètres sont restaurés ; cette expérience ne change aucun réglage visuel par défaut. Les coûts mesurés ne s'additionnent pas, et supprimer un effet sert à en diagnostiquer le coût, sans constituer une optimisation visuellement équivalente.
+
+### Résultat retenu : chargement complet dès le départ
+
+Rapport : `test-results/pass-audit-TWnQ6L/report.md` ; mesures brutes et conditions : `comparison.json` dans le même dossier. Radeon 840M via Vulkan, headless, secteur. Les onglets Room-3D de l'utilisateur ont été fermés avant la mesure. Aucune requête GPU disjointe n'a été détectée.
+
+| Diagnostic | GPU référence → test, médianes | CPU du rendu référence → test | Dessins référence → test |
+| --- | ---: | ---: | ---: |
+| Figer les cartes d'ombres | 14,12 → 11,72 ms | 17,0 → 12,5 ms | 1603 → 976 |
+| Désactiver les shadow maps | 13,49 → 11,31 ms | 14,3 → 10,9 ms | 1572 → 945 |
+| Figer les miroirs | 14,30 → 13,95 ms | 14,9 → 15,8 ms | 1570 → 1570 |
+| Supprimer la transmission | 13,73 → 13,71 ms | 14,4 → 14,5 ms | 1579 → 1579 |
+| Masquer le rendu des Laras | 13,93 → 11,05 ms | 14,7 → 9,6 ms | 1564 → 1067 |
+
+Les médianes sont calculées séparément ; leur quotient peut différer de la médiane des gains calculés paire par paire, fournie dans le JSON. Les poses évoluent entre diagnostics, ce qui explique les différents compteurs de référence entre lignes. Au sein d'une paire, la pose est la même. Le temps CPU du rendu inclut les appels et les attentes du pilote ; ce n'est pas une mesure de tout le travail JavaScript de la frame.
+
+Les trois réflecteurs existent, mais aucune réflexion ni aucun rendu secondaire hors rendu principal n'est soumis pendant ce relevé. Aucun matériau à transmission positive n'est recensé. Les petites variations des contrôles miroirs/transmission ne démontrent donc pas un gain : il n'y a pas de passe correspondante à supprimer dans cette vue.
+
+| Blocs de cadence normale, ordre symétrique | FPS observés | GPU médian |
+| --- | ---: | ---: |
+| Référence au début / à la fin | 28,56 / 26,96 | 12,87 / 13,95 ms |
+| Laras masquées, animations CPU actives | 35,53 / 33,36 | 10,39 / 11,29 ms |
+| Résolution 953 × 567 au lieu de 1362 × 810 | 31,87 / 30,08 | 10,67 / 11,63 ms |
+
+La baisse d'environ 51 % du nombre de pixels n'apporte ici qu'environ 12 % de FPS par rapport à la moyenne des deux blocs de référence. Cela ne désigne pas un problème dominé uniquement par le remplissage des pixels. Les soumissions des personnages et la production des ombres constituent des cibles plus convaincantes que les miroirs ou la transmission dans ce cadrage. Aucun second effet caché comparable à l'ancienne passe du téléphone/four n'est démontré. Les ombres des acteurs sont conservées dans l'application.
+
+Ces chiffres sont **exploratoires** : la RAM système disponible passe d'environ 1,13 à 1,64 Gio, le swap occupé d'environ 12,94 à 13,91 Gio pendant l'intervalle observé. Les températures et l'alimentation sont enregistrées, sans déduire un bridage thermique des seuls capteurs. La dérive des deux références et la pression mémoire interdisent d'approuver cette session comme référence FPS propre ou de la comparer directement au Chrome interactif.
+
+### Contrôle du protocole et correction de remontage
+
+L'essai `pass-audit-N6ewgc`, qui activait le décor après un démarrage léger, présentait environ 900 dessins au lieu de 1600 malgré des calques déclarés identiques et la même caméra enregistrée. Il n'est pas agrégé au résultat retenu. Le diagnostic définitif charge donc le contenu par défaut dès le premier montage ; l'origine de l'écart de contenu après réactivation mérite un audit de cycle de vie distinct.
+
+Le premier essai de réactivation avait aussi reproduit une erreur explicite de `RingDroneCam` : son effet déplace `RingDock` et `RingDrone` hors du clone GLB, puis leur recherche échouait à l'exécution suivante. Le nettoyage remet maintenant ces deux objets dans le clone. La session de réactivation suivante s'est terminée sans cette erreur. Le fichier modèle n'est pas modifié.
+
+Les tests du diagnostic vérifient l'alternance des paires, l'absence de requêtes GPU imbriquées, la suppression effective des passes, la restauration après une exception, l'exclusion de la chauffe, le retour à la résolution initiale et les résultats GPU des rendus secondaires. TypeScript et 13 tests ciblés du diagnostic et de l'infrastructure passent.
