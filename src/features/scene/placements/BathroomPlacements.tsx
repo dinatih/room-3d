@@ -185,7 +185,7 @@ export function BathroomFurnishings() {
       ))}
 
       {/* Porte-serviettes WY008-3 sur le mur Ouest SDB (à 111 cm du sol, 64 cm du mur Nord) */}
-      <group position={[BATH_WEST_WALL + 9.6, 111, BATH_NORTH_WALL + 64 + 18.9]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
+      <group position={[BATH_WEST_WALL + 11, 111, BATH_NORTH_WALL + 64 + 20.1]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
         <Wy0083 />
       </group>
 
