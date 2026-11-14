@@ -270,7 +270,7 @@ export const INVENTORY: InventoryItem[] = [
   // ── CLOTHING ─────────────────────────────────────────────────────────────────
   { id: 'salopette',        name: 'Salopette noire',                brand: '',         category: 'clothing',  qty: 1, dims: { w: 6,   d: 40,  h: 150 }, notes: 'Noire, suspendue', glbPath: 'characters/clothing/salopette-noir.glb' },
   { id: 'baseball-cap',     name: 'Casquette baseball',             brand: '',         category: 'clothing',  qty: 3, dims: { w: 20,  d: 25,  h: 15  }, notes: '3 casquettes rouges sur portant', glbPath: 'characters/accessories/baseball_cap.glb' },
-  { id: 'backpack',         name: 'Sac à dos',                      brand: '',         category: 'clothing',  qty: 1, dims: { w: 40,  d: 17,  h: 43  }, notes: 'Rouge procédural, mur A' },
+  { id: 'backpack',         name: 'Sac à dos roll-top rouge (LIVING TRAVELING SHARE)', brand: 'Temu', category: 'clothing', qty: 1, dims: { w: 37.2, d: 16.8, h: 51.5 }, glbPath: 'items/backpack/Backpack.glb', photos: ['items/backpack/Backpack.jpg'], url: 'https://www.temu.com/fr/g-601099541456567.html', notes: 'Sac à dos roll-top rouge avec poche frontale zippée, rabat à boucle et poignées tote, mur A' },
   { id: 'sneakers-red',     name: 'Sneakers rouges (full rouge)',   brand: '',         category: 'clothing',  qty: 2, dims: { w: 24.6, d: 28.8, h: 13.5 }, notes: 'Paire de baskets full rouge, range-chaussures mur A', glbPath: 'items/sneakers-red/SneakersRed.glb', photos: ['items/sneakers-red/SneakersRed.jpg', 'items/sneakers-red/SneakersRed_1.jpg', 'items/sneakers-red/SneakersRed_2.jpg'] },
   {
     id: 'jordan-hex-mule',
