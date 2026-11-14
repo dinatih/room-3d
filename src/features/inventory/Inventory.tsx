@@ -50,28 +50,6 @@ function getCategoryEmoji(cat: string) {
 
 // ── Detail Pane Content Component ─────────────────────────────────────────────
 
-function SpatialZonePreviewOnDemand({ zone, onStats }: {
-  zone: SpatialZone;
-  onStats: (stats: { triangles: number; drawCalls: number }) => void;
-}) {
-  const [loaded, setLoaded] = useState(false);
-
-  if (loaded) {
-    return <SpatialZonePreview zone={zone} height="100%" onStats={onStats} />;
-  }
-
-  return (
-    <div className="inventory-preview-canvas-wrap bg-light">
-      <div className="d-flex flex-column align-items-center justify-content-center gap-3 p-3 text-center h-100">
-        <span className="text-muted small">L’aperçu 3D de cette zone se charge à la demande.</span>
-        <button type="button" className="btn btn-sm btn-primary" onClick={() => setLoaded(true)}>
-          Charger l’aperçu 3D
-        </button>
-      </div>
-    </div>
-  );
-}
-
 const WIG_COLOR_OPTIONS = [
   { value: '', label: 'Couleur : Par défaut 🎨' },
   { value: 'naturel', label: 'Naturel 🟫' },
@@ -134,10 +112,11 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
       <div className="d-flex flex-column w-100">
         {/* Rendu 3D isolé de la pièce / espace sans obstruction */}
         <div className="w-100 position-relative">
-          <SpatialZonePreviewOnDemand
+          <SpatialZonePreview
             key={zone.id}
             zone={zone}
-            onStats={s => setGlbStats({ triangles: s.triangles, drawCalls: s.drawCalls })}
+            height="100%"
+            onStats={handleGlbStats}
           />
         </div>
 
