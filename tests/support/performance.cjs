@@ -29,6 +29,7 @@ exports.measure = async (page, result, system, fixture) => {
         sceneModels: fixture.sceneModels ?? 'scene-512',
         sceneGlass: fixture.originalSceneGlass ? 'refractive' : 'alpha-mask',
         powerMode: initialHost.powerMode,
+        robotSubjects: fixture.robotSubjects ?? null,
         scenario: fixture.activity, configuration: { count: fixture.count, preset: fixture.preset, seed: fixture.seed, collisions: fixture.collisions, stableMs: fixture.stableMs, sessionMs: fixture.sessionMs, environment: fixture.fixedEnvironment ?? null, frameSource: fixture.fixedEnvironment ? 'main-scene-render' : 'requestAnimationFrame' },
         viewport: fixture.viewport, drawingBuffer: result.loaded.drawingBuffer, models: result.loaded.models,
         layers: result.loaded.layers, camera: result.loaded.camera, browser: result.browser,

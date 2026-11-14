@@ -60,6 +60,10 @@ for (const [period, hour] of [['day', 12], ['night', 0]]) {
         viewport: { width: 1362, height: 810, deviceScaleFactor: 1 },
         fixedEnvironment: { date: '2026-11-09T12:00:00Z', hour, weather: 'clear' },
         query: { target: 'studio', weatherAuto: '0' }, stableMs: 15000, sessionMs: 60000, timeoutMs: 150000 };
+    exports.performance[`studio-only-mid-${period}`] = { ...exports.performance[id], id: `studio-only-mid-${period}`, count: 0,
+        query: { ...exports.performance[id].query, debug: 'studio-only' }, behavior: `studio seul, décor sans acteurs, Mid, ${period}` };
+    exports.performance[`${id}-presentation`] = { ...exports.performance[id], id: `${id}-presentation`,
+        robotSubjects: ['black-hornet-drone', 'ring-drone-cam'], behavior: `studio présentation, neuf Laras, animaux et drones, Mid, ${period}` };
     for (const [suffix, overrides] of Object.entries({ 'original-light-shader': { originalLightShader: true }, 'refractive-glass': { originalSceneGlass: true }, 'original-textures': { sceneModels: 'original' }, 'no-shadows': { layers: { shadows: false } }, 'no-mirrors': { layers: { mirrors: false, mirrorsHD: false } }, 'no-environment': { layers: { environment: false } }, 'no-characters': { count: 0 } })) {
         const diagnosticId = `${id}-${suffix}`;
         exports.performance[diagnosticId] = { ...exports.performance[id], ...overrides, id: diagnosticId, behavior: `${exports.performance[id].behavior}, diagnostic ${suffix}` };

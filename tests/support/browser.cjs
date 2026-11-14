@@ -214,6 +214,10 @@ exports.withBrowser = async (fixture, exercise) => {
                 const { CHARACTERS, getDefaultSceneCharacterIds } = await import('/src/features/scene/characterConfig.ts');
                 const { cameraState } = await import('/src/features/scene/cameraState.ts');
                 useSceneStore.getState().setCameraMovement('fix');
+                if (fixture.robotSubjects) {
+                    const { useRobotVisibility } = await import('/src/features/scene/store/useRobotVisibility.ts');
+                    useRobotVisibility.setState({ visible: fixture.robotSubjects });
+                }
                 if (fixture.fixedEnvironment) {
                     const { useWeather, WEATHER_PHASES } = await import('/src/features/scene/Weather.tsx');
                     useWeather.setState({ automatic: false, ...WEATHER_PHASES[0].weather });
