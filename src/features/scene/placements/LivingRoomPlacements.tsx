@@ -42,7 +42,7 @@ import { Phone } from '../items/Phone';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Backpack } from '../items/Backpack';
 import { DroneCell, DF } from '../items/Drona';
-import { Dimpa10056770 } from '../items/Dimpa10056770';
+import { DimpaCover } from '../items/DimpaCover';
 import { Lack90282180 } from '../items/Lack90282180';
 import { LampOla } from '../items/LampOla';
 import { UtakerFrame } from '../items/UtakerFrame';
@@ -520,12 +520,12 @@ export function LivingRoomFurniture() {
         <NavigationObstacle id="fniss-living"><Fniss40295439 /></NavigationObstacle>
       </group>
 
-      {/* Sacs Dimpa mur Ouest (posés au sol, utilisés comme poufs) */}
+      {/* Sacs Dimpa mur Ouest recouverts chacun d'un drap rouge (sacs d'origine masqués pour économiser ~133k tris) */}
       <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 1' }}>
-        <NavigationObstacle id="dimpa-1"><Dimpa10056770 /></NavigationObstacle>
+        <NavigationObstacle id="dimpa-1"><DimpaCover /></NavigationObstacle>
       </group>
       <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 2' }}>
-        <NavigationObstacle id="dimpa-2"><Dimpa10056770 /></NavigationObstacle>
+        <NavigationObstacle id="dimpa-2"><DimpaCover /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
   );
