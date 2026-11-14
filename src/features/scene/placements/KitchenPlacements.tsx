@@ -135,12 +135,12 @@ export function KitchenFurnishings() {
         <SyckRc003a actionState={as} />
       </group>
 
-      {/* Deux CITRONHAJ 8 cm (sel & poivre) sur la planche du bas du meuble haut, devant la hotte. */}
+      {/* Deux CITRONHAJ 8 cm (sel & herbes de Provence) sur la planche du bas du meuble haut, devant la hotte. */}
       <group position={[KITCHEN_WEST_WALL + 67, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Sel 8 cm' }}>
         <Citronhaj40553211 contents="salt" />
       </group>
-      <group position={[KITCHEN_WEST_WALL + 73, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Poivre 8 cm' }}>
-        <Citronhaj40553211 contents="pepper" />
+      <group position={[KITCHEN_WEST_WALL + 73, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Herbes de Provence 8 cm' }}>
+        <Citronhaj40553211 contents="herbes-de-provence" />
       </group>
 
       {/* Casseroles sur la tablette existante du meuble METOD couché. */}

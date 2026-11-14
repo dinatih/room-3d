@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
-export type CitronhajContents = 'salt' | 'pepper';
+export type CitronhajContents = 'salt' | 'herbes-de-provence';
 
 const cachedMaterials = new Map<CitronhajContents, THREE.MeshStandardMaterial>();
 
@@ -15,27 +15,38 @@ function createSpiceMaterial(kind: CitronhajContents): THREE.MeshStandardMateria
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = kind === 'salt' ? '#f2f2ef' : '#2a2521';
+  ctx.fillStyle = kind === 'salt' ? '#f2f2ef' : '#4a5b2c';
   ctx.fillRect(0, 0, size, size);
 
-  let seed = kind === 'salt' ? 101 : 202;
+  let seed = kind === 'salt' ? 101 : 303;
   const rand = () => {
     seed = (seed * 16807) % 2147483647;
     return (seed - 1) / 2147483646;
   };
 
-  for (let i = 0; i < 1800; i++) {
-    const x = rand() * size;
-    const y = rand() * size;
-    const r = 0.6 + rand() * 1.4;
-    if (kind === 'salt') {
+  if (kind === 'salt') {
+    for (let i = 0; i < 1800; i++) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const r = 0.6 + rand() * 1.4;
       const v = Math.floor(220 + rand() * 35);
       ctx.fillStyle = `rgb(${v},${v},${v - 2})`;
-    } else {
-      const v = Math.floor(20 + rand() * 75);
-      ctx.fillStyle = `rgb(${v + 8},${v + 3},${v})`;
+      ctx.fillRect(x, y, r, r);
     }
-    ctx.fillRect(x, y, r, r);
+  } else {
+    const palette = ['#2e3b1b', '#687a3d', '#7c6e42', '#556734', '#8d8052', '#6f5f70'];
+    for (let i = 0; i < 1400; i++) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const w = 1.0 + rand() * 2.6;
+      const h = 0.7 + rand() * 1.5;
+      ctx.fillStyle = palette[Math.floor(rand() * palette.length)];
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rand() * Math.PI);
+      ctx.fillRect(-w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -52,7 +63,7 @@ function createSpiceMaterial(kind: CitronhajContents): THREE.MeshStandardMateria
   return material;
 }
 
-/** Remplissage simple (sel ou poivre) à l'intérieur d'un pot CITRONHAJ. */
+/** Remplissage simple (sel ou herbes de Provence) à l'intérieur d'un pot CITRONHAJ. */
 export function CitronhajFill({ contents = 'salt', height }: { contents?: CitronhajContents; height: number }) {
   const material = useMemo(() => createSpiceMaterial(contents), [contents]);
 
