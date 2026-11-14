@@ -408,3 +408,7 @@ import { Citronhaj40553211 } from '@features/scene/items/Citronhaj40553211';
 
 SCENE_REGISTRY['citronhaj00553227'] = Citronhaj00553227;
 SCENE_REGISTRY['citronhaj40553211'] = Citronhaj40553211;
+
+import { Wy0083 } from '@features/scene/items/Wy0083';
+
+SCENE_REGISTRY['wy008-3'] = Wy0083;
