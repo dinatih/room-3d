@@ -12,7 +12,6 @@ import { Linky } from '../items/Linky';
 import { Scooter, SCOOTER_STEERING_ANGLE } from '../items/Scooter';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
-import { getRaytracingPreset } from '../camera/cameraUrlParams';
 import { useLightAppearance } from '../../home-assistant/useLightAppearance';
 
 import {
@@ -69,8 +68,6 @@ const _tempColor = new THREE.Color();
 
 function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) {
   const { remote, name, color, brightness } = useLightAppearance('lampCorridor', 0xfff2d6);
-  const preset = getRaytracingPreset();
-  const forceWarmLight = preset === 'iso' || preset === 'magazine';
   const lightRef = useRef<THREE.PointLight>(null);
   const bulbGroupRef = useRef<THREE.Group>(null);
   const emissiveMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
@@ -98,7 +95,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       emissiveMatsRef.current = mats;
     }
 
-    if (remote || forceWarmLight) {
+    if (remote) {
       _tempColor.copy(color);
     } else {
       elapsedRef.current += delta;
@@ -120,7 +117,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
       emissiveMatsRef.current[i].emissiveIntensity = 1.2 * brightness;
     }
 
-    if (!remote && !forceWarmLight) state.invalidate();
+    if (!remote) state.invalidate();
   });
 
   return (
@@ -135,14 +132,14 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
         hoverAction: { label: name ?? 'Lampe du couloir', actions: getObjectActionIds('tradfri-bulb-couloir') },
       }}
     >
-      <TradfriBulb actionState={{ on: isOn, lightColor: forceWarmLight ? color : undefined }} />
+      <TradfriBulb actionState={{ on: isOn }} />
       <pointLight
         ref={lightRef}
         position={[0, 20, 0]}
         intensity={isOn ? 20 * 100 ** 2 * brightness : 0}
         distance={0}
         decay={2}
-        color={forceWarmLight ? color : 0xff2222}
+        color={0xff2222}
         castShadow={lightsHD}
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.001}

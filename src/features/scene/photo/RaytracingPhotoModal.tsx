@@ -564,6 +564,18 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         (1 << LAYER_WALL_STRUCTURE) |
         (1 << LAYER_FLOOR_COVERINGS) |
         (1 << LAYER_MIRRORS);
+      const isMagazineCloset = (obj: THREE.Object3D): boolean => {
+        let cur: THREE.Object3D | null = obj;
+        while (cur) {
+          const itemName = cur.userData?.itemName;
+          const hoverLabel = cur.userData?.hoverAction?.label;
+          if (itemName === 'Placard Couloir' || itemName === 'Placard SDB' || hoverLabel === 'Placard couloir' || hoverLabel === 'Placard SDB') {
+            return true;
+          }
+          cur = cur.parent;
+        }
+        return false;
+      };
       const box = new THREE.Box3();
       scene.traverse((obj) => {
         if (!obj.visible) return;
@@ -572,7 +584,8 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
           hidden.push(obj);
           return;
         }
-        if (!(obj as THREE.Mesh).isMesh || (obj.layers.mask & MAGAZINE_CLIP_MASK) === 0) return;
+        if (!(obj as THREE.Mesh).isMesh) return;
+        if ((obj.layers.mask & MAGAZINE_CLIP_MASK) === 0 && !isMagazineCloset(obj)) return;
         const mesh = obj as THREE.Mesh;
         box.setFromObject(mesh);
         if (box.min.y >= MAGAZINE_CUT_HEIGHT - 0.5) {
