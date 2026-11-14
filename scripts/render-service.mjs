@@ -4,6 +4,8 @@ import { mkdir, writeFile, readdir, readFile, stat } from 'node:fs/promises';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { randomUUID } from 'node:crypto';
+import { constants, setPriority } from 'node:os';
+setPriority(constants.priority.PRIORITY_LOW);
 const jobs = new Map();
 const port = Number(process.env.RENDER_PORT || 5174);
 const serviceUrl = `http://127.0.0.1:${port}`;
