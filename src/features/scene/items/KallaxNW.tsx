@@ -16,6 +16,7 @@ import { MannequinHead }  from './MannequinHead';
 import { DroneCell } from './Drona';
 import { Variera80136622 } from './Variera80136622';
 import { MeubleT }        from './MeubleT';
+import { OyeetNexProII }  from './OyeetNexProII';
 import type { SceneItemProps } from '@shared/types';
 import { SlidingDrona } from './SlidingDrona';
 import { KALLAX_NW_DRONA_POSITIONS, DRONA_SPECIAL_ITEMS, SPECIAL_DRONA_SLIDE_DURATION } from './dronaStorage';
@@ -120,6 +121,10 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}
       <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT />
+        {/* Pistolet de massage OYeet NEX Pro II + socle posé sur la planche droite du meuble en T */}
+        <group position={[26, 36.7, -2]} rotation-y={-Math.PI / 6} userData={{ sceneItemRoot: true, itemName: 'OYeet NEX Pro II' }}>
+          <OyeetNexProII />
+        </group>
       </group>
 
     </group>

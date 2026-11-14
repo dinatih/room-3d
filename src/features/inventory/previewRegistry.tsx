@@ -415,6 +415,8 @@ SCENE_REGISTRY['wy008-3'] = Wy0083;
 
 import { HeartEarbudsRed } from '@features/scene/items/HeartEarbudsRed';
 import { TowelSetRed } from '@features/scene/items/TowelSetRed';
+import { OyeetNexProII } from '@features/scene/items/OyeetNexProII';
 
 SCENE_REGISTRY['heart-earbuds-red'] = HeartEarbudsRed;
 SCENE_REGISTRY['towel-set-red'] = TowelSetRed;
+SCENE_REGISTRY['oyeet-nex-pro-ii'] = OyeetNexProII;
