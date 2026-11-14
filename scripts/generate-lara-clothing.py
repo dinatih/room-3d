@@ -70,41 +70,56 @@ def _generate_cotton_textures():
     rib_v = yy / size * 160.0 * 2.0 * math.pi
     rib_h = np.cos(rib_u) * 0.85 + np.sin(rib_v) * 0.18 + fine_noise * 0.14
 
-    # 1. Heather Grey Cotton Fleece (Tracksuit)
-    base_grey = np.array([0.56, 0.58, 0.61], dtype=np.float32)
+    # 1. Rich Crimson / Red Cotton Fleece (Tracksuit main + deeper rib/lining tones)
+    base_red_fleece = np.array([0.74, 0.11, 0.14], dtype=np.float32)
     melange = np.clip(1.0 + low_noise * 0.055 + fine_noise * 0.045 + knit_v * 0.015, 0.80, 1.18)
-    grey_rgb = np.clip(base_grey[None, None, :] * melange[..., None], 0.0, 1.0)
-    grey_rgba = np.ones((size, size, 4), dtype=np.float32)
-    grey_rgba[..., :3] = grey_rgb
-    img_grey_col = _make_image("tex_cotton_grey_col", grey_rgba, "sRGB")
+    fleece_rgb = np.clip(base_red_fleece[None, None, :] * melange[..., None], 0.0, 1.0)
+    fleece_rgba = np.ones((size, size, 4), dtype=np.float32)
+    fleece_rgba[..., :3] = fleece_rgb
+    img_red_fleece_col = _make_image("tex_cotton_red_fleece_col", fleece_rgba, "sRGB")
+
+    base_red_rib = np.array([0.62, 0.085, 0.11], dtype=np.float32)
+    rib_rgb = np.clip(base_red_rib[None, None, :] * melange[..., None], 0.0, 1.0)
+    rib_rgba = np.ones((size, size, 4), dtype=np.float32)
+    rib_rgba[..., :3] = rib_rgb
+    img_red_rib_col = _make_image("tex_cotton_red_rib_col", rib_rgba, "sRGB")
+
+    base_red_lining = np.array([0.50, 0.068, 0.09], dtype=np.float32)
+    lining_rgb = np.clip(base_red_lining[None, None, :] * melange[..., None], 0.0, 1.0)
+    lining_rgba = np.ones((size, size, 4), dtype=np.float32)
+    lining_rgba[..., :3] = lining_rgb
+    img_red_lining_col = _make_image("tex_cotton_red_lining_col", lining_rgba, "sRGB")
+
     img_fleece_nrm = _make_image("tex_cotton_fleece_nrm", _height_to_normal_rgba(fleece_h, 0.85), "Non-Color")
     img_rib_nrm = _make_image("tex_cotton_rib_nrm", _height_to_normal_rgba(rib_h, 1.15), "Non-Color")
 
-    # 2. Anthracite / Charcoal Cotton-Elastane (Legging)
-    base_dark = np.array([0.075, 0.082, 0.098], dtype=np.float32)
-    dark_melange = np.clip(1.0 + low_noise * 0.06 + fine_noise * 0.05 + knit_v * 0.025, 0.78, 1.22)
-    dark_rgb = np.clip(base_dark[None, None, :] * dark_melange[..., None], 0.0, 1.0)
-    dark_rgba = np.ones((size, size, 4), dtype=np.float32)
-    dark_rgba[..., :3] = dark_rgb
-    img_dark_col = _make_image("tex_legging_dark_col", dark_rgba, "sRGB")
+    # 2. Deep Red Cotton-Elastane Jersey (Legging)
+    base_red_legging = np.array([0.68, 0.085, 0.12], dtype=np.float32)
+    leg_melange = np.clip(1.0 + low_noise * 0.045 + fine_noise * 0.035 + knit_v * 0.020, 0.82, 1.18)
+    leg_rgb = np.clip(base_red_legging[None, None, :] * leg_melange[..., None], 0.0, 1.0)
+    leg_rgba = np.ones((size, size, 4), dtype=np.float32)
+    leg_rgba[..., :3] = leg_rgb
+    img_red_legging_col = _make_image("tex_legging_red_col", leg_rgba, "sRGB")
     img_jersey_nrm = _make_image("tex_legging_jersey_nrm", _height_to_normal_rgba(knit_v * 0.6 + fine_noise * 0.15, 0.55), "Non-Color")
 
-    # 3. Braided Cotton Drawstring Cord
+    # 3. Braided Red Cotton Drawstring Cord
     cord_u = xx / size * 24.0 * 2.0 * math.pi
     cord_v = yy / size * 48.0 * 2.0 * math.pi
     cord_h = np.sin(cord_u + cord_v) * 0.6 + np.sin(cord_u - cord_v) * 0.4
     cord_col = np.ones((size, size, 4), dtype=np.float32)
-    cord_col[..., 0] = np.clip(0.84 + cord_h * 0.04, 0.0, 1.0)
-    cord_col[..., 1] = np.clip(0.82 + cord_h * 0.04, 0.0, 1.0)
-    cord_col[..., 2] = np.clip(0.77 + cord_h * 0.04, 0.0, 1.0)
+    cord_col[..., 0] = np.clip(0.78 + cord_h * 0.05, 0.0, 1.0)
+    cord_col[..., 1] = np.clip(0.11 + cord_h * 0.02, 0.0, 1.0)
+    cord_col[..., 2] = np.clip(0.14 + cord_h * 0.02, 0.0, 1.0)
     img_cord_col = _make_image("tex_cord_col", cord_col, "sRGB")
     img_cord_nrm = _make_image("tex_cord_nrm", _height_to_normal_rgba(cord_h, 1.2), "Non-Color")
 
     return {
-        "grey_col": img_grey_col,
+        "red_fleece_col": img_red_fleece_col,
+        "red_rib_col": img_red_rib_col,
+        "red_lining_col": img_red_lining_col,
         "fleece_nrm": img_fleece_nrm,
         "rib_nrm": img_rib_nrm,
-        "dark_col": img_dark_col,
+        "red_legging_col": img_red_legging_col,
         "jersey_nrm": img_jersey_nrm,
         "cord_col": img_cord_col,
         "cord_nrm": img_cord_nrm,
@@ -1395,48 +1410,48 @@ def main():
     textures = _generate_cotton_textures()
 
     mat_legging = _make_pbr_material(
-        "Legging_Cotton_Anthracite",
-        base_color=(0.08, 0.09, 0.11, 1.0),
+        "Legging_Cotton_Red",
+        base_color=(0.42, 0.015, 0.025, 1.0),
         roughness=0.86,
         metallic=0.0,
-        color_img=textures["dark_col"],
+        color_img=textures["red_legging_col"],
         normal_img=textures["jersey_nrm"],
         normal_strength=0.40,
         uv_scale=2.2,
     )
     mat_fleece = _make_pbr_material(
-        "Cotton_Fleece_HeatherGrey",
-        base_color=(0.56, 0.58, 0.61, 1.0),
+        "Cotton_Fleece_Red",
+        base_color=(0.50, 0.020, 0.030, 1.0),
         roughness=0.90,
         metallic=0.0,
-        color_img=textures["grey_col"],
+        color_img=textures["red_fleece_col"],
         normal_img=textures["fleece_nrm"],
         normal_strength=0.50,
         uv_scale=2.0,
     )
     mat_rib = _make_pbr_material(
-        "Cotton_Rib_HeatherGrey",
-        base_color=(0.52, 0.54, 0.57, 1.0),
+        "Cotton_Rib_Red",
+        base_color=(0.36, 0.014, 0.022, 1.0),
         roughness=0.90,
         metallic=0.0,
-        color_img=textures["grey_col"],
+        color_img=textures["red_rib_col"],
         normal_img=textures["rib_nrm"],
         normal_strength=0.65,
         uv_scale=2.5,
     )
     mat_lining = _make_pbr_material(
-        "Cotton_Hood_Lining",
-        base_color=(0.48, 0.50, 0.53, 1.0),
+        "Cotton_Hood_Lining_Red",
+        base_color=(0.24, 0.010, 0.016, 1.0),
         roughness=0.95,
         metallic=0.0,
-        color_img=textures["grey_col"],
+        color_img=textures["red_lining_col"],
         normal_img=textures["jersey_nrm"],
         normal_strength=0.35,
         uv_scale=2.2,
     )
     mat_zip_tape = _make_pbr_material(
-        "Zipper_Tape_Grey",
-        base_color=(0.38, 0.40, 0.43, 1.0),
+        "Zipper_Tape_Red",
+        base_color=(0.28, 0.012, 0.020, 1.0),
         roughness=0.88,
         metallic=0.0,
     )
@@ -1447,8 +1462,8 @@ def main():
         metallic=0.88,
     )
     mat_cord = _make_pbr_material(
-        "Cotton_Drawstring_Cream",
-        base_color=(0.84, 0.82, 0.77, 1.0),
+        "Cotton_Drawstring_Red",
+        base_color=(0.56, 0.022, 0.032, 1.0),
         roughness=0.92,
         metallic=0.0,
         color_img=textures["cord_col"],
