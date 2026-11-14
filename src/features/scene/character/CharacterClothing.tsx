@@ -10,6 +10,9 @@ import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 
 export const LARA_CLOTHING_MODEL_PATHS = {
   hoodie: 'characters/clothing/lara_hoodie_zip.glb',
+  'hoodie-crop': 'characters/clothing/lara_hoodie_crop.glb',
+  'hoodie-tank': 'characters/clothing/lara_hoodie_tank.glb',
+  'hoodie-crop-tank': 'characters/clothing/lara_hoodie_crop_tank.glb',
   legging: 'characters/clothing/lara_legging.glb',
   sweatpants: 'characters/clothing/lara_sweatpants.glb',
 } as const;

@@ -302,7 +302,12 @@ export function CharacterSection({
             <option value="native">Native</option>
             <option value="bikini">Bikini</option>
             {key === 'laraTop' ? (
-              <option value="hoodie">Sweat zippé</option>
+              <>
+                <option value="hoodie">Sweat zippé</option>
+                <option value="hoodie-crop">Sweat zippé crop top</option>
+                <option value="hoodie-tank">Sweat zippé débardeur</option>
+                <option value="hoodie-crop-tank">Sweat zippé crop débardeur</option>
+              </>
             ) : (
               <>
                 <option value="legging">Legging</option>

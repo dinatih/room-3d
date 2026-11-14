@@ -477,7 +477,9 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
   } catch {}
 }
 
-const LARA_CLOTHING_VALUES = new Set<LaraClothing>(['native', 'bikini', 'legging', 'sweatpants', 'hoodie', 'none']);
+const LARA_CLOTHING_VALUES = new Set<LaraClothing>([
+  'native', 'bikini', 'legging', 'sweatpants', 'hoodie', 'hoodie-crop', 'hoodie-tank', 'hoodie-crop-tank', 'none',
+]);
 
 export function parseUrlLaraClothing(): { laraTop: LaraClothing; laraBottom: LaraClothing } {
   const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search || window.location.hash.split('?')[1]);

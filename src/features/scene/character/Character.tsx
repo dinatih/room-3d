@@ -1358,10 +1358,10 @@ export function Character({
         resetKey={`${isPreview}:${characterGrid}`}
       />}
 
-      {isLara && laraTop === 'hoodie' && (
+      {isLara && (laraTop === 'hoodie' || laraTop === 'hoodie-crop' || laraTop === 'hoodie-tank' || laraTop === 'hoodie-crop-tank') && (
         <Suspense fallback={null}>
           <CharacterClothing
-            clothingId="hoodie"
+            clothingId={laraTop}
             laraScene={scene}
             shadows={characterShadows}
             showWallhack={showWallhack}

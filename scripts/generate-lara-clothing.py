@@ -851,25 +851,30 @@ def build_zip_hoodie(
     mat_zip_tape,
     mat_zip_metal,
     mat_cord,
+    *,
+    z_hem_bot: float = 0.960,
+    z_hem_top: float = 1.015,
+    n_body_z: int = 30,
+    include_sleeves: bool = True,
+    include_pockets: bool = True,
+    tank_armhole: bool = False,
 ):
     bm = bmesh.new()
     uv_layer = bm.loops.layers.uv.new("UVMap")
 
-    z_hem_bot = 0.960
-    z_hem_top = 1.015
     z_collar = 1.476
     n_theta = 48
 
     zs = []
     for i in range(5):
         zs.append(z_hem_bot + (z_hem_top - z_hem_bot) * (i / 4.0))
-    n_body_z = 30
     for i in range(1, n_body_z + 1):
         zs.append(z_hem_top + (z_collar - z_hem_top) * (i / n_body_z))
     n_rings = len(zs)
 
     torso_grid = []
     torso_centers = []
+    hem_clr = 0.0105 if z_hem_bot > 1.10 else 0.0085
     for zi, z in enumerate(zs):
         c = _slice_centroid_z(verts_torso, z, tol=0.028, fallback=Vector((0.0022, -0.010, z)))
         torso_centers.append(c)
@@ -893,30 +898,50 @@ def build_zip_hoodie(
         ring_verts = []
         for j in range(n_theta):
             th = thetas[j]
+            r_eff = radii[j]
+            if tank_armhole and z >= 1.430:
+                # Prevent 3D find_nearest at shoulder/neck slope from grabbing lower deltoids:
+                # taper lateral strap boundary smoothly inward toward the neck base (|x| ~ 0.062).
+                t_up = min(1.0, max(0.0, (z - 1.430) / max(1e-5, z_collar - 1.430)))
+                max_lat = 0.114 - 0.052 * (t_up ** 0.75)
+                lat_w = abs(math.cos(th))
+                if lat_w > 0.25 and r_eff * lat_w > max_lat:
+                    r_eff = max_lat / lat_w
             if is_hem:
-                clr = 0.0085
+                clr = hem_clr
             elif z < 1.24:
                 clr = 0.0155 + 0.003 * math.sin(th * 2.0) ** 2
             elif z < 1.40:
                 clr = 0.0125
+            elif tank_armhole and z >= 1.430:
+                t_up = min(1.0, max(0.0, (z - 1.430) / max(1e-5, z_collar - 1.430)))
+                clr = 0.0095 - 0.0025 * t_up
             else:
                 # Extra vertical shoulder cap ease so deltoids never poke through
                 shoulder_ease = 0.004 * (math.cos(th) ** 2)
                 clr = 0.0105 + shoulder_ease - 0.002 * ((z - 1.40) / (z_collar - 1.40))
 
-            p = c + dirs[j] * (radii[j] + clr)
-            p = _ensure_z_plane_clearance(p, Vector((c.x, c.y)), bvh_torso, 0.0080, max_r=0.22)
+            p = c + dirs[j] * (r_eff + clr)
+            if not (tank_armhole and z >= 1.430):
+                p = _ensure_z_plane_clearance(p, Vector((c.x, c.y)), bvh_torso, 0.0080, max_r=0.22)
             ring_verts.append(bm.verts.new(p))
         torso_grid.append(ring_verts)
 
-    zi_arm_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.335))
-    zi_arm_top = min(n_rings - 1, max(zi_arm_bot + 6, min(range(n_rings), key=lambda i: abs(zs[i] - 1.464))))
+    z_arm_bot_target = 1.298 if tank_armhole else 1.335
+    z_arm_top_target = 1.466 if tank_armhole else 1.464
+    zi_arm_bot = min(range(n_rings), key=lambda i: abs(zs[i] - z_arm_bot_target))
+    zi_arm_top = min(range(n_rings), key=lambda i: abs(zs[i] - z_arm_top_target))
+    if not tank_armhole:
+        zi_arm_top = min(n_rings - 1, max(zi_arm_bot + 6, zi_arm_top))
+    else:
+        zi_arm_top = min(n_rings - 2, max(zi_arm_bot + 6, zi_arm_top))
 
     j_left_mid = n_theta // 4
     j_right_mid = (3 * n_theta) // 4
+    half_w = 4 if tank_armhole else 3
     arm_windows = {
-        1: (zi_arm_bot, zi_arm_top, j_left_mid - 3, j_left_mid + 3),
-        -1: (zi_arm_bot, zi_arm_top, j_right_mid - 3, j_right_mid + 3),
+        1: (zi_arm_bot, zi_arm_top, j_left_mid - half_w, j_left_mid + half_w),
+        -1: (zi_arm_bot, zi_arm_top, j_right_mid - half_w, j_right_mid + half_w),
     }
 
     def _in_armhole(zi, j):
@@ -956,11 +981,12 @@ def build_zip_hoodie(
         hem_return_faces.append(rf)
 
     # -----------------------------------------------------------------------
-    # Sleeves (with generous shoulder cap clearance + ribbed wrist cuffs)
+    # Sleeves (long cuffed sleeves OR ribbed sleeveless armhole bindings)
     # -----------------------------------------------------------------------
     cuff_faces = []
     sleeve_shell_faces = {1: [], -1: []}
     cuff_return_faces = {1: [], -1: []}
+    armhole_band_faces = {1: [], -1: []}
     arm_data = {
         1: (bvh_left_arm, verts_left_arm),
         -1: (bvh_right_arm, verts_right_arm),
@@ -977,6 +1003,31 @@ def build_zip_hoodie(
         for zi in range(z1, z0, -1):
             hole_verts.append(torso_grid[zi][j0])
         n_sl = len(hole_verts)
+
+        if not include_sleeves:
+            c_hole = sum((v.co for v in hole_verts), Vector()) / n_sl
+            rib_ring = []
+            ret_ring = []
+            for v in hole_verts:
+                c_ref = _slice_centroid_z(verts_torso, v.co.z, tol=0.03, fallback=Vector((0.0022, -0.010, v.co.z)))
+                rad_out = Vector((v.co.x - c_ref.x, v.co.y - c_ref.y, 0.0)).normalized()
+                in_hole = (c_hole - v.co).normalized()
+                p_rim = v.co + rad_out * 0.0028 + in_hole * 0.0085
+                if p_rim.z < 1.430:
+                    p_rim = _ensure_z_plane_clearance(p_rim, Vector((c_ref.x, c_ref.y)), bvh_torso, 0.0085, max_r=0.22)
+                rib_ring.append(bm.verts.new(p_rim))
+                p_ret = p_rim - rad_out * 0.0055 + in_hole * 0.0035
+                ret_ring.append(bm.verts.new(p_ret))
+            for ring_a, ring_b, flip_normal in ((hole_verts, rib_ring, False), (rib_ring, ret_ring, True)):
+                for k in range(n_sl):
+                    kn = (k + 1) % n_sl
+                    if side == 1:
+                        f = bm.faces.new((ring_a[k], ring_a[kn], ring_b[kn], ring_b[k]))
+                    else:
+                        f = bm.faces.new((ring_a[k], ring_b[k], ring_b[kn], ring_a[kn]))
+                    cuff_faces.append(f)
+                    armhole_band_faces[side].append((f, c_hole, flip_normal))
+            continue
 
         x_start = sum(v.co.x for v in hole_verts) / n_sl
         c_sh = _slice_centroid_x(verts_arm, x_start, tol=0.03)
@@ -1056,58 +1107,60 @@ def build_zip_hoodie(
     pocket_trim_faces = []
     pocket_front_faces = []
     pocket_seam_faces = []
-    zi_pkt_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.018))
-    zi_pkt_top = min(range(n_rings), key=lambda i: abs(zs[i] - 1.158))
-    for side in (1, -1):
-        j_range = list(range(1, 8) if side == 1 else range(n_theta - 8, n_theta - 1))
-        pkt_grid = []
-        for zi in range(zi_pkt_bot, zi_pkt_top + 1):
-            t_z = (zi - zi_pkt_bot) / max(1, zi_pkt_top - zi_pkt_bot)
-            c_z = torso_centers[zi]
-            row = []
-            for idx_j, j in enumerate(j_range):
-                base_p = torso_grid[zi][j].co
-                t_x = idx_j / (len(j_range) - 1)
-                is_outer = t_x if side == 1 else (1.0 - t_x)
-                out_dir = Vector((base_p.x - c_z.x, base_p.y - c_z.y, 0.0)).normalized()
-                edge_fade = math.sin(min(1.0, max(0.0, (1.0 - is_outer) * 1.15)) * math.pi * 0.5)
-                lift = 0.0018 if (t_z < 0.10 or t_z > 0.92) else 0.0062 * (0.55 + 0.45 * edge_fade)
-                z_adj = -0.032 * (is_outer - 0.50) * (t_z - 0.20) if (is_outer > 0.50 and t_z > 0.20) else 0.0
-                row.append(bm.verts.new(base_p + out_dir * lift + Vector((0.0, 0.0, z_adj))))
-            pkt_grid.append(row)
+    if include_pockets:
+        zi_pkt_bot = min(range(n_rings), key=lambda i: abs(zs[i] - 1.018))
+        zi_pkt_top = min(range(n_rings), key=lambda i: abs(zs[i] - 1.158))
+        for side in (1, -1):
+            j_range = list(range(1, 8) if side == 1 else range(n_theta - 8, n_theta - 1))
+            pkt_grid = []
+            for zi in range(zi_pkt_bot, zi_pkt_top + 1):
+                t_z = (zi - zi_pkt_bot) / max(1, zi_pkt_top - zi_pkt_bot)
+                c_z = torso_centers[zi]
+                row = []
+                for idx_j, j in enumerate(j_range):
+                    base_p = torso_grid[zi][j].co
+                    t_x = idx_j / (len(j_range) - 1)
+                    is_outer = t_x if side == 1 else (1.0 - t_x)
+                    out_dir = Vector((base_p.x - c_z.x, base_p.y - c_z.y, 0.0)).normalized()
+                    edge_fade = math.sin(min(1.0, max(0.0, (1.0 - is_outer) * 1.15)) * math.pi * 0.5)
+                    lift = 0.0018 if (t_z < 0.10 or t_z > 0.92) else 0.0062 * (0.55 + 0.45 * edge_fade)
+                    z_adj = -0.032 * (is_outer - 0.50) * (t_z - 0.20) if (is_outer > 0.50 and t_z > 0.20) else 0.0
+                    row.append(bm.verts.new(base_p + out_dir * lift + Vector((0.0, 0.0, z_adj))))
+                pkt_grid.append(row)
 
-        nr_p = len(pkt_grid)
-        nc_p = len(pkt_grid[0])
-        for r in range(nr_p - 1):
+            nr_p = len(pkt_grid)
+            nc_p = len(pkt_grid[0])
+            for r in range(nr_p - 1):
+                for c_i in range(nc_p - 1):
+                    f = bm.faces.new((pkt_grid[r][c_i], pkt_grid[r][c_i + 1], pkt_grid[r + 1][c_i + 1], pkt_grid[r + 1][c_i]))
+                    pocket_front_faces.append(f)
+                    # Outer pocket entry lip strip gets subtle trim shade
+                    is_outer_col = (c_i == nc_p - 2) if side == 1 else (c_i == 0)
+                    if is_outer_col and r >= 2:
+                        pocket_trim_faces.append(f)
+            for r in range(nr_p - 1):
+                j_in = j_range[0] if side == 1 else j_range[-1]
+                c_in = 0 if side == 1 else (nc_p - 1)
+                v_b0 = torso_grid[zi_pkt_bot + r][j_in]
+                v_b1 = torso_grid[zi_pkt_bot + r + 1][j_in]
+                if side == 1:
+                    sf = bm.faces.new((v_b0, pkt_grid[r][c_in], pkt_grid[r + 1][c_in], v_b1))
+                else:
+                    sf = bm.faces.new((v_b0, v_b1, pkt_grid[r + 1][c_in], pkt_grid[r][c_in]))
+                pocket_seam_faces.append((sf, "in", side))
             for c_i in range(nc_p - 1):
-                f = bm.faces.new((pkt_grid[r][c_i], pkt_grid[r][c_i + 1], pkt_grid[r + 1][c_i + 1], pkt_grid[r + 1][c_i]))
-                pocket_front_faces.append(f)
-                # Outer pocket entry lip strip gets subtle trim shade
-                is_outer_col = (c_i == nc_p - 2) if side == 1 else (c_i == 0)
-                if is_outer_col and r >= 2:
-                    pocket_trim_faces.append(f)
-        for r in range(nr_p - 1):
-            j_in = j_range[0] if side == 1 else j_range[-1]
-            c_in = 0 if side == 1 else (nc_p - 1)
-            v_b0 = torso_grid[zi_pkt_bot + r][j_in]
-            v_b1 = torso_grid[zi_pkt_bot + r + 1][j_in]
-            if side == 1:
-                sf = bm.faces.new((v_b0, pkt_grid[r][c_in], pkt_grid[r + 1][c_in], v_b1))
-            else:
-                sf = bm.faces.new((v_b0, v_b1, pkt_grid[r + 1][c_in], pkt_grid[r][c_in]))
-            pocket_seam_faces.append((sf, "in", side))
-        for c_i in range(nc_p - 1):
-            j_a = j_range[c_i]
-            j_b = j_range[c_i + 1]
-            pocket_seam_faces.append((bm.faces.new((pkt_grid[-1][c_i], torso_grid[zi_pkt_top][j_a], torso_grid[zi_pkt_top][j_b], pkt_grid[-1][c_i + 1])), "top", side))
-            pocket_seam_faces.append((bm.faces.new((torso_grid[zi_pkt_bot][j_a], pkt_grid[0][c_i], pkt_grid[0][c_i + 1], torso_grid[zi_pkt_bot][j_b])), "bot", side))
+                j_a = j_range[c_i]
+                j_b = j_range[c_i + 1]
+                pocket_seam_faces.append((bm.faces.new((pkt_grid[-1][c_i], torso_grid[zi_pkt_top][j_a], torso_grid[zi_pkt_top][j_b], pkt_grid[-1][c_i + 1])), "top", side))
+                pocket_seam_faces.append((bm.faces.new((torso_grid[zi_pkt_bot][j_a], pkt_grid[0][c_i], pkt_grid[0][c_i + 1], torso_grid[zi_pkt_bot][j_b])), "bot", side))
 
     # -----------------------------------------------------------------------
     # Cupped Watertight Draped Hood (2-manifold closed pouch flush on collar)
     # -----------------------------------------------------------------------
     # Kept strictly disconnected (2-manifold watertight pouch) from torso_grid[-1]
     # so there are zero 3-way non-manifold seams while kissing the collar line seamlessly.
-    hood_col_indices = list(range(5, n_theta - 5))
+    hood_margin = 13 if tank_armhole else 5
+    hood_col_indices = list(range(hood_margin, n_theta - hood_margin))
     n_hc = len(hood_col_indices)
 
     # 16-station non-self-intersecting CCW cross-section in (u_frac, v_frac):
@@ -1150,8 +1203,9 @@ def build_zip_hoodie(
             d_rad.normalize()
         else:
             d_rad = Vector((0.0, 1.0, 0.0))
-        d_back_fan = Vector((0.08 * (0.5 - t_side) * 2.0, 1.0, 0.0)).normalized()
-        d_drape = d_rad.lerp(d_back_fan, 0.90 * (w ** 0.45)).normalized()
+        fan_x = 0.04 if tank_armhole else 0.08
+        d_back_fan = Vector((fan_x * (0.5 - t_side) * 2.0, 1.0, 0.0)).normalized()
+        d_drape = d_rad.lerp(d_back_fan, (0.95 if tank_armhole else 0.90) * (w ** 0.45)).normalized()
 
         col_verts = []
         for u_frac, v_frac in hood_profile:
@@ -1172,6 +1226,8 @@ def build_zip_hoodie(
                 )
 
             p = p_under + d_drape * (u_frac * depth + fold_wave * u_frac)
+            if tank_armhole:
+                p.x = max(-0.102, min(0.102, p.x))
             if w > 0.25 and p.y > 0.040 and u_frac > 0.08:
                 p.z = min(p.z, 1.464)
             col_verts.append(bm.verts.new(p))
@@ -1299,6 +1355,13 @@ def build_zip_hoodie(
         for f in cuff_return_faces[side]:
             if f.normal.x * side < 0.0:
                 f.normal_flip()
+        for f, c_hole, is_return in armhole_band_faces[side]:
+            fc = f.calc_center_median()
+            out_dir = Vector((side * 0.65, (fc.y - c_hole.y) * 0.5, (fc.z - c_hole.z) * 0.5))
+            if is_return:
+                out_dir = -out_dir
+            if out_dir.length > 1e-6 and out_dir.dot(f.normal) < 0.0:
+                f.normal_flip()
     for f in pocket_front_faces:
         fc = f.calc_center_median()
         c_t = _slice_centroid_z(verts_torso, fc.z, tol=0.03, fallback=Vector((0.0022, -0.010, fc.z)))
@@ -1326,7 +1389,7 @@ def build_zip_hoodie(
             continue
         for loop in f.loops:
             co = loop.vert.co
-            if abs(co.x) > 0.165:
+            if include_sleeves and abs(co.x) > 0.165:
                 ang = math.atan2(co.z - 1.42, co.y)
                 loop[uv_layer].uv = ((ang / (2.0 * math.pi) + 0.5) * 1.4, abs(co.x) * 2.2)
             else:
@@ -1369,11 +1432,11 @@ def build_zip_hoodie(
     bpy.ops.object.modifier_apply(modifier=sub.name)
 
     for v in obj.data.vertices:
-        if v.co.x > 0.165 and v.co.z > 1.30:
+        if include_sleeves and v.co.x > 0.165 and v.co.z > 1.30:
             c_a = _slice_centroid_x(verts_left_arm, v.co.x, tol=0.03)
             clr_a = 0.0110 if v.co.x < 0.25 else 0.0055
             v.co = _ensure_radial_clearance(v.co, c_a, bvh_left_arm, clr_a, max_r=0.11)
-        elif v.co.x < -0.165 and v.co.z > 1.30:
+        elif include_sleeves and v.co.x < -0.165 and v.co.z > 1.30:
             c_a = _slice_centroid_x(verts_right_arm, v.co.x, tol=0.03)
             clr_a = 0.0110 if v.co.x > -0.25 else 0.0055
             v.co = _ensure_radial_clearance(v.co, c_a, bvh_right_arm, clr_a, max_r=0.11)
@@ -1386,7 +1449,7 @@ def build_zip_hoodie(
         bvh_torso,
         verts_torso,
         eyelets=[(-0.026, 1.448), (0.030, 1.448)],
-        z_end=1.305,
+        z_end=1.320 if z_hem_bot > 1.10 else 1.305,
         mat_cord=mat_cord,
         mat_metal=mat_zip_metal,
         extra_y=-0.016,
@@ -1584,33 +1647,89 @@ def main():
     _bind_and_transfer_weights(sweatpants, donor_legs, armature, smooth_passes=1)
     _export_garment_glb([sweatpants], armature, "lara_sweatpants.glb")
 
-    # 3. Zipped Cotton Hoodie (Cotton Tracksuit Top)
-    hoodie = build_zip_hoodie(
-        name="lara_hoodie_zip",
-        bvh_torso=bvh_torso,
-        verts_torso=verts_torso,
-        bvh_left_arm=bvh_left_arm,
-        verts_left_arm=verts_left_arm,
-        bvh_right_arm=bvh_right_arm,
-        verts_right_arm=verts_right_arm,
-        mat_fleece=mat_fleece,
-        mat_rib=mat_rib,
-        mat_lining=mat_lining,
-        mat_zip_tape=mat_zip_tape,
-        mat_zip_metal=mat_zip_metal,
-        mat_cord=mat_cord,
-    )
-    _bind_and_transfer_weights(
-        hoodie,
-        donor_top,
-        armature,
-        bone_attenuation={"breast_left_base": 0.45, "breast_right_base": 0.45},
-        smooth_passes=1,
-        region_selector=lambda vco: donor_arms_only if (abs(vco.x) > 0.145 and vco.z > 1.325) else donor_torso_only,
-    )
-    _export_garment_glb([hoodie], armature, "lara_hoodie_zip.glb")
+    # 3-6. Zipped Cotton Hoodie & Variants (standard, crop, tank, crop-tank)
+    hoodie_variants = [
+        {
+            "name": "lara_hoodie_zip",
+            "filename": "lara_hoodie_zip.glb",
+            "z_hem_bot": 0.960,
+            "z_hem_top": 1.015,
+            "n_body_z": 30,
+            "include_sleeves": True,
+            "include_pockets": True,
+            "tank_armhole": False,
+        },
+        {
+            "name": "lara_hoodie_crop",
+            "filename": "lara_hoodie_crop.glb",
+            "z_hem_bot": 1.185,
+            "z_hem_top": 1.225,
+            "n_body_z": 22,
+            "include_sleeves": True,
+            "include_pockets": False,
+            "tank_armhole": False,
+        },
+        {
+            "name": "lara_hoodie_tank",
+            "filename": "lara_hoodie_tank.glb",
+            "z_hem_bot": 0.960,
+            "z_hem_top": 1.015,
+            "n_body_z": 30,
+            "include_sleeves": False,
+            "include_pockets": True,
+            "tank_armhole": True,
+        },
+        {
+            "name": "lara_hoodie_crop_tank",
+            "filename": "lara_hoodie_crop_tank.glb",
+            "z_hem_bot": 1.185,
+            "z_hem_top": 1.225,
+            "n_body_z": 22,
+            "include_sleeves": False,
+            "include_pockets": False,
+            "tank_armhole": True,
+        },
+    ]
 
-    print("All 3 Lara garments generated successfully!")
+    for spec in hoodie_variants:
+        garment = build_zip_hoodie(
+            name=spec["name"],
+            bvh_torso=bvh_torso,
+            verts_torso=verts_torso,
+            bvh_left_arm=bvh_left_arm,
+            verts_left_arm=verts_left_arm,
+            bvh_right_arm=bvh_right_arm,
+            verts_right_arm=verts_right_arm,
+            mat_fleece=mat_fleece,
+            mat_rib=mat_rib,
+            mat_lining=mat_lining,
+            mat_zip_tape=mat_zip_tape,
+            mat_zip_metal=mat_zip_metal,
+            mat_cord=mat_cord,
+            z_hem_bot=spec["z_hem_bot"],
+            z_hem_top=spec["z_hem_top"],
+            n_body_z=spec["n_body_z"],
+            include_sleeves=spec["include_sleeves"],
+            include_pockets=spec["include_pockets"],
+            tank_armhole=spec["tank_armhole"],
+        )
+        if spec["include_sleeves"]:
+            donor_sel = donor_top
+            region_sel = lambda vco: donor_arms_only if (abs(vco.x) > 0.145 and vco.z > 1.325) else donor_torso_only
+        else:
+            donor_sel = donor_torso_only
+            region_sel = None
+        _bind_and_transfer_weights(
+            garment,
+            donor_sel,
+            armature,
+            bone_attenuation={"breast_left_base": 0.45, "breast_right_base": 0.45},
+            smooth_passes=1,
+            region_selector=region_sel,
+        )
+        _export_garment_glb([garment], armature, spec["filename"])
+
+    print("All Lara garments generated successfully!")
 
 
 if __name__ == "__main__":
