@@ -248,10 +248,13 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
         const isEyeMat = matName.includes('eye') && !matName.includes('lash');
         if (isEyeMat) {
+           const isCornea = matName.includes('eye2') || meshName.includes('eye2');
            mat.visible = true; // Ensure both are visible in case one is the sclera and one is the pupil
            mat.emissive.setHex(0x000000);
            mat.metalness = 0;
-           mat.roughness = 0.3;
+           mat.roughness = isCornea ? 0.05 : 0.3;
+           mat.transparent = isCornea;
+           mat.depthWrite = !isCornea;
            if ('transmission' in mat) (mat as any).transmission = 0;
 
            if (isDelphina || isRomana) {
