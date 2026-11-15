@@ -110,43 +110,39 @@ def build_textures():
     S = TEX_SIZE
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
 
-    # Organic non-woven/polyester fabric mottling (matches drona-3.jpg close-up)
-    n_macro = _tileable_noise(rng, S, 18)
-    n_mid = _tileable_noise(rng, S, 72)
-    n_fine = _tileable_noise(rng, S, 240)
+    # Very fine, uniform micro-weave for light cotton/polyester sheeting ("drap léger")
+    # Avoid coarse/mid blotches ("taches") and heavy velvet-like bump noise.
+    n_micro = _tileable_noise(rng, S, 384)
 
-    # Subtle perpendicular warp/weft micro-weave (no big diagonal stripes)
-    wx = np.sin(xx * (2.0 * math.pi / 3.0))
-    wy = np.sin(yy * (2.0 * math.pi / 3.0))
+    # Fine perpendicular warp/weft micro-weave
+    wx = np.sin(xx * (2.0 * math.pi / 2.0))
+    wy = np.sin(yy * (2.0 * math.pi / 2.0))
     outer_weave = 0.5 * (wx + wy)
 
-    # Fine regular basketweave for inner lining (matches drona-2.jpg)
-    ibx = np.sin(xx * (2.0 * math.pi / 4.0))
-    iby = np.sin(yy * (2.0 * math.pi / 4.0))
-    cell_alt = (((xx // 4).astype(np.int32) + (yy // 4).astype(np.int32)) % 2) * 2.0 - 1.0
-    inner_weave = 0.55 * (ibx * cell_alt + iby * (-cell_alt)) + 0.45 * (ibx * iby)
+    # Fine regular plain weave for inner lining
+    ibx = np.sin(xx * (2.0 * math.pi / 3.0))
+    iby = np.sin(yy * (2.0 * math.pi / 3.0))
+    inner_weave = 0.5 * (ibx + iby)
 
-    # Aspect-corrected basketweave for Q3 inner walls (142 cm perimeter vs 33 cm height -> ~4.3:1)
-    q3_wx = np.sin(xx * (2.0 * math.pi / 2.2))
-    q3_wy = np.sin(yy * (2.0 * math.pi / 9.2))
-    q3_alt = (((xx // 2).astype(np.int32) + (yy // 5).astype(np.int32)) % 2) * 2.0 - 1.0
-    q3_weave = 0.50 * (q3_wx * q3_alt + q3_wy * (-q3_alt)) + 0.50 * (q3_wx * q3_wy)
+    # Aspect-corrected fine weave for Q3 inner walls (142 cm perimeter vs 33 cm height -> ~4.3:1)
+    q3_wx = np.sin(xx * (2.0 * math.pi / 2.0))
+    q3_wy = np.sin(yy * (2.0 * math.pi / 8.0))
+    q3_weave = 0.5 * (q3_wx + q3_wy)
 
     albedo = np.zeros((S, S, 3), dtype=np.float32)
     height = np.zeros((S, S), dtype=np.float32)
-    rough = np.full((S, S), 0.88, dtype=np.float32)
+    rough = np.full((S, S), 0.80, dtype=np.float32)
     ao = np.ones((S, S), dtype=np.float32)
 
     # ------------------------------------------------------------------
-    # Outer Fabric: Deep Saturated IKEA Crimson Red (sRGB ~ #B4050A)
-    # Keeping G/B very low prevents AgX from turning bright faces coral/pink.
+    # Outer Fabric: Clean, smooth saturated IKEA Crimson Red (no blotches)
     # ------------------------------------------------------------------
-    mottle = 0.040 * n_macro + 0.055 * n_mid + 0.045 * n_fine
-    albedo[..., 0] = 0.705 + mottle + 0.015 * outer_weave
-    albedo[..., 1] = 0.014 + 0.008 * np.clip(mottle + 0.1, 0.0, 0.2)
-    albedo[..., 2] = 0.021 + 0.010 * np.clip(mottle + 0.1, 0.0, 0.2)
-    height[:] = 0.16 * outer_weave + 0.28 * n_fine + 0.14 * n_mid
-    rough[:] = 0.88 + 0.05 * n_mid - 0.02 * outer_weave
+    micro_var = 0.006 * n_micro + 0.004 * outer_weave
+    albedo[..., 0] = 0.715 + micro_var
+    albedo[..., 1] = 0.015 + 0.001 * np.clip(micro_var + 0.01, 0.0, 0.02)
+    albedo[..., 2] = 0.022 + 0.001 * np.clip(micro_var + 0.01, 0.0, 0.02)
+    height[:] = 0.032 * outer_weave + 0.016 * n_micro
+    rough[:] = 0.80 + 0.012 * n_micro - 0.008 * outer_weave
 
     # UV Quadrants (image Y=0 is top -> UV V = 1 - Y/S)
     half = S // 2
@@ -155,47 +151,47 @@ def build_textures():
     def v_to_y(v):
         return (1.0 - v) * S
 
-    # --- Q3 (Bot-Left): Inner walls (crisp basketweave + bottom/corner AO) ---
+    # --- Q3 (Bot-Left): Inner walls (smooth fine weave + subtle bottom/corner AO) ---
     q3 = (slice(half, S), slice(0, half))
-    albedo[q3][..., 0] = 0.54 + 0.04 * n_mid[q3] + 0.042 * q3_weave[q3]
+    albedo[q3][..., 0] = 0.55 + 0.005 * n_micro[q3] + 0.006 * q3_weave[q3]
     albedo[q3][..., 1] = 0.012
     albedo[q3][..., 2] = 0.018
-    height[q3] = 0.24 * q3_weave[q3] + 0.14 * n_fine[q3]
-    rough[q3] = 0.91 - 0.03 * q3_weave[q3]
+    height[q3] = 0.040 * q3_weave[q3] + 0.015 * n_micro[q3]
+    rough[q3] = 0.83 - 0.010 * q3_weave[q3]
 
     v_q3 = 1.0 - yy[q3] / S  # [0..0.50]
     t_inner_h = np.clip((v_q3 - 0.02) / 0.45, 0.0, 1.0)
-    ao_inner_v = 0.62 + 0.38 * (t_inner_h ** 0.55)
+    ao_inner_v = 0.68 + 0.32 * (t_inner_h ** 0.55)
     # 4 vertical inner corners evenly spaced in u in [0.02..0.48]:
     # Perimeter fractions: 33 / 142 = 0.2324, (33+38)/142 = 0.50, (33+38+33)/142 = 0.7324
     u_q3 = xx[q3] / S
     u_norm = np.clip((u_q3 - 0.02) / 0.46, 0.0, 1.0)
     corner_dist = np.min(np.stack([np.abs(u_norm - c) for c in (0.0, 0.2324, 0.5, 0.7324, 1.0)], axis=0), axis=0)
-    ao_inner_c = 0.80 + 0.20 * np.clip(corner_dist / 0.030, 0.0, 1.0)
+    ao_inner_c = 0.86 + 0.14 * np.clip(corner_dist / 0.025, 0.0, 1.0)
     ao[q3] *= ao_inner_v * ao_inner_c
-    albedo[q3] *= (0.76 + 0.24 * ao_inner_v * ao_inner_c)[..., None]
+    albedo[q3] *= (0.80 + 0.20 * ao_inner_v * ao_inner_c)[..., None]
 
     # --- Q4 upper (Bot-Right top): Inner bottom board & pull loop ---
     q4_in = (slice(half, q_bot_mid), slice(half, S))
-    albedo[q4_in][..., 0] = 0.50 + 0.04 * n_mid[q4_in] + 0.048 * inner_weave[q4_in]
-    albedo[q4_in][..., 1] = 0.011
-    albedo[q4_in][..., 2] = 0.017
-    height[q4_in] = 0.32 * inner_weave[q4_in] + 0.14 * n_fine[q4_in]
-    rough[q4_in] = 0.92
+    albedo[q4_in][..., 0] = 0.52 + 0.005 * n_micro[q4_in] + 0.006 * inner_weave[q4_in]
+    albedo[q4_in][..., 1] = 0.012
+    albedo[q4_in][..., 2] = 0.018
+    height[q4_in] = 0.045 * inner_weave[q4_in] + 0.015 * n_micro[q4_in]
+    rough[q4_in] = 0.84
     u_f = (xx[q4_in] - half) / float(half)
     v_f = (yy[q4_in] - half) / float(q_bot_mid - half)
     edge_f = np.minimum(np.minimum(u_f, 1.0 - u_f), np.minimum(v_f, 1.0 - v_f))
-    ao_floor = 0.65 + 0.35 * np.clip(edge_f / 0.12, 0.0, 1.0)
+    ao_floor = 0.70 + 0.30 * np.clip(edge_f / 0.10, 0.0, 1.0)
     ao[q4_in] *= ao_floor
-    albedo[q4_in] *= (0.76 + 0.24 * ao_floor)[..., None]
+    albedo[q4_in] *= (0.80 + 0.20 * ao_floor)[..., None]
 
     # --- Q4 lower (Bot-Right bottom): Outer bottom ---
     q4_out = (slice(q_bot_mid, S), slice(half, S))
-    albedo[q4_out][..., 0] = 0.45 + 0.03 * n_mid[q4_out]
-    albedo[q4_out][..., 1] = 0.010
-    albedo[q4_out][..., 2] = 0.016
-    rough[q4_out] = 0.94
-    ao[q4_out] *= 0.85
+    albedo[q4_out][..., 0] = 0.48 + 0.004 * n_micro[q4_out]
+    albedo[q4_out][..., 1] = 0.011
+    albedo[q4_out][..., 2] = 0.017
+    rough[q4_out] = 0.86
+    ao[q4_out] *= 0.88
 
     # ------------------------------------------------------------------
     # Q1 (Top-Left): Front & Back Outer Panels + Pull-Band (u in [0.02, 0.48])
@@ -209,29 +205,26 @@ def build_textures():
     # Contact shadow right under the pull-band flap
     y_wall_top = v_to_y(0.82)
     dy_shadow = yy[:, :half] - y_wall_top
-    shadow_band = np.exp(-np.clip(dy_shadow, 0.0, 32.0) / 4.5) * (dy_shadow >= -1.5)
-    ao[:, :half] *= (1.0 - 0.48 * shadow_band)
-    albedo[:, :half] *= (1.0 - 0.34 * shadow_band)[..., None]
+    shadow_band = np.exp(-np.clip(dy_shadow, 0.0, 28.0) / 3.8) * (dy_shadow >= -1.5)
+    ao[:, :half] *= (1.0 - 0.42 * shadow_band)
+    albedo[:, :half] *= (1.0 - 0.28 * shadow_band)[..., None]
 
     # Contact shadow right under the top folded rim
     y_band_top = v_to_y(0.945)
     dy_rim_shadow = yy[:, :half] - y_band_top
-    shadow_rim = np.exp(-np.clip(dy_rim_shadow, 0.0, 24.0) / 3.2) * (dy_rim_shadow >= -1.5)
-    ao[:, :half] *= (1.0 - 0.36 * shadow_rim)
-    albedo[:, :half] *= (1.0 - 0.26 * shadow_rim)[..., None]
+    shadow_rim = np.exp(-np.clip(dy_rim_shadow, 0.0, 20.0) / 2.8) * (dy_rim_shadow >= -1.5)
+    ao[:, :half] *= (1.0 - 0.30 * shadow_rim)
+    albedo[:, :half] *= (1.0 - 0.22 * shadow_rim)[..., None]
 
-    # Subtle crisp vertical corner seam AO (tight 3 px seam shadow, not muddy band)
+    # Subtle edge crease AO only (no vertical stitching lines on real DRÖNA)
     d_edge_q1 = np.minimum(np.abs(xx[:, :half] - x_q1_0), np.abs(xx[:, :half] - x_q1_1))
-    seam_ao_q1 = 0.86 + 0.14 * np.clip(d_edge_q1 / 3.5, 0.0, 1.0)
+    seam_ao_q1 = 0.93 + 0.07 * np.clip(d_edge_q1 / 2.5, 0.0, 1.0)
     ao[:, :half] *= seam_ao_q1
-    albedo[:, :half] *= (0.90 + 0.10 * seam_ao_q1)[..., None]
+    albedo[:, :half] *= (0.95 + 0.05 * seam_ao_q1)[..., None]
 
-    # Stitching lines on Q1 (matching drona-3.jpg)
-    _draw_stitch_line(albedo, height, rough, ao, x_q1_0 + 3, v_to_y(0.967), x_q1_1 - 3, v_to_y(0.967), pitch_px=6.5, width_px=1.8)
-    _draw_stitch_line(albedo, height, rough, ao, x_q1_0 + 3, v_to_y(0.844), x_q1_1 - 3, v_to_y(0.844), pitch_px=6.5, width_px=1.8)
-    # Vertical corner stitches tucked cleanly inside the flat panel margin (~4 mm from edge)
-    _draw_stitch_line(albedo, height, rough, ao, x_q1_0 + 7, v_to_y(0.978), x_q1_0 + 7, v_to_y(0.525), pitch_px=6.5, width_px=1.7)
-    _draw_stitch_line(albedo, height, rough, ao, x_q1_1 - 7, v_to_y(0.978), x_q1_1 - 7, v_to_y(0.525), pitch_px=6.5, width_px=1.7)
+    # Horizontal stitching lines only on Q1 (top folded rim + pull-band bottom)
+    _draw_stitch_line(albedo, height, rough, ao, x_q1_0 + 2, v_to_y(0.967), x_q1_1 - 2, v_to_y(0.967), pitch_px=6.5, width_px=1.6)
+    _draw_stitch_line(albedo, height, rough, ao, x_q1_0 + 2, v_to_y(0.844), x_q1_1 - 2, v_to_y(0.844), pitch_px=6.5, width_px=1.6)
 
     # ------------------------------------------------------------------
     # Q2 (Top-Right): Left & Right Outer Panels (u in [0.52, 0.98])
@@ -240,20 +233,20 @@ def build_textures():
     x_q2_1 = 0.98 * S
     y_side_rim = v_to_y(0.945)
     dy_side_rim = yy[:, half:] - y_side_rim
-    shadow_side_rim = np.exp(-np.clip(dy_side_rim, 0.0, 24.0) / 3.2) * (dy_side_rim >= -1.5)
-    ao[:, half:] *= (1.0 - 0.36 * shadow_side_rim)
-    albedo[:, half:] *= (1.0 - 0.26 * shadow_side_rim)[..., None]
+    shadow_side_rim = np.exp(-np.clip(dy_side_rim, 0.0, 20.0) / 2.8) * (dy_side_rim >= -1.5)
+    ao[:, half:] *= (1.0 - 0.30 * shadow_side_rim)
+    albedo[:, half:] *= (1.0 - 0.22 * shadow_side_rim)[..., None]
 
-    _draw_stitch_line(albedo, height, rough, ao, x_q2_0 + 3, v_to_y(0.967), x_q2_1 - 3, v_to_y(0.967))
+    _draw_stitch_line(albedo, height, rough, ao, x_q2_0 + 2, v_to_y(0.967), x_q2_1 - 2, v_to_y(0.967), pitch_px=6.5, width_px=1.6)
     d_edge_q2 = np.minimum(np.abs(xx[:, half:] - x_q2_0), np.abs(xx[:, half:] - x_q2_1))
-    seam_ao_q2 = 0.84 + 0.16 * np.clip(d_edge_q2 / 8.0, 0.0, 1.0)
+    seam_ao_q2 = 0.93 + 0.07 * np.clip(d_edge_q2 / 4.0, 0.0, 1.0)
     ao[:, half:] *= seam_ao_q2
 
     # ------------------------------------------------------------------
     # Height -> Tangent-Space Normal Map (OpenGL +Y up)
     # ------------------------------------------------------------------
     gy, gx = np.gradient(height)
-    strength = 1.45
+    strength = 0.85
     nx = -gx * strength
     ny = gy * strength
     nz = np.ones_like(height)
@@ -306,7 +299,7 @@ def build_material(img_base, img_nrm, img_orm):
     tex_nrm = nt.nodes.new("ShaderNodeTexImage")
     tex_nrm.image = img_nrm
     nrm_node = nt.nodes.new("ShaderNodeNormalMap")
-    nrm_node.inputs["Strength"].default_value = 0.75
+    nrm_node.inputs["Strength"].default_value = 0.45
     nt.links.new(uv_node.outputs["UV"], tex_nrm.inputs["Vector"])
     nt.links.new(tex_nrm.outputs["Color"], nrm_node.inputs["Color"])
     nt.links.new(nrm_node.outputs["Normal"], bsdf.inputs["Normal"])

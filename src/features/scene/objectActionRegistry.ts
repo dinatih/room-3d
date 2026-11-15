@@ -165,7 +165,7 @@ const ACTIONS: Record<string, ActionConfig> = {
     type: 'select',
     initialValue: 'blender-red',
     options: [
-      { value: 'blender-red', label: 'Blender Rouge (946 tris · 215,7 Ko)' },
+      { value: 'blender-red', label: 'Blender Rouge (946 tris · 47,4 Ko)' },
       { value: 'official-ikea', label: 'Officiel IKEA (45 121 tris · 367,8 Ko)' },
       { value: 'low-poly', label: 'Ancien Low-Poly (132 tris · 0 Ko)' },
     ],
