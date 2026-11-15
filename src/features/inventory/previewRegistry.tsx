@@ -102,7 +102,6 @@ import { Linky }                                      from '@features/scene/item
 import { Scooter, SCOOTER_STEERING_ANGLE }              from '@features/scene/items/Scooter';
 import { LaserDistanceMaster }                        from '@features/scene/items/LaserDistanceMaster';
 import { ElectricRacket }                             from '@features/scene/items/ElectricRacket';
-import { Drona }                                      from '@features/scene/items/Drona';
 import { CharacterGroup }                               from '@features/scene/character';
 import { CHARACTERS }                                 from '@features/scene/characterConfig';
 import { DogBowl } from '@features/scene/items/DogBowl';
@@ -206,7 +205,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'toilet':                 Toilet,
   'corridor-closet':        CorridorCloset,
   'sdb-closet':             SdbCloset,
-  'drona':                  Drona,
 
   // ── Procéduraux (pas de glbPath) ──────────────────────────────────────────
   'counter':                Counter,
