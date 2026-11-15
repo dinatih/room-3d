@@ -30,6 +30,7 @@ import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
 import { Smorkull, SMORKULL_FOOTPRINT } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
+import { JordanHexMule } from '../items/JordanHexMule';
 import { RugLarge, RugSmall } from '../items/Rugs';
 import { ElectricSwatter } from '../items/ElectricSwatter';
 import { Grejig40329868 } from '../items/Grejig40329868';
@@ -671,6 +672,11 @@ export function LivingRoomDecor() {
 
       {/* Baskets Sneakers Rouges sur range-chaussures */}
       <SneakersPair />
+
+      {/* Paire de Jordan Hex Mule SP sur le grand tapis sous la baie vitrée */}
+      <group position={[220, 0.5, 35]} rotation-y={-0.28} userData={{ sceneItemRoot: true, itemName: 'Jordan Hex Mule SP' }}>
+        <JordanHexMule />
+      </group>
 
       {/* Cintres et vêtements Mackapär (T-shirt noir + cintres Spruttig) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, itemName: 'Cintres et T-shirt Mackapär' }}>
