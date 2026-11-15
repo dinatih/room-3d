@@ -82,12 +82,12 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
   const requestedAction = initialSmartAction && getInventorySmartObjects(item.id).some(object => object.id === initialSmartAction.objectId) ? initialSmartAction : undefined;
   const [smartAction, setSmartAction] = useState(requestedAction);
   useEffect(() => setSmartAction(requestedAction), [requestedAction]);
-  const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number } | null>(null);
+  const [glbStats, setGlbStats] = useState<{ fileSize?: number; triangles: number; drawCalls: number; glbPath?: string } | null>(null);
 
-  const handleGlbStats = useCallback((s: { fileSize?: number; triangles: number; drawCalls: number } | null) => {
+  const handleGlbStats = useCallback((s: { fileSize?: number; triangles: number; drawCalls: number; glbPath?: string } | null) => {
     setGlbStats(prev => {
       if (!s && !prev) return prev;
-      if (s && prev && s.fileSize === prev.fileSize && s.triangles === prev.triangles && s.drawCalls === prev.drawCalls) {
+      if (s && prev && s.fileSize === prev.fileSize && s.triangles === prev.triangles && s.drawCalls === prev.drawCalls && s.glbPath === prev.glbPath) {
         return prev;
       }
       return s;
@@ -333,16 +333,24 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
               <div className="col-6">
                 <div className="card bg-primary-subtle border border-primary-subtle p-2 h-100">
                   <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Fichier GLB</div>
-                  <div className="fw-semibold small text-truncate" title={glbPath}>
-                    {glbPath.split('/').pop()}
-                    {glbStats?.fileSize !== undefined ? (
-                      <span className="d-block text-muted small mt-1">
-                        Taille : {glbStats.fileSize > 1024 * 1024 
-                          ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
-                          : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
-                      </span>
-                    ) : null}
-                  </div>
+                  {(() => {
+                    const activeGlbPath = glbStats?.glbPath !== undefined ? glbStats.glbPath : glbPath;
+                    const glbLabel = activeGlbPath ? activeGlbPath.split('/').pop() : 'Procédural (Drona.tsx)';
+                    return (
+                      <div className="fw-semibold small text-truncate" title={activeGlbPath || glbLabel}>
+                        {glbLabel}
+                        {glbStats?.fileSize !== undefined ? (
+                          <span className="d-block text-muted small mt-1">
+                            Taille : {glbStats.fileSize === 0
+                              ? '0 Ko (procédural)'
+                              : glbStats.fileSize > 1024 * 1024
+                                ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
+                                : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 

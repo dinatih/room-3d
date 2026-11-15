@@ -42,9 +42,41 @@ export interface GlbDebugStats {
   fileSize?: number;
   triangles: number;
   drawCalls: number;
+  glbPath?: string;
 }
 
 const glbSizeCache = new Map<string, number>();
+const pendingGlbSizeRequests = new Map<string, Promise<number | undefined>>();
+
+function ensureGlbFileSize(path: string, onLoaded?: () => void): number | undefined {
+  if (!path) return 0;
+  const cached = glbSizeCache.get(path);
+  if (cached !== undefined) return cached;
+  let pending = pendingGlbSizeRequests.get(path);
+  if (!pending) {
+    pending = fetch(path, { method: 'HEAD' })
+      .then(res => {
+        const len = res.headers.get('content-length');
+        const sz = len ? parseInt(len, 10) : NaN;
+        if (!isNaN(sz)) {
+          glbSizeCache.set(path, sz);
+          return sz;
+        }
+        return undefined;
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        pendingGlbSizeRequests.delete(path);
+      });
+    pendingGlbSizeRequests.set(path, pending);
+  }
+  if (onLoaded) {
+    void pending.then(sz => {
+      if (sz !== undefined) onLoaded();
+    });
+  }
+  return undefined;
+}
 type PreviewCameraView = 'free' | string;
 
 function getPreviewViewConfig(key: string, elevation = 45): { direction: THREE.Vector3; up: [number, number, number] } {
@@ -76,19 +108,7 @@ function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () =
 
     // Fetch file size if not cached
     if (glbPath) {
-      if (glbSizeCache.has(glbPath)) {
-        // already cached
-      } else {
-        fetch(glbPath, { method: 'HEAD' })
-          .then(res => {
-            const len = res.headers.get('content-length');
-            if (len) {
-              const sz = parseInt(len, 10);
-              if (!isNaN(sz)) glbSizeCache.set(glbPath, sz);
-            }
-          })
-          .catch(() => {});
-      }
+      ensureGlbFileSize(glbPath);
     }
 
     loader.load(glbPath, gltf => {
@@ -650,7 +670,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   const [worldSize, setWorldSize] = useState<{ x: number; y: number; z: number } | null>(null);
   const lastTargetYRef = useRef<number | null>(null);
   const lastRadiusRef = useRef<number | null>(null);
-  const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number } | null>(null);
+  const lastStatsRef = useRef<{ sz?: number; tris: number; calls: number; glbPath?: string } | null>(null);
 
   useLayoutEffect(() => {
     if (wireframe) return enableWireframe(innerRef.current, invalidate);
@@ -663,6 +683,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     const box = new THREE.Box3();
     let totalTris = 0;
     let totalMeshes = 0;
+    let previewGlbPathOverride: string | undefined;
     innerRef.current.traverse(o => {
       if ((o as THREE.Mesh).isMesh && o.visible) {
         let p: THREE.Object3D | null = o;
@@ -679,6 +700,9 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
           mesh.castShadow = true;
           mesh.receiveShadow = true;
           totalMeshes++;
+          if (previewGlbPathOverride === undefined && mesh.userData?.previewGlbPath !== undefined) {
+            previewGlbPathOverride = mesh.userData.previewGlbPath;
+          }
           if (mesh.geometry) {
             if (mesh.geometry.index) {
               totalTris += mesh.geometry.index.count / 3;
@@ -695,19 +719,22 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     });
 
     if (totalMeshes > 0 && onStats) {
-      const sz = glbPath ? glbSizeCache.get(glbPath) : undefined;
+      const effectiveGlbPath = previewGlbPathOverride !== undefined ? previewGlbPathOverride : glbPath;
+      const sz = effectiveGlbPath !== undefined ? ensureGlbFileSize(effectiveGlbPath, fit) : undefined;
       const tris = Math.round(totalTris);
       if (
         !lastStatsRef.current ||
         lastStatsRef.current.sz !== sz ||
         lastStatsRef.current.tris !== tris ||
-        lastStatsRef.current.calls !== totalMeshes
+        lastStatsRef.current.calls !== totalMeshes ||
+        lastStatsRef.current.glbPath !== effectiveGlbPath
       ) {
-        lastStatsRef.current = { sz, tris, calls: totalMeshes };
+        lastStatsRef.current = { sz, tris, calls: totalMeshes, glbPath: effectiveGlbPath };
         onStats({
           fileSize: sz,
           triangles: tris,
           drawCalls: totalMeshes,
+          glbPath: effectiveGlbPath,
         });
       }
     }
@@ -765,19 +792,8 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
     lastTargetYRef.current = null;
 
     // If glbPath is present, trigger size fetch
-    if (glbPath && !glbSizeCache.has(glbPath)) {
-      fetch(glbPath, { method: 'HEAD' })
-        .then(res => {
-          const len = res.headers.get('content-length');
-          if (len) {
-            const sz = parseInt(len, 10);
-            if (!isNaN(sz)) {
-              glbSizeCache.set(glbPath, sz);
-              fit();
-            }
-          }
-        })
-        .catch(() => {});
+    if (glbPath) {
+      ensureGlbFileSize(glbPath, fit);
     }
 
     // Retries to ensure async GLTF / cloned components (like Variera) compute matrices & meshes

@@ -82,6 +82,7 @@ import { KallaxNE }                                   from '@features/scene/item
 import { KallaxSE }                                   from '@features/scene/items/KallaxSE';
 import { KallaxNW }                                   from '@features/scene/items/KallaxNW';
 import { KallaxCuisine }                              from '@features/scene/items/KallaxCuisine';
+import { Drona }                                      from '@features/scene/items/Drona';
 import { MeubleT }                                    from '@features/scene/items/MeubleT';
 import { UtakerStack }                                from '@features/scene/items/UtakerStack';
 import { Bollsidan30574370 }                          from '@features/scene/items/Bollsidan30574370';
@@ -225,6 +226,7 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'sneaker':                SneakersRed,
   'sneakers-red':           SneakersRed,
   'meuble-t':               MeubleT,
+  'drona':                  Drona,
   'utaker-stack':           UtakerStack,
   'utaker-lower':           UtakerStack,
   'utaker-upper':           UtakerStack,

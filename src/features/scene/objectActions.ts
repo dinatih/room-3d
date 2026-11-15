@@ -57,6 +57,8 @@ const OBJECT_ACTIONS: Record<string, readonly string[]> = {
   'syck-rc003a': ['syck-rc003a-lid', 'syck-rc003a-pot'],
   'ninja-sp101': ['ninja', 'ninja-rack', 'ninja-light'],
   'freezer': ['freezer'],
+  'meuble-t': ['mannequin-meubleT-random', 'mannequin-meubleT-wig', 'mannequin-meubleT-color', 'mannequin-meubleT-wind'],
+  'drona': ['drona-model-variant'],
   'drona-ne-catchall': ['drona-ne-catchall-slide'],
   'kallax-ne-stack': ['drona-ne-catchall-slide', 'drona-ne-catchall2-slide'],
   'drona-ne-catchall2': ['drona-ne-catchall2-slide'],

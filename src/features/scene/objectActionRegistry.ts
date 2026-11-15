@@ -160,6 +160,16 @@ const ACTIONS: Record<string, ActionConfig> = {
   sdbClosetR: { label: ['Ouvrir Droite', 'Fermer Droite'] },
   cbnWest: { label: ['Ouvrir', 'Fermer'] },
   cbnEast: { label: ['Ouvrir', 'Fermer'] },
+  'drona-model-variant': {
+    label: 'Version 3D',
+    type: 'select',
+    initialValue: 'blender-red',
+    options: [
+      { value: 'blender-red', label: 'Blender Rouge (946 tris · 215,7 Ko)' },
+      { value: 'official-ikea', label: 'Officiel IKEA (45 121 tris · 367,8 Ko)' },
+      { value: 'low-poly', label: 'Ancien Low-Poly (132 tris · 0 Ko)' },
+    ],
+  },
   'drona-kitchen-diy-slide': { label: ['Sortir Bricolage', 'Ranger Bricolage'] },
   'drona-kitchen-old-it-slide': { label: ['Sortir Old IT', 'Ranger Old IT'] },
   'drona-kitchen-main-slide': { label: ['Sortir Cuisine Principale', 'Ranger Cuisine Principale'] },
