@@ -61,7 +61,7 @@ const background = process.argv.includes('--background');
     fs.writeFileSync('/tmp/room-loading-shaders.json', JSON.stringify(result, null, 2));
     console.log(JSON.stringify(result.samples.filter(sample => /scène|shaders|Compilation|Rendu|removed/.test(sample.text)), null, 2));
     assert(result.samples.some(sample => /Shaders GPU : [1-9]\d*/.test(sample.shaders)), 'Le nombre de shaders doit être affiché avant la disparition du chargement');
-    assert(background || result.samples.some(sample => /Préparation 3D \d+\/\d+ : .+/.test(sample.text)), 'Afficher le nom du matériau en préparation');
+    assert(background || result.samples.some(sample => /Préparation 3D : compilation/.test(sample.text)), 'Afficher la compilation complète de la scène');
     assert.deepEqual(result.styles[0], result.styles[1], 'Les deux lignes doivent avoir le même style');
   } finally {
     await browser?.close();

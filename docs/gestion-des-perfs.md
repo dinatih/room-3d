@@ -553,3 +553,57 @@ L'essai `pass-audit-N6ewgc`, qui activait le décor après un démarrage léger,
 Le premier essai de réactivation avait aussi reproduit une erreur explicite de `RingDroneCam` : son effet déplace `RingDock` et `RingDrone` hors du clone GLB, puis leur recherche échouait à l'exécution suivante. Le nettoyage remet maintenant ces deux objets dans le clone. La session de réactivation suivante s'est terminée sans cette erreur. Le fichier modèle n'est pas modifié.
 
 Les tests du diagnostic vérifient l'alternance des paires, l'absence de requêtes GPU imbriquées, la suppression effective des passes, la restauration après une exception, l'exclusion de la chauffe, le retour à la résolution initiale et les résultats GPU des rendus secondaires. TypeScript et 13 tests ciblés du diagnostic et de l'infrastructure passent.
+
+## Audit de la préparation 3D — 15 novembre 2026
+
+L'utilisateur constate un écran de préparation plus long depuis les changements intervenus pendant la pause. L'audit distingue le chargement/prétraitement CPU, la compilation, les transferts de textures et le premier rendu. Préparer davantage de ressources évite surtout les gels au premier usage ; cela ne constitue pas en soi un gain de FPS stabilisés.
+
+### Commits examinés et attribution
+
+| Commit | Auteur effectif | Changement pertinent |
+| --- | --- | --- |
+| `aa10870f`, 8 novembre | Codex | Ajoute la compilation par représentant de matériau, puis une compilation complète. Cette redondance est antérieure aux derniers changements de Gemini. |
+| `8eaef834`, 14 novembre | Antigravity CLI / Gemini | Initialise explicitement les textures ; désactive temporairement le culling pour préparer aussi la géométrie hors caméra et force les réflecteurs lors du premier rendu. Cela élargit le travail réalisé sous l'écran de chargement. |
+| `173cd44a`, 14 novembre | Antigravity CLI / Gemini | Attend le HDRI et fixe l'environnement avant compilation pour éviter une autre variante ultérieure ; force la visibilité des groupes de miroirs pendant la préparation. Regroupe aussi les compilations par 32, ce qui réduit les attentes par rapport à l'ancienne boucle séquentielle, sans supprimer la redondance. |
+| `a10bf62a`, `064a8529`, `4cbe87af`, `3ef9c320` | Codex | Cache des volumes, appuis de l'oiseau, fusion yeux/pistolets et diagnostics. Aucun ajout d'étape dans `GpuWarmup`. La fusion ajoute un prétraitement partagé des trois géométries, sans être identifiée comme poste dominant dans le profil de démarrage. |
+| `396d59e0`, 15 novembre | Antigravity CLI / Gemini | Nouveau clip TV. L'état `tvClip` est désactivé par défaut et `useScreenVideo` n'acquiert la vidéo que sur demande ; la lecture du code ne désigne pas ce clip comme cause de la préparation GPU par défaut. |
+
+Le prétraitement du laptop, qui ressort dans le profil CPU, est plus ancien : les derniers changements de ses fichiers de fusion remontent à octobre. On ne peut donc pas attribuer tout le temps de montage actuel aux deux seuls commits récents de Gemini.
+
+### Mesures et correction de la redondance
+
+```bash
+node scripts/profile-studio-startup.cjs --hardware-gpu
+```
+
+Le diagnostic relève les changements du libellé, les appels de compilation, les parcours des lumières, les transferts de textures et les rendus. Il enregistre aussi un profil CPU de la navigation jusqu'à la disponibilité du scénario dans `startup/startup.cpuprofile.json` (profil et repère d'horloge de la page). Un rejeu ABBA compare ensuite les stratégies sur la même scène déjà chargée, avec le rendu normal suspendu. Ce rejeu est un test de surcoût API/parcours avec cache chaud, pas un nouveau démarrage à froid.
+
+Rapport avant correction : `test-results/startup-audit-h5ZK5P/report.md`. Studio complet, neuf personnages, Mid, 1362 × 810, DPR 1, Radeon 840M/Vulkan headless, repère BNF masqué et réseau externe bloqué.
+
+- Compilation initiale : **865 appels**, 865 parcours des lumières et environ **3,25 millions de visites d'objets**. La partie synchrone cumulée représente 0,362 s ; les attentes des appels se recouvrent et ne s'additionnent pas.
+- Phase shaders/animations : environ **1,8 s** ; textures GPU : **0,76 s** ; premier rendu élargi : **0,89 s**. L'ensemble de la préparation GPU affichée dure environ **3,6 s**.
+- Le libellé « Préparation de la scène 3D » reste aussi affiché environ **8,25 s avant** cette préparation GPU. Il couvre donc un travail CPU qui ne doit pas être confondu avec la compilation.
+
+Avec cache chaud, l'ancienne méthode prend 570 et 598 ms, pour 899 appels et environ 4,8 millions de visites d'objets. Une seule compilation de scène prend 60 puis 30 ms, pour un appel et 5376 visites. Le premier passage complet crée un programme tardif (188 → 189) ; tous les suivants restent à 189, y compris l'ancienne méthode. L'API Three.js compile tous les objets rendables de la scène, y compris ceux qui partagent un matériau et les objets masqués. La boucle préalable n'ajoute donc pas de couverture à la compilation complète qui la suivait.
+
+`GpuWarmup` utilise désormais un seul `compileAsync(scene, camera)`, en parallèle de l'attente des animations. Le HDRI préalable, les transferts de textures et le rendu de préparation hors frustum/miroirs sont conservés. Le libellé indique la compilation complète, sans compteur artificiel de matériaux parcourus plusieurs fois.
+
+### Validation après correction et principale attente restante
+
+Rapport : `test-results/startup-audit-xbJuOn/report.md`, profil CPU dans le sous-dossier `startup/`, synthèse d'analyse dans `cpu-summary.json`. Le démarrage aboutit avec **un appel de compilation**, un parcours des lumières et 3116 visites au moment de cet appel. La phase shaders/animations observée dure 1,04 s, les textures 0,92 s et le rendu élargi 0,99 s. La préparation GPU affichée dure environ 3,35 s, et le rejeu atteint à nouveau 189 programmes avec les deux stratégies.
+
+Le délai avant cette phase atteint toutefois 10,43 s sur ce second relevé. Le profil CPU, aligné approximativement sur les libellés à partir de l'horloge enregistrée à l'arrêt, relève notamment :
+
+| Travail avant préparation GPU | Temps CPU échantillonné inclusif |
+| --- | ---: |
+| Prétraitement du laptop | environ 2,25 s |
+| Dont fusion par matériau, dans le laptop et les autres objets | environ 1,73 s, inclus dans les appels parents |
+| Composants Character | environ 1,25 s |
+| Clonage GLTF, tous utilisateurs confondus | environ 0,97 s |
+| Fabrication de la texture d'herbe | environ 0,47 s |
+
+Ces temps se recouvrent selon les piles et ne s'additionnent pas. React en développement, les allocations et le ramasse-miettes représentent aussi une partie du montage. Le profil confirme que l'attente n'est pas constituée uniquement de compilations GPU.
+
+La disponibilité du scénario complet est observée à 34,85 s avant et 36,45 s après ; elle inclut encore le déploiement des personnages, après la disparition du préchargement. Le second essai active en plus le profil CPU, les caches OS/pilote ne sont pas contrôlés et les montages évoluent entre les mesures : **aucun gain global de démarrage à froid n'est annoncé** à partir de ces deux valeurs. La suppression de centaines d'appels redondants est vérifiée, mais la réduction du gros travail CPU de montage reste une cible distincte, avec le laptop en premier candidat mesuré.
+
+TypeScript et 13 tests ciblés passent : une seule compilation de la scène complète, attente des dépendances, annulation et erreurs, conservation/restauration du rendu élargi et de ses miroirs, délégation correcte des méthodes instrumentées et arrêt de collecte à la fin de la préparation.

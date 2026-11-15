@@ -13,7 +13,7 @@ import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
   Mesh, PlaneGeometry, MeshStandardMaterial, WebGLRenderer,
-  PerspectiveCamera, OrthographicCamera, type LightShadow, type Material,
+  PerspectiveCamera, OrthographicCamera, type LightShadow,
 } from 'three';
 import { CameraController } from '@features/scene/CameraController';
 import { cameraState }      from '@features/scene/cameraState';
@@ -203,32 +203,11 @@ function GpuWarmup({ active, onReady }: { active: boolean; onReady: () => void }
         return null;
       });
       if (cancelled) return;
-      const targets: Mesh[] = [];
-      const seen = new Set<Material>();
-      scene.traverse(object => {
-        const mesh = object as Mesh;
-        if (!mesh.material) return;
-        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        if (materials.every(material => seen.has(material))) return;
-        materials.forEach(material => seen.add(material));
-        targets.push(mesh);
-      });
-      const COMPILE_BATCH_SIZE = 32;
-      for (let i = 0; i < targets.length; i += COMPILE_BATCH_SIZE) {
-        // Éviter une temporisation de compilation ralentie par objet en arrière-plan.
-        if (document.hidden) break;
-        const batch = targets.slice(i, i + COMPILE_BATCH_SIZE);
-        const doneCount = Math.min(i + batch.length, targets.length);
-        const lastMat = batch[batch.length - 1]?.material;
-        const lastList = Array.isArray(lastMat) ? lastMat : lastMat ? [lastMat] : [];
-        const name = lastList.map(material => material.name || material.type).join(', ');
-        phase(`⚡ Préparation 3D ${doneCount}/${targets.length} : ${name}`);
-        updateShaders();
-        await Promise.all(batch.map(mesh => gl.compileAsync(mesh, camera, scene)));
-        if (cancelled) return;
-      }
-      // Compléter les variantes liées aux autres objets partageant un matériau.
-      phase('⚡ Finalisation des shaders et animations…');
+      // Three.js visits every renderable, including hidden objects and meshes
+      // sharing a material. Per-material calls repeat the scene's light scan
+      // and are redundant with this complete compilation.
+      phase('⚡ Préparation 3D : compilation des shaders et animations…');
+      updateShaders();
       await Promise.all([gl.compileAsync(scene, camera), animsPromise]);
       if (cancelled) return;
       updateShaders();

@@ -45,7 +45,7 @@ exports.withBrowser = async (fixture, exercise) => {
         environment: { platform: os.platform(), release: os.release(), arch: os.arch(), cpus: os.cpus(), memoryBytes: os.totalmem(), node: process.version },
         reproduction: fixture.reproduction ?? `npm run test:${process.env.ROOM_TEST_SUITE === 'perf' ? 'perf' : 'studio'} -- --case=${fixture.configurationId ?? fixture.id}${process.argv.includes('--hardware-gpu') ? ' --hardware-gpu' : ''}` };
     const save = () => fs.writeFileSync(path.join(directory, 'result.json'), JSON.stringify(result, null, 2));
-    let browser, server, heartbeat, loadingProgress, cacheDir, debuggerSession, closing = false, lastHeartbeat = Date.now();
+    let browser, server, heartbeat, loadingProgress, cacheDir, debuggerSession, startupProfiler, closing = false, lastHeartbeat = Date.now();
     const start = performance.now();
     let rejectBrowser;
     const browserFailure = new Promise((_, reject) => { rejectBrowser = reject; });
@@ -109,6 +109,12 @@ exports.withBrowser = async (fixture, exercise) => {
         if (fixture.fixedEnvironment && (!result.gpu.gpu.devices.length || /swiftshader|llvmpipe|software/i.test(JSON.stringify(result.gpu.gpu.devices))))
             throw Error('Performance reference requires a verified hardware GPU; software rendering is not comparable');
         const page = await browser.newPage();
+        if (fixture.captureStartup) {
+            await page.evaluateOnNewDocument(require('./startup-metrics.cjs').installStartupMetrics);
+            startupProfiler = await page.createCDPSession();
+            await startupProfiler.send('Profiler.enable');
+            await startupProfiler.send('Profiler.start');
+        }
         const fail = error => { if (closing) return; result.errors.push(error.stack ?? String(error)); save(); rejectBrowser(Error(String(error))); };
         const blockedExternalUrls = new Set();
         if (fixture.localResourcesOnly) {
@@ -221,6 +227,13 @@ exports.withBrowser = async (fixture, exercise) => {
                 return cameraState.isSceneLaunched && !cameraState.isIntroRunning && window.__THREE_GL__ && furnitureObstacles.size > 0 && window.__testReadiness.every(character => character.ready);
             }, { timeout: fixture.readinessTimeoutMs }, fixture.count);
             result.startupMs = performance.now() - startup;
+            if (startupProfiler) {
+                const { profile } = await startupProfiler.send('Profiler.stop');
+                const pageAtStop = await page.evaluate(() => performance.now());
+                fs.writeFileSync(path.join(directory, 'startup.cpuprofile.json'), JSON.stringify({ pageAtStop, profile }));
+                await startupProfiler.detach();
+                startupProfiler = undefined;
+            }
             clearInterval(loadingProgress);
             progress(`Scène prête après ${(result.startupMs / 1000).toFixed(1)} s`);
             result.loaded = await page.evaluate(async (fixture) => {

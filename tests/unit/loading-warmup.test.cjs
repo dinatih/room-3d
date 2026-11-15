@@ -14,6 +14,7 @@ function deferred() {
 function warmup() {
   const shaders = deferred(), animation = deferred(), sky = deferred(), timers = new Map();
   let effect, error = null, nextId = 0, ready = 0, invalidations = 0, compilations = 0, renders = 0, hook = 0;
+  const compilationTargets = [];
   const elements = { 'loading-bar': { style: {}, classList: { add() {} } }, 'loading-item': {} };
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
   const mirror = new THREE.Mesh(new THREE.PlaneGeometry(), new THREE.MeshBasicMaterial());
@@ -31,7 +32,7 @@ function warmup() {
     },
     '@react-three/fiber': { useFrame() {}, useThree: () => ({
       gl: {
-        compileAsync: () => { compilations++; return shaders.promise; }, shadowMap: {}, info: { programs: [] },
+        compileAsync: target => { compilations++; compilationTargets.push(target); return shaders.promise; }, shadowMap: {}, info: { programs: [] },
         render() {
           renders++;
           assert.equal(mirror.frustumCulled, false);
@@ -61,7 +62,7 @@ function warmup() {
   const render = () => { hook = 0; return GpuWarmup({ active: true, onReady: () => ready++ }); };
   render();
   return {
-    shaders, animation, sky, timers, render, elements, mirror, group, start: () => effect(),
+    shaders, animation, sky, timers, render, elements, mirror, group, scene, compilationTargets, start: () => effect(),
     get compilations() { return compilations; }, get renders() { return renders; },
     get ready() { return ready; }, get invalidations() { return invalidations; },
     async timer() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach(fn => fn()); await tick(); },
@@ -76,7 +77,8 @@ it('attend HDRI, shaders et animations puis prépare un rendu et restaure les mi
   test.sky.resolve(); await tick();
   assert.equal(test.compilations, 1);
   test.shaders.resolve(); await tick();
-  assert.equal(test.compilations, 2);
+  assert.equal(test.compilations, 1);
+  assert.deepEqual(test.compilationTargets, [test.scene]);
   assert.equal(test.timers.size, 0);
   test.animation.resolve(); await tick();
   assert.match(test.elements['loading-item'].textContent, /Initialisation du rendu 3D/);
