@@ -54,10 +54,34 @@ export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = '
 
   useLayoutEffect(() => {
     scene.traverse(child => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
+      if (!(child instanceof THREE.Mesh)) return;
+      child.castShadow = true;
+      child.receiveShadow = true;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      const updated = materials.map((mat) => {
+        if (!(mat instanceof THREE.MeshStandardMaterial)) return mat;
+        if (mat.name === 'M_Cornea' || mat.name === 'M_CometCornea') return mat;
+        const isBody = mat.name === 'M_JikinBody' || mat.name === 'M_TosakinBody'
+          || (mat.name === 'M_CometSp' && child.name === 'body');
+        if (isBody) {
+          // Body must be opaque so water, shadows, and gizmos never bleed through it.
+          const bodyMat = mat.name === 'M_CometSp' ? mat.clone() : mat;
+          bodyMat.transparent = false;
+          bodyMat.depthWrite = true;
+          bodyMat.alphaTest = 0;
+          bodyMat.needsUpdate = true;
+          return bodyMat;
+        }
+        if (mat.name === 'M_JikinFins' || mat.name === 'M_TosakinFins' || mat.name === 'M_CometSp') {
+          // Alpha cutout in the opaque pass keeps depth sorting consistent under water.
+          mat.transparent = false;
+          mat.depthWrite = true;
+          mat.alphaTest = 0.25;
+          mat.needsUpdate = true;
+        }
+        return mat;
+      });
+      child.material = Array.isArray(child.material) ? updated : updated[0];
     });
     const ai = life.current;
     ai.timer = clips.idle.duration * 2;
