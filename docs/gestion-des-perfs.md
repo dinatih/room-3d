@@ -639,3 +639,39 @@ L'export livre directement **six primitives matériau**, au lieu des 107 meshes 
 La visibilité est évaluée par rayons depuis les centres et les coins intérieurs des triangles, dans 26 directions et suivant leurs normales. C'est un échantillonnage, pas une preuve de visibilité pour tous les angles possibles. Les détails visibles des prises restent conservés. Les rendus Blender avant/après (face, trois-quarts, dos, dessous) et la réimportation du GLB final avec les deux profils latéraux ont été inspectés ; l'écart moyen des images est inférieur à 0,06/255 par canal entre le `.blend` final et son GLB. Les images et l'audit détaillé des faces sont dans `test-results/laptop-authoring/`.
 
 Pour modifier et réexporter, voir le README situé à côté du modèle. Les tests ciblés couvrent le cache après cinquante reprises, l'indépendance des clones, le budget de primitives/triangles et la présence des deux ports USB-C rouges aux emplacements arrière. TypeScript et les dix tests ciblés passent. Aucun gain FPS du nouveau modèle n'est encore mesuré.
+
+## Essai de regroupement des ombres statiques — 15 novembre 2026 (non activé)
+
+Le prototype expérimental est conservé dans `tests/fixtures/static-shadow-batches.ts`, **sans intégration dans le rendu de l'application**. Le diagnostic collecte les meshes issus de `MergedStaticGroup` et conserve leurs matériaux pour l'image principale et la sélection. Il prépare une géométrie de profondeur commune pour les meshes frères opaques compatibles : mêmes transformations locales, calques, faces et politique de culling. Cette géométrie ne contient que les positions et les indices nécessaires aux ombres. Aucune résolution d'affichage, de texture ou de shadow map n'est modifiée.
+
+Le contrôleur intervient uniquement autour de `renderer.shadowMap.render`, après la construction des listes principales. Pendant cet appel, le premier mesh utilise la géométrie commune et un matériau donnant la même profondeur ; les autres suspendent leur projection. Un `finally` rétablit toutes les références et les indicateurs avant le rendu couleur, y compris lorsqu'une erreur remonte. Les données ne sont pas reconstruites par image et sont libérées à la fermeture du diagnostic.
+
+Les meshes à découpe alpha, transparents, déformés, clippés, en wireframe ou dotés d'un matériau de profondeur personnalisé restent sur le rendu normal. Un changement indépendant de visibilité, de matériau, de géométrie, de transformation, de calque ou de projection suspend le regroupement du lot concerné. Les personnages, animaux et drones ne passent pas par ce mécanisme. VSM est exclu, ainsi que les images recalculant les ombres cubiques d'une lumière ponctuelle : le culling par face du cube pourrait sinon augmenter fortement le nombre de triangles soumis. Une vue différente peut également modifier l'équilibre entre regroupement et culling des lots ; il faut continuer à le surveiller.
+
+### Contrôles et reproduction
+
+```bash
+# Petite scène isolée : comparaison des pixels, lumières directionnelle et spot.
+node scripts/check-static-shadow-batches.cjs --hardware-gpu
+# Un chargement complet du Studio, puis paires et blocs avec/sans regroupement.
+node scripts/profile-studio-passes.cjs --hardware-gpu --static-shadows
+```
+
+`baseline` désigne ici la version regroupée ; `static-shadow-batches-off` rétablit les meshes séparés. Le mode ciblé conserve 1362 × 810, DPR 1 pendant toute la campagne, sans test de résolution réduite. Les comparaisons de pixels sont séparées des échantillons de temps : les `readPixels` de cette vérification ne sont pas ajoutés aux campagnes FPS ordinaires.
+
+Rapport Studio : `test-results/pass-audit-KlY9nO/report.md`, mesures brutes dans `comparison.json`. Radeon 840M/Vulkan headless, Mid, neuf Laras et contenu par défaut chargé dès le départ, PNJ actifs, secteur, onglets Room-3D de l'utilisateur fermés. Sur les **60 paires**, le regroupement économise **exactement 68 soumissions par image**, avec **zéro différence de triangles soumis**. La comparaison du framebuffer compte sept composantes différentes sur 4 412 880, d'une unité sur 255 au maximum.
+
+| Mesure | Meshes séparés | Regroupement |
+| --- | ---: | ---: |
+| Dessins totaux, médiane des paires | 1668 | 1600 |
+| GPU, médiane des paires | 15,26 ms | 15,22 ms |
+| CPU du rendu, médiane des paires | 14,80 ms | 15,10 ms |
+| Cadence, blocs symétriques de 8 s | 26,73 / 26,72 FPS | 25,73 / 27,21 FPS |
+
+Ce relevé établit l'économie de soumissions et la conservation de l'image, **pas une hausse de FPS**. Le prototype n'est donc pas activé en production : son surcoût CPU/mémoire n'est pas justifié par ces résultats. Le temps GPU est presque identique et le temps CPU n'est pas amélioré sur cet essai. La mémoire disponible est basse (1,34 → 1,26 Gio) et le swap augmente d'environ 0,21 Gio : cette campagne ne constitue pas une référence FPS propre. Les géométries de profondeur ajoutent des buffers de positions/indices ; aucune baisse de RAM n'est annoncée.
+
+Contrôle isolé : `test-results/static-shadow-check-FK4pPb/comparison.json`. Douze dessins d'ombres deviennent un pour une lumière directionnelle et un spot, avec **zéro pixel différent** et treize dessins principaux conservés. Un masquage indépendant rétablit correctement les onze dessins d'ombres restants. Le contrôle a été répété après finalisation du mécanisme.
+
+TypeScript et **18 tests ciblés** passent : activation explicite et nettoyage du prototype, restauration après exception, masquages/calques, déformations et découpes exclues, ombres cubiques, démontage, géométries et raycasting des lots statiques, paires GPU et comparaison des pixels. L'exécution non filtrée de `static-scene-cleanup.test.cjs` retrouve aussi les deux échecs préexistants déjà documentés : mock du renderer des miroirs et dépendance `redFabricMaterial` du test UTÅKER. La suite globale n'est pas déclarée verte.
+
+Le prochain poste important reste la production des ombres et les soumissions des Laras : leur coût avait été distingué par l'audit du 14 novembre. Cette investigation ne change aucun réglage ni aucune passe du Studio en dehors du diagnostic explicite.

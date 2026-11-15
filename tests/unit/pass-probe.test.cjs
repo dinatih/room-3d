@@ -1,16 +1,18 @@
 const {it}=require('node:test');
 const assert=require('node:assert/strict');
 const {installPassProbe}=require('../support/pass-probe.cjs');
-async function setup() {
+async function setup(staticExperiment=true) {
     const root={name:'Native',visible:true,userData:{dynamicActor:true}};
     const material={name:'glass',transmission:1};
     const mirror={isReflector:true,name:'mirror',onBeforeRender:null};
-    const main={name:'main',getObjectByName:()=>root,traverse:visit=>{visit(mirror);visit({name:'glass',material});}};
+    const parent={},staticMeshes=[0,1].map(()=>({isMesh:true,userData:{isMergedStatic:true},parent}));
+    const main={name:'main',getObjectByName:()=>root,traverse:visit=>{visit(mirror);visit({name:'glass',material});staticMeshes.forEach(visit);}};
     let target=null,activeQuery=null,clock=0,throwOnHidden=false,pixelRatio=1;
     const timers=[];
     const context={GPU_DISJOINT_EXT:1,QUERY_RESULT_AVAILABLE:2,QUERY_RESULT:3,
         getExtension:()=>({GPU_DISJOINT_EXT:1,TIME_ELAPSED_EXT:4}),getParameter:()=>false,
         get drawingBufferWidth(){return Math.floor(640*pixelRatio);},get drawingBufferHeight(){return Math.floor(480*pixelRatio);},
+        readPixels(_x,_y,_w,_h,_format,_type,pixels){pixels.fill(17);},
         createQuery:()=>({}),beginQuery(_type,query){assert.equal(activeQuery,null,'GPU queries must not nest');activeQuery=query;},
         endQuery(){activeQuery.ns=1e6;activeQuery=null;},getQueryParameter:(_query,parameter)=>parameter===2?true:1e6,deleteQuery(){} };
     const renderer={
@@ -28,15 +30,18 @@ async function setup() {
     mirror.onBeforeRender=()=>{const previous=target;target={uuid:'reflection'};renderer.render(main,{nested:true});target=previous;};
     const original={render:renderer.render,direct:renderer.renderBufferDirect,shadow:renderer.shadowMap.render,mirror:mirror.onBeforeRender};
     const window={__THREE_GL__:renderer,__THREE_SCENE__:main};
+    const batching={enabled:true};
+    const lifecycle={registrations:0,installed:false};
     const imports={
+        '/tests/fixtures/static-shadow-batches.ts': { staticShadowBatching: batching, registerStaticShadowBatches: (scene,meshes) => {assert.equal(scene,main);assert.deepEqual(meshes,staticMeshes);lifecycle.registrations++;return ()=>lifecycle.registrations--;}, installStaticShadowBatching: () => {lifecycle.installed=true;return ()=>{lifecycle.installed=false;};} },
         '/src/features/scene/characterConfig.ts':{CHARACTERS:[{id:'native',name:'Native'}]},
         '/src/features/scene/DevToolsCollector.tsx':{resolveEntityKey:object=>object.name},
     };
     const install=new Function('window','performance','requestAnimationFrame','setTimeout','modules',`return (${installPassProbe.toString().replaceAll('await import(', 'await modules(')});`)(window,{now:()=>++clock},fn=>queueMicrotask(fn),fn=>timers.push(fn),async name=>{
         assert.ok(name in imports,`Unexpected module ${name}`);return imports[name];
     });
-    await install(['native']);
-    return {renderer,root,material,mirror,main,original,probe:window.__passProbe,fail(){throwOnHidden=true;},async timer(){timers.shift()();await Promise.resolve();},
+    await install(['native'],staticExperiment);
+    return {renderer,root,material,mirror,main,original,batching,lifecycle,probe:window.__passProbe,fail(){throwOnHidden=true;},async timer(){timers.shift()();await Promise.resolve();},
         secondary(){target={uuid:'feed'};try{renderer.render(main,{nested:true});}finally{target=null;}}};
 }
 it('alterne les paires à pose identique et mesure les passes imbriquées sans requête GPU imbriquée',async()=>{
@@ -99,4 +104,19 @@ it('trace les rendus secondaires et leurs résultats GPU sans les confondre avec
     assert.equal(auxiliary[0].secondary,true);
     assert.equal(auxiliary[0].target,'feed');
     assert.equal(auxiliary[0].gpuMs,1);
+});
+
+it('compare les pixels à pose identique et restaure le mode de regroupement des ombres',async()=>{
+    const test=await setup();
+    const pending=test.probe.pixels('static-shadow-batches-off');test.renderer.render(test.main,{});
+    assert.deepEqual(await pending,{components:640*480*4,different:0,maxDifference:0});
+    assert.equal(test.batching.enabled,true);test.probe.dispose();assert.equal(test.batching.enabled,true);
+});
+
+it('charge et nettoie le prototype uniquement pour le diagnostic explicite',async()=>{
+    for(const enabled of [false,true]){
+        const test=await setup(enabled);
+        assert.equal(test.lifecycle.registrations,enabled?1:0);assert.equal(test.lifecycle.installed,enabled);
+        test.probe.dispose();assert.deepEqual(test.lifecycle,{registrations:0,installed:false});
+    }
 });

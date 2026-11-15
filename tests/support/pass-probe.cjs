@@ -1,7 +1,22 @@
 // Browser-only diagnostic. Paired renders share one pose; cadence blocks run normally.
-exports.installPassProbe = async function (ids) {
+exports.installPassProbe = async function (ids, staticShadowExperiment = false) {
     const renderer = window.__THREE_GL__, main = window.__THREE_SCENE__;
     const { CHARACTERS } = await import('/src/features/scene/characterConfig.ts');
+    let staticShadowBatching = { enabled: false }, cleanupBatching = () => {};
+    if (staticShadowExperiment) {
+        const experiment = await import('/tests/fixtures/static-shadow-batches.ts');
+        staticShadowBatching = experiment.staticShadowBatching;
+        const groups = new Map();
+        main.traverse(object => {
+            if (!object.isMesh || !object.userData.isMergedStatic) return;
+            const meshes = groups.get(object.parent) ?? [];
+            meshes.push(object); groups.set(object.parent, meshes);
+        });
+        const cleanups = [...groups.values()].map(meshes => experiment.registerStaticShadowBatches(main, meshes));
+        const uninstall = experiment.installStaticShadowBatching(renderer, main);
+        cleanupBatching = () => { uninstall(); for (const cleanup of cleanups) cleanup(); };
+    }
+    const batchingEnabled = staticShadowBatching.enabled;
     const { resolveEntityKey } = await import('/src/features/scene/DevToolsCollector.tsx');
     const roots = ids.map(id => {
         const root = main.getObjectByName(CHARACTERS.find(character => character.id === id).name);
@@ -34,6 +49,7 @@ exports.installPassProbe = async function (ids) {
         }
     };
     const configure = mode => {
+        staticShadowBatching.enabled = mode === 'static-shadow-batches-off' ? false : batchingEnabled;
         renderer.shadowMap.enabled = mode === 'shadows-off' ? false : shadowsEnabled;
         for (const mirror of mirrors) mirror.object.onBeforeRender = mode === 'mirror-update-off' ? noop : mirror.before;
         for (const [material, entry] of transmission) {
@@ -92,7 +108,23 @@ exports.installPassProbe = async function (ids) {
             return;
         }
         const frame = task.frame++;
-        if (task.kind === 'pairs') {
+        if (task.kind === 'pixels') {
+            const buffers = [];
+            for (const mode of ['baseline', task.mode]) {
+                draw(scene, camera, mode, frame);
+                const pixels = new Uint8Array(context.drawingBufferWidth * context.drawingBufferHeight * 4);
+                context.readPixels(0, 0, context.drawingBufferWidth, context.drawingBufferHeight, context.RGBA, context.UNSIGNED_BYTE, pixels);
+                buffers.push(pixels);
+            }
+            let different = 0, maxDifference = 0;
+            for (let i = 0; i < buffers[0].length; i++) {
+                const delta = Math.abs(buffers[0][i] - buffers[1][i]);
+                if (delta) different++;
+                maxDifference = Math.max(maxDifference, delta);
+            }
+            const done = task.resolve; task = null;
+            done({ components: buffers[0].length, different, maxDifference });
+        } else if (task.kind === 'pairs') {
             const modes = frame % 2 ? [task.mode, 'baseline'] : ['baseline', task.mode];
             for (const mode of modes) {
                 const row = draw(scene, camera, mode, frame);
@@ -116,6 +148,10 @@ exports.installPassProbe = async function (ids) {
         get secondaryCount() { return auxiliary.length; },
         info: { timerAvailable: !!timer, ratio, roots: roots.map(root => root.name), mirrors: mirrors.length,
             transmission: [...transmission].map(([material, entry]) => ({ name: material.name, value: entry.value, objects: [...entry.objects] })) },
+        async pixels(mode) {
+            const comparison = await new Promise(resolve => { task = { kind: 'pixels', mode, resolve, frame: 0 }; });
+            await waitQueries(); return comparison;
+        },
         async pairs(mode, frames = 60, warmFrames = 12) {
             const rows = [];
             await new Promise(resolve => { task = { kind: 'pairs', mode, frames, warmFrames, rows, resolve, frame: 0 }; });
@@ -138,7 +174,7 @@ exports.installPassProbe = async function (ids) {
         },
         dispose() {
             task = null; renderer.render = render; renderer.shadowMap.render = shadow; renderer.renderBufferDirect = direct;
-            renderer.setPixelRatio(ratio); configure('baseline');
+            renderer.setPixelRatio(ratio); configure('baseline'); cleanupBatching();
             for (const { query } of pending) context.deleteQuery(query);
             return { auxiliary, disjoint };
         },

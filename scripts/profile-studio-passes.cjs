@@ -18,6 +18,7 @@ const fixture = { ...require('../tests/fixtures/cases.cjs').performance[process.
 // Enabling layers afterwards also exercises lifecycle paths and changes the setup.
 fixture.query = {...fixture.query, bnfMarker:'0'};
 const progress = createProgress(fixture.id);
+const staticShadows = process.argv.includes('--static-shadows');
 const report = { commit:process.env.ROOM_TEST_COMMIT, dirty:process.env.ROOM_TEST_DIRTY==='true', fixture, pairs:[], blocks:[] };
 const stats = values => values.length ? summary(values) : null;
 function pairSummary(data) {
@@ -45,18 +46,23 @@ withBrowser(fixture, async(page,result)=>{
         const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');
         const gl=window.__THREE_GL__;return {layers:useSceneStore.getState().layers,drawingBuffer:[gl.domElement.width,gl.domElement.height],programs:gl.info.programs.length};
     });
-    await page.evaluate(installPassProbe,result.loaded.models.map(model=>model.id));
+    await page.evaluate(installPassProbe,result.loaded.models.map(model=>model.id),staticShadows);
     report.info=await page.evaluate(()=>window.__passProbe.info);save();
     try {
-        for (const mode of ['shadow-update-off','shadows-off','mirror-update-off','transmission-off','actors-draw-off']) {
+        for (const mode of staticShadows ? ['static-shadow-batches-off'] : ['shadow-update-off','shadows-off','mirror-update-off','transmission-off','actors-draw-off']) {
             progress(`Paires à pose identique : ${mode}…`);
             const data=await page.evaluate(mode=>window.__passProbe.pairs(mode),mode);
             const row=pairSummary(data);report.pairs.push(row);save();
             progress(`${mode} : GPU ${row.baselineGpuMs?.median.toFixed(2) ?? 'indisponible'} → ${row.variantGpuMs?.median.toFixed(2) ?? 'indisponible'} ms ; dessins ${row.baselineCalls?.median} → ${row.variantCalls?.median}`);
         }
+        if (staticShadows) {
+            report.pixels = await page.evaluate(()=>window.__passProbe.pixels('static-shadow-batches-off'));
+            if (report.pixels.maxDifference > 1) throw Error(`Static shadow batching changed the framebuffer: ${JSON.stringify(report.pixels)}`);
+            progress(`Pixels : ${report.pixels.different}/${report.pixels.components} composantes différentes ; écart max ${report.pixels.maxDifference}/255`); save();
+        }
         const candidates=report.pairs.filter(row=>row.gpuSavedPercent?.median>0 && row.baselineCalls?.median!==row.variantCalls?.median);
-        const best=candidates.sort((a,b)=>b.gpuSavedPercent.median-a.gpuSavedPercent.median)[0]?.mode;
-        const variants=[...(best?[best]:[]),'resolution-70'];
+        const best=staticShadows ? 'static-shadow-batches-off' : candidates.sort((a,b)=>b.gpuSavedPercent.median-a.gpuSavedPercent.median)[0]?.mode;
+        const variants=staticShadows ? [best] : [...(best?[best]:[]),'resolution-70'];
         if(await page.evaluate(()=>window.__passProbe.secondaryCount))variants.push('secondary-off');
         const sequence=['baseline',...variants,...variants.toReversed(),'baseline'];
         report.cadenceCandidate=best ?? null;
@@ -78,6 +84,7 @@ withBrowser(fixture, async(page,result)=>{
         '', 'Diagnostic exploratoire, PNJ actifs. Les paires rendent la même pose dans un ordre alterné ; leurs cadences doubles ne représentent pas les FPS normaux. Les blocs suivants mesurent la cadence normale avec le même instrument. Réseau externe bloqué. Aucun réglage visuel par défaut n’est modifié.',
         '', '| Diagnostic | GPU référence → test (ms médianes) | CPU rendu référence → test (ms) | Dessins référence → test | Gain GPU médian par paire |', '| --- | ---: | ---: | ---: | ---: |',
         ...report.pairs.map(row=>`| ${row.mode} | ${f(row.baselineGpuMs?.median)} → ${f(row.variantGpuMs?.median)} | ${f(row.baselineCpuMs?.median)} → ${f(row.variantCpuMs?.median)} | ${f(row.baselineCalls?.median)} → ${f(row.variantCalls?.median)} | ${f(row.gpuSavedPercent?.median)} % |`),
+        ...(report.pixels ? ['', `Framebuffer à pose identique : ${report.pixels.different}/${report.pixels.components} composantes différentes ; écart maximal ${report.pixels.maxDifference}/255.`] : []),
         '', '| Bloc de cadence | FPS | Image p95 (ms) | GPU médian (ms) | Résolution |', '| --- | ---: | ---: | ---: | --- |',
         ...report.blocks.map(row=>`| ${row.mode} | ${f(row.fps)} | ${f(row.frameMs?.p95)} | ${f(row.gpuMs?.median)} | ${row.drawingBuffer.join(' × ')} |`),
         '', 'Les diagnostics cachent temporairement certains dessins, figent des cartes ou suppriment un effet. Leur gain indique une sensibilité, pas une optimisation visuellement équivalente. Les coûts ne s’additionnent pas. `actors-draw-off` conserve la simulation et les animations CPU. `shadow-update-off` conserve la lecture des cartes précédentes. Les timings CPU incluent les appels au pilote et peuvent subir son attente.',
