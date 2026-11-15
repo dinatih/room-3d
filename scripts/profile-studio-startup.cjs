@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const assert = require('node:assert/strict');
 const {execFileSync} = require('node:child_process');
 const {withBrowser} = require('../tests/support/browser.cjs');
 process.env.ROOM_TEST_SUITE='perf';
@@ -11,7 +12,8 @@ process.env.ROOM_TEST_DIRTY=String(!!execFileSync('git',['status','--porcelain']
 const fixture={...require('../tests/fixtures/cases.cjs').performance['studio-9-mid-day'],id:'startup',captureStartup:true,localResourcesOnly:true,timeoutMs:120000};
 fixture.query={...fixture.query,bnfMarker:'0'};
 withBrowser(fixture,async(page,result)=>{
-    const startup=await page.evaluate(()=>window.__startupMetrics);
+    const startup=await page.evaluate(()=>({...window.__startupMetrics,laptopPreparations:window.__laptopPreparations}));
+    assert(Number.isInteger(startup.laptopPreparations) && startup.laptopPreparations > 0, 'Laptop preparation instrumentation missing: check the source hook or fixture');
     fs.writeFileSync(`${directory}/startup.json`,JSON.stringify({startupMs:result.startupMs,renderer:result.loaded.renderer,host:result.hostAtStart,...startup},null,2));
     console.log('Comparaison des stratégies de compilation sur la même scène, cache déjà chaud…');
     const replay=await page.evaluate(async()=>{
@@ -50,6 +52,7 @@ withBrowser(fixture,async(page,result)=>{
     const compile=startup.calls.filter(row=>row.method==='compileAsync');
     const lines=['# Audit de préparation 3D','',`Commit ${process.env.ROOM_TEST_COMMIT}, arbre modifié : ${process.env.ROOM_TEST_DIRTY}. GPU : ${result.loaded.renderer}. Studio neuf personnages, Mid, 1362 × 810, repère BNF masqué, réseau externe bloqué.`,
         '',`Démarrage jusqu’à disponibilité du scénario : ${(result.startupMs/1000).toFixed(2)} s. Ce délai inclut le chargement et le déploiement des personnages.`,
+        '',`Prétraitements du laptop exécutés : ${startup.laptopPreparations ?? 'non observé'}.`,
         '',`Compilation initiale : ${compile.length} appels, ${compile.reduce((n,x)=>n+x.scans,0)} parcours des lumières et ${compile.reduce((n,x)=>n+x.visits,0)} visites d’objets ; ${(compile.reduce((n,x)=>n+x.syncMs,0)/1000).toFixed(3)} s synchrones cumulées. Les durées asynchrones se recouvrent et ne s’additionnent pas.`,
         '', '| Phase affichée | Début (s) | Durée avant le prochain libellé (s) |','| --- | ---: | ---: |',
         ...phases.filter(row=>!row.text.startsWith('📦')).map(row=>`| ${row.text.replaceAll('|','/')} | ${(row.at/1000).toFixed(3)} | ${Number.isFinite(row.ms)?(row.ms/1000).toFixed(3):'—'} |`),

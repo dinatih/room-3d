@@ -607,3 +607,35 @@ Ces temps se recouvrent selon les piles et ne s'additionnent pas. React en déve
 La disponibilité du scénario complet est observée à 34,85 s avant et 36,45 s après ; elle inclut encore le déploiement des personnages, après la disparition du préchargement. Le second essai active en plus le profil CPU, les caches OS/pilote ne sont pas contrôlés et les montages évoluent entre les mesures : **aucun gain global de démarrage à froid n'est annoncé** à partir de ces deux valeurs. La suppression de centaines d'appels redondants est vérifiée, mais la réduction du gros travail CPU de montage reste une cible distincte, avec le laptop en premier candidat mesuré.
 
 TypeScript et 13 tests ciblés passent : une seule compilation de la scène complète, attente des dépendances, annulation et erreurs, conservation/restauration du rendu élargi et de ses miroirs, délégation correcte des méthodes instrumentées et arrêt de collecte à la fin de la préparation.
+
+### Laptop : reprises Suspense, puis préparation hors ligne (15 novembre 2026)
+
+Le compteur ajouté au diagnostic révèle **50 prétraitements du même laptop** pendant le montage. Le `useMemo` du composant ne survit pas aux rendus abandonnés par Suspense : clonage, reconstruction des ports, filtrage des faces et fusion étaient répétés. `getPreparedLaptopScene` conserve désormais un template dans une `WeakMap` indexée par la scène source du loader. `useGLTFClone` clone ce template pour chaque instance ; les transformations, la visibilité et les layers restent indépendants. Une nouvelle scène source déclenche une nouvelle préparation.
+
+Deux relevés exploratoires avec profil CPU actif, avant les modifications du modèle décrites ci-dessous :
+
+| Indicateur | Avant (`startup-audit-JvXylF`) | Cache (`startup-audit-SD2k5c`) |
+| --- | ---: | ---: |
+| Prétraitements laptop | 50 | 1 |
+| CPU inclusif échantillonné laptop, avant préparation GPU | 2079 ms | 50 ms |
+| Fin de préparation GPU, depuis navigation | 20,43 s | 16,96 s |
+| Scénario prêt, déploiement des personnages inclus | 36,72 s | 32,70 s |
+
+Même scénario Studio neuf personnages Mid, 1362 × 810 DPR 1, Radeon 840M/Vulkan headless, réseau externe bloqué. Ce sont deux observations avec caches OS/pilote et charge machine non contrôlés, pas une campagne de référence ni une mesure de gain FPS. Le diagnostic échoue explicitement si son compteur de prétraitement n'est plus instrumenté.
+
+Le modèle a ensuite été repris dans `public/items/framework-laptop13/framework-laptop13.blend`. Les couleurs, le placement des ports et la correction des faces écran/logo y sont intégrés. Le code JavaScript de personnalisation a été supprimé. L'export fusionne les primitives par matériau et applique Draco **sans quantification** ; le script vérifie que décoder le fichier conserve exactement les indices et attributs avant d'écrire le GLB final.
+
+| Géométrie | Triangles |
+| --- | ---: |
+| Ancien laptop après son traitement JS | 176 678 |
+| CAD avec les nouveaux ports, avant nettoyage des faces masquées | 178 816 |
+| Après suppression de 15 944 faces masquées | 162 872 |
+| Après dissolution des subdivisions coplanaires | **162 794** |
+
+La baisse est de **9,0 % à configuration de ports identique**, et de **7,9 % par rapport à l'ancien modèle rendu dans l'app**. Les deux bases diffèrent à cause du remplacement d'une carte très simple par une seconde USB-C détaillée. Le GLB passe de 4 457 976 à **4 442 208 octets** : ne pas annoncer une grosse réduction du téléchargement ou de la RAM.
+
+L'export livre directement **six primitives matériau**, au lieu des 107 meshes du CAD exporté par Blender. L'ancien code fusionnait déjà le laptop à l'exécution : ce nombre ne représente donc pas un nouveau gain de 107 → 6 appels sur une scène déjà chargée. L'écran vidéo React reste un appel supplémentaire, hors passes d'ombres et reflets. Le bezel et les deux cartes USB-C partagent un matériau rouge opaque mat pour conserver six primitives.
+
+La visibilité est évaluée par rayons depuis les centres et les coins intérieurs des triangles, dans 26 directions et suivant leurs normales. C'est un échantillonnage, pas une preuve de visibilité pour tous les angles possibles. Les détails visibles des prises restent conservés. Les rendus Blender avant/après (face, trois-quarts, dos, dessous) et la réimportation du GLB final avec les deux profils latéraux ont été inspectés ; l'écart moyen des images est inférieur à 0,06/255 par canal entre le `.blend` final et son GLB. Les images et l'audit détaillé des faces sont dans `test-results/laptop-authoring/`.
+
+Pour modifier et réexporter, voir le README situé à côté du modèle. Les tests ciblés couvrent le cache après cinquante reprises, l'indépendance des clones, le budget de primitives/triangles et la présence des deux ports USB-C rouges aux emplacements arrière. TypeScript et les dix tests ciblés passent. Aucun gain FPS du nouveau modèle n'est encore mesuré.

@@ -2,15 +2,15 @@
  * Laptop.tsx — Framework Laptop 13".
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
  *
- * Charge le GLB Draco (4.3 MB, ~3107 draw calls).
- * Overrides : bezel + cartes d'extension rouges, positions des slots.
+ * Charge le GLB Draco exporté depuis framework-laptop13.blend, puis cloné par instance.
+ * Ports et couleurs intégrés au modèle ; préparation statique mise en cache.
  * DRACOLoader configuré en amont dans main.tsx (useGLTF.setDecoderPath).
  */
-import { useLayoutEffect, useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useLayoutEffect } from 'react';
+import { useGLTFClone } from '../useGLTFClone';
+import { getPreparedLaptopScene } from './prepareLaptopScene';
 import * as THREE from 'three';
 import type { SceneItemProps } from '@shared/types';
-import { removeGlbLines, mergeGlbByMaterial } from '@features/scene/glbUtils';
 import { useDeskScreenVideo } from '@features/scene/utils/deskScreenVideo';
 
 const BASE_W = 29.7, BASE_D = 22.8, BASE_H = 1.6;
@@ -22,106 +22,11 @@ const GLB_PATH = 'items/framework-laptop13/framework-laptop13.glb';
 // GLB exporté Y-up. Z centré sur 0.41 cm → offset -0.41
 const GLB_POS: [number, number, number] = [0, 0, -0.41];
 
-const red = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.35 });
-
-function moveOcc(root: THREE.Object3D, name: string, tx: number, ty: number, tz: number) {
-  const occ = root.getObjectByName('occurrence of ' + name);
-  if (!occ) return;
-  occ.matrix.decompose(occ.position, occ.quaternion, occ.scale);
-  occ.position.set(tx, ty, tz);
-  occ.matrixAutoUpdate = true;
-}
-
 // ── Export ────────────────────────────────────────────────────────────────────
 
 export function Laptop({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
-  const { scene } = useGLTF(GLB_PATH);
+  const { scene: clone } = useGLTFClone(GLB_PATH, false, getPreparedLaptopScene);
   const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
-
-  const clone = useMemo(() => {
-    const c = scene.clone(true);
-    removeGlbLines(c);
-
-    // Bezel → rouge
-    c.getObjectByName('GFW00_3H_NB_ID_BEZEL_1_3')?.traverse(child => {
-      if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).material = red;
-    });
-
-    // SD_CARD (USB-C) → rouge
-    const sdMesh = c.getObjectByName('GFW00_3H_NB_ID_SD_CARD_1') as THREE.Mesh | undefined;
-    if (sdMesh) sdMesh.material = red;
-
-    // Placement cartes d'extension
-    moveOcc(c, 'GFW00_3H_NB_ID_SD_CARD_1',   -0.2522,  0.01055, -0.18198);
-    moveOcc(c, 'GFW00_3H_NB_ID_HDMI_CARD_1',  0.014,   0.01055, -0.07238);
-    moveOcc(c, 'GFW00_3H_NB_ID_USBA_CARD_1',  0.2382,  0.01055, -0.12718);
-
-    // USB-C clone → slot supérieur droit
-    const sdOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_SD_CARD_1');
-    if (sdOcc?.parent) {
-      const sdClone = sdOcc.clone(true);
-      sdClone.matrix.decompose(sdClone.position, sdClone.quaternion, sdClone.scale);
-      sdClone.position.set(0.0288, 0.00765, -0.16778);
-      sdClone.matrixAutoUpdate = true;
-      sdOcc.parent.add(sdClone);
-    }
-    const usbcOcc = c.getObjectByName('occurrence of GFW00_3H_NB_ID_USBC_CARD_1');
-    if (usbcOcc) usbcOcc.visible = false;
-
-    // Filtrage des géométries opposées et gestion des priorités (renderOrder + polygonOffset) :
-    // - L'écran (BEZEL_1_1) ne doit avoir AUCUNE face orientée vers l'arrière (-Z) pour ne pas percer le capot
-    // - Le logo (COVER_LOGO_1) ne doit avoir AUCUNE face orientée vers l'avant (+Z) pour ne pas percer l'écran
-    const filterMeshFaces = (mesh: THREE.Mesh | undefined, keepPredicate: (avgZ: number) => boolean) => {
-      if (!mesh || !mesh.geometry) return;
-      const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
-      const posAttr = geo.getAttribute('position');
-      const normAttr = geo.getAttribute('normal');
-      const uvAttr = geo.getAttribute('uv');
-      if (!posAttr) return;
-
-      const newPos: number[] = [];
-      const newNorm: number[] = [];
-      const newUv: number[] = [];
-
-      for (let i = 0; i < posAttr.count; i += 3) {
-        const avgZ = normAttr ? (normAttr.getZ(i) + normAttr.getZ(i + 1) + normAttr.getZ(i + 2)) / 3 : 0;
-        if (!keepPredicate(avgZ)) continue;
-
-        for (let k = 0; k < 3; k++) {
-          newPos.push(posAttr.getX(i + k), posAttr.getY(i + k), posAttr.getZ(i + k));
-          if (normAttr) newNorm.push(normAttr.getX(i + k), normAttr.getY(i + k), normAttr.getZ(i + k));
-          if (uvAttr) newUv.push(uvAttr.getX(i + k), uvAttr.getY(i + k));
-        }
-      }
-
-      const filteredGeo = new THREE.BufferGeometry();
-      filteredGeo.setAttribute('position', new THREE.Float32BufferAttribute(newPos, 3));
-      if (newNorm.length) filteredGeo.setAttribute('normal', new THREE.Float32BufferAttribute(newNorm, 3));
-      if (newUv.length) filteredGeo.setAttribute('uv', new THREE.Float32BufferAttribute(newUv, 2));
-      mesh.geometry = filteredGeo;
-    };
-
-    // L'écran garde les faces avant ; le logo garde les faces arrière.
-    for (const [name, keep] of [
-      ['GFW00_3H_NB_ID_BEZEL_1_1', (avgZ: number) => avgZ > -0.5],
-      ['GFW00_3H_NB_ID_COVER_LOGO_1', (avgZ: number) => avgZ < 0.5],
-    ] as const) {
-      const mesh = c.getObjectByName(name) as THREE.Mesh | undefined;
-      if (!mesh?.material) continue;
-      filterMeshFaces(mesh, keep);
-      const original = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-      const material = (original as THREE.MeshStandardMaterial).clone();
-      material.side = THREE.FrontSide;
-      material.polygonOffset = true;
-      material.polygonOffsetFactor = -1;
-      material.polygonOffsetUnits = -1;
-      mesh.material = material;
-      mesh.renderOrder = 1;
-    }
-
-    mergeGlbByMaterial(c);
-    return c;
-  }, [scene]);
 
   useLayoutEffect(() => {
     onSize?.(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));

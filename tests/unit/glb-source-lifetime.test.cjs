@@ -47,3 +47,17 @@ it('keeps reduced scene sources cached and leaves unaudited sources alone', () =
         assert.deepEqual(f.clears, []); assert.deepEqual(f.disposed, []);
     }
 });
+
+it('clone un template préparé sans partager les objets mutables ni les matériaux possédés', () => {
+    const f=fixture(true),template=f.gltf.scene.clone(true);
+    const prepare=source=>{assert.equal(source,f.gltf.scene);return template;};
+    const first=f.api.useGLTFClone('/other.glb',true,prepare).scene;
+    const second=f.api.useGLTFClone('/other.glb',true,prepare).scene;
+    assert.notEqual(first,template);assert.notEqual(first,second);
+    first.children[0].visible=false;first.children[0].position.x=20;
+    assert.equal(second.children[0].visible,true);assert.equal(second.children[0].position.x,0);
+    assert.equal(template.children[0].visible,true);
+    assert.equal(first.children[0].geometry,template.children[0].geometry);
+    assert.notEqual(first.children[0].material,second.children[0].material);
+    assert.notEqual(first.children[0].material,template.children[0].material);
+});

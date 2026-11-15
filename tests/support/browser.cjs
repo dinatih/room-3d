@@ -66,6 +66,10 @@ exports.withBrowser = async (fixture, exercise) => {
             cacheDir,
             server: { host: '127.0.0.1', port, strictPort: true, hmr: false },
             plugins: [{ name: 'test-executed-instructions', enforce: 'pre', transform(source, id) {
+                        if (fixture.captureStartup && ['/src/features/scene/items/Laptop.tsx', '/src/features/scene/items/prepareLaptopScene.ts'].some(file => id.split('?')[0].endsWith(file))) {
+                            const clone = 'const c = scene.clone(true);';
+                            if (source.includes(clone)) return { code: source.replace(clone, '(window as any).__laptopPreparations = ((window as any).__laptopPreparations ?? 0) + 1;\n' + clone), map: null };
+                        }
                         if (fixture.originalLightShader && id.split('?')[0].endsWith('/src/features/scene/utils/zeroEnergyLights.ts')) {
                             const install = 'ShaderChunk.lights_fragment_begin = optimizeDirectLightShader(originalDirectLightShader);';
                             assert(source.includes(install), 'Zero-energy shader diagnostic no longer matches source');

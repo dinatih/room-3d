@@ -30,7 +30,7 @@ export function hasMountedGLTFClones(path: string): boolean {
   return (mountedClones.get(path) ?? 0) > 0;
 }
 
-export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
+export function useGLTFClone(path: string, ownMaterials = false, prepareSource?: (scene: THREE.Group) => THREE.Group): { scene: THREE.Group; animations: THREE.AnimationClip[] } {
   const sourcePath = useContext(SceneModelContext) ? sceneModelPath(path) : path;
   const gltf = useGLTF(sourcePath);
   // Loading is complete; clones need the scenes and clips, not the parser's
@@ -59,7 +59,9 @@ export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE
   }, [path, sourcePath, gltf.scene]);
 
   const scene = useMemo(() => {
-    const cloned = SkeletonUtils.clone(gltf.scene) as THREE.Group;
+    // Optional static preparation returns an immutable template, never an
+    // instance mounted in React. Its cache must survive Suspense retries.
+    const cloned = SkeletonUtils.clone(prepareSource ? prepareSource(gltf.scene) : gltf.scene) as THREE.Group;
     shareSkeletons(cloned);
     const baseName = path.split('/').pop()?.replace(/\.glb$/i, '') || 'Model3D';
     if (!cloned.name || cloned.name === 'Scene' || cloned.name === 'Group') {
@@ -89,6 +91,6 @@ export function useGLTFClone(path: string, ownMaterials = false): { scene: THREE
       }
     });
     return cloned;
-  }, [gltf.scene, path, sourcePath, categoryLayer, ownMaterials]);
+  }, [gltf.scene, path, sourcePath, categoryLayer, ownMaterials, prepareSource]);
   return { scene, animations: gltf.animations };
 }
