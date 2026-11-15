@@ -1,6 +1,12 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
-import type { LayerState, LaraClothing } from '../types';
+import {
+  LARA_TOP_SPECS,
+  LARA_BOTTOM_SPECS,
+  LARA_HOODIE_ZIP_OPTIONS,
+  isHoodieTop,
+} from '../../character/laraOutfits';
+import type { LayerState, LaraClothing, LaraHoodieZip } from '../types';
 
 export interface CharacterSectionProps {
   layers: LayerState;
@@ -263,6 +269,49 @@ export function CharacterSection({
       )}
 
       {layers.character && (
+        <div className="py-1 border-bottom bg-transparent d-flex flex-column">
+          <div className="text-muted fw-bold text-dark text-uppercase mt-1 mb-1 px-2" style={{ fontSize: '9px' }}>
+            <i className="bi bi-tags me-1" aria-hidden="true" />Outfits lara
+          </div>
+          {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
+          {layerBtn('light',  iconLabel('bi-eyeglasses', 'Lunettes Lara (Shift+B)'), 'laraGlasses')}
+          {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
+          {(['laraTop', 'laraBottom'] as const).map((key) => {
+            const specs = key === 'laraTop' ? LARA_TOP_SPECS : LARA_BOTTOM_SPECS;
+            const label = key === 'laraTop' ? 'Haut' : 'Bas';
+            const icon = key === 'laraTop' ? 'bi-person-standing-dress' : 'bi-person-standing';
+            return (
+              <label key={key} className="character-clothing-row w-100 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1">
+                {iconLabel(icon, label)}
+                <select className="form-select form-select-sm w-auto py-0 ps-2 pe-4 bg-transparent text-dark" aria-label={label}
+                  value={layers[key]} onChange={event => useSceneStore.getState().setLaraClothing(key, event.target.value as LaraClothing)}>
+                  {specs.map((spec) => (
+                    <option key={spec.id} value={spec.id}>{spec.label}</option>
+                  ))}
+                </select>
+              </label>
+            );
+          })}
+          {isHoodieTop(layers.laraTop) && (
+            <label className="character-clothing-row w-100 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1">
+              {iconLabel('bi-arrows-expand-vertical', 'Ouverture zip')}
+              <select className="form-select form-select-sm w-auto py-0 ps-2 pe-4 bg-transparent text-dark" aria-label="Ouverture zip"
+                value={layers.laraHoodieZip} onChange={event => useSceneStore.getState().setLaraClothing('laraHoodieZip', event.target.value as LaraHoodieZip)}>
+                {LARA_HOODIE_ZIP_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          {layerBtn('light',  iconLabel('bi-person-walking', 'Bottes Lara'), 'laraShoes')}
+          {layerBtn('pink',   iconLabel('bi-vinyl', 'Chaussettes rouges'), 'laraSocks')}
+          {layerBtn('pink',   iconLabel('bi-person-walking', 'Baskets rouges'), 'laraSneakers')}
+          {layerBtn('pink',   iconLabel('bi-suit-heart', 'Bandana cou rouge'), 'laraNeckBandana')}
+          {layerBtn('pink',   iconLabel('bi-bandaid', 'Bandana poignet rouge'), 'laraWristBandana')}
+        </div>
+      )}
+
+      {layers.character && (
         <div className="p-2 border-bottom bg-transparent d-flex flex-column gap-1">
           <div className="text-muted fw-bold text-dark text-uppercase mb-1" style={{ fontSize: '9px' }}>
             <i className="bi bi-robot me-1" aria-hidden="true" />Visite guidée de l'appartement
@@ -291,34 +340,6 @@ export function CharacterSection({
         <i className="bi bi-gear me-1" aria-hidden="true" />Options d'affichage
       </div>
       {layerBtn('pink',   iconLabel('bi-droplet-half', 'Peau & tissus réalistes (Mat)'), 'laraRealisticTextures')}
-      {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
-      {layerBtn('light',  iconLabel('bi-eyeglasses', 'Lunettes Lara (Shift+B)'), 'laraGlasses')}
-      {layerBtn('light',  iconLabel('bi-handbag', 'Accessoires Lara'), 'accessories')}
-      {(['laraTop', 'laraBottom'] as const).map((key) => (
-        <label key={key} className="character-clothing-row w-100 border-bottom py-1 px-2 d-flex align-items-center justify-content-between gap-1">
-          {iconLabel(key === 'laraTop' ? 'bi-person-standing-dress' : 'bi-person-standing', key === 'laraTop' ? 'Haut' : 'Bas')}
-          <select className="form-select form-select-sm w-auto py-0 ps-2 pe-4 bg-transparent text-dark" aria-label={key === 'laraTop' ? 'Haut' : 'Bas'}
-            value={layers[key]} onChange={event => useSceneStore.getState().setLaraClothing(key, event.target.value as LaraClothing)}>
-            <option value="native">Native</option>
-            <option value="bikini">Bikini</option>
-            {key === 'laraTop' ? (
-              <>
-                <option value="hoodie">Sweat zippé</option>
-                <option value="hoodie-crop">Sweat zippé crop top</option>
-                <option value="hoodie-tank">Sweat zippé débardeur</option>
-                <option value="hoodie-crop-tank">Sweat zippé crop débardeur</option>
-              </>
-            ) : (
-              <>
-                <option value="legging">Legging</option>
-                <option value="sweatpants">Jogging</option>
-              </>
-            )}
-            <option value="none">Aucun</option>
-          </select>
-        </label>
-      ))}
-      {layerBtn('light',  iconLabel('bi-person-walking', 'Chaussures Lara'), 'laraShoes')}
       {layerBtn('pink',   iconLabel('bi-activity', 'Physique buste'), 'breastPhysics')}
       {layerBtn('pink',   iconLabel('bi-scissors', 'Physique cheveux'), 'hairPhysics')}
       {layerBtn('cyan', 'Wallhack (Silhouettes)', 'wallhack')}

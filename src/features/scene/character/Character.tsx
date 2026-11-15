@@ -17,6 +17,7 @@ import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { CharacterClothing } from './CharacterClothing';
+import { resolveLaraGarmentGlbPath } from './laraOutfits';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
@@ -145,7 +146,12 @@ export function Character({
   const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
   const laraTop = useSceneStore(state => state.layers.laraTop);
   const laraBottom = useSceneStore(state => state.layers.laraBottom);
+  const laraHoodieZip = useSceneStore(state => state.layers.laraHoodieZip);
   const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
+  const laraSocks = useSceneStore(state => state.layers.laraSocks ?? false);
+  const laraSneakers = useSceneStore(state => state.layers.laraSneakers ?? false);
+  const laraNeckBandana = useSceneStore(state => state.layers.laraNeckBandana ?? false);
+  const laraWristBandana = useSceneStore(state => state.layers.laraWristBandana ?? false);
   const laraGlasses = useSceneStore(state => state.layers.laraGlasses ?? true);
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
@@ -511,6 +517,7 @@ export function Character({
       laraTop,
       laraBottom,
       laraShoes,
+      laraSneakers,
       laraGlasses,
       showAccessories,
       laraPistols,
@@ -518,7 +525,7 @@ export function Character({
       equipment
     });
     invalidate();
-  }, [parts, scene, equipment, laraTop, laraBottom, laraShoes, laraGlasses, showAccessories, laraPistols, invalidate, isLara]);
+  }, [parts, scene, equipment, laraTop, laraBottom, laraShoes, laraSneakers, laraGlasses, showAccessories, laraPistols, invalidate, isLara]);
 
   // Propriétés de rendu : ombres, wallhack, fil de fer
   useEffect(() => {
@@ -907,7 +914,7 @@ export function Character({
       ?? (isTPose ? undefined : getAnimationDef(target)?.equipment);
     if (isLara && animationEquipmentRef.current !== animationEquipment) {
       animationEquipmentRef.current = animationEquipment;
-      applyClothingAndAccessoriesVisibility(parts, { laraTop, laraBottom, laraShoes, laraGlasses, showAccessories, laraPistols, equipment, animationEquipment });
+      applyClothingAndAccessoriesVisibility(parts, { laraTop, laraBottom, laraShoes, laraSneakers, laraGlasses, showAccessories, laraPistols, equipment, animationEquipment });
       const cap = scene.getObjectByName('character_baseball_cap_attachment');
       if (cap) cap.visible = animationEquipment !== 'shower';
       scene.traverse((child) => {
@@ -1364,10 +1371,11 @@ export function Character({
         resetKey={`${isPreview}:${characterGrid}`}
       />}
 
-      {isLara && (laraTop === 'hoodie' || laraTop === 'hoodie-crop' || laraTop === 'hoodie-tank' || laraTop === 'hoodie-crop-tank') && (
+      {isLara && resolveLaraGarmentGlbPath(laraTop, laraHoodieZip) && (
         <Suspense fallback={null}>
           <CharacterClothing
             clothingId={laraTop}
+            hoodieZip={laraHoodieZip}
             laraScene={scene}
             shadows={characterShadows}
             showWallhack={showWallhack}
@@ -1376,7 +1384,7 @@ export function Character({
           />
         </Suspense>
       )}
-      {isLara && (laraBottom === 'legging' || laraBottom === 'sweatpants') && (
+      {isLara && resolveLaraGarmentGlbPath(laraBottom) && (
         <Suspense fallback={null}>
           <CharacterClothing
             clothingId={laraBottom}
@@ -1388,6 +1396,25 @@ export function Character({
           />
         </Suspense>
       )}
+      {isLara && ([
+        ['socks-red', laraSocks],
+        ['sneakers-red', laraSneakers],
+        ['bandana-neck', laraNeckBandana],
+        ['bandana-wrist', laraWristBandana],
+      ] as const).map(([extraId, active]) => (
+        active ? (
+          <Suspense key={extraId} fallback={null}>
+            <CharacterClothing
+              clothingId={extraId}
+              laraScene={scene}
+              shadows={characterShadows}
+              showWallhack={showWallhack}
+              wireframe={characterWireframe}
+              visible={animationEquipmentRef.current !== 'shower'}
+            />
+          </Suspense>
+        ) : null
+      ))}
 
       {headBone && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />

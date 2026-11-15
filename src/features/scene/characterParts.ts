@@ -356,6 +356,7 @@ export interface ClothingAndAccessoriesOptions {
   laraTop: LaraClothing;
   laraBottom: LaraClothing;
   laraShoes: boolean;
+  laraSneakers?: boolean;
   laraGlasses?: boolean;
   showAccessories: boolean;
   laraPistols: boolean;
@@ -372,14 +373,16 @@ export function applyPistolVisibility(parts: CharacterParts, opts: Pick<Clothing
 
 export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opts: ClothingAndAccessoriesOptions) {
   const shower = opts.animationEquipment === 'shower';
-  opts = { ...opts, laraShoes: opts.laraShoes && !shower, laraGlasses: (opts.laraGlasses ?? true) && !shower, showAccessories: opts.showAccessories && !shower };
+  const showNativeBoots = opts.laraShoes && !opts.laraSneakers && !shower;
+  const showSneakers = Boolean(opts.laraSneakers) && !shower;
+  opts = { ...opts, laraShoes: showNativeBoots, laraGlasses: (opts.laraGlasses ?? true) && !shower, showAccessories: opts.showAccessories && !shower };
   const isTopNude = opts.laraTop !== 'native';
   const isBottomNude = opts.laraBottom !== 'native';
 
   // Boots / Feet / Gloves / Hands
-  setPartVisibility(parts.boots, opts.laraShoes);
-  setPartVisibility(parts.feet, !opts.laraShoes && isBottomNude);
-  setPartVisibility(parts.feetClothed, !opts.laraShoes && !isBottomNude);
+  setPartVisibility(parts.boots, showNativeBoots);
+  setPartVisibility(parts.feet, (!showNativeBoots && isBottomNude) || showSneakers);
+  setPartVisibility(parts.feetClothed, !showNativeBoots && !showSneakers && !isBottomNude);
   setPartVisibility(parts.gloves, true);
   setPartVisibility(parts.hands, false);
 
@@ -390,8 +393,8 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.torsoClothed, !isTopNude);
   setPartVisibility(parts.torsoNude, isTopNude);
   setPartVisibility(parts.legsClothed, !isBottomNude);
-  setPartVisibility(parts.legsClothed.filter(({ mesh }) => mesh.name === 'body_legs'), !isBottomNude && opts.laraShoes);
-  setPartVisibility(parts.legsBarefoot, !isBottomNude && !opts.laraShoes);
+  setPartVisibility(parts.legsClothed.filter(({ mesh }) => mesh.name === 'body_legs'), !isBottomNude && showNativeBoots);
+  setPartVisibility(parts.legsBarefoot, !isBottomNude && !showNativeBoots);
   setPartVisibility(parts.legsNude, isBottomNude);
   setPartVisibility(parts.bodyFull, !isTopNude && !isBottomNude);
 

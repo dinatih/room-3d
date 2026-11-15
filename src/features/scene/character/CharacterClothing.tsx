@@ -7,20 +7,18 @@ import * as THREE from 'three';
 import { LAYER_WALKER } from '@config';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
+import {
+  type LaraClothing,
+  type LaraExtraClothingId,
+  type LaraHoodieZip,
+  resolveLaraGarmentGlbPath,
+} from './laraOutfits';
 
-export const LARA_CLOTHING_MODEL_PATHS = {
-  hoodie: 'characters/clothing/lara_hoodie_zip.glb',
-  'hoodie-crop': 'characters/clothing/lara_hoodie_crop.glb',
-  'hoodie-tank': 'characters/clothing/lara_hoodie_tank.glb',
-  'hoodie-crop-tank': 'characters/clothing/lara_hoodie_crop_tank.glb',
-  legging: 'characters/clothing/lara_legging.glb',
-  sweatpants: 'characters/clothing/lara_sweatpants.glb',
-} as const;
-
-export type CustomLaraClothingId = keyof typeof LARA_CLOTHING_MODEL_PATHS;
+export type CustomLaraClothingId = LaraClothing | LaraExtraClothingId;
 
 interface CharacterClothingProps {
   clothingId: CustomLaraClothingId;
+  hoodieZip?: LaraHoodieZip;
   laraScene: THREE.Object3D;
   shadows: boolean;
   showWallhack: boolean;
@@ -30,14 +28,19 @@ interface CharacterClothingProps {
 
 export function CharacterClothing({
   clothingId,
+  hoodieZip = 'closed',
   laraScene,
   shadows,
   showWallhack,
   wireframe,
   visible = true,
 }: CharacterClothingProps) {
-  const modelPath = LARA_CLOTHING_MODEL_PATHS[clothingId];
+  const modelPath = resolveLaraGarmentGlbPath(clothingId, hoodieZip);
+  if (!modelPath) {
+    throw new Error(`No GLB path registered for Lara clothing "${clothingId}"`);
+  }
   const { scene: garmentScene } = useGLTFClone(modelPath, true);
+  const containerName = `lara_custom_clothing_${clothingId}`;
 
   useLayoutEffect(() => {
     if (!garmentScene || !laraScene) return;
@@ -55,7 +58,7 @@ export function CharacterClothing({
 
     const targetParent = laraScene.getObjectByName('Armature') ?? laraScene;
     const container = new THREE.Group();
-    container.name = `lara_custom_clothing_${clothingId}`;
+    container.name = containerName;
     container.userData.isCustomClothingRoot = true;
     container.visible = visible;
 
@@ -126,11 +129,11 @@ export function CharacterClothing({
         skel.dispose();
       }
     };
-  }, [garmentScene, laraScene, clothingId, visible]);
+  }, [garmentScene, laraScene, clothingId, containerName, visible]);
 
   // Mettre à jour les propriétés de rendu (ombres, wallhack, wireframe) sans ré-attacher le squelette
   useLayoutEffect(() => {
-    const container = laraScene.getObjectByName(`lara_custom_clothing_${clothingId}`);
+    const container = laraScene.getObjectByName(containerName);
     if (!container) return;
     container.traverse((node) => {
       if ((node as THREE.Mesh).isMesh) {
@@ -148,7 +151,7 @@ export function CharacterClothing({
         }
       }
     });
-  }, [laraScene, clothingId, shadows, showWallhack, wireframe]);
+  }, [laraScene, containerName, shadows, showWallhack, wireframe]);
 
   // Libérer uniquement les matériaux clonés par ownMaterials=true au démontage
   useLayoutEffect(() => {

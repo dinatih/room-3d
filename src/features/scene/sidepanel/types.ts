@@ -1,4 +1,11 @@
-export type LaraClothing = 'native' | 'bikini' | 'legging' | 'sweatpants' | 'hoodie' | 'hoodie-crop' | 'hoodie-tank' | 'hoodie-crop-tank' | 'none';
+export type {
+  LaraClothing,
+  LaraTopId,
+  LaraBottomId,
+  LaraHoodieZip,
+  LaraExtraClothingId,
+} from '../character/laraOutfits';
+import type { LaraClothing, LaraHoodieZip } from '../character/laraOutfits';
 
 import type { PlaneModelKey } from '../PaperPlane';
 import type { LaraCountMode } from '../characterConfig';
@@ -141,7 +148,12 @@ export interface LayerState {
   laraPistols:  boolean;
   laraTop: LaraClothing;
   laraBottom: LaraClothing;
+  laraHoodieZip?: LaraHoodieZip;
   laraShoes?:   boolean;
+  laraSocks?:   boolean;
+  laraSneakers?: boolean;
+  laraNeckBandana?: boolean;
+  laraWristBandana?: boolean;
   laraRealisticTextures?: boolean;
   laraCount:    LaraCountMode;
   showAllLaraStyles: boolean;

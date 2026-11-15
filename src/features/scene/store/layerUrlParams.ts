@@ -1,4 +1,5 @@
-import type { LayerState, GroundType, LaraClothing } from '../sidepanel/types';
+import type { LayerState, GroundType, LaraClothing, LaraHoodieZip } from '../sidepanel/types';
+import { ALL_LARA_CLOTHING_VALUES, LARA_HOODIE_ZIP_IDS } from '../character/laraOutfits';
 import { getDebugPreset } from './debugPresets';
 import { getUrlParams } from '../camera/cameraUrlParams';
 
@@ -63,6 +64,10 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   laraGlasses: true,
   laraPistols: true,
   laraShoes: true,
+  laraSocks: false,
+  laraSneakers: false,
+  laraNeckBandana: false,
+  laraWristBandana: false,
   laraRealisticTextures: false,
   pillarsOnly: false,
   wallhack: false,
@@ -235,6 +240,26 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'windowStepElevation',
     canonicalParam: 'windowStepElevation',
     urlParams: ['windowstepelevation', 'windowstep', 'marchefenetre'],
+  },
+  {
+    layerKey: 'laraSocks',
+    canonicalParam: 'laraSocks',
+    urlParams: ['larasocks', 'socks', 'chaussettes'],
+  },
+  {
+    layerKey: 'laraSneakers',
+    canonicalParam: 'laraSneakers',
+    urlParams: ['larasneakers', 'sneakers', 'baskets'],
+  },
+  {
+    layerKey: 'laraNeckBandana',
+    canonicalParam: 'laraNeckBandana',
+    urlParams: ['laraneckbandana', 'neckbandana', 'bandanacou'],
+  },
+  {
+    layerKey: 'laraWristBandana',
+    canonicalParam: 'laraWristBandana',
+    urlParams: ['larawristbandana', 'wristbandana', 'bandanapoignet'],
   },
 ];
 
@@ -477,23 +502,27 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
   } catch {}
 }
 
-const LARA_CLOTHING_VALUES = new Set<LaraClothing>([
-  'native', 'bikini', 'legging', 'sweatpants', 'hoodie', 'hoodie-crop', 'hoodie-tank', 'hoodie-crop-tank', 'none',
-]);
+const LARA_HOODIE_ZIP_VALUES = new Set<LaraHoodieZip>(LARA_HOODIE_ZIP_IDS);
 
-export function parseUrlLaraClothing(): { laraTop: LaraClothing; laraBottom: LaraClothing } {
+export function parseUrlLaraClothing(): { laraTop: LaraClothing; laraBottom: LaraClothing; laraHoodieZip: LaraHoodieZip } {
   const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search || window.location.hash.split('?')[1]);
   const read = (key: string): LaraClothing => {
     const value = params.get(key) as LaraClothing | null;
-    return value && LARA_CLOTHING_VALUES.has(value) ? value : 'native';
+    return value && ALL_LARA_CLOTHING_VALUES.has(value) ? value : 'native';
   };
-  return { laraTop: read('laraTop'), laraBottom: read('laraBottom') };
+  const zipVal = params.get('laraHoodieZip') as LaraHoodieZip | null;
+  return {
+    laraTop: read('laraTop'),
+    laraBottom: read('laraBottom'),
+    laraHoodieZip: zipVal && LARA_HOODIE_ZIP_VALUES.has(zipVal) ? zipVal : 'closed',
+  };
 }
 
-export function updateUrlLaraClothing(key: 'laraTop' | 'laraBottom', value: LaraClothing) {
+export function updateUrlLaraClothing(key: 'laraTop' | 'laraBottom' | 'laraHoodieZip', value: LaraClothing | LaraHoodieZip) {
   if (typeof window === 'undefined') return;
   const url = new URL(window.location.href);
-  if (value === 'native') url.searchParams.delete(key);
+  const isDefault = key === 'laraHoodieZip' ? value === 'closed' : value === 'native';
+  if (isDefault) url.searchParams.delete(key);
   else url.searchParams.set(key, value);
   window.history.replaceState(null, '', url.toString());
 }

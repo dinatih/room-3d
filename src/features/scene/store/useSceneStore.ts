@@ -40,7 +40,8 @@ import {
   type GraphicsPreset,
   LAYER_DEFAULTS,
 } from './layerUrlParams';
-import type { FurnitureState, LayerState, GroundType, LaraClothing } from '../sidepanel/types';
+import type { FurnitureState, LayerState, GroundType, LaraClothing, LaraHoodieZip } from '../sidepanel/types';
+import { isOnePieceTop } from '../character/laraOutfits';
 import {
   type LaraCountMode,
   isExtraCharacter,
@@ -158,7 +159,7 @@ interface SceneStore {
   setLaraCount: (count: LaraCountMode | 0) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
-  setLaraClothing: (key: 'laraTop' | 'laraBottom', value: LaraClothing) => void;
+  setLaraClothing: (key: 'laraTop' | 'laraBottom' | 'laraHoodieZip', value: LaraClothing | LaraHoodieZip) => void;
   toggleLayer: (key: keyof LayerState) => void;
   setLayers: (partial: Partial<LayerState>) => void;
   setActiveExtraIds: (ids: string[]) => void;
@@ -614,7 +615,14 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
 
   setLaraClothing: (key, value) => {
-    set(state => ({ layers: { ...state.layers, [key]: value } }));
+    set((state) => {
+      const nextLayers: LayerState = { ...state.layers, [key]: value };
+      if (key === 'laraTop' && isOnePieceTop(value as LaraClothing) && (state.layers.laraBottom === 'native' || state.layers.laraBottom === 'bikini')) {
+        nextLayers.laraBottom = 'none';
+        updateUrlLaraClothing('laraBottom', 'none');
+      }
+      return { layers: nextLayers };
+    });
     updateUrlLaraClothing(key, value);
     cameraState.invalidate?.();
   },
