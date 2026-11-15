@@ -9,7 +9,7 @@ export const useRobotVisibility = create<{
   visible: string[];
   toggle: (id: string) => void;
 }>(set => ({
-  visible: ['black-hornet-drone', 'ring-drone-cam', 'unitree-g1', 'microduck', 'jumper-robot'],
+  visible: ['black-hornet-drone', 'ring-drone-cam', 'microduck', 'jumper-robot'],
   toggle: id => set(state => ({ visible: state.visible.includes(id) ? state.visible.filter(value => value !== id) : [...state.visible, id] })),
 }));
 export const isRobotSubjectVisible = (id: string, visible: string[]) =>
