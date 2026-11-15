@@ -675,3 +675,40 @@ Contrôle isolé : `test-results/static-shadow-check-FK4pPb/comparison.json`. Do
 TypeScript et **18 tests ciblés** passent : activation explicite et nettoyage du prototype, restauration après exception, masquages/calques, déformations et découpes exclues, ombres cubiques, démontage, géométries et raycasting des lots statiques, paires GPU et comparaison des pixels. L'exécution non filtrée de `static-scene-cleanup.test.cjs` retrouve aussi les deux échecs préexistants déjà documentés : mock du renderer des miroirs et dépendance `redFabricMaterial` du test UTÅKER. La suite globale n'est pas déclarée verte.
 
 Le prochain poste important reste la production des ombres et les soumissions des Laras : leur coût avait été distingué par l'audit du 14 novembre. Cette investigation ne change aucun réglage ni aucune passe du Studio en dehors du diagnostic explicite.
+
+## Regroupement des ombres natives des Laras — 15 novembre 2026
+
+Les pièces opaques compatibles du clone natif de Lara partagent une géométrie pour la passe de profondeur. Leurs matériaux couleur restent distincts, ainsi que leurs squelettes et leurs animations. Le chemin principal, les textures, la résolution de l'app et la taille des shadow maps ne sont pas réduits.
+
+`useLaraShadowBatching` enregistre uniquement le clone natif, après son assemblage. Les vêtements externes, les cheveux à découpe alpha, les morphs, la transparence, les déformations par matériau, le clipping et les callbacks d'ombres personnalisés gardent leur rendu normal. Le branchement dans `Character.tsx` se limite à l'import et à l'appel du hook ; les fichiers d'outfits ne sont pas modifiés par cette tâche.
+
+Les lots exigent le même squelette, les mêmes transformations et matrices de liaison, les mêmes calques et faces. La sélection des pièces suit leur visibilité actuelle, leurs parents et leur projection d'ombres. Les positions, poids et indices d'os sont conservés ; une sphère réunissant les bornes animées des pièces assure un culling conservateur. Le changement temporaire de géométrie, de matériau et de sphère est restauré dans un `finally` avant le rendu couleur. Les matériaux de profondeur personnalisés restent exclus. VSM et les frames recalculant des ombres cubiques restent également sur le chemin normal.
+
+Les buffers ne sont assemblés que lorsque la combinaison de pièces change. Ils sont partagés entre acteurs compatibles, avec un compteur de références : les anciennes combinaisons sans utilisateur sont libérées, et les poses successives ne créent aucune nouvelle géométrie. Les modifications de géométrie, d'index, d'attribut ou de version d'attribut désactivent le lot pour la pièce concernée, afin qu'un masque de corps ou un nouvel outfit ne réutilise pas d'anciens triangles. Les outfits ajoutés après l'enregistrement restent rendus normalement.
+
+### Mesures et limites
+
+```bash
+node scripts/check-lara-shadow-batches.cjs --hardware-gpu
+node scripts/profile-studio-passes.cjs --hardware-gpu --lara-shadows
+```
+
+Le diagnostic réutilise le contrôleur déjà monté dans l'app au lieu d'en installer un second. `baseline` est le rendu regroupé, `lara-shadow-batches-off` le rendu original. Le mode ciblé garde 1362 × 810, DPR 1 pendant toute la campagne.
+
+Contrôle isolé sur le vrai GLB natif, trois poses dont une avec le sac masqué : `test-results/lara-shadow-check-QY2ChJ/comparison.json`. Les **38 / 38 / 37 dessins d'ombres deviennent 5 / 5 / 5**, avec **zéro pixel différent** et le même nombre de dessins principaux. Le contrôle a été répété avec le contrôleur partagé de production : `test-results/lara-shadow-check-M7ugKI/comparison.json`.
+
+Mesure exploratoire complète : `test-results/pass-audit-bRmWY8/report.md`. Radeon 840M/Vulkan headless, neuf Laras, Mid, jour, décor chargé dès le départ, réseau externe bloqué, secteur, aucun onglet Room-3D de l'utilisateur ouvert. Sur les **60 paires**, le prototype économise exactement **134 soumissions par image**, avec **zéro différence de triangles soumis**. Le framebuffer diffère sur neuf composantes parmi 4 412 880, d'une unité sur 255 au maximum.
+
+| Coût du rendu, médianes des paires | Original | Regroupé |
+| --- | ---: | ---: |
+| Soumissions totales | 1573 | 1439 |
+| CPU du rendu | 21,70 ms | 19,00 ms |
+| GPU | 17,01 ms | 15,85 ms |
+
+Ces médianes indiquent environ **2,7 ms CPU et 1,2 ms GPU économisées pendant les doubles rendus du diagnostic**. Elles ne s'additionnent pas et ne donnent pas un gain FPS global. Les blocs ordinaires sont trop instables pour l'établir : 15,71 puis 25,43 FPS avec regroupement, 18,47 puis 25,93 FPS sans. Le GPU des blocs ordinaires reste autour de 13,8–14,5 ms dans les deux modes. La RAM disponible varie de 1,49 à 1,82 Gio entre début et fin, avec des variations intermédiaires, et le swap augmente de 0,10 Gio. Une campagne calme reste nécessaire pour approuver une nouvelle référence FPS.
+
+L'essai comptait **deux géométries partagées**, créées deux fois au total, pour **2 858 480 octets (2,73 Mio)** d'attributs/indices CPU ; leur copie GPU peut ajouter une quantité comparable. Ce n'est pas une baisse de RAM. Les données du profil complet précèdent le branchement du hook de production, qui limite explicitement l'enregistrement au clone natif. Les autres vues, vêtements et nombres d'acteurs peuvent changer les économies et le volume des buffers ; le regroupement peut également rendre le culling des petites pièces moins fin.
+
+Contrôle du montage React de production : `test-results/lara-shadow-integration-6IHmWU/verification.json`, dans un Studio allégé (mobilier, décor, animaux et robots désactivés). Sur douze nouvelles paires, le contrôleur natif économise lui aussi **134 dessins**, avec zéro différence de triangles et **zéro pixel différent**. Il reste actif après la fermeture du diagnostic et conserve ses deux géométries partagées.
+
+TypeScript et **25 tests ciblés** passent : sommets skinnés et sphères sur plusieurs poses, partage des buffers sans partage des poses, changements de visibilité, morphs/alpha laissés au rendu normal, versions d'attributs, restauration après exception, démontage du dernier acteur, cache borné par ses utilisateurs, runtime des personnages et contrôleur de diagnostic emprunté sans double installation. Les mesures exploratoires et les vérifications visuelles ne remplacent pas une référence FPS stabilisée.

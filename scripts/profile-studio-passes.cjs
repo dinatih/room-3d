@@ -19,6 +19,9 @@ const fixture = { ...require('../tests/fixtures/cases.cjs').performance[process.
 fixture.query = {...fixture.query, bnfMarker:'0'};
 const progress = createProgress(fixture.id);
 const staticShadows = process.argv.includes('--static-shadows');
+const laraShadows = process.argv.includes('--lara-shadows');
+if (staticShadows && laraShadows) throw Error('Select one shadow batching experiment');
+const batchingMode = laraShadows ? 'lara-shadow-batches-off' : staticShadows ? 'static-shadow-batches-off' : null;
 const report = { commit:process.env.ROOM_TEST_COMMIT, dirty:process.env.ROOM_TEST_DIRTY==='true', fixture, pairs:[], blocks:[] };
 const stats = values => values.length ? summary(values) : null;
 function pairSummary(data) {
@@ -46,23 +49,24 @@ withBrowser(fixture, async(page,result)=>{
         const {useSceneStore}=await import('/src/features/scene/store/useSceneStore.ts');
         const gl=window.__THREE_GL__;return {layers:useSceneStore.getState().layers,drawingBuffer:[gl.domElement.width,gl.domElement.height],programs:gl.info.programs.length};
     });
-    await page.evaluate(installPassProbe,result.loaded.models.map(model=>model.id),staticShadows);
+    await page.evaluate(installPassProbe,result.loaded.models.map(model=>model.id),staticShadows,laraShadows);
     report.info=await page.evaluate(()=>window.__passProbe.info);save();
     try {
-        for (const mode of staticShadows ? ['static-shadow-batches-off'] : ['shadow-update-off','shadows-off','mirror-update-off','transmission-off','actors-draw-off']) {
+        for (const mode of batchingMode ? [batchingMode] : ['shadow-update-off','shadows-off','mirror-update-off','transmission-off','actors-draw-off']) {
             progress(`Paires à pose identique : ${mode}…`);
             const data=await page.evaluate(mode=>window.__passProbe.pairs(mode),mode);
             const row=pairSummary(data);report.pairs.push(row);save();
             progress(`${mode} : GPU ${row.baselineGpuMs?.median.toFixed(2) ?? 'indisponible'} → ${row.variantGpuMs?.median.toFixed(2) ?? 'indisponible'} ms ; dessins ${row.baselineCalls?.median} → ${row.variantCalls?.median}`);
         }
-        if (staticShadows) {
-            report.pixels = await page.evaluate(()=>window.__passProbe.pixels('static-shadow-batches-off'));
-            if (report.pixels.maxDifference > 1) throw Error(`Static shadow batching changed the framebuffer: ${JSON.stringify(report.pixels)}`);
+        if (batchingMode) {
+            report.batchStats = await page.evaluate(()=>window.__passProbe.batchStats);
+            report.pixels = await page.evaluate(mode=>window.__passProbe.pixels(mode),batchingMode);
+            if (report.pixels.maxDifference > 1) throw Error(`Shadow batching changed the framebuffer: ${JSON.stringify(report.pixels)}`);
             progress(`Pixels : ${report.pixels.different}/${report.pixels.components} composantes différentes ; écart max ${report.pixels.maxDifference}/255`); save();
         }
         const candidates=report.pairs.filter(row=>row.gpuSavedPercent?.median>0 && row.baselineCalls?.median!==row.variantCalls?.median);
-        const best=staticShadows ? 'static-shadow-batches-off' : candidates.sort((a,b)=>b.gpuSavedPercent.median-a.gpuSavedPercent.median)[0]?.mode;
-        const variants=staticShadows ? [best] : [...(best?[best]:[]),'resolution-70'];
+        const best=batchingMode ? batchingMode : candidates.sort((a,b)=>b.gpuSavedPercent.median-a.gpuSavedPercent.median)[0]?.mode;
+        const variants=batchingMode ? [best] : [...(best?[best]:[]),'resolution-70'];
         if(await page.evaluate(()=>window.__passProbe.secondaryCount))variants.push('secondary-off');
         const sequence=['baseline',...variants,...variants.toReversed(),'baseline'];
         report.cadenceCandidate=best ?? null;

@@ -1,5 +1,5 @@
 // Browser-only diagnostic. Paired renders share one pose; cadence blocks run normally.
-exports.installPassProbe = async function (ids, staticShadowExperiment = false) {
+exports.installPassProbe = async function (ids, staticShadowExperiment = false, laraShadowExperiment = false) {
     const renderer = window.__THREE_GL__, main = window.__THREE_SCENE__;
     const { CHARACTERS } = await import('/src/features/scene/characterConfig.ts');
     let staticShadowBatching = { enabled: false }, cleanupBatching = () => {};
@@ -23,6 +23,21 @@ exports.installPassProbe = async function (ids, staticShadowExperiment = false) 
         if (!root?.userData.dynamicActor) throw Error(`Missing character root: ${id}`);
         return root;
     });
+    let laraShadowController;
+    if (laraShadowExperiment) {
+        const { createLaraShadowBatching, getLaraShadowBatching } = await import('/src/features/scene/utils/laraShadowBatches.ts');
+        const nativeRoots = roots.filter((_root, i) => CHARACTERS.find(character => character.id === ids[i]).path === 'characters/lara/lara_native.glb');
+        laraShadowController = getLaraShadowBatching(renderer);
+        const previousCleanup = cleanupBatching;
+        if (laraShadowController) {
+            const enabled = laraShadowController.state.enabled;
+            cleanupBatching = () => { laraShadowController.state.enabled = enabled; previousCleanup(); };
+        } else {
+            laraShadowController = createLaraShadowBatching(nativeRoots);
+            const uninstall = laraShadowController.install(renderer, main);
+            cleanupBatching = () => { uninstall(); laraShadowController.dispose(); previousCleanup(); };
+        }
+    }
     const mirrors = [], transmission = new Map();
     main.traverse(object => {
         if (object.isReflector) mirrors.push({ object, before: object.onBeforeRender });
@@ -50,6 +65,7 @@ exports.installPassProbe = async function (ids, staticShadowExperiment = false) 
     };
     const configure = mode => {
         staticShadowBatching.enabled = mode === 'static-shadow-batches-off' ? false : batchingEnabled;
+        if (laraShadowController) laraShadowController.state.enabled = mode !== 'lara-shadow-batches-off';
         renderer.shadowMap.enabled = mode === 'shadows-off' ? false : shadowsEnabled;
         for (const mirror of mirrors) mirror.object.onBeforeRender = mode === 'mirror-update-off' ? noop : mirror.before;
         for (const [material, entry] of transmission) {
@@ -145,6 +161,7 @@ exports.installPassProbe = async function (ids, staticShadowExperiment = false) 
         }
     };
     window.__passProbe = {
+        get batchStats() { return laraShadowController?.stats(); },
         get secondaryCount() { return auxiliary.length; },
         info: { timerAvailable: !!timer, ratio, roots: roots.map(root => root.name), mirrors: mirrors.length,
             transmission: [...transmission].map(([material, entry]) => ({ name: material.name, value: entry.value, objects: [...entry.objects] })) },
@@ -173,10 +190,11 @@ exports.installPassProbe = async function (ids, staticShadowExperiment = false) 
             } finally { task = null; renderer.setPixelRatio(ratio); configure('baseline'); }
         },
         dispose() {
+            const batchStats = laraShadowController?.stats();
             task = null; renderer.render = render; renderer.shadowMap.render = shadow; renderer.renderBufferDirect = direct;
             renderer.setPixelRatio(ratio); configure('baseline'); cleanupBatching();
             for (const { query } of pending) context.deleteQuery(query);
-            return { auxiliary, disjoint };
+            return { auxiliary, disjoint, batchStats };
         },
     };
 };

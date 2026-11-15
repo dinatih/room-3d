@@ -10,6 +10,7 @@ import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { mergeLaraPairs } from './mergeLaraPairs';
+import { useLaraShadowBatching } from './useLaraShadowBatching';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
@@ -207,6 +208,7 @@ export function Character({
     if (isLara) mergeLaraPairs(scene);
     return extractCharacterParts(scene);
   }, [scene, isLara]);
+  useLaraShadowBatching(scene, isLara);
   const pendantRef = useRef<CharacterPendantHandle>(null);
   const parachuteRef = useRef<HeartParachuteHandle>(null);
   const headBone = parts.bones.head;
