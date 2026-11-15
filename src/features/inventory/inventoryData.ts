@@ -278,7 +278,7 @@ export const INVENTORY: InventoryItem[] = [
     brand: 'Nike/Jordan',
     category: 'clothing',
     qty: 2,
-    dims: { w: 20.4, d: 28.5, h: 4.8 },
+    dims: { w: 28.7, d: 29.1, h: 10.5 },
     price: '38,97',
     glbPath: 'items/jordan-hex-mule/JordanHexMule.glb',
     photos: [
