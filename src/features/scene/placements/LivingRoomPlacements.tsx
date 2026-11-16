@@ -48,6 +48,7 @@ import { createStaticGlbItem } from '../items/createStaticGlbItem';
 import { Dirigera10503406 } from '../items/Dirigera10503406';
 import { MatterHub } from '../items/MatterHub';
 import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
+import { VacuumCleanerPart } from '../items/VacuumCleanerPart';
 import { DroneCell, DF } from '../items/Drona';
 import { DimpaCover } from '../items/DimpaCover';
 import { Lack90282180 } from '../items/Lack90282180';
@@ -115,6 +116,7 @@ const MIRROR_CX = (KITCHEN_EAST_WALL + DOOR_START) / 2; // centre des miroirs Ni
 const FreeboxPop = createStaticGlbItem('/items/freebox-pop/freebox-pop.glb', {
   scale: 16.1 / 67.46903991699219,
 });
+const Koppla = createStaticGlbItem('/items/koppla00314741/Koppla00314741.glb');
 
 const SIT_H = 70;
 const STAND_H = 103;
@@ -729,10 +731,19 @@ export function LivingRoomDecor() {
         <group position={[3, MEUBLE_T_Y, -13]} userData={{ sceneItemRoot: true, itemName: 'Crème en distributeur' }}><CreamPump /></group>
         <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
-          {/* Deuxième tablette depuis le bas : dessus à 21 + 1,5 cm. */}
-          <group position={[12, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Freebox Pop (Serveur)' }}><FreeboxPop /></group>
-          <group position={[32, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'DIRIGERA' }}><Dirigera10503406 /></group>
-          <group position={[49, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Hub Matter' }}><MatterHub /></group>
+          {/* Troisième tablette depuis le bas : dessus à 37 + 1,5 cm. */}
+          <group position={[12, 38.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Freebox Pop (Serveur)' }}><FreeboxPop /></group>
+          <group position={[32, 38.5, 13]} userData={{ sceneItemRoot: true, itemName: 'DIRIGERA' }}><Dirigera10503406 /></group>
+          <group position={[49, 38.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Hub Matter' }}><MatterHub /></group>
+          {/* KOPPLA au bord avant de la deuxième tablette, prises vers le haut. */}
+          <group position={[30, 22.5, 26 - 5.8164 / 2]} userData={{ sceneItemRoot: true, itemName: 'KOPPLA Prise quadruple' }}><Koppla /></group>
+          {/* Rangement détaché de l'aspirateur, comme sur les photos. */}
+          <group position={[12, 54.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Aspirateur Rowenta — tube et brosse' }}>
+            <VacuumCleanerPart part="VacuumTube" />
+          </group>
+          <group position={[39, 54.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Aspirateur Rowenta — bloc moteur' }}>
+            <VacuumCleanerPart part="VacuumHandheld" />
+          </group>
           {/* Tapette électrique sur l'étage supérieur, à droite des porte-chapeaux */}
           <group position={[57.5, 54.5, 13]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Tapette électrique' }}>
             <ElectricSwatter />
