@@ -101,7 +101,10 @@ const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X = 32; // contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
-const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - 16.035; // plaqué contre Kallax Cuisine
+const MACK_HALF_DEPTH = 16.035; // structure du meuble seule, sans les Drona du haut qui débordent
+const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH; // plaqué contre Kallax Cuisine
+const DRONA_HALF_WIDTH = 16.64; // largeur du GLB Drona (33,28 cm), orientée le long de Z une fois pivotée de 90°
+const DRONA_FLOOR_Z = MACK_Z - MACK_HALF_DEPTH - DRONA_HALF_WIDTH; // contre la face Nord du meuble Mackapär
 const MIRROR_CX = (KITCHEN_EAST_WALL + DOOR_START) / 2; // centre des miroirs Nissedal D
 
 const SIT_H = 70;
@@ -572,7 +575,7 @@ export function LivingRoomFurnishings() {
       </group>
 
       {/* Boîte Drona au sol mur Ouest */}
-      <group position={[22, DF / 2 + 0.2, 272]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Boîte Drona Sol Ouest' }}>
+      <group position={[22, DF / 2 + 0.2, DRONA_FLOOR_Z]} rotation={[0, Math.PI / 2, 0]} userData={{ sceneItemRoot: true, itemName: 'Boîte Drona Sol Ouest' }}>
         <DroneCell />
       </group>
 
