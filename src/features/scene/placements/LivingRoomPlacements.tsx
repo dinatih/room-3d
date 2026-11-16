@@ -110,7 +110,10 @@ const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH;
 const DRONA_HALF_WIDTH = 16.64; // largeur du GLB Drona (33,28 cm), orientée le long de Z une fois pivotée de 90°
 const DRONA_FLOOR_Z = MACK_Z - MACK_HALF_DEPTH - DRONA_HALF_WIDTH; // contre la face Nord du meuble Mackapär
 const MIRROR_CX = (KITCHEN_EAST_WALL + DOOR_START) / 2; // centre des miroirs Nissedal D
-const FreeboxPop = createStaticGlbItem('/items/freebox-pop/freebox-pop.glb');
+// Source width is 67.469 model units, rather than metres; normalize to 16.1 cm.
+const FreeboxPop = createStaticGlbItem('/items/freebox-pop/freebox-pop.glb', {
+  scale: 16.1 / 67.46903991699219,
+});
 
 const SIT_H = 70;
 const STAND_H = 103;
