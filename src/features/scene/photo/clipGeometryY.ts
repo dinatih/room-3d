@@ -14,22 +14,13 @@ const MAGAZINE_CLIP_MASK =
   (1 << LAYER_WALL_STRUCTURE) |
   (1 << LAYER_FLOOR_COVERINGS);
 
-function isMagazineCloset(obj: THREE.Object3D): boolean {
+function magazineCutOverride(obj: THREE.Object3D): boolean | undefined {
   let cur: THREE.Object3D | null = obj;
   while (cur) {
-    const itemName = cur.userData?.itemName;
-    const hoverLabel = cur.userData?.hoverAction?.label;
-    if (
-      itemName === 'Placard Couloir' ||
-      itemName === 'Placard SDB' ||
-      hoverLabel === 'Placard couloir' ||
-      hoverLabel === 'Placard SDB'
-    ) {
-      return true;
-    }
+    if (typeof cur.userData.magazineCut === 'boolean') return cur.userData.magazineCut;
     cur = cur.parent;
   }
-  return false;
+  return undefined;
 }
 
 interface ClipVertex {
@@ -151,7 +142,8 @@ export function applyMagazineCut(
   const box = new THREE.Box3();
   root.traverse((obj) => {
     if (!obj.visible || !(obj as THREE.Mesh).isMesh) return;
-    if ((obj.layers.mask & MAGAZINE_CLIP_MASK) === 0 && !isMagazineCloset(obj)) return;
+    const override = magazineCutOverride(obj);
+    if (override === false || (override !== true && (obj.layers.mask & MAGAZINE_CLIP_MASK) === 0)) return;
     const mesh = obj as THREE.Mesh;
     box.setFromObject(mesh);
     if (box.min.y >= cutHeight - 0.5) {

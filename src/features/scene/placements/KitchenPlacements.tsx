@@ -9,7 +9,7 @@ import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGr
 import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
-import { SprayCleaner } from '../items/CleaningProducts';
+import { SprayCleaner, CifInfiniteClean } from '../items/CleaningProducts';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Citronhaj40553211 } from '../items/Citronhaj40553211';
@@ -108,6 +108,13 @@ export function KitchenFurnishings() {
       {/* Boîtes Drona intégrées au Kallax Cuisine */}
       <group position={KALLAX_CUISINE_POSITION} rotation={[0, KALLAX_CUISINE_ROTATION, 0]}>
         <KallaxCuisineDrona />
+      </group>
+
+      {/* Case droite du Kallax, juste sous l'étage du four (ouverture vers -Z local). */}
+      <group position={KALLAX_CUISINE_POSITION} rotation-y={KALLAX_CUISINE_ROTATION}>
+        <group position={[-17.5, 76.5 + KALLAX_FRAME, -10]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean Kallax cuisine' }}>
+          <CifInfiniteClean />
+        </group>
       </group>
 
       {/* IKEA 365+ — bord avant de la case supérieure gauche (riz 1/4, macaronis 3/4, semoule 2/4 de gauche à droite). */}

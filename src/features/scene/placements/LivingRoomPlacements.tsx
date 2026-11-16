@@ -43,6 +43,10 @@ import { Laptop } from '../items/Laptop';
 import { Phone } from '../items/Phone';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Backpack } from '../items/Backpack';
+import { createStaticGlbItem } from '../items/createStaticGlbItem';
+import { Dirigera10503406 } from '../items/Dirigera10503406';
+import { MatterHub } from '../items/MatterHub';
+import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
 import { DroneCell, DF } from '../items/Drona';
 import { DimpaCover } from '../items/DimpaCover';
 import { Lack90282180 } from '../items/Lack90282180';
@@ -106,6 +110,7 @@ const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH;
 const DRONA_HALF_WIDTH = 16.64; // largeur du GLB Drona (33,28 cm), orientée le long de Z une fois pivotée de 90°
 const DRONA_FLOOR_Z = MACK_Z - MACK_HALF_DEPTH - DRONA_HALF_WIDTH; // contre la face Nord du meuble Mackapär
 const MIRROR_CX = (KITCHEN_EAST_WALL + DOOR_START) / 2; // centre des miroirs Nissedal D
+const FreeboxPop = createStaticGlbItem('/items/freebox-pop/freebox-pop.glb');
 
 const SIT_H = 70;
 const STAND_H = 103;
@@ -463,7 +468,7 @@ function SneakersPair() {
   const pz = ROOM_D - 16;
   return (
     <>
-      {[0.5, 18.5].flatMap(y => [-SNEAKER_PAIR_DX, SNEAKER_PAIR_DX].map(dx => (
+      {[0.5, 36.5].flatMap(y => [-SNEAKER_PAIR_DX, SNEAKER_PAIR_DX].map(dx => (
         <group key={`${y}-${dx}`} position={[MIRROR_CX + dx, y, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges' }}>
           <SneakersRed />
         </group>
@@ -505,7 +510,7 @@ export function LivingRoomFurniture() {
       </group>
 
       {/* Rangement chaussures Grejig */}
-      {[0, 18, 36].map(y => (
+      {[0, 18].map(y => (
         <group key={y} position={[MIRROR_CX, y, ROOM_D - 14]} userData={{ sceneItemRoot: true, itemName: `Range-chaussures Grejig ${y / 18 + 1}` }}>
           <NavigationObstacle id={`grejig-${y}`} owner="grejig"><Grejig40329868 /></NavigationObstacle>
         </group>
@@ -683,6 +688,16 @@ export function LivingRoomDecor() {
       {/* Baskets Sneakers Rouges sur range-chaussures */}
       <SneakersPair />
 
+      {/* Second sac sur les baskets du dernier étage, dos contre le miroir. */}
+      <group position={[MIRROR_CX, 36.5 + 13.54, ROOM_D - 5.5 - 16.8 / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Second sac à dos sur les baskets' }}>
+        <Backpack />
+      </group>
+
+      {/* Paire de mules à droite du premier étage libéré. */}
+      <group position={[MIRROR_CX + SNEAKER_PAIR_DX, 18.5, ROOM_D - 16]} userData={{ sceneItemRoot: true, itemName: 'Jordan Hex Mule SP — première étagère' }}>
+        <JordanHexMule />
+      </group>
+
       {/* Paire de Jordan Hex Mule SP sur le grand tapis sous la baie vitrée */}
       <group position={[220, 0.5, 35]} rotation-y={-0.28} userData={{ sceneItemRoot: true, itemName: 'Jordan Hex Mule SP' }}>
         <JordanHexMule />
@@ -700,8 +715,15 @@ export function LivingRoomDecor() {
 
       {/* Casquettes sur ShoeHatRack (flanc Kallax SE) */}
       <group position={KALLAX_SE_TRANSFORM.position} rotation={[0, KALLAX_SE_TRANSFORM.rotationY - Math.PI / 2, 0]}>
+        {/* Produits de soin au bord avant du dessus du Kallax. */}
+        <group position={[-7, MEUBLE_T_Y, -13]} userData={{ sceneItemRoot: true, itemName: 'Déodorant en spray (Axe)' }}><AxeDeodorant /></group>
+        <group position={[3, MEUBLE_T_Y, -13]} userData={{ sceneItemRoot: true, itemName: 'Crème en distributeur' }}><CreamPump /></group>
         <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
           <ShoeHatRackCaps />
+          {/* Deuxième tablette depuis le bas : dessus à 21 + 1,5 cm. */}
+          <group position={[12, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Freebox Pop (Serveur)' }}><FreeboxPop /></group>
+          <group position={[32, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'DIRIGERA' }}><Dirigera10503406 /></group>
+          <group position={[49, 22.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Hub Matter' }}><MatterHub /></group>
           {/* Tapette électrique sur l'étage supérieur, à droite des porte-chapeaux */}
           <group position={[57.5, 54.5, 13]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Tapette électrique' }}>
             <ElectricSwatter />

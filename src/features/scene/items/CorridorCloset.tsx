@@ -62,7 +62,7 @@ export function CorridorCloset({ actionState = {}, onSize }: Partial<Omit<SceneI
   const closetActions = [...getObjectActionIds('corridor-closet'), ...smartActions];
 
   return (
-    <group userData={{ sceneItemRoot: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
+    <group userData={{ magazineCut: false, sceneItemRoot: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
       {/* Étagères — remplissent toute la largeur et profondeur du caisson */}
       {[60, 120, 180].map((y) => (
         <mesh key={y} position={[0, y, 0]} castShadow receiveShadow material={shelfMat}>
@@ -74,7 +74,7 @@ export function CorridorCloset({ actionState = {}, onSize }: Partial<Omit<SceneI
           Centre décalé de -1 cm en X : face ext à x=0 (pivot), face int à x=-2.
           À l'ouverture +π/2, x=0 → z=0 et x=-2 → z=+2 : aucune pénétration nord. */}
       <group ref={doorRef} position={[DOOR_PIVOT_X, 0, DOOR_PIVOT_Z]}
-        userData={{ hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
+        userData={{ magazineCut: true, hoverAction: { label: 'Placard couloir', actions: closetActions } }}>
         <mesh position={[-1, WALL_H / 2, CLOSET_D / 2]} castShadow material={doorMat}>
           <boxGeometry args={[2, WALL_H - DOOR_GAP * 2, CLOSET_D - DOOR_GAP * 2]} />
         </mesh>

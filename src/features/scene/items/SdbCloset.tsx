@@ -122,9 +122,9 @@ export function SdbCloset({ actionState = {}, onSize }: Partial<Omit<SceneItemPr
   const sdbSmartActions = SMART_OBJECTS['sdb-closet'].slots.map(s => `smart-object:::sdb-closet:::${s.slotId}`);
 
   return (
-    <group userData={{ sceneItemRoot: true, hoverAction: { label: 'Placard SDB', actions: [...getObjectActionIds('sdb-closet'), ...sdbSmartActions] } }}>
+    <group userData={{ magazineCut: false, sceneItemRoot: true, hoverAction: { label: 'Placard SDB', actions: [...getObjectActionIds('sdb-closet'), ...sdbSmartActions] } }}>
       {/* Rail haut */}
-      <mesh position={[0, H - 1.5, 0]} castShadow material={railMat}>
+      <mesh position={[0, H - 1.5, 0]} castShadow material={railMat} userData={{ magazineCut: true }}>
         <boxGeometry args={[W, 3, RAIL_D]} />
       </mesh>
       {/* Rail bas */}
@@ -134,7 +134,7 @@ export function SdbCloset({ actionState = {}, onSize }: Partial<Omit<SceneItemPr
 
       {/* Panneau gauche (en -X, ce qui correspond à la Droite depuis la SDB) */}
       <group ref={groupLRef} position-y={0} position-z={ZL}
-             userData={{ hoverAction: { label: 'Porte SDB D', actions: ['sdbClosetR', ...sdbSmartActions] } }}>
+             userData={{ magazineCut: true, hoverAction: { label: 'Porte SDB D', actions: ['sdbClosetR', ...sdbSmartActions] } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>
@@ -145,7 +145,7 @@ export function SdbCloset({ actionState = {}, onSize }: Partial<Omit<SceneItemPr
 
       {/* Panneau droit (en +X, ce qui correspond à la Gauche depuis la SDB) */}
       <group ref={groupRRef} position-y={0} position-z={ZR}
-             userData={{ hoverAction: { label: 'Porte SDB G', actions: ['sdbClosetL', ...sdbSmartActions] } }}>
+             userData={{ magazineCut: true, hoverAction: { label: 'Porte SDB G', actions: ['sdbClosetL', ...sdbSmartActions] } }}>
         <mesh position={[0, H / 2, 0]} castShadow material={doorMats}>
           <boxGeometry args={[PANEL_W, H, PANEL_T]} />
         </mesh>

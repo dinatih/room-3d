@@ -32,7 +32,8 @@ import { TowelFoldedRed, TowelHangingLargeRed, TowelHangingSmallRed } from '../i
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin';
 import { CecotecReadywarm } from '../items/CecotecReadywarm';
-import { TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
+import { CifInfiniteClean, TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
+import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
@@ -209,7 +210,12 @@ export function BathroomFurnishings() {
           <DroneCell />
           <group position={[0.26, -DF / 2 + 15, id === 'drona-bathroom-west' ? 9.765 : -9.765]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
             <Stackstod60620144 />
+            {id === 'drona-bathroom-east' && <>
+              <group position={[-8, 1, 0]} userData={{ sceneItemRoot: true, itemName: 'Déodorant en spray (Axe)' }}><AxeDeodorant /></group>
+              <group position={[8, 1, 0]} userData={{ sceneItemRoot: true, itemName: 'Crème en distributeur' }}><CreamPump /></group>
+            </>}
           </group>
+          {id === 'drona-bathroom-west' && <group position={[0, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean SDB Ouest' }}><CifInfiniteClean /></group>}
         </group>
       ))}
 
