@@ -131,7 +131,7 @@ export function GardenAnimals() {
       </group>
       {extraDogs.map((dog, index) => (
         <group key={dog.id} position={[50 + (index % 3) * 90, 0, -50 - Math.floor(index / 3) * 90]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: dog.name }}>
-          <ImportedDog path={'/' + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} />
+          <ImportedDog path={'/' + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} agentId={dog.id} walkClip={dog.walkClip} runClip={dog.runClip} />
         </group>
       ))}
     </>

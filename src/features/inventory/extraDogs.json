@@ -17,7 +17,9 @@
       "characters/animated-pitbull-dog/front.png",
       "characters/animated-pitbull-dog/three-quarter.png",
       "characters/animated-pitbull-dog/back.png"
-    ]
+    ],
+    "walkClip": "walk_fwd 29",
+    "runClip": "run_fwd 13"
   },
   {
     "id": "labrador-dog-from-cotw-game",
@@ -37,7 +39,9 @@
       "characters/labrador-dog-from-cotw-game/front.png",
       "characters/labrador-dog-from-cotw-game/three-quarter.png",
       "characters/labrador-dog-from-cotw-game/back.png"
-    ]
+    ],
+    "walkClip": "Armature|Armature|labrador_walk_fwd_01",
+    "runClip": "Armature|Armature|labrador_run_fwd_01"
   },
   {
     "id": "bloodhund-from-cotw-game-ears-has-animglitch",
@@ -57,7 +61,9 @@
       "characters/bloodhund-from-cotw-game-ears-has-animglitch/front.png",
       "characters/bloodhund-from-cotw-game-ears-has-animglitch/three-quarter.png",
       "characters/bloodhund-from-cotw-game-ears-has-animglitch/back.png"
-    ]
+    ],
+    "walkClip": "walk fwd",
+    "runClip": "run fwd"
   },
   {
     "id": "rdr2-dog-poodle",

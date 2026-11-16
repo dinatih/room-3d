@@ -37,7 +37,9 @@ export function createDogBehavior() {
 }
 export type DogBehavior = ReturnType<typeof createDogBehavior>;
 export interface DogContext {
-  id: 'shiba' | 'ulotte';
+  id: string;
+  walkSpeed?: number;
+  pauses?: DogAction[];
   root: THREE.Group;
   play: (action: DogAction, once?: boolean) => number;
   // Museau dans le repère du chien, mesuré à mi-parcours du clip de repas.
@@ -58,7 +60,7 @@ export function resumeDogBehavior(state: DogBehavior, context: DogContext) {
 }
 export function updateDogControl(state: DogBehavior, context: DogContext, delta: number): boolean {
   const driver = state.driver ??= new SubjectDriver(context.id);
-  driver.step(context.root, delta, DOG_WALK_SPEED[context.id]);
+  driver.step(context.root, delta, (context.walkSpeed ?? DOG_WALK_SPEED[context.id as keyof typeof DOG_WALK_SPEED]));
   if (driver.started) { releaseDogRoute(state, context.id); state.autonomous = false; state.controlAction = null; }
   if (driver.active) {
     if (driver.action) {
@@ -86,7 +88,7 @@ export function startDogPause(state: DogBehavior, context: DogContext) {
     { action: 'rest', weight: DOG_ACTIVITY.restWeight },
     { action: 'jump', weight: DOG_ACTIVITY.jumpWeight },
   ];
-  const available = choices.filter(choice => choice.action !== state.lastPause);
+  const available = choices.filter(choice => (!context.pauses || context.pauses.includes(choice.action)) && (context.pauses?.length === 1 || choice.action !== state.lastPause));
   let draw = Math.random() * available.reduce((sum, choice) => sum + choice.weight, 0);
   const choice = available.find(choice => (draw -= choice.weight) < 0)!;
   state.action = state.lastPause = choice.action;
@@ -167,7 +169,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
   const meal = state.mode === 'meal-approach';
   if (meal && (!dogFeedingStation.position || !isAgentDestinationFree(id, state.target))) { postponeMeal(state, context); return; }
   const before = { x: state.position.x, z: state.position.z };
-  const speed = state.gait === 'walk' ? DOG_WALK_SPEED[id] : DOG_ACTIVITY.runSpeed;
+  const speed = state.gait === 'walk' ? (context.walkSpeed ?? DOG_WALK_SPEED[id as keyof typeof DOG_WALK_SPEED]) : DOG_ACTIVITY.runSpeed;
   const next = followRoute(state.route, id, before, state.target, speed * delta, (direction, remaining) => {
     const steer = computeSteeringVector(id, before.x, before.z, direction.x, direction.z, remaining);
     return { x: steer.steerX, z: steer.steerZ };
