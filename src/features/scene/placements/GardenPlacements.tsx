@@ -1,3 +1,5 @@
+import extraDogs from '../../inventory/extraDogs.json';
+import { ImportedDog } from '../items/ImportedDog';
 import { useRobotVisibility } from '../store/useRobotVisibility';
 import { WindPlant } from '../WindPlant';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
@@ -127,6 +129,11 @@ export function GardenAnimals() {
       <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
         <Dachshund />
       </group>
+      {extraDogs.map((dog, index) => (
+        <group key={dog.id} position={[50 + (index % 3) * 90, 0, -50 - Math.floor(index / 3) * 90]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: dog.name }}>
+          <ImportedDog path={'/' + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} />
+        </group>
+      ))}
     </>
   );
 }

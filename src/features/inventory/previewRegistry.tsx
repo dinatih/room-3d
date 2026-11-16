@@ -1,3 +1,5 @@
+import extraDogs from './extraDogs.json';
+import { ImportedDog } from '@features/scene/items/ImportedDog';
 import { Microduck } from '@features/scene/items/Microduck';
 import { Jumper } from '@features/scene/items/Jumper';
 import { RaphRover } from '@features/scene/items/RaphRover';
@@ -416,3 +418,9 @@ import { OyeetNexProII } from '@features/scene/items/OyeetNexProII';
 SCENE_REGISTRY['heart-earbuds-red'] = HeartEarbudsRed;
 SCENE_REGISTRY['towel-set-red'] = TowelSetRed;
 SCENE_REGISTRY['oyeet-nex-pro-ii'] = OyeetNexProII;
+
+for (const dog of extraDogs) {
+  SCENE_REGISTRY[dog.id] = function ImportedDogPreview({ onSize }: SceneItemProps) {
+    return <ImportedDog path={"/" + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} onSize={onSize} />;
+  };
+}

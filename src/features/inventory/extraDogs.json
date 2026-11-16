@@ -1,0 +1,122 @@
+[
+  {
+    "id": "animated-pitbull-dog",
+    "name": "Pitbull",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 52.31,
+      "d": 55.0,
+      "h": 55
+    },
+    "glbPath": "characters/animated-pitbull-dog/dog.glb",
+    "idleClip": "idle 50",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées.",
+    "photos": [
+      "characters/animated-pitbull-dog/front.png",
+      "characters/animated-pitbull-dog/three-quarter.png",
+      "characters/animated-pitbull-dog/back.png"
+    ]
+  },
+  {
+    "id": "labrador-dog-from-cotw-game",
+    "name": "Labrador COTW",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 57.06,
+      "d": 60.0,
+      "h": 60
+    },
+    "glbPath": "characters/labrador-dog-from-cotw-game/dog.glb",
+    "idleClip": "Armature|Armature|labrador_idle_aggressive_pose_01",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées.",
+    "photos": [
+      "characters/labrador-dog-from-cotw-game/front.png",
+      "characters/labrador-dog-from-cotw-game/three-quarter.png",
+      "characters/labrador-dog-from-cotw-game/back.png"
+    ]
+  },
+  {
+    "id": "bloodhund-from-cotw-game-ears-has-animglitch",
+    "name": "Bloodhound COTW",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 67.3,
+      "d": 65.0,
+      "h": 65
+    },
+    "glbPath": "characters/bloodhund-from-cotw-game-ears-has-animglitch/dog.glb",
+    "idleClip": "idle drop",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées. Défaut d’animation des oreilles signalé dans le modèle source.",
+    "photos": [
+      "characters/bloodhund-from-cotw-game-ears-has-animglitch/front.png",
+      "characters/bloodhund-from-cotw-game-ears-has-animglitch/three-quarter.png",
+      "characters/bloodhund-from-cotw-game-ears-has-animglitch/back.png"
+    ]
+  },
+  {
+    "id": "rdr2-dog-poodle",
+    "name": "Caniche RDR2",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 47.55,
+      "d": 50.0,
+      "h": 50
+    },
+    "glbPath": "characters/rdr2-dog-poodle/dog.glb",
+    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées.",
+    "photos": [
+      "characters/rdr2-dog-poodle/front.png",
+      "characters/rdr2-dog-poodle/three-quarter.png",
+      "characters/rdr2-dog-poodle/back.png"
+    ]
+  },
+  {
+    "id": "rdr2-dog-border-collie",
+    "name": "Border Collie RDR2",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 52.31,
+      "d": 55.0,
+      "h": 55
+    },
+    "glbPath": "characters/rdr2-dog-border-collie/dog.glb",
+    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées.",
+    "photos": [
+      "characters/rdr2-dog-border-collie/front.png",
+      "characters/rdr2-dog-border-collie/three-quarter.png",
+      "characters/rdr2-dog-border-collie/back.png"
+    ]
+  },
+  {
+    "id": "rdr2-dog-labrador",
+    "name": "Labrador RDR2",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 57.06,
+      "d": 60.0,
+      "h": 60
+    },
+    "glbPath": "characters/rdr2-dog-labrador/dog.glb",
+    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "notes": "Modèle animé importé. Dimensions de présentation estimées.",
+    "photos": [
+      "characters/rdr2-dog-labrador/front.png",
+      "characters/rdr2-dog-labrador/three-quarter.png",
+      "characters/rdr2-dog-labrador/back.png"
+    ]
+  }
+]

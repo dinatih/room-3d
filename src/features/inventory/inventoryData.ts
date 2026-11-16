@@ -1,6 +1,7 @@
 // =============================================
 
 import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
+import extraDogs from './extraDogs.json';
 import householdShowcaseItems from './householdShowcaseItems.json';
 // INVENTORY DATA — port de js/ui/inventoryData.js
 // dims: { w, d, h } en cm (w=X, d=Z, h=Y)
@@ -43,6 +44,7 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   ...householdShowcaseItems,
+  ...extraDogs,
   // Imported household products and red hats.
   {"id": "spray-cleaner", "name": "Spray nettoyant", "brand": "", "category": "bathroom", "qty": 1, "dims": {"w": 14.18, "d": 6.59, "h": 29.37}, "glbPath": "items/spray-cleaner/SprayCleaner.glb", "photos": ["items/spray-cleaner/preview-three-quarter.png", "items/spray-cleaner/preview-front.png", "items/spray-cleaner/preview-back.png"], "notes": "Pulvérisateur texturé importé de Spray+cleaner.zip. Échelle estimée."},
   {"id": "laundry-detergent", "name": "Lessive", "brand": "", "category": "bathroom", "qty": 1, "dims": {"w": 8.42, "d": 10.57, "h": 25.0}, "glbPath": "items/laundry-detergent/LaundryDetergent.glb", "photos": ["items/laundry-detergent/preview-three-quarter.png", "items/laundry-detergent/preview-front.png", "items/laundry-detergent/preview-back.png"], "notes": "Grand flacon et bouchon séparés du modèle bottles. Plastique blanc. Échelle estimée."},
