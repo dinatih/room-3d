@@ -35,6 +35,7 @@ import { RugLarge, RugSmall } from '../items/Rugs';
 import { ElectricSwatter } from '../items/ElectricSwatter';
 import { Grejig40329868 } from '../items/Grejig40329868';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
+import { Tjena80395489 } from '../items/Tjena80395489';
 import { Lagerpoppel00561816 } from '../items/Lagerpoppel00561816';
 import { MaillotInyeong } from '../items/MaillotInyeong';
 import { Spruttig20317079 } from '../items/Spruttig20317079';
@@ -581,9 +582,14 @@ export function LivingRoomFurnishings() {
       {/* Objets et accessoires de travail posés sur les bureaux (Stackstod, Laptop, Phone, Mug) */}
       <DeskDecor />
 
-      {/* Enceinte JBL Charge 3 sur Kallax NE */}
-      <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} userData={{ sceneItemRoot: true, itemName: 'Enceinte JBL Charge 3' }}>
+      {/* Enceinte JBL Charge 3 sur Kallax NE (décalée vers le sud pour laisser place à l'organiseur TJENA) */}
+      <group position={[KALLAX_NE_POSITION[0] - 15, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 6]} userData={{ sceneItemRoot: true, itemName: 'Enceinte JBL Charge 3' }}>
         <JblCharge3 />
+      </group>
+
+      {/* Organiseur TJENA noir sur Kallax NE, au bord avant entre Variera et l'enceinte */}
+      <group position={[KALLAX_NE_POSITION[0] - 10.25, 117.5, KALLAX_NE_POSITION[2] + 11.2]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Organiseur TJENA noir' }}>
+        <Tjena80395489 />
       </group>
 
       {/* TV */}
@@ -624,8 +630,8 @@ export function LivingRoomDecor() {
         <KallaxNWMannequins />
       </group>
 
-      {/* Tête de mannequin 2 sur Kallax NE */}
-      <group position={[KALLAX_NE_POSITION[0] + KALLAX_DEPTH / 2 - 14, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 11]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
+      {/* Tête de mannequin 2 sur Kallax NE (légèrement reculée pour dégager TJENA) */}
+      <group position={[KALLAX_NE_POSITION[0] + KALLAX_DEPTH / 2 - 10, 118, KALLAX_NE_POSITION[2] + w2 / 2 - 9]} rotation-y={-Math.PI / 4} userData={{ skipMerge: true, itemName: 'Tête de mannequin 2', hoverAction: { label: 'Tête de mannequin 2', actions: ['mannequin-kallax-ne-random', 'mannequin-kallax-ne-wig', 'mannequin-kallax-ne-color', 'mannequin-kallax-ne-wind'] } }}>
         <MannequinHead mannequinId="kallax-ne" />
       </group>
 
