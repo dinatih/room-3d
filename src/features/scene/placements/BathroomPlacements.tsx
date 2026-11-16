@@ -165,8 +165,8 @@ export function BathroomFurniture() {
         <NavigationObstacle id="bathroom-cabinet-east"><BathroomCabinetEast actionState={as} /></NavigationObstacle>
       </group>
 
-      {/* Poubelle verte sur roulettes, centrée devant la porte du METOD ouest. */}
-      <group position={[westCabinet[0], 0, westCabinetFront + 1 + TEMU_ROLLING_BIN_DEPTH / 2]} userData={{ sceneItemRoot: true, itemName: 'Poubelle verte sur roulettes' }}>
+      {/* Poubelle rouge sur roulettes, centrée devant la porte du METOD ouest. */}
+      <group position={[westCabinet[0], 0, westCabinetFront + 1 + TEMU_ROLLING_BIN_DEPTH / 2]} userData={{ sceneItemRoot: true, itemName: 'Poubelle rouge sur roulettes' }}>
         <NavigationObstacle id="temu-rolling-bin"><TemuRollingBin /></NavigationObstacle>
       </group>
 

@@ -1,4 +1,6 @@
-"""Blender: reproduce Temu 607499684021065 from its dimensioned green photo.
+"""Blender: reproduce the red variant of Temu 607499684021065.
+
+Geometry follows the dimensioned green reference photo; finish is red.
 
 Run: blender -b --python scripts/generate-temu-rolling-bin.py
 Photo dimensions take precedence over the listing's inconsistent 26.4 L title.
@@ -24,8 +26,8 @@ def material(name, color, roughness):
     return mat
 
 
-green = material('Forest green moulded polypropylene', (0.012, 0.065, 0.040), 0.3)
-lid_green = material('Green inset lid', (0.020, 0.090, 0.060), 0.32)
+red = material('Red moulded polypropylene', (0.42, 0.012, 0.018), 0.3)
+lid_red = material('Red inset lid', (0.46, 0.018, 0.024), 0.32)
 black = material('Charcoal caster tyres', (0.018, 0.022, 0.021), 0.65)
 frame = material('Dark grey base and caster forks', (0.045, 0.055, 0.05), 0.4)
 
@@ -105,18 +107,18 @@ faces.extend([tuple(reversed(range(n))), tuple(4 * n + i for i in range(n))])
 mesh = bpy.data.meshes.new('Hollow injection moulded bin')
 mesh.from_pydata(vertices, [], faces)
 mesh.update()
-body = bpy.data.objects.new('Green rounded body with inner walls', mesh)
+body = bpy.data.objects.new('Red rounded body with inner walls', mesh)
 bpy.context.collection.objects.link(body)
-body.data.materials.append(green)
+body.data.materials.append(red)
 for poly in mesh.polygons:
     poly.use_smooth = len(poly.vertices) == 4
 
 # Sloping surround with a genuinely separate flush rectangular lid and dark seam.
 box('Lid recessed shadow seam', (0.185, 0.168, 0.003), (0, 0, 0.339), 0.005, frame)
-box('Inset push lid', (0.182, 0.165, 0.005), (0, 0, 0.342), 0.005, lid_green)
-box('Finger recess', (0.050, 0.006, 0.002), (0, -0.080, 0.344), 0.002, green)
+box('Inset push lid', (0.182, 0.165, 0.005), (0, 0, 0.342), 0.005, lid_red)
+box('Finger recess', (0.050, 0.006, 0.002), (0, -0.080, 0.344), 0.002, red)
 for x in (-0.064, 0.064):
-    cylinder('Lid pivot', 0.003, 0.014, (x, 0.080, 0.342), green, (0, math.pi / 2, 0))
+    cylinder('Lid pivot', 0.003, 0.014, (x, 0.080, 0.342), red, (0, math.pi / 2, 0))
 
 objects = list(bpy.context.scene.objects)
 bpy.ops.object.select_all(action='SELECT')
