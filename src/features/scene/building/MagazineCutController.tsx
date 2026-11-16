@@ -14,6 +14,7 @@ export function MagazineCutController({ active, assetsLoaded }: { active: boolea
   const floorCoverings = useSceneStore(state => state.layers.floorCoverings);
   const mirrorSurfaces = useSceneStore(state => state.layers.mirrorSurfaces);
   const equipment = useSceneStore(state => state.layers.equipment);
+  const pillarsOnly = useSceneStore(state => state.layers.pillarsOnly);
 
   useLayoutEffect(() => {
     if (!active) return;
@@ -32,7 +33,7 @@ export function MagazineCutController({ active, assetsLoaded }: { active: boolea
       });
       cameraState.invalidate?.();
     };
-  }, [active, scene, assetsLoaded, wallStructure, structure, doors, floorCoverings, mirrorSurfaces, equipment]);
+  }, [active, scene, assetsLoaded, wallStructure, structure, doors, floorCoverings, mirrorSurfaces, equipment, pillarsOnly]);
 
   return null;
 }

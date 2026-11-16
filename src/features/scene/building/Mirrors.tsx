@@ -323,6 +323,9 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
           <group userData={{ sceneItemRoot: true }}>
             <group position={[fx, MA_BOTTOM_Y, mz]} rotation-y={Math.PI / 2}>
               <NissedalFrame w={M4_W} h={M4_H} ft={FT} fd={FD} />
+              <mesh position={[0, M4_H / 2, 0]} material={silverMirrorMat}>
+                <boxGeometry args={[M4_W - FT * 2, M4_H - FT * 2, 0.2]} />
+              </mesh>
             </group>
           </group>
         );

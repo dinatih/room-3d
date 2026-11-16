@@ -216,7 +216,8 @@ const initialLayers: LayerState = {
     doors: true,
     pillarsOnly: false,
     transparentWallsDoors: false,
-    ...(raytracingPreset === 'magazine' ? { cutWalls: true, neighbors: false, bermudaGrass: false } : {}),
+    cutWalls: raytracingPreset === 'magazine',
+    ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
   } : {}),
   // Valeurs non-booléennes (pas dans LAYER_DEFAULTS)
   ...parseUrlLaraClothing(),

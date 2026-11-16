@@ -900,6 +900,7 @@ export function Studio() {
         doors: true,
         pillarsOnly: false,
         transparentWallsDoors: false,
+        cutWalls: raytracingPreset === 'magazine',
         ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
       });
       requestAnimationFrame(() => requestAnimationFrame(() => store.setPhotoModeOpen(true)));

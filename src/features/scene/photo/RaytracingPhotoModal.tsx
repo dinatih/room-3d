@@ -185,7 +185,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const originalMaterialsMapRef = useRef<Map<THREE.Mesh, THREE.Material | THREE.Material[]>>(new Map());
   const originalGeometriesMapRef = useRef<Map<THREE.Mesh, THREE.BufferGeometry>>(new Map());
   const originalPositionsMapRef = useRef<Map<THREE.Object3D, THREE.Vector3>>(new Map());
-  const prevWallLayersRef = useRef<{ wallStructure: boolean; structure: boolean; doors: boolean; pillarsOnly: boolean; transparentWallsDoors: boolean } | null>(null);
+  const prevWallLayersRef = useRef<{ wallStructure: boolean; structure: boolean; doors: boolean; pillarsOnly: boolean; transparentWallsDoors: boolean; cutWalls: boolean } | null>(null);
   const restoreSplitMeshesRef = useRef<(() => void) | null>(null);
   const hiddenHelpersRef = useRef<THREE.Object3D[]>([]);
   const denoiseQuadRef = useRef<FullScreenQuad | null>(null);
@@ -204,24 +204,26 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
   const doors = useSceneStore(state => Boolean(state.layers.doors));
   const pillarsOnly = useSceneStore(state => Boolean(state.layers.pillarsOnly));
   const transparentWallsDoors = useSceneStore(state => Boolean(state.layers.transparentWallsDoors));
+  const cutWalls = useSceneStore(state => Boolean(state.layers.cutWalls));
   const setLayers = useSceneStore(state => state.setLayers);
-  const areWallsCeilingFull = wallStructure && structure && doors && !pillarsOnly && !transparentWallsDoors;
+  const areWallsCeilingFull = wallStructure && structure && doors && !pillarsOnly && !transparentWallsDoors && !cutWalls;
 
   const handleToggleWallsCeilingFull = () => {
     if (!areWallsCeilingFull) {
-      prevWallLayersRef.current = { wallStructure, structure, doors, pillarsOnly, transparentWallsDoors };
+      prevWallLayersRef.current = { wallStructure, structure, doors, pillarsOnly, transparentWallsDoors, cutWalls };
       setLayers({
         wallStructure: true,
         structure: true,
         doors: true,
         pillarsOnly: false,
         transparentWallsDoors: false,
+        cutWalls: false,
       });
     } else if (prevWallLayersRef.current) {
       setLayers(prevWallLayersRef.current);
       prevWallLayersRef.current = null;
     } else {
-      setLayers({ transparentWallsDoors: true });
+      setLayers({ cutWalls: true });
     }
   };
 
@@ -1198,6 +1200,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     doors,
     pillarsOnly,
     transparentWallsDoors,
+    cutWalls,
     prepareScene,
     restoreScene,
     getRenderDimensions,

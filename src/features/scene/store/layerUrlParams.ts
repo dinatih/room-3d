@@ -10,7 +10,7 @@ import { getUrlParams } from '../camera/cameraUrlParams';
 export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Structure & architecture
   structure: false,
-  wallStructure: false,
+  wallStructure: true,
   iceCastle: false,
   floorCoverings: true,
   environment: true,
@@ -25,8 +25,8 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   seineBoats: true,
   seineDebugPath: false,
   doors: true,
-  transparentWallsDoors: true,
-  cutWalls: false,
+  transparentWallsDoors: false,
+  cutWalls: true,
   ceiling: false,
   // Contenu
   equipment: true,

@@ -4,7 +4,6 @@ import {
   LAYER_DOORS,
   LAYER_WALL_STRUCTURE,
   LAYER_FLOOR_COVERINGS,
-  LAYER_MIRRORS,
 } from '@config';
 
 export const MAGAZINE_CUT_HEIGHT = 135;
@@ -13,8 +12,7 @@ const MAGAZINE_CLIP_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_DOORS) |
   (1 << LAYER_WALL_STRUCTURE) |
-  (1 << LAYER_FLOOR_COVERINGS) |
-  (1 << LAYER_MIRRORS);
+  (1 << LAYER_FLOOR_COVERINGS);
 
 function isMagazineCloset(obj: THREE.Object3D): boolean {
   let cur: THREE.Object3D | null = obj;
@@ -148,6 +146,8 @@ export function applyMagazineCut(
   geomMap: Map<THREE.Mesh, THREE.BufferGeometry>,
   hidden: THREE.Object3D[],
 ) {
+  // Met à jour toutes les matrices monde avant Box3.setFromObject (useLayoutEffect précède le 1er render).
+  root.updateMatrixWorld(true);
   const box = new THREE.Box3();
   root.traverse((obj) => {
     if (!obj.visible || !(obj as THREE.Mesh).isMesh) return;
