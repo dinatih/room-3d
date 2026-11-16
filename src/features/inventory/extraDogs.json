@@ -19,7 +19,8 @@
       "characters/animated-pitbull-dog/back.png"
     ],
     "walkClip": "walk_fwd 29",
-    "runClip": "run_fwd 13"
+    "runClip": "run_fwd 13",
+    "forwardRotationY": 0
   },
   {
     "id": "labrador-dog-from-cotw-game",
@@ -41,7 +42,8 @@
       "characters/labrador-dog-from-cotw-game/back.png"
     ],
     "walkClip": "Armature|Armature|labrador_walk_fwd_01",
-    "runClip": "Armature|Armature|labrador_run_fwd_01"
+    "runClip": "Armature|Armature|labrador_run_fwd_01",
+    "forwardRotationY": 0
   },
   {
     "id": "bloodhund-from-cotw-game-ears-has-animglitch",
@@ -63,7 +65,8 @@
       "characters/bloodhund-from-cotw-game-ears-has-animglitch/back.png"
     ],
     "walkClip": "walk fwd",
-    "runClip": "run fwd"
+    "runClip": "run fwd",
+    "forwardRotationY": -1.5707963267948966
   },
   {
     "id": "rdr2-dog-poodle",
@@ -83,7 +86,8 @@
       "characters/rdr2-dog-poodle/front.png",
       "characters/rdr2-dog-poodle/three-quarter.png",
       "characters/rdr2-dog-poodle/back.png"
-    ]
+    ],
+    "forwardRotationY": 0
   },
   {
     "id": "rdr2-dog-border-collie",
@@ -103,7 +107,8 @@
       "characters/rdr2-dog-border-collie/front.png",
       "characters/rdr2-dog-border-collie/three-quarter.png",
       "characters/rdr2-dog-border-collie/back.png"
-    ]
+    ],
+    "forwardRotationY": 0
   },
   {
     "id": "rdr2-dog-labrador",
@@ -123,6 +128,7 @@
       "characters/rdr2-dog-labrador/front.png",
       "characters/rdr2-dog-labrador/three-quarter.png",
       "characters/rdr2-dog-labrador/back.png"
-    ]
+    ],
+    "forwardRotationY": 0
   }
 ]

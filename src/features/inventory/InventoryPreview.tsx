@@ -1,3 +1,4 @@
+import dogAnimationOptions from './dogAnimationOptions.json';
 import '../scene/utils/zeroEnergyLights';
 import { disposeModelResources } from '../scene/utils/disposeModelResources';
 import { enableWireframe } from '../scene/utils/wireframe';
@@ -822,7 +823,7 @@ function CenteredItem({ Component, actionState, item, grounded = false, preserve
   );
 }
 
-const NON_HUMAN_CHARACTER_IDS = ['ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish', 'black-hornet-drone', 'ring-drone-cam'];
+const NON_HUMAN_CHARACTER_IDS = [...Object.keys(dogAnimationOptions), 'ushiro', 'shiba-inu', 'ulotte', 'robin-bird', 'jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish', 'black-hornet-drone', 'ring-drone-cam'];
 
 function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange, onBoundsChange, onStats }: { item: InventoryItem; actionState: Record<string, any>; showDims: boolean; wireframe: boolean; onTargetChange?: (t: [number, number, number]) => void; onBoundsChange?: (r: number) => void; onStats?: (s: GlbDebugStats) => void; }) {
   const Component = SCENE_REGISTRY[item.id], isCharacter = item.category === 'characters' || item.category === 'animals' || (item.category === 'robots' && !['unitree-g1', 'unitree-go2', 'unitree-as2w', 'raph-rover', 'jumper-robot', 'microduck'].includes(item.id));
@@ -1084,6 +1085,7 @@ export function InventoryPreview({
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
+    if (item.id in dogAnimationOptions) return dogAnimationOptions[item.id as keyof typeof dogAnimationOptions];
     if (item.id === 'black-hornet-drone' || item.id === 'ring-drone-cam') return [
       { value: 'Drone_Hover', label: 'Vol stationnaire' },
       { value: 'Drone_Fly', label: 'Vol' },

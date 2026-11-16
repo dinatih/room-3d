@@ -420,7 +420,7 @@ SCENE_REGISTRY['towel-set-red'] = TowelSetRed;
 SCENE_REGISTRY['oyeet-nex-pro-ii'] = OyeetNexProII;
 
 for (const dog of extraDogs) {
-  SCENE_REGISTRY[dog.id] = function ImportedDogPreview({ onSize }: SceneItemProps) {
-    return <ImportedDog path={"/" + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} onSize={onSize} />;
+  SCENE_REGISTRY[dog.id] = function ImportedDogPreview({ onSize, actionState }: SceneItemProps) {
+    return <ImportedDog path={"/" + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} heading={dog.forwardRotationY} isPreview previewAnim={actionState?.characterAnim} onSize={onSize} />;
   };
 }

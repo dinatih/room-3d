@@ -1,6 +1,8 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { AnimationMixer, Group, Vector3, type AnimationAction } from 'three';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { AnimationMixer, Group, LoopOnce, Vector3, type AnimationAction } from 'three';
+import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
+import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '../cameraState';
 import { glbLocalBBox } from '../glbUtils';
 import { useGLTFClone } from '../useGLTFClone';
@@ -10,7 +12,8 @@ import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import type { SceneModelProps } from '@shared/types';
 
 /** Original skeleton and clips; one animation at a time, independent per dog. */
-export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, runClip }: SceneModelProps & { path: string; height: number; clip: string; agentId?: string; walkClip?: string; runClip?: string }) {
+export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, runClip, heading = 0, isPreview = false, previewAnim }: SceneModelProps & { path: string; height: number; clip: string; agentId?: string; walkClip?: string; runClip?: string; heading?: number; isPreview?: boolean; previewAnim?: string }) {
+  const { invalidate } = useThree();
   const { scene, animations } = useGLTFClone(path);
   const mixer = useMemo(() => new AnimationMixer(scene), [scene]);
   const root = useRef<Group>(null);
@@ -33,6 +36,8 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
     mixer.update(0);
     scene.scale.setScalar(1);
     scene.position.set(0, 0, 0);
+    scene.rotation.set(0, heading, 0);
+    scene.traverse(node => { if ((node as import('three').Mesh).isMesh) enableAnimatedFrustumCulling(node as import('three').Mesh); });
     scene.updateMatrixWorld(true);
     const bounds = glbLocalBBox(scene, true);
     const size = bounds.getSize(new Vector3());
@@ -48,8 +53,21 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
       resumeDogBehavior(life, context());
     }
     return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); if (autonomous) { removeAgentProfile(agentId!); releaseDogRoute(life, agentId!); delete cameraState.positions[agentId!]; } };
-  }, [scene, height, path, onSize, animations, clip, mixer, autonomous, agentId, walkClip, runClip, life]);
-  useFrame((_, delta) => { if (autonomous) {
+  }, [scene, height, path, onSize, animations, clip, mixer, autonomous, agentId, walkClip, runClip, life, heading]);
+  useEffect(() => {
+    if (!isPreview) return;
+    const name = previewAnim ?? clip;
+    const animation = animations.find(candidate => candidate.name === name);
+    if (!animation) throw new Error(`Missing dog preview animation ${name}: ${path}`);
+    mixer.stopAllAction();
+    active.current = mixer.clipAction(animation).reset().setLoop(LoopOnce, 1).play();
+    active.current.clampWhenFinished = true;
+    useAnimPreviewStore.getState().setClipInfo(animation.name, animation.duration, false, 30);
+    invalidate();
+  }, [isPreview, previewAnim, clip, animations, mixer, path, invalidate]);
+  useFrame((_, delta) => {
+    if (isPreview) { mixer.setTime(useAnimPreviewStore.getState().tick(delta)); invalidate(); return; }
+    if (autonomous) {
     updateDogBehavior(life, context(), delta);
     root.current!.getWorldQuaternion(life.rotation);
     cameraState.positions[agentId!] = { x: life.position.x, y: life.position.y, z: life.position.z, yaw: life.euler.setFromQuaternion(life.rotation).y };
