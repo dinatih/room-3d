@@ -5,7 +5,7 @@ import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 const prepared = new WeakSet<Object3D>();
 const geometries = new WeakMap<BufferGeometry, WeakMap<BufferGeometry, BufferGeometry>>();
 const materialKeys = new WeakMap<Material, string>();
-const pairs = [['eye2', 'eyes'], ['handgun_left', 'handgun_right'], ['handgun_left_holster', 'handgun_right_holster']] as const;
+const pairs = [['handgun_left', 'handgun_right'], ['handgun_left_holster', 'handgun_right_holster']] as const;
 
 function materialKey(material: Material): string {
   const cached = materialKeys.get(material);
@@ -46,8 +46,7 @@ export function mergeLaraPairs(root: Object3D): void {
       matches.set(right.geometry, geometry);
     }
     left.geometry = geometry;
-    // Keep the left semantic name: both eyes are head/internal meshes, while
-    // each pistol pair belongs to one existing equipment visibility category.
+    // Keep the left semantic name: each pistol pair belongs to one existing equipment visibility category.
     right.removeFromParent();
     enableAnimatedFrustumCulling(left);
   }
