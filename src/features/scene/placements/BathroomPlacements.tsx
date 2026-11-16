@@ -30,6 +30,7 @@ import { Stackstod60620144 } from '../items/Stackstod60620144';
 import { Wy0083 } from '../items/Wy0083';
 import { TowelFoldedRed, TowelHangingLargeRed, TowelHangingSmallRed } from '../items/TowelSetRed';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
+import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
@@ -150,6 +151,9 @@ export function BathroomEquipment() {
 // Pass 1 — Furniture (Structure & gros volumes)
 export function BathroomFurniture() {
   const as = useFurnitureToggles(['cbnWest', 'cbnEast']);
+  const westCabinet = BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position;
+  // 37 cm carcass + half the 1.7 cm door thickness; leave 1 cm to the closed door.
+  const westCabinetFront = westCabinet[2] + 37 / 2 + 1.7 / 2;
 
   return (
     <MergedStaticGroup name="merged-bathroom-furniture">
@@ -159,6 +163,11 @@ export function BathroomFurniture() {
       </group>
       <group position={BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position} userData={{ sceneItemRoot: true, itemName: 'Meuble SDB Est' }}>
         <NavigationObstacle id="bathroom-cabinet-east"><BathroomCabinetEast actionState={as} /></NavigationObstacle>
+      </group>
+
+      {/* Poubelle verte sur roulettes, centrée devant la porte du METOD ouest. */}
+      <group position={[westCabinet[0], 0, westCabinetFront + 1 + TEMU_ROLLING_BIN_DEPTH / 2]} userData={{ sceneItemRoot: true, itemName: 'Poubelle verte sur roulettes' }}>
+        <NavigationObstacle id="temu-rolling-bin"><TemuRollingBin /></NavigationObstacle>
       </group>
 
       {/* Poubelle Fniss SDB */}
