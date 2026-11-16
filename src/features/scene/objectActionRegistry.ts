@@ -167,7 +167,6 @@ const ACTIONS: Record<string, ActionConfig> = {
     options: [
       { value: 'blender-red', label: 'Blender Rouge (946 tris · 47,4 Ko)' },
       { value: 'official-ikea', label: 'Officiel IKEA (45 121 tris · 367,8 Ko)' },
-      { value: 'low-poly', label: 'Ancien Low-Poly (132 tris · 0 Ko)' },
     ],
   },
   'drona-kitchen-diy-slide': { label: ['Sortir Bricolage', 'Ranger Bricolage'] },
