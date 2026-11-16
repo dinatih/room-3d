@@ -209,7 +209,6 @@ const initialLayers: LayerState = {
     structure: true,
     doors: true,
     pillarsOnly: false,
-    transparentWallsDoors: false,
     cutWalls: raytracingPreset === 'magazine',
     ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
   } : {}),
@@ -618,23 +617,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
           updateUrlLayer(other, false);
         }
       }
-      if (key === 'iceCastle' && isActivating) {
-        nextLayers.wallStructure = true;
-        nextLayers.structure = true;
-        nextLayers.pillarsOnly = false;
-        updateUrlLayer('wallStructure', true);
-        updateUrlLayer('structure', true);
-        updateUrlLayer('pillarsOnly', false);
-      }
       if (key === 'cutWalls' && isActivating) {
         nextLayers.wallStructure = true;
         nextLayers.doors = true;
         nextLayers.pillarsOnly = false;
-        nextLayers.transparentWallsDoors = false;
         updateUrlLayer('wallStructure', true);
         updateUrlLayer('doors', true);
         updateUrlLayer('pillarsOnly', false);
-        updateUrlLayer('transparentWallsDoors', false);
       }
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;

@@ -148,12 +148,10 @@ export function LayersSection({
         </div>
       </div>
       {layerBtn(iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
-      {layerBtn(iconLabel('bi-snow', 'Château de glace (murs et plafond)'), 'iceCastle')}
       {layerBtn(iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}
       {layerBtn(iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
       {layerBtn(iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}
       {layerBtn(iconLabel('bi-scissors', 'Murs coupés à 1,35 m (Magazine)'), 'cutWalls')}
-      {layerBtn(iconLabel('bi-transparency', 'Portes et murs à 30 % d’opacité'), 'transparentWallsDoors')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-building', 'Lumières Tour Montparnasse'), 'montparnasseLights')}

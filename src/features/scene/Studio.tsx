@@ -898,7 +898,6 @@ export function Studio() {
         structure: true,
         doors: true,
         pillarsOnly: false,
-        transparentWallsDoors: false,
         cutWalls: raytracingPreset === 'magazine',
         ...(raytracingPreset === 'magazine' ? { neighbors: false, bermudaGrass: false } : {}),
       });
@@ -1023,15 +1022,15 @@ export function Studio() {
            * LAYER_STRUCTURE (28) — dalle béton, plafonds (géré dans Floor)
            * LAYER_FLOOR_COVERINGS (25) — parquet, carrelage, pvc, plinthes (géré dans Floor)
            */}
-          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
+          <CategoryLayerGroup layer={LAYER_WALL_STRUCTURE} visible={layers.wallStructure} wireframe={layers.wireframe || layers.wireframeWallStructure}>
             <Walls pillarsOnly={layers.pillarsOnly} cutHeight={layers.cutWalls ? MAGAZINE_CUT_HEIGHT : undefined} />
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
+          <CategoryLayerGroup layer={LAYER_DOORS} visible={layers.doors} wireframe={layers.wireframe || layers.wireframeDoors}>
             {!layers.pillarsOnly && <DoorsPlacement />}
           </CategoryLayerGroup>
 
-          <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={layers.floorCoverings} register={false} opacity={layers.transparentWallsDoors ? 0.3 : 1}>
+          <CategoryLayerGroup layer={LAYER_FLOOR_COVERINGS} visible={layers.floorCoverings} register={false}>
             {!layers.pillarsOnly && <DoorsPlacement framesOnly />}
           </CategoryLayerGroup>
           <Floor />

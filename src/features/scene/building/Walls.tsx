@@ -13,7 +13,7 @@ import {
 import { WoodenFencePanel } from '../items/WoodenFencePanel';
 import { GardenFrontWallScan } from './GardenFrontWallScan';
 import {
-  architecturalGlassMat, wallMat, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
+  wallMat, southMats, MAT_MAP, caplessX, caplessZ, makeExtrudeGeo
 } from './buildingCommon';
 import { MergedStaticGroup } from './MergedStaticGroup';
 
@@ -146,8 +146,6 @@ export function PillarLabels() {
 export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolean; cutHeight?: number }) {
   const wallEdges = useSceneStore(state => state.layers.wallEdges);
   const showLabels = pillarsOnly || wallEdges;
-  const iceCastle = useSceneStore(state => state.layers.iceCastle);
-  const materialOverride = iceCastle ? architecturalGlassMat : undefined;
   const effectiveWallH = cutHeight !== undefined ? Math.min(WALL_H, cutHeight) : WALL_H;
 
   const diagGeos = useMemo(() => ({
@@ -161,7 +159,7 @@ export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolea
         {showLabels && <PillarLabels />}
 
         {/* ── Piliers ────────────────────────────────────────────────────────── */}
-        <MergedStaticGroup key={`pillars-${effectiveWallH}`} name="merged-pillars" materialOverride={materialOverride}>
+        <MergedStaticGroup key={`pillars-${effectiveWallH}`} name="merged-pillars">
           <group name="pillars">
             {PILLAR_DEFS.map((p) => {
               const pp = p as any;
@@ -191,7 +189,7 @@ export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolea
 
         {/* ── Murs ─────────────────────────────────────────────────────────────── */}
         {!pillarsOnly && (
-          <MergedStaticGroup key={`walls-${effectiveWallH}`} name="merged-walls" materialOverride={materialOverride}>
+          <MergedStaticGroup key={`walls-${effectiveWallH}`} name="merged-walls">
             <group name="walls">
               {WALL_DEFS.filter(d => d.segKind !== 'door' && (d.yBase ?? 0) < effectiveWallH).map((d, i) => {
                 const mat = MAT_MAP[d.mat ?? 'default'];
@@ -213,11 +211,15 @@ export function Walls({ pillarsOnly = false, cutHeight }: { pillarsOnly?: boolea
               ))}
 
               {/* Panneaux bois occultants jardin */}
-              {GARDEN_PANEL_DEFS.map((p, i) => (
-                <group key={i} position={[p.cx, p.cy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, sceneItemRoot: true, brickType: 'wall', side: 'garden' }}>
-                  <WoodenFencePanel w={p.w} h={Math.min(p.h, effectiveWallH)} d={p.d} />
-                </group>
-              ))}
+              {GARDEN_PANEL_DEFS.map((p, i) => {
+                const panelH = Math.min(p.h, effectiveWallH);
+                const panelCy = p.cy - p.h / 2 + panelH / 2;
+                return (
+                  <group key={i} position={[p.cx, panelCy, p.cz]} userData={{ birdSupport: { id: `fence-${i}`, kind: 'fence' }, skipMerge: true, sceneItemRoot: true, brickType: 'wall', side: 'garden' }}>
+                    <WoodenFencePanel w={p.w} h={panelH} d={p.d} />
+                  </group>
+                );
+              })}
 
               {/* Mur en face du jardin (Scan 3D Seoul) */}
               <GardenFrontWallScan />

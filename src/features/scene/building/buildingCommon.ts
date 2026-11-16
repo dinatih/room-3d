@@ -20,19 +20,6 @@ export const wallMatHorizontal = new THREE.MeshStandardMaterial({
   side: THREE.DoubleSide,
 });
 export const noCapMat = new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 });
-// Mode château de glace : parois translucides visibles des deux côtés.
-export const architecturalGlassMat = new THREE.MeshPhysicalMaterial({
-  color: 0xbce8f4,
-  transparent: true,
-  opacity: 0.03,
-  side: THREE.DoubleSide,
-  depthWrite: false,
-  roughness: 0.12,
-  metalness: 0,
-  clearcoat: 1,
-  clearcoatRoughness: 0.08,
-  envMapIntensity: 1,
-});
 export const skirtingMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4 });
 
 // BoxGeometry face order : [+X(0), -X(1), +Y(2), -Y(3), +Z(4), -Z(5)]

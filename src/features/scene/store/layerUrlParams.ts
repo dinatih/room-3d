@@ -11,7 +11,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Structure & architecture
   structure: false,
   wallStructure: true,
-  iceCastle: false,
   floorCoverings: true,
   environment: true,
   bnfMarker: true,
@@ -25,7 +24,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   seineBoats: true,
   seineDebugPath: false,
   doors: true,
-  transparentWallsDoors: false,
   cutWalls: true,
   ceiling: false,
   // Contenu
@@ -107,9 +105,7 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: key, canonicalParam: key, urlParams: [key.toLowerCase()],
   })),
   { layerKey: 'cutWalls', canonicalParam: 'cutWalls', urlParams: ['cutwalls', 'magazine', 'murscoupes'] },
-  { layerKey: 'transparentWallsDoors', canonicalParam: 'transparentWallsDoors', urlParams: ['transparentwallsdoors'] },
   { layerKey: 'wigGrid', canonicalParam: 'wigGrid', urlParams: ['wiggrid'] },
-  { layerKey: 'iceCastle', canonicalParam: 'iceCastle', urlParams: ['icecastle'] },
   {
     layerKey: 'lightsHD',
     canonicalParam: 'lightsHD',

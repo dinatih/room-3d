@@ -96,7 +96,6 @@ export type GroundType = 'bermuda' | 'medium_01' | 'medium_02' | 'celandine';
 export interface LayerState {
   structure: boolean;
   wallStructure: boolean;
-  iceCastle?: boolean;
   floorCoverings: boolean;
   environment: boolean;
   bnfMarker?: boolean;
@@ -118,7 +117,6 @@ export interface LayerState {
   wireframeWallStructure?: boolean;
   wireframeStructure?: boolean;
   wireframeDoors?: boolean;
-  transparentWallsDoors?: boolean;
   cutWalls?: boolean;
   mirrorSurfaces: boolean;
   mirrors:       boolean;

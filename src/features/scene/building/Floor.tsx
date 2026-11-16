@@ -22,7 +22,7 @@ import {
 import { LAYER_FLOOR_COVERINGS, LAYER_STRUCTURE } from '@config';
 import {
   COLORS, skirtingMat, noCapMat, slabConcreteMat,
-  boxFaceMats, qrGeo, architecturalGlassMat
+  boxFaceMats, qrGeo
 } from './buildingCommon';
 import { P } from './Walls';
 
@@ -497,7 +497,6 @@ export function Floor() {
   const bermudaGrass = useSceneStore(state => state.layers.bermudaGrass);
   const groundType = useSceneStore(state => state.layers.groundType);
   const structure = useSceneStore(state => state.layers.structure);
-  const iceCastle = useSceneStore(state => state.layers.iceCastle);
   const floorCoverings = useSceneStore(state => state.layers.floorCoverings);
   const wireframeStructure = useSceneStore(state => state.layers.wireframeStructure);
   const globalWireframe = useSceneStore(state => state.layers.wireframe);
@@ -563,7 +562,7 @@ export function Floor() {
         </group>
 
         <group name="ceiling-group" userData={{ itemName: 'Plafonds' }}>
-          <MergedStaticGroup name="merged-ceiling" materialOverride={iceCastle ? architecturalGlassMat : undefined}>
+          <MergedStaticGroup name="merged-ceiling">
             <group position={[0, CEILING_Y, 0]}>
               <mesh
                 geometry={slabTopGeo}
