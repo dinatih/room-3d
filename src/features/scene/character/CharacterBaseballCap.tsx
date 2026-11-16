@@ -44,7 +44,7 @@ export function CharacterBaseballCap({ attachTo, color }: CharacterBaseballCapPr
     );
 
     // Ajustement de pose pour épouser le crâne et le front de Lara sans traverser les cheveux
-    capGroup.position.set(-0.01, 0.152, 0.024);
+    capGroup.position.set(-0.01, 0.152, 0.054);
     capGroup.rotation.set(-0.16, 0, 0);
 
     const clonedMats: THREE.Material[] = [];
