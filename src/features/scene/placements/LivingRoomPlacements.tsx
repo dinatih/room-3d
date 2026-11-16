@@ -40,6 +40,7 @@ import { Lagerpoppel00561816 } from '../items/Lagerpoppel00561816';
 import { MaillotInyeong } from '../items/MaillotInyeong';
 import { Spruttig20317079 } from '../items/Spruttig20317079';
 import { Laptop } from '../items/Laptop';
+import { LaptopStand, LAPTOP_STAND_TILT, LAPTOP_STAND_CENTER_HEIGHT } from '../items/LaptopStand';
 import { Phone } from '../items/Phone';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Backpack } from '../items/Backpack';
@@ -329,6 +330,9 @@ export function DeskDecor() {
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
+          <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Support ordinateur GRIFFIN' }}>
+            <LaptopStand />
+          </group>
           <group userData={{
             sceneItemRoot: true,
             skipMerge: true,
@@ -341,7 +345,9 @@ export function DeskDecor() {
               ]
             }
           }}>
-            <Laptop />
+            <group position={[0, LAPTOP_STAND_CENTER_HEIGHT, 0]} rotation={[LAPTOP_STAND_TILT, 0, 0]}>
+              <Laptop />
+            </group>
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Smartphone' }}>
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
