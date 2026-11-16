@@ -1,9 +1,9 @@
 import { getAnimationDef } from '../animations/animationResolver';
 import { KALLAX_SE_DRONA_POSITIONS } from './kallaxSeDrona';
 import { FURNITURE_WALL_CLEARANCE } from '../wallData';
+import { KALLAX_NW_WALL_EXTENTS } from '../furniturePositions';
 
 // Actual GLB frame is slightly deeper than the nominal 39 cm.
-const KALLAX_NW_WALL_EXTENTS = { west: 20.051, north: 20.5 };
 export const KALLAX_NW_POSITION: [number, number, number] = [KALLAX_NW_WALL_EXTENTS.west + FURNITURE_WALL_CLEARANCE, 0, KALLAX_NW_WALL_EXTENTS.north + FURNITURE_WALL_CLEARANCE];
 export const KALLAX_NW_ROTATION = -Math.PI / 2;
 export const KALLAX_NW_DRONA_POSITIONS: [number, number, number][] = [

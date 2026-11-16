@@ -23,6 +23,9 @@ export const currentFurnitureTransforms: Record<string, FurnitureTransform> = {}
 // dos au mur Est, avec 3 cm de dégagement pour les plinthes au sol.
 // Le bureau 2 touche le congélateur sous le Kallax SE
 // (centre à ROOM_D - largeur porte-chaussures - demi-profondeur congélateur - dégagement Sud ; profondeur : 47.37 cm).
+// Kallax NW : empreinte au sol mesurée sur le GLB (profondeur 20.051 × 2, largeur 41), collée aux murs Ouest et Nord.
+export const KALLAX_NW_WALL_EXTENTS = { west: 20.051, north: 20.5 };
+const KALLAX_NW_SOUTH_Z = KALLAX_NW_WALL_EXTENTS.north * 2 + FURNITURE_WALL_CLEARANCE;
 const DESK_WIDTH = 68;
 const DESK_DEPTH = 36;
 const EAST_DESK_X = ROOM_W - FURNITURE_WALL_CLEARANCE - DESK_DEPTH / 2;
@@ -75,13 +78,16 @@ export interface DoubleBedConfig {
 export const BED_FRAME_WIDTH = 83;
 export const BED_FRAME_LENGTH = 205;
 
+// Lits Ouest : remontés vers le Nord jusqu'au contact du Kallax NW.
+const WEST_BED_Z = KALLAX_NW_SOUTH_Z + BED_FRAME_LENGTH / 2;
+
 export const SINGLE_BED_POSITIONS = {
-  west: { x: 77, z: 166, ry: Math.PI / 2 },
+  west: { x: 77, z: WEST_BED_Z, ry: Math.PI / 2 },
   east: { x: ROOM_W - 45.5, z: 190, ry: Math.PI / 2 },
 } as const;
 
 export const DOUBLE_BED_POSITIONS: readonly DoubleBedConfig[] = [
-  { label: 'Mur Ouest', west: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH / 2, z: 180 }, east: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH * 1.5, z: 180 } },
+  { label: 'Mur Ouest', west: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH / 2, z: WEST_BED_Z }, east: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH * 1.5, z: WEST_BED_Z } },
   { label: 'Mur Est',   west: { x: ROOM_W - 128.5, z: 190 },     east: { x: ROOM_W - 45.5, z: 190 } },
 ];
 
