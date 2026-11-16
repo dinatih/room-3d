@@ -9,7 +9,7 @@
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
-import { BaseballCap } from './BaseballCap';
+import { TruckerCap } from './TruckerCap';
 import { SHOE_HAT_RACK } from '../shoeHatRackData';
 import { MergedStaticGroup } from '../building/MergedStaticGroup';
 
@@ -48,7 +48,7 @@ export function ShoeHatRackCaps() {
     <>
       {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
         <group key={`${x}-${barY}`} position={[x, barY + 1.5, TR + 5.5]} rotation={[Math.PI / 2, 0, 0]}>
-          <BaseballCap />
+          <TruckerCap />
         </group>
       )))}
     </>

@@ -7,7 +7,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Raskog30586783 } from './Raskog30586783';
 import { MannequinHead } from './MannequinHead';
-import { BaseballCap }   from './BaseballCap';
+import { TruckerCap }   from './TruckerCap';
 import type { SceneModelProps } from '@shared/types';
 
 // Hauteur tête (base → sommet) : 8 + 8 + 8.9 × scale 1.15
@@ -26,8 +26,8 @@ export function RaskogLargeGroup({ onSize }: SceneModelProps) {
   return (
     <group ref={ref}>
       <Raskog30586783 />
-      <group position={[5, top + HEAD_HEIGHT - 9, -2]} rotation={[0.15, Math.PI / 2, 0]}>
-        <BaseballCap />
+      <group position={[5, top + HEAD_HEIGHT - 8, -2]} rotation={[0.15, Math.PI / 2, 0]}>
+        <TruckerCap />
       </group>
       {/* Tête de mannequin — toujours visible */}
       <group position={[0, top, -2]} rotation-y={Math.PI / 2}>
