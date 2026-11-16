@@ -10,6 +10,7 @@ import { CorridorCloset } from '../items/CorridorCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
 import { Linky } from '../items/Linky';
 import { Scooter, SCOOTER_STEERING_ANGLE } from '../items/Scooter';
+import { RugSmall } from '../items/Rugs';
 import { SMART_OBJECTS } from '../ai/smartObjectRegistry';
 import { getObjectActionIds } from '../objectActions';
 import { useLightAppearance } from '../../home-assistant/useLightAppearance';
@@ -23,7 +24,7 @@ import {
   KITCHEN_EAST_WALL,
   PARTITION_THICKNESS
 } from '../wallData';
-import { CORRIDOR_NORTH_WALL, ROOM_EAST_WALL, pZ } from '../wallData';
+import { CORRIDOR_NORTH_WALL, ROOM_EAST_WALL, DiagWall, pZ } from '../wallData';
 
 // Coffrage plastique vertical 25.5×6.5×WALL_H, contre mur est du couloir,
 // début Z=ROOM_D+5 (5 cm du mur nord du couloir = mur sud séjour).
@@ -186,6 +187,8 @@ export function CorridorEquipment() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function CorridorFurnishings() {
+  // The small rug is 40 × 60 cm; its long edge follows the diagonal doorway.
+  const entryRug = DiagWall.p(DiagWall.door.start + DiagWall.door.width / 2, DiagWall.depth + 40 / 2 + 1);
   const [parking, setParking] = useState({ x:0, z:0, angle:Math.PI });
   const parkScooter = useCallback((front: THREE.Vector3[], rear: THREE.Vector3[]) => {
     const eastContact = (points: THREE.Vector3[], angle: number) => Math.max(...points.map(p => p.x * Math.cos(angle) + p.z * Math.sin(angle)));
@@ -202,6 +205,9 @@ export function CorridorFurnishings() {
   }, []);
   return (
     <MergedStaticGroup name="merged-corridor-furnishings">
+      <group position={[entryRug.x, 0.05, entryRug.z]} rotation-y={DiagWall.rotY} userData={{ sceneItemRoot: true, itemName: 'Petit tapis rouge extérieur entrée' }}>
+        <RugSmall />
+      </group>
       {/* Trottinette Xiaomi */}
       <group position={[parking.x, 0, parking.z]} rotation-y={parking.angle} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Trottinette Xiaomi' }}>
         <NavigationObstacle id="scooter" hull><Scooter steeringAngle={SCOOTER_STEERING_ANGLE} onWheels={parkScooter} /></NavigationObstacle>

@@ -148,7 +148,7 @@ export function KitchenFurnishings() {
 
       {/* TACKAN évier — plan cuisine (y=93), fond à droite de la niche */}
       <group position={[KITCHEN_WEST_WALL + 5, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Cuisine' }}>
-        <Tackan />
+        <Tackan fillLevel={1 / 2} />
       </group>
 
       {/* Cuiseur à riz Senya SYCK-RC003/A — sur les plaques contre le mur sud */}

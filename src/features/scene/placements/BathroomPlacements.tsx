@@ -254,12 +254,12 @@ export function BathroomFurnishings() {
 
       {/* TACKAN douche */}
       <group position={[BATH_WEST_WALL + 40, 92.5, SHOWER_SOUTH_WALL - 5.6]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Douche' }}>
-        <Tackan />
+        <Tackan fillLevel={2 / 3} soapColor="#8334b7" />
       </group>
 
       {/* TACKAN lavabo */}
       <group position={[BATH_EAST_WALL - 61, 83, BATH_NORTH_WALL + 5]} userData={{ sceneItemRoot: true, itemName: 'Distributeur Tackan Lavabo' }}>
-        <Tackan />
+        <Tackan fillLevel={1 / 3} />
       </group>
 
       {/* TISKEN sur miroir vasque */}
