@@ -103,7 +103,7 @@ const launch = require('./browser-test-options.cjs');
     await page.setViewport({ width: 1400, height: 1000 });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto('http://127.0.0.1:5173/?characterCount=0&preset=low&skipIntro=1&animals=0', { waitUntil: 'domcontentloaded' });
+    await page.goto('http://127.0.0.1:5173/?characterCount=0&skipIntro=1&animals=0', { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(async () => (await import('/src/features/scene/cameraState.ts')).cameraState.isSceneLaunched, { timeout: 180000 });
     await page.waitForSelector('[aria-label="Grille perruques"]', { visible: true, timeout: 60000 });
     await page.click('[aria-label="Grille perruques"]');

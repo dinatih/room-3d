@@ -9,7 +9,7 @@ fs.mkdirSync('test-results',{recursive:true});
 const directory=fs.mkdtempSync(path.resolve('test-results/startup-audit-'));
 process.env.ROOM_TEST_RESULTS=directory;
 process.env.ROOM_TEST_DIRTY=String(!!execFileSync('git',['status','--porcelain'],{encoding:'utf8'}).trim());
-const fixture={...require('../tests/fixtures/cases.cjs').performance['studio-9-mid-day'],id:'startup',captureStartup:true,localResourcesOnly:true,timeoutMs:120000};
+const fixture={...require('../tests/fixtures/cases.cjs').performance['studio-9-high-day'],id:'startup',captureStartup:true,localResourcesOnly:true,timeoutMs:120000};
 fixture.query={...fixture.query,bnfMarker:'0'};
 withBrowser(fixture,async(page,result)=>{
     const startup=await page.evaluate(()=>({...window.__startupMetrics,laptopPreparations:window.__laptopPreparations}));

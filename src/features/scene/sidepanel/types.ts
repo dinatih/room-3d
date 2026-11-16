@@ -122,7 +122,6 @@ export interface LayerState {
   cutWalls?: boolean;
   mirrorSurfaces: boolean;
   mirrors:       boolean;
-  mirrorsHD:  boolean;
   plan:         boolean;
   grid:         boolean;
   gridDepth:    boolean;

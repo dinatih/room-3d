@@ -63,7 +63,7 @@ async function run(version, seed, visible = false) {
       window.__testTrace = [];
       setInterval(() => window.dispatchEvent(new MouseEvent('mousemove')), 1000);
     }, seed);
-    const query = new URLSearchParams({ characterCount: String(CHARACTERS.length), skipIntro: '1', preset: 'low', target: 'studio',
+    const query = new URLSearchParams({ characterCount: String(CHARACTERS.length), skipIntro: '1', preset: 'high', target: 'studio',
       ...(visible ? {} : { debug: 'characters-only' }), animals: '1', npcCollisions: '1' });
     await page.goto(`http://127.0.0.1:5198/?${query}`, { waitUntil: 'domcontentloaded', timeout: 180000 });
     const startup = Date.now();

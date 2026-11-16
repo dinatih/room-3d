@@ -1,7 +1,7 @@
 require('../support/load-ts.cjs');
 const { CHARACTERS } = require('../../src/features/scene/characterConfig.ts');
 const apartment = {
-    seed: 20261019, count: 0, preset: 'low', camera: 'top',
+    seed: 20261019, count: 0, preset: 'high', camera: 'top',
     viewport: { width: 1280, height: 720, deviceScaleFactor: 1 },
     collisions: true, cache: { browser: 'cold-new-profile', vite: 'cold-temporary-isolated', os: 'uncontrolled-shared' }, readinessTimeoutMs: 180000,
     heartbeatTimeoutMs: 30000, travelCmPerFrame: 3, dt: 1 / 30, turnSpeed: Math.PI,
@@ -24,7 +24,7 @@ exports.navigation = [
         layers: { animals: false }, timeoutMs: 180000 },
     { id: 'lara-life', behavior: 'fait travailler, marcher et se reposer Lara Native, puis respecte une interruption manuelle', activity: 'life', count: 2,
         layers: { animals: false }, timeoutMs: 300000 },
-    { id: 'autonomous-all', behavior: 'fait vivre tous les personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: CHARACTERS.length, preset: 'mid', sessionMs: 15000, timeoutMs: 60000 },
+    { id: 'autonomous-all', behavior: 'fait vivre tous les personnages rendus et respecte les capacités des pièces', activity: 'autonomous', count: CHARACTERS.length, preset: 'high', sessionMs: 15000, timeoutMs: 60000 },
     { id: 'solo-xbot-doors', behavior: 'termine seul le trajet séjour, entrée et couloir bâtiment avec le gabarit du Xbot', activity: 'soloDoors', layers: { animals: false }, profile: { radius: 15, height: 170 }, timeoutMs: 60000 },
     { id: 'full-living-transit', behavior: 'rejoint les WC par le jardin et la porte d’entrée sans traverser un séjour plein', activity: 'fullLivingTransit', layers: { animals: false }, travelCmPerFrame: 12, timeoutMs: 60000 },
     { id: 'occupied-target', behavior: 'atteint une destination occupée avec une empreinte PNJ à zéro', activity: 'arrival', actors: 1, occupied: true, maxTurnRadians: Math.PI, timeoutMs: 30000 },
@@ -46,25 +46,26 @@ exports.interactions = [
     { id: 'failed-action', behavior: 'libère les réservations d’une action devenue inaccessible', activity: 'failed-action', objectId: 'sofa-garden-east', timeoutMs: 60000 },
     { id: 'interruption', behavior: 'libère ses réservations après interruption et échec', activity: 'interruption', timeoutMs: 60000 },
 ].map(c => ({ ...apartment, ...c }));
-exports.performance = Object.fromEntries([0, 7, 15].flatMap(count => ['low', 'mid'].map(preset => {
+exports.performance = Object.fromEntries([0, 7, 15].map(count => {
+    const preset = 'high';
     const id = `${count}-${preset}`;
     return [id, { ...apartment, id, count, preset, camera: 'orbit', activity: 'seeded-autonomous',
             behavior: `mesure ${count} personnages en ${preset}`, timeoutMs: 480000,
             stableMs: 15000, sessionMs: 300000 }];
-})));
+}));
 
 for (const [period, hour] of [['day', 12], ['night', 0]]) {
-    const id = `studio-9-mid-${period}`;
-    exports.performance[id] = { ...apartment, id, count: 9, preset: 'mid', camera: 'orbit',
-        activity: 'fixed-studio', behavior: `studio par défaut, 9 personnages, Mid, ${period}`,
+    const id = `studio-9-high-${period}`;
+    exports.performance[id] = { ...apartment, id, count: 9, preset: 'high', camera: 'orbit',
+        activity: 'fixed-studio', behavior: `studio par défaut, 9 personnages, High, ${period}`,
         viewport: { width: 1362, height: 810, deviceScaleFactor: 1 },
         fixedEnvironment: { date: '2026-11-09T12:00:00Z', hour, weather: 'clear' },
         query: { target: 'studio', weatherAuto: '0' }, stableMs: 15000, sessionMs: 60000, timeoutMs: 150000 };
-    exports.performance[`studio-only-mid-${period}`] = { ...exports.performance[id], id: `studio-only-mid-${period}`, count: 0,
-        query: { ...exports.performance[id].query, debug: 'studio-only' }, behavior: `studio seul, décor sans acteurs, Mid, ${period}` };
+    exports.performance[`studio-only-high-${period}`] = { ...exports.performance[id], id: `studio-only-high-${period}`, count: 0,
+        query: { ...exports.performance[id].query, debug: 'studio-only' }, behavior: `studio seul, décor sans acteurs, High, ${period}` };
     exports.performance[`${id}-presentation`] = { ...exports.performance[id], id: `${id}-presentation`,
-        robotSubjects: ['black-hornet-drone', 'ring-drone-cam'], behavior: `studio présentation, neuf Laras, animaux et drones, Mid, ${period}` };
-    for (const [suffix, overrides] of Object.entries({ 'original-light-shader': { originalLightShader: true }, 'refractive-glass': { originalSceneGlass: true }, 'original-textures': { sceneModels: 'original' }, 'no-shadows': { layers: { shadows: false } }, 'no-mirrors': { layers: { mirrors: false, mirrorsHD: false } }, 'no-environment': { layers: { environment: false } }, 'no-characters': { count: 0 } })) {
+        robotSubjects: ['black-hornet-drone', 'ring-drone-cam'], behavior: `studio présentation, neuf Laras, animaux et drones, High, ${period}` };
+    for (const [suffix, overrides] of Object.entries({ 'original-light-shader': { originalLightShader: true }, 'refractive-glass': { originalSceneGlass: true }, 'original-textures': { sceneModels: 'original' }, 'no-shadows': { layers: { shadows: false } }, 'no-mirrors': { layers: { mirrors: false } }, 'no-environment': { layers: { environment: false } }, 'no-characters': { count: 0 } })) {
         const diagnosticId = `${id}-${suffix}`;
         exports.performance[diagnosticId] = { ...exports.performance[id], ...overrides, id: diagnosticId, behavior: `${exports.performance[id].behavior}, diagnostic ${suffix}` };
     }

@@ -10,7 +10,6 @@ import { HDRI_LIST } from './hdriConfig';
 import { chooseRandomCharacter } from './store/randomCharacter';
 import { CharacterCountSelect } from './CharacterCountSelect';
 import { CharacterSelect } from './CharacterSelect';
-import { PresetButton } from './PresetButton';
 
 export interface ViewControlBarProps {
   /** Position du dock flottant. Ignoré quand inline=true. Défaut : 'bottom-right' */
@@ -27,7 +26,6 @@ export interface ViewControlBarProps {
   activeCameraPos?: string | null;
   /** Rangée unique réordonnée pour la barre de contrôle de l’inventaire. */
   inventoryLayout?: boolean;
-  showMirrorsHD?: boolean;
   hideUI?: boolean;
   onToggleHideUI?: () => void;
   onEnterFlight?: () => void;
@@ -120,7 +118,6 @@ export function ViewControlBar({
   showOrbitControls = false,
   activeCameraPos: previewCameraPos,
   inventoryLayout = false,
-  showMirrorsHD = false,
   hideUI = false,
   onToggleHideUI: _onToggleHideUI,
   onEnterFlight: _onEnterFlight,
@@ -345,7 +342,6 @@ export function ViewControlBar({
         {toolbarPrefix}
         {zoomButton('in')}
         {perspButton}
-        {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
       </div>
     );
@@ -381,7 +377,6 @@ export function ViewControlBar({
         {elevationGroup}
         {cardinalGroup}
         {perspButton}
-        {showMirrorsHD && <PresetButton hideUI={hideUI} />}
         {beforeAmbianceActions}
         {toolbarActions}
         <select

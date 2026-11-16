@@ -1,13 +1,21 @@
 # Gestion des perfs de l’app
 
+## Qualité unique depuis le 16 novembre 2026
+
+Les niveaux Low/Mid/High et le calque `mirrorsHD` sont supprimés. La scène utilise les réglages de l’ancien High : ciel 4K, vidéos HD et reflets complets à 512 × 512 pixels, sans rétrogradation selon le mode caméra. Le calque Miroirs permet toujours de masquer les reflets. Les paramètres de qualité des anciennes URL ne pilotent plus le rendu.
+
+La définition High des miroirs à 512 px est documentée dans le commit `07e4e2e0` du 10 octobre 2026. Le commit d’optimisation `8eaef834` du 14 novembre à 19 h 27 a ajouté `multisample: 0` aux Reflector : il désactive leur MSAA (4 échantillons par défaut dans Three.js). Le Canvas principal conserve `antialias: true` ; cette option ne lisse pas le contenu des textures de réflexion. Le DPR principal est plafonné à 1,5 depuis `2bbaab5e` du 28 août. Un reflet agrandi peut donc rester pixelisé avec ces réglages High.
+
+Les mesures historiques ci-dessous conservent leurs conditions Low/Mid d’origine. Les commandes actuelles utilisent les nouveaux scénarios High : il faut établir de nouvelles références avant de comparer leurs performances.
+
 ## Référence et commandes
 
-Le scénario de suivi est la vue studio orbitale par défaut, caméra fixe, **9 personnages, preset Mid**, animaux et robots par défaut. Deux conditions indépendantes : midi et minuit, date astronomique fixée au 9 novembre 2026, beau temps, sol sec, profil navigateur neuf, graine 20261019, viewport 1362 × 810 et DPR 1. L’horloge mondiale est figée par une transformation Vite réservée aux tests ; les animations continuent. Aucun code de rendu de l’application n’est modifié par ce suivi.
+Le scénario de suivi est la vue studio orbitale par défaut, caméra fixe, **9 personnages, qualité High**, animaux et robots par défaut. Deux conditions indépendantes : midi et minuit, date astronomique fixée au 9 novembre 2026, beau temps, sol sec, profil navigateur neuf, graine 20261019, viewport 1362 × 810 et DPR 1. L’horloge mondiale est figée par une transformation Vite réservée aux tests ; les animations continuent. Aucun code de rendu de l’application n’est modifié par ce suivi.
 
 Après redémarrage, laisser la machine revenir à une température stable, fermer les onglets lourds et lancer sur secteur ou sur batterie :
 
 ```bash
-npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu
+npm run test:perf -- --case=studio-9-high-day,studio-9-high-night --hardware-gpu
 ```
 
 Le test lance ses propres Vite et Chromium headless ; aucun serveur manuel n’est nécessaire. Trois chargements indépendants par scénario, chargement/préparation puis 15 secondes de chauffe et 60 secondes mesurées. La scène reste active grâce au mécanisme d’activité existant du test, sans forcer l’invalidation continue dans ces nouveaux scénarios. Les anciens cas 0/7/15 conservent leur fonctionnement historique et ne sont pas comparables à ces nouveaux cas.
@@ -19,11 +27,11 @@ Les rapports JSON/Markdown, captures `scene.png`, erreurs et mesures partielles 
 Après examen d’une campagne saine, créer explicitement une référence, puis comparer les prochaines features :
 
 ```bash
-npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu --approve-reference=studio-mid-initial
-npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-night --hardware-gpu --reference=studio-mid-initial
+npm run test:perf -- --case=studio-9-high-day,studio-9-high-night --hardware-gpu --approve-reference=studio-high-initial
+npm run test:perf -- --case=studio-9-high-day,studio-9-high-night --hardware-gpu --reference=studio-high-initial
 ```
 
-Le nom fourni est un nom de base : le test détecte l’alimentation et ajoute automatiquement `-ac` (secteur) ou `-battery` (batterie). Ainsi les commandes ci-dessus créent ou comparent `tests/references/studio-mid-initial-ac.json` sur secteur et `tests/references/studio-mid-initial-battery.json` sur batterie. Répéter la commande de création une fois dans chaque condition pour constituer les deux références. Les références ne contiennent aucun résultat fictif avant ces mesures. Si la référence de l’alimentation actuelle manque, la comparaison échoue explicitement ; aucun emprunt à l’autre alimentation n’est effectué.
+Le nom fourni est un nom de base : le test détecte l’alimentation et ajoute automatiquement `-ac` (secteur) ou `-battery` (batterie). Ainsi les commandes ci-dessus créent ou comparent `tests/references/studio-high-initial-ac.json` sur secteur et `tests/references/studio-high-initial-battery.json` sur batterie. Répéter la commande de création une fois dans chaque condition pour constituer les deux références. Les références ne contiennent aucun résultat fictif avant ces mesures. Si la référence de l’alimentation actuelle manque, la comparaison échoue explicitement ; aucun emprunt à l’autre alimentation n’est effectué.
 
 La première commande effectue une nouvelle campagne : elle ne convertit pas une ancienne exécution. Une référence existante n’est jamais écrasée. Les références utilisent désormais le schéma 3 ; les anciennes références doivent être remesurées. Le navigateur, GPU, OS, résolution, caméra, personnages, calques, graine, scénario et alimentation doivent correspondre exactement. Une alimentation inconnue ou modifiée pendant un passage ou entre les passages empêche la création/comparaison de référence ; les diagnostics restent conservés. Les alimentations secteur et USB prises en charge par Linux sont interrogées au début du passage, pendant les phases mesurées et à la fin. Un branchement/débranchement très bref entre deux relevés peut échapper à l’échantillonnage.
 
@@ -50,7 +58,7 @@ Une hausse du swap ou un changement d’alimentation est signalé. Examiner auss
 Pour isoler une famille de coûts, chaque cas jour/nuit possède les suffixes `-no-shadows`, `-no-environment` et `-no-characters`. Exemple :
 
 ```bash
-npm run test:perf -- --case=studio-9-mid-day,studio-9-mid-day-no-shadows --hardware-gpu
+npm run test:perf -- --case=studio-9-high-day,studio-9-high-day-no-shadows --hardware-gpu
 ```
 
 Ces cas sont des diagnostics distincts : ne pas comparer leurs conditions via `--reference`. Leur différence indique une sensibilité du scénario ; elle ne permet pas d’additionner les coûts, ni d’attribuer automatiquement une régression à un commit. `no-characters` conserve animaux et robots.
@@ -196,7 +204,7 @@ Le premier script alterne original/scène/scène/original dans quatre navigateur
 Le suffixe `-refractive-glass` permet aussi une campagne complète de trois passages de 60 secondes avec les matériaux précédents, en gardant les textures 512 px :
 
 ```bash
-npm run test:perf -- --case=studio-9-mid-day-refractive-glass,studio-9-mid-day --hardware-gpu
+npm run test:perf -- --case=studio-9-high-day-refractive-glass,studio-9-high-day --hardware-gpu
 ```
 
 Cette variante neutralise uniquement le hook de simplification, par une transformation Vite réservée au diagnostic. Les conditions des rapports indiquent désormais `sceneGlass` ; les anciennes références doivent être recréées après examen d'une campagne saine. Les scénarios standard continuent à mesurer le rendu normal de l'application.
@@ -275,7 +283,7 @@ Le contrôle de nuit sur la vraie scène à neuf personnages effectue deux cycle
 node scripts/profile-studio-rendering.cjs --lights --hardware-gpu
 node scripts/test-zero-light-shader.cjs --hardware-gpu
 node scripts/test-light-switches.cjs --night --hardware-gpu
-npm run test:perf -- --case=studio-9-mid-day-original-light-shader,studio-9-mid-day --hardware-gpu
+npm run test:perf -- --case=studio-9-high-day-original-light-shader,studio-9-high-day --hardware-gpu
 ```
 
 Le profilage permanent conserve quatre navigateurs indépendants et 30 secondes mesurées par passage ; il complète l'enquête sur une même session. `--night` choisit minuit. La variante de diagnostic `-original-light-shader` neutralise seulement l'installation du chunk optimisé. Le mode apparaît dans la configuration du passage, sans devenir un critère d'incompatibilité d'une référence : le rendu visuel est identique. Le suivi standard continue donc à pouvoir comparer les implémentations à conditions égales.
@@ -432,9 +440,9 @@ Les tests de préparation GPU ont été adaptés à la séquence actuelle : atte
 
 ### Scénarios à conserver pour la prochaine référence
 
-- `studio-only-mid-day` / `studio-only-mid-night` : décor seul, sans personnages, animaux ni robots.
-- `studio-9-mid-day-presentation` / `studio-9-mid-night-presentation` : neuf personnages, animaux et les deux drones `black-hornet-drone` et `ring-drone-cam`, sans les autres robots.
-- `studio-9-mid-day` / `studio-9-mid-night` : scénario historique complet, utile pour suivre les extras séparément.
+- `studio-only-high-day` / `studio-only-high-night` : décor seul, sans personnages, animaux ni robots.
+- `studio-9-high-day-presentation` / `studio-9-high-night-presentation` : neuf personnages, animaux et les deux drones `black-hornet-drone` et `ring-drone-cam`, sans les autres robots.
+- `studio-9-high-day` / `studio-9-high-night` : scénario historique complet, utile pour suivre les extras séparément.
 
 La priorité produit reste le décor du studio, les Laras, les chiens et les drones de présentation. Les autres robots, poissons et étoiles de mer viennent ensuite. Les anciennes valeurs par objet du 12 novembre ne décrivent plus automatiquement leurs passes actuelles.
 

@@ -23,8 +23,8 @@ import {
 
 const kallaxW1 = 40.5;
 
-// Mid : Structure, Murs, Sols, Portes, Végetation, Personnages, Animaux, Ciel + Equipements & Furniture (256px)
-export const MIRROR_BASE_MASK =
+// Reflets complets, y compris les personnages et les accessoires masqués en FPV.
+const MIRROR_MASK =
   (1 << LAYER_STRUCTURE) |
   (1 << LAYER_WALL_STRUCTURE) |
   (1 << LAYER_FLOOR_COVERINGS) |
@@ -37,24 +37,14 @@ export const MIRROR_BASE_MASK =
   (1 << LAYER_WALKER_DETAIL) |
   (1 << LAYER_WALKER) |
   (1 << LAYER_ANIMALS) |
-  (1 << LAYER_ROBOTS);
-
-// High : Full miroir (inclut en plus Furnishings tapis/rideaux et Decor bibelots/plantes/props) (512px)
-export const MIRROR_HD_MASK =
-  MIRROR_BASE_MASK |
+  (1 << LAYER_ROBOTS) |
   (1 << LAYER_FURNISHINGS) |
   (1 << LAYER_DECOR);
 
 const MIRROR_EXCLUDED_MASK = (1 << LAYER_AI_ZONES) | (1 << LAYER_LIDAR) | (1 << LAYER_NEIGHBORS);
 
-function getMirrorTargetConfig(): { res: number; mask: number } {
-  const { layers, isFisheyeModalOpen } = useSceneStore.getState();
-  if (layers.mirrorsHD) {
-    return { res: 512, mask: MIRROR_HD_MASK & ~MIRROR_EXCLUDED_MASK };
-  }
-  const mask = (isFisheyeModalOpen ? MIRROR_HD_MASK : MIRROR_BASE_MASK) & ~MIRROR_EXCLUDED_MASK;
-  return { res: 256, mask };
-}
+const MIRROR_RESOLUTION = 512;
+export const MIRROR_RENDER_MASK = MIRROR_MASK & ~MIRROR_EXCLUDED_MASK;
 
 let _reflectionDepth = 0;
 
@@ -66,8 +56,7 @@ function MirrorSurface({ geometry, position, rotationY }: {
   const [x, y, z] = position;
   const reflector = useMemo(() => {
     geometry.computeBoundingBox();
-    const { res } = getMirrorTargetConfig();
-    const mir = new Reflector(geometry, { textureWidth: res, textureHeight: res, color: 0xbbbbbb, multisample: 0 });
+    const mir = new Reflector(geometry, { textureWidth: MIRROR_RESOLUTION, textureHeight: MIRROR_RESOLUTION, color: 0xbbbbbb, multisample: 0 });
     mir.position.set(x, y, z);
     mir.rotation.y = rotationY;
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
@@ -85,19 +74,13 @@ function MirrorSurface({ geometry, position, rotationY }: {
 
       _reflectionDepth++;
 
-      const { res: targetRes, mask: mirrorMask } = getMirrorTargetConfig();
-      const renderTarget = (mir as any).getRenderTarget();
-      if (renderTarget && renderTarget.width !== targetRes) {
-        renderTarget.setSize(targetRes, targetRes);
-      }
-
       const reflectionCamera = (mir as any).getReflectionCamera(renderCam);
       if (reflectionCamera) {
-        reflectionCamera.layers.mask = mirrorMask;
+        reflectionCamera.layers.mask = MIRROR_RENDER_MASK;
       }
 
       const oldMask = renderCam.layers.mask;
-      renderCam.layers.mask = mirrorMask;
+      renderCam.layers.mask = MIRROR_RENDER_MASK;
 
       const oldBackground = scene.background;
       const worldAutoUpdate = scene.matrixWorldAutoUpdate;

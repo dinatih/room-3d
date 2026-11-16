@@ -6,7 +6,6 @@ import { setNeighborArchitectureVisible } from '../ai/navigation/architecture';
 import { refuseUnsafeBedLayout } from '../ai/bedLayout';
 import { positionState } from '../positionState';
 import { DOUBLE_BED_POSITIONS } from '../furniturePositions';
-import { GRAPHICS_PRESETS } from './graphicsPresets';
 import { isHomeAssistantLinked, isHomeAssistantAction, requestHomeAssistantAction, useHomeAssistant } from '../../home-assistant/connection';
 import { cameraState } from '@features/scene/cameraState';
 import type { ArrowControl, CameraMovement, CameraTarget, OrbitMouseMode } from '@features/scene/camera/types';
@@ -35,9 +34,6 @@ import {
   updateUrlLayer,
   parseUrlGroundType,
   updateUrlGroundType,
-  parseUrlPreset,
-  updateUrlPreset,
-  type GraphicsPreset,
   LAYER_DEFAULTS,
 } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType, LaraClothing, LaraHoodieZip } from '../sidepanel/types';
@@ -123,11 +119,9 @@ interface SceneStore {
   hdriResolution: HdriResolution;
   screenVideosEnabled: boolean;
   screenVideoQuality: ScreenVideoQuality;
-  graphicsQualityPreset: GraphicsPreset;
   setScreenVideosEnabled: (enabled: boolean) => void;
   setScreenVideoQuality: (quality: ScreenVideoQuality) => void;
   setHdriResolution: (resolution: HdriResolution) => void;
-  setGraphicsQualityPreset: (preset: GraphicsPreset) => void;
   bnfAzimuth: number;
   bnfElevation: number;
   bnfRadius: number;
@@ -397,12 +391,6 @@ if (initialTarget === 'charactersGrid') {
   initialLayers.inventoryGrid = !initialLayers.wigGrid;
 }
 
-const urlPreset = parseUrlPreset();
-const initialPreset: GraphicsPreset = urlPreset ?? (initialLayers.mirrorsHD ? 'high' : (initialLayers.mirrors ? 'mid' : 'low'));
-
-const initialGraphics = GRAPHICS_PRESETS[initialPreset];
-Object.assign(initialLayers, initialGraphics.layers);
-
 if (!initialLayers.character) {
   cameraState.characterHidden = true;
 }
@@ -417,10 +405,9 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
-  hdriResolution: initialGraphics.hdriResolution,
-  screenVideosEnabled: initialGraphics.screenVideosEnabled,
-  screenVideoQuality: initialGraphics.screenVideoQuality,
-  graphicsQualityPreset: initialPreset,
+  hdriResolution: '4k',
+  screenVideosEnabled: true,
+  screenVideoQuality: 'hd',
   setScreenVideosEnabled: (enabled) => {
     set({ screenVideosEnabled: enabled });
     cameraState.invalidate?.();
@@ -431,24 +418,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
   },
   setHdriResolution: (resolution) => {
     set({ hdriResolution: resolution });
-    cameraState.invalidate?.();
-  },
-  setGraphicsQualityPreset: (preset) => {
-    updateUrlPreset(preset);
-    // Supprimer les paramètres de miroirs de l'URL s'ils correspondent aux valeurs par défaut du preset
-    if (typeof window !== 'undefined') {
-      try {
-        const url = new URL(window.location.href);
-        const mirrorKeys = ['mirrors', 'mirror', 'miroir', 'miroirs', 'mirrorshd', 'mirrorhd', 'mirror-hd', 'miroirhd', 'miroir-hd', 'miroirs-hd', 'miroirshd'];
-        for (const k of Array.from(url.searchParams.keys())) {
-          if (mirrorKeys.includes(k.toLowerCase())) url.searchParams.delete(k);
-        }
-        window.history.replaceState(null, '', url.toString());
-      } catch {}
-    }
-
-    const settings = GRAPHICS_PRESETS[preset];
-    set(state => ({ ...settings, graphicsQualityPreset: preset, layers: { ...state.layers, ...settings.layers } }));
     cameraState.invalidate?.();
   },
   bnfAzimuth: DEFAULT_BNF_COORDS.azimuth,
@@ -667,13 +636,6 @@ export const useSceneStore = create<SceneStore>((set) => ({
         updateUrlLayer('pillarsOnly', false);
         updateUrlLayer('transparentWallsDoors', false);
       }
-      if (key === 'mirrors' && !isActivating) nextLayers.mirrorsHD = false;
-      if (key === 'mirrorsHD' && isActivating) nextLayers.mirrors = true;
-      const nextPreset: GraphicsPreset = nextLayers.mirrorsHD
-        ? 'high'
-        : nextLayers.mirrors
-          ? 'mid'
-          : 'low';
       if (key === 'character') {
         cameraState.characterHidden = !nextLayers.character;
         if (!nextLayers.character) {
@@ -684,7 +646,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
       }
       cameraState.invalidate?.();
       return {
-        layers: nextLayers, activeExtraIds: nextActiveExtraIds, graphicsQualityPreset: nextPreset,
+        layers: nextLayers, activeExtraIds: nextActiveExtraIds,
       };
     });
   },

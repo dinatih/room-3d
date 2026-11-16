@@ -35,7 +35,6 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   decor: true,
   mirrorSurfaces: true,
   mirrors: true,
-  mirrorsHD: false,
   neighbors: false,
   animals: true,
   robots: true,
@@ -162,11 +161,6 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     urlParams: ['mirrors', 'mirror', 'miroir', 'miroirs'],
   },
   {
-    layerKey: 'mirrorsHD',
-    canonicalParam: 'mirrorsHD',
-    urlParams: ['mirrorshd', 'mirrorhd', 'mirror-hd', 'miroirhd', 'miroir-hd', 'miroirs-hd', 'miroirshd'],
-  },
-  {
     layerKey: 'neighbors',
     canonicalParam: 'neighbors',
     urlParams: ['neighbors', 'neighbor', 'voisins', 'voisin'],
@@ -273,53 +267,6 @@ function parseBooleanParam(val: string | null): boolean | undefined {
     return false;
   }
   return undefined;
-}
-
-export type GraphicsPreset = 'low' | 'mid' | 'high';
-
-/**
- * Analyse l'URL pour détecter le preset de performances demandé.
- * Paramètres supportés : ?preset=..., ?quality=...
- * Valeurs acceptées :
- * - low : 'low', 'sd', 'basse', 'eco', '0'
- * - mid : 'mid', 'medium', 'med', 'moyenne', 'md', '1'
- * - high : 'high', 'hd', 'haute', 'max', 'ultra', '2'
- */
-export function parseUrlPreset(): GraphicsPreset | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    let search = window.location.search;
-    if (!search && window.location.hash.includes('?')) {
-      search = window.location.hash.substring(window.location.hash.indexOf('?'));
-    }
-    const params = new URLSearchParams(search);
-    const raw = params.get('preset') ?? params.get('quality') ?? params.get('qualite') ?? params.get('perf');
-    if (raw !== null) {
-      const lower = raw.trim().toLowerCase();
-      if (['low', 'sd', 'ld', 'basse', 'eco', 'min', '0'].includes(lower)) return 'low';
-      if (['mid', 'medium', 'med', 'moyenne', 'md', '1'].includes(lower)) return 'mid';
-      if (['high', 'hd', 'haute', 'max', 'ultra', '2'].includes(lower)) return 'high';
-    }
-  } catch {}
-  return null;
-}
-
-/**
- * Met à jour le paramètre d'URL pour le preset
- */
-export function updateUrlPreset(preset: GraphicsPreset) {
-  if (typeof window === 'undefined') return;
-  try {
-    const url = new URL(window.location.href);
-    const keysToDelete = ['preset', 'quality', 'qualite', 'perf'];
-    for (const k of keysToDelete) {
-      url.searchParams.delete(k);
-    }
-    if (preset !== 'mid') {
-      url.searchParams.set('preset', preset);
-    }
-    window.history.replaceState(null, '', url.toString());
-  } catch {}
 }
 
 export function parseUrlGroundType(): { groundType?: GroundType; active?: boolean } {

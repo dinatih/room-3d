@@ -10,7 +10,7 @@ const scope = process.argv.includes('--lights') ? 'lights' : 'glass';
 const modes = args.length ? args : ['original', 'scene', 'scene', 'original'];
 if (modes.some(mode => !['original', 'scene'].includes(mode))) throw Error('Expected original or scene; optional --lights --night --hardware-gpu');
 const period = process.argv.includes('--night') ? 'night' : 'day';
-const base = require('../tests/fixtures/cases.cjs').performance[`studio-9-mid-${period}`];
+const base = require('../tests/fixtures/cases.cjs').performance[`studio-9-high-${period}`];
 process.env.ROOM_TEST_SUITE = 'perf';
 const resultsRoot = path.resolve(__dirname, '../test-results');
 fs.mkdirSync(resultsRoot, { recursive: true });

@@ -12,7 +12,7 @@ function evaluate(file, globals = {}, mockRequire = require, rewrite = s => s) {
   vm.runInNewContext(code, { exports, URL, URLSearchParams, require: mockRequire, ...globals });
   return exports;
 }
-const browser = { location: new URL('https://room.test/?flight=1&mirrorsHD=0&ui=0'), history: { replaceState(_, __, href) { browser.location = new URL(href); } } };
+const browser = { location: new URL('https://room.test/?flight=1&mirrors=0&ui=0'), history: { replaceState(_, __, href) { browser.location = new URL(href); } } };
 const params = evaluate('src/features/scene/camera/cameraUrlParams.ts', { window: browser });
 for (const flag of ['', '=1', '=true', '=yes', '=on']) {
   browser.location = new URL('https://room.test/?flight' + flag);
@@ -22,10 +22,10 @@ for (const flag of ['=0', '=false', '=off', '=no']) {
   browser.location = new URL('https://room.test/?flight' + flag);
   assert.equal(params.parseUrlFlightMode(), false);
 }
-browser.location = new URL('https://room.test/?mirrorsHD=0&ui=0');
+browser.location = new URL('https://room.test/?mirrors=0&ui=0');
 params.updateUrlFlightMode(true);
 assert.equal(browser.location.searchParams.get('flight'), '1');
-assert.equal(browser.location.searchParams.get('mirrorsHD'), '0');
+assert.equal(browser.location.searchParams.get('mirrors'), '0');
 assert.equal(browser.location.searchParams.get('ui'), '0');
 params.updateUrlFlightMode(false);
 assert.equal(params.parseUrlFlightMode(), false);
@@ -70,10 +70,10 @@ const mirrors = evaluate('src/features/scene/building/Mirrors.tsx', {}, name => 
 const aircraftLayers = new THREE.Layers();
 aircraftLayers.set(config.LAYER_AIRCRAFT);
 const mirrorLayers = new THREE.Layers();
-mirrorLayers.mask = mirrors.MIRROR_BASE_MASK;
-assert(mirrorLayers.test(aircraftLayers), 'LQ mirror includes aircraft layer');
+mirrorLayers.mask = mirrors.MIRROR_RENDER_MASK;
+assert(mirrorLayers.test(aircraftLayers), 'mirror includes aircraft layer');
 const defaultLayers = new THREE.Layers();
-assert(!mirrorLayers.test(defaultLayers), 'LQ does not include unrelated default helpers');
+assert(!mirrorLayers.test(defaultLayers), 'mirror does not include unrelated default helpers');
 const skyBounds = evaluate('src/features/scene/skyBounds.ts');
 let frame;
 const state = { mode: 'plane', planeSkyContact: true };
@@ -101,4 +101,4 @@ assert.equal(wire.material.opacity, .62);
 state.planeSkyContact = false;
 frame({ camera });
 assert.equal(wire.visible, false, 'grid clears even with unchanged camera position');
-console.log('Flight URL, LQ mirror mask and sky contact grid checks passed.');
+console.log('Flight URL, mirror mask and sky contact grid checks passed.');

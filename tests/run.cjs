@@ -28,7 +28,7 @@ async function main() {
     if (options.reference && options['approve-reference'])
         throw Error('Select comparison OR explicit approval');
     if (suite === 'perf' && !options.case)
-        throw Error('Select configurations explicitly: --case=0-low,7-mid (or --case=all)');
+        throw Error('Select configurations explicitly: --case=0-high,7-high (or --case=all)');
     const cases = suite === 'perf' ? Object.values(fixtures.performance) : [...fixtures.navigation, ...fixtures.interactions, ...rendering];
     const selected = options.case === 'all' ? cases.map(c => c.id) : (options.case?.split(',') ?? cases.map(c => c.id));
     if (new Set(selected).size !== selected.length)

@@ -60,7 +60,6 @@ import {
   SKY_START_TARGET,
 } from './camera';
 import type { CameraTarget } from './camera/types';
-import { parseUrlLayerOverrides } from './store/layerUrlParams';
 import { resolveCameraView, CAMERA_VIEW_HEIGHT, type CameraViewPreset } from './camera/cameraViews';
 import { getOrbitMouseButtons, getOrbitTouches } from './camera/orbitMouseButtons';
 import { getCharacterGridCameraView, getCharacterGridActiveTarget } from './character/characterGridUtils';
@@ -272,25 +271,6 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
       ctrlRef.current.target.set(...targetPos);
       currentTarget.current.set(...targetPos);
       ctrlRef.current.update();
-    }
-
-    // Auto-enable HD mirrors en FPV, disable hors FPV (orbit, follow, top, ortho) pour les performances.
-    // On bypass toggleLayer pour ne pas polluer l'URL avec mirrorsHD=1 (comportement automatique, pas un choix utilisateur).
-    // On respecte uniquement un mirrorsHD=0 explicite dans l'URL ou un preset low pour forcer la désactivation.
-    const urlLayerOverrides = parseUrlLayerOverrides();
-    const isMirrorsHDExplicitlyOff = urlLayerOverrides.mirrorsHD === false;
-    const isMirrorsHD = useSceneStore.getState().layers.mirrorsHD;
-    const currentPreset = useSceneStore.getState().graphicsQualityPreset;
-    if (m === 'fpv' && !isMirrorsHD && !isMirrorsHDExplicitlyOff && currentPreset !== 'low') {
-      useSceneStore.setState(state => ({
-        layers: { ...state.layers, mirrorsHD: true },
-        graphicsQualityPreset: 'high',
-      }));
-    } else if (m !== 'fpv' && isMirrorsHD && urlLayerOverrides.mirrorsHD !== true) {
-      useSceneStore.setState(state => ({
-        layers: { ...state.layers, mirrorsHD: false },
-        graphicsQualityPreset: currentPreset === 'low' || !state.layers.mirrors ? 'low' : 'mid',
-      }));
     }
 
     // Vues Top (ortho) : Désactiver le calque Miroir dans les 2 Vues Top (pièce et suivi perso)

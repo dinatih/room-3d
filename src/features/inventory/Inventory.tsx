@@ -120,7 +120,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
           />
         </div>
 
-        <ViewControlBar inline showOrbitControls showMirrorsHD inventoryLayout />
+        <ViewControlBar inline showOrbitControls inventoryLayout />
 
         <div className="p-3">
           <h3 className="fw-bold mb-1 text-dark fs-5">{zone.name}</h3>

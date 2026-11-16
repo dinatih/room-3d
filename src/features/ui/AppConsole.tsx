@@ -17,7 +17,6 @@ import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { useAppIdle } from '@features/scene/idleState';
 import { ProfileButton } from '@features/scene/ProfileButton';
 import { EnvironmentButton } from '@features/scene/EnvironmentButton';
-import { PresetButton } from '@features/scene/PresetButton';
 import { isHouseMusicPlaying, playHouseMusic, stopHouseMusic } from '@features/scene/utils/houseMusic';
 import { devLog } from '@/devLog';
 
@@ -763,7 +762,6 @@ export function AppConsole({
           >
             <i className="bi bi-bar-chart-fill" aria-hidden="true" />
           </button>
-          <PresetButton hideUI={hideUI} />
         </div>
 
         {/* 5. Calques, Personnages, Inventaire & + Chevrons (à la suite du btn Preset) */}

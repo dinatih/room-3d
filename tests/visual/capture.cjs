@@ -8,21 +8,20 @@ const { writeGallery, writeHistory } = require('../support/visual-gallery.cjs');
 const { navigation } = require('../fixtures/cases.cjs');
 
 async function main() {
-    const options = { preset: 'mid', label: '' };
+    const options = { label: '' };
     for (const arg of process.argv.slice(2)) {
         if (arg === '--hardware-gpu') continue;
-        const match = /^--(view|preset|label)=(.+)$/.exec(arg);
+        const match = /^--(view|label)=(.+)$/.exec(arg);
         if (!match) throw Error(`Unknown argument: ${arg}`);
         options[match[1]] = match[2];
     }
-    assert(['low', 'mid'].includes(options.preset), 'Expected --preset=low or mid');
     const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
     const root = path.resolve('test-results/visual');
     const createdAt = new Date().toISOString();
     const id = `${createdAt.replaceAll(':', '-')}-${commit.slice(0, 8)}`;
     const directory = path.join(root, id);
     const manifest = { schema: 1, id, commit, dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()), createdAt, label: options.label, status: 'running', captures: [] };
-    const fixture = { ...navigation[0], id, preset: options.preset, camera: 'orbit', timeoutMs: 240000,
+    const fixture = { ...navigation[0], id, camera: 'orbit', timeoutMs: 240000,
         freezeSource: true, query: { ui: '0', animals: '0', cameraTarget: 'studio' }, reproduction: 'npm run test:screenshots' };
     manifest.viewport = fixture.viewport;
     process.env.ROOM_TEST_RESULTS = root;
@@ -38,7 +37,7 @@ async function main() {
             const selected = options.view ? options.view.split(',') : views.map(v => v.key);
             assert.equal(new Set(selected).size, selected.length, 'Duplicate views');
             for (const key of selected) assert(views.some(v => v.key === key), `Unknown view ${key}`);
-            result.reproduction = `npm run test:screenshots -- --preset=${fixture.preset} --view=${selected.join(',')}`;
+            result.reproduction = `npm run test:screenshots -- --view=${selected.join(',')}`;
             manifest.views = views;
             const canvas = await page.$('[data-visual-capture]');
             assert(canvas, 'Missing scene canvas');

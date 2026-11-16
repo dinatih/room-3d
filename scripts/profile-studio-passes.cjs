@@ -12,7 +12,7 @@ process.env.ROOM_TEST_DIRTY = String(!!execFileSync('git',['status','--porcelain
 fs.mkdirSync('test-results',{recursive:true});
 const directory = fs.mkdtempSync(path.resolve('test-results/pass-audit-'));
 process.env.ROOM_TEST_RESULTS = directory;
-const fixture = { ...require('../tests/fixtures/cases.cjs').performance[process.argv.includes('--night') ? 'studio-9-mid-night' : 'studio-9-mid-day'],
+const fixture = { ...require('../tests/fixtures/cases.cjs').performance[process.argv.includes('--night') ? 'studio-9-high-night' : 'studio-9-high-day'],
     id:'pass-audit', localResourcesOnly:true, timeoutMs:300000 };
 // Performance diagnosis needs the actual default scene from the first mount.
 // Enabling layers afterwards also exercises lifecycle paths and changes the setup.

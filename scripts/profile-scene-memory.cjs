@@ -4,7 +4,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { withBrowser } = require('../tests/support/browser.cjs');
 const { hostMetrics } = require('../tests/support/host-metrics.cjs');
-const fixture = require('../tests/fixtures/cases.cjs').performance['studio-9-mid-day'];
+const fixture = require('../tests/fixtures/cases.cjs').performance['studio-9-high-day'];
 
 async function main() {
     const variants = process.argv.slice(2).filter(arg => arg !== '--hardware-gpu');

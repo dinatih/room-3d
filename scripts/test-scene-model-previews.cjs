@@ -2,7 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const {withBrowser} = require('../tests/support/browser.cjs');
 process.env.ROOM_TEST_SUITE='perf';process.env.ROOM_TEST_OPTIONS='{}';process.env.ROOM_TEST_RESULTS=fs.mkdtempSync('/tmp/room-memory-preview-');
-const fixture={...require('../tests/fixtures/cases.cjs').performance['studio-9-mid-day'],count:0,id:'preview-lifecycle',cancelledRequestPaths:['/items/black-hornet/black-hornet.glb']};
+const fixture={...require('../tests/fixtures/cases.cjs').performance['studio-9-high-day'],count:0,id:'preview-lifecycle',cancelledRequestPaths:['/items/black-hornet/black-hornet.glb']};
 const path='/items/black-hornet/black-hornet.glb';
 withBrowser(fixture,async(page,result)=>{
  for(let cycle=0;cycle<2;cycle++) {

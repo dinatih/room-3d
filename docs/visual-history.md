@@ -32,10 +32,9 @@ Pour cibler une vue ou annoter une étape :
 
 ```bash
 npm run test:screenshots -- --view=north-45,south-east-0,north--90 --label=avant-cuisine
-npm run test:screenshots -- --preset=low
 ```
 
-Par défaut : qualité Mid, 1280 × 720, DPR 1, interface masquée, aucun PNJ ni animal et temps d’animation 3D figé à zéro après préparation de la scène. Les positions viennent des vrais presets et les deux projections utilisent les commandes de caméra de l’application. Le rechargement automatique des sources est désactivé pendant les captures. Le runner attend une caméra réellement rendue et stabilisée avant chaque capture. Une erreur conserve la galerie partielle et les diagnostics.
+Par défaut : qualité High, 1280 × 720, DPR 1, interface masquée, aucun PNJ ni animal et temps d’animation 3D figé à zéro après préparation de la scène. Les positions viennent des vrais presets et les deux projections utilisent les commandes de caméra de l’application. Le rechargement automatique des sources est désactivé pendant les captures. Le runner attend une caméra réellement rendue et stabilisée avant chaque capture. Une erreur conserve la galerie partielle et les diagnostics.
 
 Le comparateur signale des conditions différentes : qualité/calques, résolution, navigateur, GPU, graine et animation. La comparaison reste visuelle ; aucun seuil de pixels ne transforme automatiquement une évolution voulue en échec.
 

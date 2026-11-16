@@ -9,7 +9,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     page.on('pageerror', error => { errors.push(String(error)); console.error(error); });
     await page.setViewport({ width: 1280, height: 800 });
     const base = process.env.HORNET_TEST_URL || 'http://127.0.0.1:5173';
-    await page.goto(`${base}/?preset=low&characterCount=0&character=marissa&skipIntro=1&target=studio`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${base}/?characterCount=0&character=marissa&skipIntro=1&target=studio`, { waitUntil: 'domcontentloaded' });
     const ready = async () => {
       await page.waitForFunction(async () => {
         const { cameraState } = await import('/src/features/scene/cameraState.ts');
@@ -125,7 +125,7 @@ const launchBrowser = require('../../scripts/browser-test-options.cjs');
     await select('character', 'fpv');
     await page.screenshot({ path: '/tmp/room-camera-subject-selector.png' });
     for (const [query, id, mode] of [['fpv=ushiro', 'shiba', 'fpv'], ['follow=bird', 'robin', 'follow'], ['cameraTarget=hornet&follow=1', 'drone', 'follow'], ['target=character&fpv=1', null, 'fpv']]) {
-      await page.goto(`${base}/?preset=low&characterCount=0&character=marissa&skipIntro=1&${query}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/?characterCount=0&character=marissa&skipIntro=1&${query}`, { waitUntil: 'domcontentloaded' });
       await ready();
       await page.waitForFunction((id, mode) => window.cameraSubjectsState.animalTarget === id && window.cameraSubjectsState.mode === mode, {}, id, mode);
       assert.equal(await page.evaluate(() => window.cameraSubjectsStore.getState().activeCharacterId), 'marissa');

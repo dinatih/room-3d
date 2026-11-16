@@ -34,7 +34,7 @@ const background = process.argv.includes('--background');
       else requestAnimationFrame(sample);
     }, background);
     if (background) await browser.newPage();
-    await page.goto('http://127.0.0.1:5176/?characterCount=7&skipIntro=1&preset=mid&target=studio&cameraMovement=fix', { waitUntil: 'domcontentloaded', timeout: 180000 });
+    await page.goto('http://127.0.0.1:5176/?characterCount=7&skipIntro=1&target=studio&cameraMovement=fix', { waitUntil: 'domcontentloaded', timeout: 180000 });
     if (background) {
       assert(await page.evaluate(() => document.hidden), 'Le chargement doit être testé dans un onglet réellement caché');
       await page.waitForFunction(() => document.getElementById('loading-item')?.textContent === '✅ Scène 3D prête', { polling: 1000, timeout: 360000 });

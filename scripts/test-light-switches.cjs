@@ -4,16 +4,15 @@ const path = require('node:path');
 const { withBrowser } = require('../tests/support/browser.cjs');
 const { installRenderMetrics } = require('../tests/support/render-metrics.cjs');
 const original = process.argv.includes('--original');
-const high = process.argv.includes('--high');
 const period = process.argv.includes('--night') ? 'night' : 'day';
 process.env.ROOM_TEST_SUITE = 'perf';
 process.env.ROOM_TEST_OPTIONS = '{}';
 const root = path.resolve(__dirname, '../test-results');
 fs.mkdirSync(root, { recursive: true });
 process.env.ROOM_TEST_RESULTS = fs.mkdtempSync(path.join(root, `light-switches-${original ? 'original' : 'scene'}-`));
-const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-mid-${period}`], id: 'switches',
-    originalLightShader: original, preset: high ? 'high' : 'mid', timeoutMs: 240000,
-    reproduction: `node scripts/test-light-switches.cjs${original ? ' --original' : ''}${high ? ' --high' : ''}${period === 'night' ? ' --night' : ''} --hardware-gpu` };
+const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-high-${period}`], id: 'switches',
+    originalLightShader: original, timeoutMs: 240000,
+    reproduction: `node scripts/test-light-switches.cjs${original ? ' --original' : ''}${period === 'night' ? ' --night' : ''} --hardware-gpu` };
 withBrowser(fixture, async (page, result, system) => {
     const memory = async () => {
         const { processInfo } = await system.send('SystemInfo.getProcessInfo');
@@ -54,7 +53,7 @@ withBrowser(fixture, async (page, result, system) => {
     }
     await client.send('HeapProfiler.collectGarbage');
     const finalMemory = await memory();
-    fs.writeFileSync(path.join(process.env.ROOM_TEST_RESULTS, 'switches.json'), JSON.stringify({ original, high, period, initialMemory, finalMemory, samples }, null, 2));
+    fs.writeFileSync(path.join(process.env.ROOM_TEST_RESULTS, 'switches.json'), JSON.stringify({ original, period, initialMemory, finalMemory, samples }, null, 2));
     console.log('Mémoire après GC :', finalMemory);
     console.log(`Rapport : ${process.env.ROOM_TEST_RESULTS}/switches.json`);
 }).catch(error => { console.error(error); process.exitCode = 1; });

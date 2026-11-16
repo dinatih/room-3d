@@ -212,7 +212,7 @@ exports.withBrowser = async (fixture, exercise) => {
                 const ready = result.partial?.readiness;
                 progress(`Chargement en cours — personnages prêts : ${ready ? `${ready.filter(character => character.ready).length}/${fixture.count}` : `en attente/${fixture.count}`} ; frames navigateur : ${result.partial?.frames ?? 0}`);
             }, PROGRESS_INTERVAL_MS);
-            const query = new URLSearchParams({ characterCount: String(fixture.count), skipIntro: '1', preset: fixture.preset, mode: fixture.camera, ...fixture.query });
+            const query = new URLSearchParams({ characterCount: String(fixture.count), skipIntro: '1', mode: fixture.camera, ...fixture.query });
             await page.goto(`http://127.0.0.1:${address.port}/?${query}`, { waitUntil: 'domcontentloaded', timeout: fixture.readinessTimeoutMs });
             await page.waitForFunction(async (count) => {
                 const { cameraState } = await import('/src/features/scene/cameraState.ts');

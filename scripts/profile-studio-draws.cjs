@@ -9,7 +9,7 @@ process.env.ROOM_TEST_DIRTY = String(!!execFileSync('git', ['status', '--porcela
 fs.mkdirSync('test-results', { recursive: true });
 const directory = fs.mkdtempSync(path.resolve('test-results/draw-submissions-'));
 process.env.ROOM_TEST_RESULTS = directory;
-const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-mid-${process.argv.includes('--night') ? 'night' : 'day'}`], id: 'draw-submissions' };
+const fixture = { ...require('../tests/fixtures/cases.cjs').performance[`studio-9-high-${process.argv.includes('--night') ? 'night' : 'day'}`], id: 'draw-submissions' };
 fixture.captureReadPixels = process.argv.includes('--read-pixels');
 fixture.localResourcesOnly = true;
 // The BNF label uses Troika's remote Unicode fallback. Exclude this overlay

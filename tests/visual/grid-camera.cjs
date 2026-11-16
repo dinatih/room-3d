@@ -44,7 +44,7 @@ const launch = require('../../scripts/browser-test-options.cjs');
       await settle();
     };
     if (process.argv.includes('--centering')) {
-      await page.goto(`${base}/?preset=low&characterCount=7&animals=0&skipIntro=1&target=charactersGrid`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/?characterCount=7&animals=0&skipIntro=1&target=charactersGrid`, { waitUntil: 'domcontentloaded' });
       await ready();
       const check = async id => {
         await page.waitForFunction(id => {
@@ -79,7 +79,7 @@ const launch = require('../../scripts/browser-test-options.cjs');
       page.on('console', message => {
         if (message.text().includes('[InventoryObjectsGrid] Error')) errors.push(message.text());
       });
-      await page.goto(`${base}/?preset=low&characterCount=0&animals=0&skipIntro=1&target=inventoryObjectGrid`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/?characterCount=0&animals=0&skipIntro=1&target=inventoryObjectGrid`, { waitUntil: 'domcontentloaded' });
       await ready();
       await page.waitForFunction(() => {
         const grid = window.__THREE_SCENE__?.getObjectByName('inventory-objects-grid');
@@ -108,10 +108,10 @@ const launch = require('../../scripts/browser-test-options.cjs');
       return;
     }
     for (const view of switchOnly ? [''] : ['', '&follow=1', '&target=studio&projection=ortho&cameraPos=north-east']) {
-      await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1${view}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/?characterCount=1&animals=0&skipIntro=1${view}`, { waitUntil: 'domcontentloaded' });
       await ready();
       await settle();
-      if (!view) assert.equal(new URL(page.url()).search, '?preset=low&characterCount=1&animals=0&skipIntro=1');
+      if (!view) assert.equal(new URL(page.url()).search, '?characterCount=1&animals=0&skipIntro=1');
       let laraPosition;
       for (const kind of ['lara', 'wigs']) {
         const before = await snapshot();
@@ -162,7 +162,7 @@ const launch = require('../../scripts/browser-test-options.cjs');
       }
     }
     for (const query of switchOnly ? [] : ['target=charactersGrid', 'target=inventoryObjectGrid&wigGrid=1']) {
-      await page.goto(`${base}/?preset=low&characterCount=1&animals=0&skipIntro=1&${query}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${base}/?characterCount=1&animals=0&skipIntro=1&${query}`, { waitUntil: 'domcontentloaded' });
       await ready(); await settle();
       const expected = query.includes('wigGrid') ? 'inventoryObjectGrid' : 'charactersGrid';
       await page.waitForFunction(expected => window.gridStore.getState().cameraTarget === expected && window.gridState.mode === 'orbit', {}, expected);

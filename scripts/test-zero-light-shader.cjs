@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const { withBrowser } = require('../tests/support/browser.cjs');
 process.env.ROOM_TEST_SUITE = 'perf'; process.env.ROOM_TEST_OPTIONS = '{}';
 process.env.ROOM_TEST_RESULTS = fs.mkdtempSync('/tmp/room-light-pixels-');
-const fixture = { ...require('../tests/fixtures/cases.cjs').performance['studio-9-mid-night'], count: 0, id: 'light-pixels', reproduction: 'node scripts/test-zero-light-shader.cjs --hardware-gpu' };
+const fixture = { ...require('../tests/fixtures/cases.cjs').performance['studio-9-high-night'], count: 0, id: 'light-pixels', reproduction: 'node scripts/test-zero-light-shader.cjs --hardware-gpu' };
 withBrowser(fixture, async page => {
     const differences = await page.evaluate(async () => {
         const T = await import('/node_modules/three/build/three.module.js');

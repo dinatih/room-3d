@@ -9,7 +9,7 @@ const objects = [
     { id: 'air-performer', node: 'Circle670_1', transmission: 1, path: '/items/philips-amf870/philips-amf870.glb' },
     { id: 'phone', node: 'Glass_glass_0', transmission: .5, path: '/items/xiaomi-phone/xiaomi-phone.glb' },
 ];
-const fixture = { ...require('../tests/fixtures/cases.cjs').performance['studio-9-mid-day'], count: 0,
+const fixture = { ...require('../tests/fixtures/cases.cjs').performance['studio-9-high-day'], count: 0,
     id: 'glass-previews', timeoutMs: 240000, cancelledRequestPaths: objects.map(object => object.path), reproduction: 'node scripts/test-scene-glass-previews.cjs --hardware-gpu' };
 withBrowser(fixture, async page => {
     const sceneGlass = await page.evaluate(nodes => nodes.map(name => {
@@ -22,18 +22,7 @@ withBrowser(fixture, async page => {
         assert(materials.length, 'Expected physical glass material');
         for (const material of materials) { assert.equal(material.transmission, 0); assert.equal(material.transparent, true); }
     }
-    for (const preset of ['high', 'mid']) {
-        await page.evaluate(async preset => {
-            const { useSceneStore } = await import('/src/features/scene/store/useSceneStore.ts');
-            useSceneStore.getState().setGraphicsQualityPreset(preset);
-        }, preset);
-        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-        await page.waitForFunction(objects => objects.every(({ node }) => {
-            const mesh = window.__THREE_SCENE__?.getObjectByName(node);
-            return mesh?.isMesh && (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).every(material => !(material.transmission > 0));
-        }), { timeout: 60000 }, objects);
-    }
-    console.log('High et Mid : vitrage optimisé conservé');
+    console.log('Vitrage optimisé conservé dans la scène');
     for (const object of objects) {
         await page.evaluate(async object => {
             const { openInventoryTarget } = await import('/src/features/ui/AppConsole.tsx');

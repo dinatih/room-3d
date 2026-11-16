@@ -671,7 +671,6 @@ export function Studio() {
         if (k === 'h') { e.preventDefault(); onToggleLayer('furnishings'); cameraState.invalidate?.(); return; }
         if (k === 'e') { e.preventDefault(); onToggleLayer('extraCharacters'); cameraState.invalidate?.(); return; }
         if (k === 'u') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
-        if (k === 'g') { e.preventDefault(); onToggleLayer('mirrorsHD'); cameraState.invalidate?.(); return; }
         if (k === 'z') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraTop', useSceneStore.getState().layers.laraTop === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'c') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraBottom', useSceneStore.getState().layers.laraBottom === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'x') { e.preventDefault(); const store = useSceneStore.getState(); const value = store.layers.laraTop === 'none' && store.layers.laraBottom === 'none' ? 'native' : 'none'; store.setLaraClothing('laraTop', value); store.setLaraClothing('laraBottom', value); cameraState.invalidate?.(); return; }
@@ -1082,7 +1081,7 @@ export function Studio() {
             <Robots />
           </CategoryLayerGroup>
 
-          {/* LAYER_MIRRORS (17) — plans de réflexion Reflector (MD/HD) ou glaces ambiantes PBR (SD) */}
+          {/* LAYER_MIRRORS (17) — plans de réflexion Reflector ou glaces ambiantes PBR */}
           <CategoryLayerGroup layer={LAYER_MIRRORS} visible={layers.mirrorSurfaces}>
             <MirrorReflectors showReflection={layers.mirrors || isFisheyeModalOpen} />
           </CategoryLayerGroup>

@@ -176,7 +176,6 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-robot', 'Robots'), 'robots')}
       {layerBtn('Surfaces des miroirs',           'mirrorSurfaces')}
       {layerBtn('Miroirs MD (Moyenne déf)',       'mirrors')}
-      {layerBtn('Miroirs HD (Haute déf) (Alt+G)', 'mirrorsHD')}
       {layerBtn(iconLabel('bi-robot', 'Zones IA (Shift+A)'), 'aiZones')}
       {layerBtn(iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn(iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}

@@ -180,11 +180,13 @@ it('restaure les échelles originales après transition, interruption et démont
 });
 
 it('partage le rendu miroir et restaure la scène même quand une réflexion échoue', async () => {
-  const cleanups = [], state = { layers: { mirrorsHD: false } }, reflectionCamera = new THREE.PerspectiveCamera();
+  const cleanups = [], reflectionCamera = new THREE.PerspectiveCamera();
   let fail = true, renders = 0;
   class Reflector extends THREE.Mesh {
-    constructor(geometry) {
+    constructor(geometry, options) {
       super(geometry, new THREE.MeshBasicMaterial());
+      assert.equal(options.textureWidth, 512);
+      assert.equal(options.textureHeight, 512);
       this.onBeforeRender = (_, scene, camera) => {
         renders++;
         assert.equal(scene.matrixWorldAutoUpdate, false);
@@ -192,39 +194,36 @@ it('partage le rendu miroir et restaure la scène même quand une réflexion éc
         if (fail) throw new Error('reflection failed');
       };
     }
-    getRenderTarget() { return { width: 256 }; }
     getReflectionCamera() { return reflectionCamera; }
     dispose() {}
   }
-  const { MirrorSurface, mirrorPlanesGeometry, getMirrorTargetConfig } = load('src/features/scene/building/Mirrors.tsx', {
+  const { MirrorSurface, mirrorPlanesGeometry } = load('src/features/scene/building/Mirrors.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useMemo: fn => fn(), useEffect: fn => cleanups.push(fn()) },
     '@react-three/fiber': {}, 'three/addons/objects/Reflector.js': { Reflector },
     'three/addons/utils/BufferGeometryUtils.js': await geometryUtils,
-    '../store/useSceneStore': { useSceneStore: { getState: () => state } }, '../SkySphere': { getLoadedSkyTexture: () => null },
+    '../store/useSceneStore': {},
+    '../SkySphere': { getLoadedSkyTexture: () => null },
     '../items/NissedalMirror': {}, './MergedStaticGroup': {}, '../wallData': {}, '@config': {},
-  }, source => source + '\nexport { MirrorSurface, mirrorPlanesGeometry, getMirrorTargetConfig };');
-  const { GRAPHICS_PRESETS } = load('src/features/scene/store/graphicsPresets.ts', {});
-  for (const [preset, resolution] of [['mid', 256], ['high', 512]]) {
-    Object.assign(state, GRAPHICS_PRESETS[preset]);
-    assert.equal(getMirrorTargetConfig().res, resolution);
-  }
-  state.layers = { ...state.layers, mirrorsHD: false };
-  assert.equal(getMirrorTargetConfig().res, 256, 'désactiver HD après High réduit réellement la résolution');
+  }, source => source + '\nexport { MirrorSurface, mirrorPlanesGeometry };');
   const geometry = mirrorPlanesGeometry([{ w: 2, h: 4, x: 0, y: 0 }, { w: 2, h: 4, x: 10, y: 0 }]);
   assert.deepEqual(geometry.boundingBox.min.toArray(), [-1, -2, 0]);
   assert.deepEqual(geometry.boundingBox.max.toArray(), [11, 2, 0]);
   const mirror = MirrorSurface({ geometry, position: [1, 2, 3], rotationY: Math.PI }).props.object;
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera();
+  const target = {}, renderer = {
+    getRenderTarget: () => target, getActiveCubeFace: () => 2, getActiveMipmapLevel: () => 1,
+    setRenderTarget: (...args) => assert.deepEqual(args, [target, 2, 1]),
+  };
   const projection = camera.projectionMatrix.clone(), mask = camera.layers.mask;
   scene.background = new THREE.Color('red');
   const background = scene.background;
-  assert.throws(() => mirror.onBeforeRender(null, scene, camera), /reflection failed/);
+  assert.throws(() => mirror.onBeforeRender(renderer, scene, camera), /reflection failed/);
   assert.equal(scene.background, background);
   assert.equal(scene.matrixWorldAutoUpdate, true);
   assert(camera.projectionMatrix.equals(projection));
   assert.equal(camera.layers.mask, mask);
   fail = false;
-  mirror.onBeforeRender(null, scene, camera);
+  mirror.onBeforeRender(renderer, scene, camera);
   assert.equal(renders, 2, 'la profondeur de réflexion doit aussi être restaurée');
   cleanups.forEach(cleanup => cleanup());
 });
