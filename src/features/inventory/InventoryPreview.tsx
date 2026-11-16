@@ -835,7 +835,7 @@ function RegistryScene({ item, actionState, showDims, wireframe, onTargetChange,
   );
 }
 
-function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: string[], initialIndex?: number, onIndexChange?: (i: number) => void }) {
+function PhotoGallery({ photos, referenceSheet, initialIndex = 0, onIndexChange }: { photos: string[], referenceSheet?: string, initialIndex?: number, onIndexChange?: (i: number) => void }) {
   const [idx, setIdx] = useState(initialIndex);
   useEffect(() => {
     setIdx(initialIndex);
@@ -854,7 +854,10 @@ function PhotoGallery({ photos, initialIndex = 0, onIndexChange }: { photos: str
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src={photos[idx]} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+      <img src={photos[idx]} alt={photos[idx] === referenceSheet ? 'Référence radiographique : squelette et rig, vues Anterior, Lateral, Posterior et Dorsal' : `Photo ${idx + 1}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+      <a href={photos[idx]} target="_blank" rel="noreferrer" className="btn btn-sm btn-light border position-absolute top-0 end-0 m-2" aria-label="Ouvrir l’image en pleine résolution">
+        <i className="bi bi-arrows-fullscreen me-1" aria-hidden="true" />Pleine résolution
+      </a>
       {photos.length > 1 && (
         <>
           <button onClick={handlePrev} className="btn btn-sm btn-light border shadow-sm position-absolute start-0 top-50 translate-middle-y ms-1">‹</button>
@@ -917,7 +920,10 @@ export function InventoryPreview({
   const isMobile = useIsMobile();
   const walkDebug = useAnimPreviewStore(state => state.walkDebug);
   const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
-  const glbPath = item && 'glbPath' in item ? item.glbPath : undefined, photos = item && 'photos' in item ? (item as InventoryItem).photos : undefined;
+  const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
+  const referenceSheet = item && 'referenceSheet' in item ? item.referenceSheet : undefined;
+  const itemPhotos = item && 'photos' in item ? item.photos : undefined;
+  const photos = referenceSheet ? [...(itemPhotos ?? []), referenceSheet] : itemPhotos;
   const hasRegistry = item ? !!SCENE_REGISTRY[item.id] : false, has3D = !!glbPath || hasRegistry, hasPhotos = showPhotoGallery && !!photos && photos.length > 0;
   const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'unitree-as2w', 'raph-rover', 'jumper-robot', 'microduck'].includes(item.id))
     ? getPreviewActionIds(item.id)
@@ -1301,7 +1307,7 @@ export function InventoryPreview({
               <DevToolsCollector />
             </Canvas>
             </>
-          ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
+          ) : showingPhotos ? <PhotoGallery key={item.id + '-photos'} photos={photos!} referenceSheet={referenceSheet} initialIndex={photoIdx} onIndexChange={setPhotoIdx} /> : null}
           <div className="position-absolute top-0 end-0 m-2 z-3 d-flex gap-2 align-items-center">
             {showing3D && isWigItem && (
               <button
@@ -1592,6 +1598,14 @@ export function InventoryPreview({
       </ViewControlBar>
     )}
     {isWigItem && item && <WigFitPanel key={item.id} wigId={item.id} />}
+    {referenceSheet && hasPhotos && (
+      <div className="d-flex flex-wrap align-items-center gap-2 p-2 border-top small">
+        <button type="button" className="btn btn-sm btn-outline-info" aria-pressed={showingPhotos && photos![photoIdx] === referenceSheet} onClick={() => { setPhotoIdx(photos!.indexOf(referenceSheet)); setViewMode('photos'); }}>
+          <i className="bi bi-image me-1" aria-hidden="true" />Référence radiographique
+        </button>
+        <span className="text-muted">Planche illustrative · Squelette et rig de référence</span>
+      </div>
+    )}
     {item && hasPhotos && showPhotoGallery && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', width: '100%', background: '#eaeaea' }}>
         {has3D && (

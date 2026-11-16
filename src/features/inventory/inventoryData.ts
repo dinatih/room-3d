@@ -19,6 +19,8 @@ export interface InventoryItem {
   notes?: string;
   glbPath?: string;
   photos?: string[];
+  /** Illustrated anatomical / rig reference; independent of the 3D asset. */
+  referenceSheet?: string;
   url?: string;
   price?: string;
   description?: string;
@@ -453,7 +455,9 @@ const sortedCharacters = [
 
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
-    const photos = char.path.includes('xbot')
+    const photos = char.id === 'native'
+      ? ['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-${view}.png`)
+      : char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
       : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined);
     INVENTORY.push({
@@ -476,6 +480,7 @@ sortedCharacters.forEach(char => {
         h: char.height
       },
       glbPath: char.path,
+      ...(char.id === 'native' ? { referenceSheet: 'references/xray/lara-native-xray.png' } : {}),
       ...(photos ? { photos } : {}),
       notes: char.id === 'skeleton'
         ? 'Personnage animé : Squelette anatomique complet avec organes internes et cage thoracique.'
@@ -492,6 +497,7 @@ sortedCharacters.forEach(char => {
 
 INVENTORY.push({
   id: 'ushiro',
+  referenceSheet: 'references/xray/ushiro-xray.png',
   name: 'Chien Ushiro (Shiba Inu)',
   brand: 'Animal',
   category: 'animals',
@@ -510,6 +516,7 @@ INVENTORY.push({
 
 INVENTORY.push({
   id: 'ulotte',
+  referenceSheet: 'references/xray/ulotte-xray.png',
   name: 'Chienne Ulotte (Teckel)',
   brand: 'Animal',
   category: 'animals',
