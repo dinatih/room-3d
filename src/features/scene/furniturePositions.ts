@@ -28,8 +28,9 @@ const DESK_DEPTH = 36;
 const EAST_DESK_X = ROOM_W - FURNITURE_WALL_CLEARANCE - DESK_DEPTH / 2;
 const FREEZER_NORTH_Z = ROOM_D - SHOE_HAT_RACK.width - 47.37 - FURNITURE_WALL_CLEARANCE;
 const EAST_DESK2_Z = FREEZER_NORTH_Z - DESK_WIDTH / 2;
-// DIMPA : centre X=16, profondeur 22 cm ; bureaux accolés côté séjour.
-const DIMPA_DESK_X = 16 + 22 / 2 + DESK_DEPTH / 2;
+// DIMPA : centre X=19, profondeur 22 cm ; bureaux accolés côté séjour.
+export const DIMPA_X = 19;
+const DIMPA_DESK_X = DIMPA_X + 22 / 2 + DESK_DEPTH / 2;
 
 export const DESK1_POSITIONS: readonly FurnitureTransform[] = [
   { x: 73.5, z: 18,   ry: 0           },
@@ -75,12 +76,12 @@ export const BED_FRAME_WIDTH = 83;
 export const BED_FRAME_LENGTH = 205;
 
 export const SINGLE_BED_POSITIONS = {
-  west: { x: 74, z: 166, ry: Math.PI / 2 },
+  west: { x: 77, z: 166, ry: Math.PI / 2 },
   east: { x: ROOM_W - 45.5, z: 190, ry: Math.PI / 2 },
 } as const;
 
 export const DOUBLE_BED_POSITIONS: readonly DoubleBedConfig[] = [
-  { label: 'Mur Ouest', west: { x: 16 + 22 / 2 + BED_FRAME_WIDTH / 2, z: 180 }, east: { x: 16 + 22 / 2 + BED_FRAME_WIDTH * 1.5, z: 180 } },
+  { label: 'Mur Ouest', west: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH / 2, z: 180 }, east: { x: DIMPA_X + 22 / 2 + BED_FRAME_WIDTH * 1.5, z: 180 } },
   { label: 'Mur Est',   west: { x: ROOM_W - 128.5, z: 190 },     east: { x: ROOM_W - 45.5, z: 190 } },
 ];
 

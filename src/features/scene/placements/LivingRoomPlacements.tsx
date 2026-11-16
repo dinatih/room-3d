@@ -76,6 +76,7 @@ import {
   AIRPERFORMER_REMOTE_POSITIONS,
   DOUBLE_BED_POSITIONS,
   SINGLE_BED_POSITIONS,
+  DIMPA_X,
 } from '../furniturePositions';
 
 const w2 = 75.5; // 2×Kallax : 2×33.5 + 2×3.5 + 1.5
@@ -523,10 +524,10 @@ export function LivingRoomFurniture() {
       </group>
 
       {/* Sacs Dimpa mur Ouest recouverts chacun d'un drap rouge (sacs d'origine masqués pour économiser ~133k tris) */}
-      <group position={[16, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 1' }}>
+      <group position={[DIMPA_X, 0, 155]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 1' }}>
         <NavigationObstacle id="dimpa-1"><DimpaCover /></NavigationObstacle>
       </group>
-      <group position={[16, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 2' }}>
+      <group position={[DIMPA_X, 0, 220]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Sac Dimpa Ouest 2' }}>
         <NavigationObstacle id="dimpa-2"><DimpaCover /></NavigationObstacle>
       </group>
     </MergedStaticGroup>
