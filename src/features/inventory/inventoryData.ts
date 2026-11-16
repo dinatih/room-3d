@@ -1,6 +1,7 @@
 // =============================================
 
 import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
+import householdShowcaseItems from './householdShowcaseItems.json';
 // INVENTORY DATA — port de js/ui/inventoryData.js
 // dims: { w, d, h } en cm (w=X, d=Z, h=Y)
 // =============================================
@@ -41,6 +42,7 @@ export interface Category {
 }
 
 export const INVENTORY: InventoryItem[] = [
+  ...householdShowcaseItems,
   // Imported household products and red hats.
   {"id": "spray-cleaner", "name": "Spray nettoyant", "brand": "", "category": "bathroom", "qty": 1, "dims": {"w": 14.18, "d": 6.59, "h": 29.37}, "glbPath": "items/spray-cleaner/SprayCleaner.glb", "photos": ["items/spray-cleaner/preview-three-quarter.png", "items/spray-cleaner/preview-front.png", "items/spray-cleaner/preview-back.png"], "notes": "Pulvérisateur texturé importé de Spray+cleaner.zip. Échelle estimée."},
   {"id": "laundry-detergent", "name": "Lessive", "brand": "", "category": "bathroom", "qty": 1, "dims": {"w": 8.42, "d": 10.57, "h": 25.0}, "glbPath": "items/laundry-detergent/LaundryDetergent.glb", "photos": ["items/laundry-detergent/preview-three-quarter.png", "items/laundry-detergent/preview-front.png", "items/laundry-detergent/preview-back.png"], "notes": "Grand flacon et bouchon séparés du modèle bottles. Plastique blanc. Échelle estimée."},
@@ -265,7 +267,7 @@ export const INVENTORY: InventoryItem[] = [
       'items/trash-bin/tatay-smart-deco_3d_preview.png',
     ] },
 
-  { id: 'temu-rolling-bin', name: 'Poubelle rouge sur roulettes avec couvercle', brand: 'Temu', category: 'bathroom', qty: 1, dims: { w: 22.7, d: 23.7, h: 35 }, notes: 'Devant la porte du meuble METOD ouest. Dimensions de la photo ; capacité 26,4 L annoncée non cohérente avec ces dimensions.', glbPath: 'items/temu-rolling-bin/TemuRollingBin.glb', photos: ['items/temu-rolling-bin/preview.png', 'items/temu-rolling-bin/preview-front.png', 'items/temu-rolling-bin/preview-back.png'], url: 'https://www.temu.com/fr/poubelle-g-607499684021065.html' },
+  { id: 'temu-rolling-bin', name: 'Poubelle rouge sur roulettes avec couvercle', brand: 'Temu', price: '29,99', category: 'bathroom', qty: 1, dims: { w: 22.7, d: 23.7, h: 35 }, notes: 'Devant la porte du meuble METOD ouest. Dimensions de la photo ; capacité 26,4 L annoncée non cohérente avec ces dimensions.', glbPath: 'items/temu-rolling-bin/TemuRollingBin.glb', photos: ['items/temu-rolling-bin/preview.png', 'items/temu-rolling-bin/preview-front.png', 'items/temu-rolling-bin/preview-back.png'], url: 'https://www.temu.com/fr/poubelle-g-607499684021065.html' },
 
   // ── BATHROOM ─────────────────────────────────────────────────────────────────
   { id: 'bathroom-cabinet-west', name: 'METOD Structure élément mural, blanc, 40x37x60 cm (ouest)', brand: 'IKEA', category: 'storage', qty: 1, dims: { w: 40, d: 37.6, h: 60 }, notes: 'Blanc + porte gris brillant + poignée inox 213mm', glbPath: 'items/metod10205534/Metod10205534.glb', url: 'https://www.ikea.com/fr/fr/p/metod-rangement-mural-blanc-10205534/', price: '24', photos: ['items/metod10205534/Metod10205534.jpg', 'items/metod10205534/Metod10205534_1.jpg'] },

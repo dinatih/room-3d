@@ -1,0 +1,282 @@
+[
+  {
+    "id": "household-shampoo-pantene",
+    "name": "Shampooing Pantene",
+    "brand": "Pantene",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 8.79,
+      "d": 5.04,
+      "h": 22.5
+    },
+    "glbPath": "items/household-showcase/shampoo-pantene.glb",
+    "photos": [
+      "items/household-showcase/shampoo-pantene-three-quarter.png",
+      "items/household-showcase/shampoo-pantene-front.png",
+      "items/household-showcase/shampoo-pantene-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-multipurpose-cleaner",
+    "name": "Nettoyant multi-usage",
+    "brand": "Mr Muscle",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 11.16,
+      "d": 4.82,
+      "h": 22.46
+    },
+    "glbPath": "items/household-showcase/multipurpose-cleaner.glb",
+    "photos": [
+      "items/household-showcase/multipurpose-cleaner-three-quarter.png",
+      "items/household-showcase/multipurpose-cleaner-front.png",
+      "items/household-showcase/multipurpose-cleaner-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-harpic-cleaner",
+    "name": "Nettoyant WC Harpic",
+    "brand": "Harpic",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 8.85,
+      "d": 3.24,
+      "h": 21.64
+    },
+    "glbPath": "items/household-showcase/harpic-cleaner.glb",
+    "photos": [
+      "items/household-showcase/harpic-cleaner-three-quarter.png",
+      "items/household-showcase/harpic-cleaner-front.png",
+      "items/household-showcase/harpic-cleaner-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-redoxon",
+    "name": "Boîte Redoxon",
+    "brand": "Redoxon",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 15.75,
+      "d": 6.06,
+      "h": 4.17
+    },
+    "glbPath": "items/household-showcase/redoxon.glb",
+    "photos": [
+      "items/household-showcase/redoxon-three-quarter.png",
+      "items/household-showcase/redoxon-front.png",
+      "items/household-showcase/redoxon-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-soda-bottle",
+    "name": "Bouteille de soda",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 5.94,
+      "d": 5.9,
+      "h": 22.36
+    },
+    "glbPath": "items/household-showcase/soda-bottle.glb",
+    "photos": [
+      "items/household-showcase/soda-bottle-three-quarter.png",
+      "items/household-showcase/soda-bottle-front.png",
+      "items/household-showcase/soda-bottle-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-dettol",
+    "name": "Flacon Dettol",
+    "brand": "Dettol",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 4.81,
+      "d": 2.75,
+      "h": 9.87
+    },
+    "glbPath": "items/household-showcase/dettol.glb",
+    "photos": [
+      "items/household-showcase/dettol-three-quarter.png",
+      "items/household-showcase/dettol-front.png",
+      "items/household-showcase/dettol-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-reserva",
+    "name": "Bouteille Reserva",
+    "brand": "Reserva",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 5.67,
+      "d": 5.67,
+      "h": 21.45
+    },
+    "glbPath": "items/household-showcase/reserva.glb",
+    "photos": [
+      "items/household-showcase/reserva-three-quarter.png",
+      "items/household-showcase/reserva-front.png",
+      "items/household-showcase/reserva-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-lifebuoy",
+    "name": "Flacon Lifebuoy",
+    "brand": "Lifebuoy",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 12.88,
+      "d": 5.46,
+      "h": 20.28
+    },
+    "glbPath": "items/household-showcase/lifebuoy.glb",
+    "photos": [
+      "items/household-showcase/lifebuoy-three-quarter.png",
+      "items/household-showcase/lifebuoy-front.png",
+      "items/household-showcase/lifebuoy-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-swensens",
+    "name": "Pot de glace Swensen’s",
+    "brand": "Swensen’s",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 10.55,
+      "d": 10.55,
+      "h": 12.51
+    },
+    "glbPath": "items/household-showcase/swensens.glb",
+    "photos": [
+      "items/household-showcase/swensens-three-quarter.png",
+      "items/household-showcase/swensens-front.png",
+      "items/household-showcase/swensens-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-chips",
+    "name": "Sachet de chips",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 12.92,
+      "d": 9.84,
+      "h": 21.02
+    },
+    "glbPath": "items/household-showcase/chips.glb",
+    "photos": [
+      "items/household-showcase/chips-three-quarter.png",
+      "items/household-showcase/chips-front.png",
+      "items/household-showcase/chips-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-seeds",
+    "name": "Boîte de graines",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 10.34,
+      "d": 10.34,
+      "h": 8.16
+    },
+    "glbPath": "items/household-showcase/seeds.glb",
+    "photos": [
+      "items/household-showcase/seeds-three-quarter.png",
+      "items/household-showcase/seeds-front.png",
+      "items/household-showcase/seeds-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-spicy",
+    "name": "Boîte Spicy",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 5.96,
+      "d": 5.96,
+      "h": 3.49
+    },
+    "glbPath": "items/household-showcase/spicy.glb",
+    "photos": [
+      "items/household-showcase/spicy-three-quarter.png",
+      "items/household-showcase/spicy-front.png",
+      "items/household-showcase/spicy-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-soda-can",
+    "name": "Canette de soda",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 4.93,
+      "d": 4.93,
+      "h": 9.04
+    },
+    "glbPath": "items/household-showcase/soda-can.glb",
+    "photos": [
+      "items/household-showcase/soda-can-three-quarter.png",
+      "items/household-showcase/soda-can-front.png",
+      "items/household-showcase/soda-can-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  },
+  {
+    "id": "household-guava",
+    "name": "Bouteille de jus de goyave",
+    "brand": "",
+    "category": "kitchen",
+    "qty": 1,
+    "dims": {
+      "w": 6.87,
+      "d": 6.87,
+      "h": 21.45
+    },
+    "glbPath": "items/household-showcase/guava.glb",
+    "photos": [
+      "items/household-showcase/guava-three-quarter.png",
+      "items/household-showcase/guava-front.png",
+      "items/household-showcase/guava-back.png"
+    ],
+    "url": "https://www.cgtrader.com/3d-models/interior/kitchen/generic-house-hold-items",
+    "notes": "Extrait de householdshowcase.blend. Sans textures d’étiquettes, conformément au choix utilisateur. Surface neutre ; dimensions estimées, proportions du modèle conservées."
+  }
+]
