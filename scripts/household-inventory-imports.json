@@ -1,0 +1,83 @@
+[
+  {
+    "id": "spray-cleaner",
+    "glbPath": "items/spray-cleaner/SprayCleaner.glb",
+    "dims": {
+      "w": 14.18,
+      "d": 6.59,
+      "h": 29.37
+    }
+  },
+  {
+    "id": "laundry-detergent",
+    "glbPath": "items/laundry-detergent/LaundryDetergent.glb",
+    "dims": {
+      "w": 8.42,
+      "d": 10.57,
+      "h": 25.0
+    }
+  },
+  {
+    "id": "fabric-softener",
+    "glbPath": "items/fabric-softener/FabricSoftener.glb",
+    "dims": {
+      "w": 5.63,
+      "d": 5.63,
+      "h": 18.27
+    }
+  },
+  {
+    "id": "transparent-spray-cleaner",
+    "glbPath": "items/transparent-spray-cleaner/TransparentSprayCleaner.glb",
+    "dims": {
+      "w": 4.49,
+      "d": 10.41,
+      "h": 28.0
+    }
+  },
+  {
+    "id": "cosmetics-kit",
+    "glbPath": "items/cosmetics-kit/CosmeticsKit.glb",
+    "dims": {
+      "w": 13.85,
+      "d": 11.92,
+      "h": 14.61
+    }
+  },
+  {
+    "id": "plastic-water-bottle",
+    "glbPath": "items/plastic-water-bottle/PlasticWaterBottle.glb",
+    "dims": {
+      "w": 7.9,
+      "d": 7.72,
+      "h": 24.81
+    }
+  },
+  {
+    "id": "cap-red",
+    "glbPath": "items/cap-red/CapRed.glb",
+    "dims": {
+      "w": 26.8,
+      "d": 18.73,
+      "h": 10.24
+    }
+  },
+  {
+    "id": "bob-red",
+    "glbPath": "items/bob-red/BobRed.glb",
+    "dims": {
+      "w": 24.46,
+      "d": 25.34,
+      "h": 23.0
+    }
+  },
+  {
+    "id": "bob-droit-red",
+    "glbPath": "items/bob-droit-red/BobDroitRed.glb",
+    "dims": {
+      "w": 21.85,
+      "d": 26.14,
+      "h": 19.18
+    }
+  }
+]
