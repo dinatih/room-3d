@@ -30,6 +30,7 @@ const SEP_T   = 1;
 const RAIL_D  = SDB_CLOSET_D;
 const SHELF_Y = 170;
 const SHELF_T = 2;
+export const SDB_CLOSET_SHELF_TOP = SHELF_Y + SHELF_T;
 
 const doorMat   = new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.5 });
 // Face sud masquée, comme les murs extérieurs ; face SDB et chants opaques.

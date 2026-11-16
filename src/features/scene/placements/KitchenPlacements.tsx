@@ -9,6 +9,7 @@ import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGr
 import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
+import { SprayCleaner } from '../items/CleaningProducts';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Citronhaj40553211 } from '../items/Citronhaj40553211';
@@ -119,6 +120,11 @@ export function KitchenFurnishings() {
             <Ikea36590066708 contents={contents} fillLevel={fillLevel} />
           </group>
         ))}
+      </group>
+
+      {/* Spray sur le fond du meuble sous évier : pieds de 10 cm + panneau supérieur à 1,92 cm. */}
+      <group position={[KITCHEN_WEST_WALL + 20, 10 + 1.92, ROOM_D + 15]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant sous évier cuisine' }}>
+        <SprayCleaner />
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}

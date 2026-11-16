@@ -5,4 +5,5 @@ import { createStaticGlbItem } from './createStaticGlbItem';
  * Price: 25,19 €
  * URL: https://fr.aliexpress.com/item/1005006738372455.html
  */
+export const WY0083_HEIGHT = 25;
 export const Wy0083 = createStaticGlbItem('/items/wy008-3/Wy0083.glb');

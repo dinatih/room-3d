@@ -16,7 +16,7 @@ import { Toilet, TOILET_W, TOILET_D } from '../items/Toilet';
 import { Shower, SHOWER_W, SHOWER_D } from '../items/Shower';
 import { Havback49514017, HAVBACK_D } from '../items/Havback49514017';
 import { BathroomCabinetWest, BathroomCabinetEast } from '../items/BathroomCabinet';
-import { SdbCloset, SDB_CLOSET_X, SDB_CLOSET_Z } from '../items/SdbCloset';
+import { SdbCloset, SDB_CLOSET_X, SDB_CLOSET_Z, SDB_CLOSET_W, SDB_CLOSET_D, SDB_CLOSET_SHELF_TOP } from '../items/SdbCloset';
 import { TradfriBulb } from '../items/TradfriBulb';
 import { Vathult40467548 } from '../items/Vathult40467548';
 import { GrassRug } from '../items/GrassRug';
@@ -27,12 +27,23 @@ import { OralBToothbrush } from '../items/OralBToothbrush';
 import { Fniss40295439, FNISS_D } from '../items/Fniss40295439';
 import { DroneCell, DF } from '../items/Drona';
 import { Stackstod60620144 } from '../items/Stackstod60620144';
-import { Wy0083 } from '../items/Wy0083';
+import { Wy0083, WY0083_HEIGHT } from '../items/Wy0083';
 import { TowelFoldedRed, TowelHangingLargeRed, TowelHangingSmallRed } from '../items/TowelSetRed';
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin';
+import { CecotecReadywarm } from '../items/CecotecReadywarm';
+import { TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
+
+const TOWEL_RACK_BASE_Y = 111;
+const TOWEL_RACK_Z = BATH_NORTH_WALL + 64 + 20.1;
+const HEATER_ABOVE_RACK_GAP = 22;
+const HEATER_DEPTH = 18;
+// Viewed from the bathroom, the right-hand closet panel is the -X side.
+const CLOSET_RIGHT_EDGE_X = SDB_CLOSET_X - SDB_CLOSET_W / 2;
+const CLOSET_SHELF_FRONT_Z = SDB_CLOSET_Z + SDB_CLOSET_D / 2;
+const PRODUCT_EDGE_GAP = 1;
 
 // Retrait de 5 cm sur chaque bord pour dégager l'accès aux meubles et boîtes DRÖNA.
 const TOILET_OBSTACLE_INSET = 5;
@@ -82,6 +93,11 @@ export function BathroomEquipment() {
       {/* Chauffe-eau */}
       <group position={[BATH_WEST_WALL + WH_W / 2, WALL_H - 10 - WH_H / 2, BATH_NORTH_WALL + 11 + WH_D / 2]} rotation-y={Math.PI / 2} userData={{ side: 'west', itemName: 'Chauffe-eau' }}>
         <WaterHeater />
+      </group>
+
+      {/* Cecotec : bas du chauffage à 22 cm au-dessus du sommet du porte-serviettes. */}
+      <group position={[BATH_WEST_WALL + HEATER_DEPTH / 2, TOWEL_RACK_BASE_Y + WY0083_HEIGHT + HEATER_ABOVE_RACK_GAP, TOWEL_RACK_Z]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Chauffage Cecotec ReadyWarm' }}>
+        <CecotecReadywarm />
       </group>
 
       {/* Meuble Vasque SDB */}
@@ -197,8 +213,21 @@ export function BathroomFurnishings() {
         </group>
       ))}
 
+      {/* Spray transparent au sol, au milieu du passage entre le WC et le meuble vasque. */}
+      <group position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant transparent SDB' }}>
+        <NavigationObstacle id="spray-cleaner-bath"><TransparentSprayCleaner /></NavigationObstacle>
+      </group>
+
+      {/* Lessive et adoucissant sur la tablette, au bord avant droit depuis la SDB. */}
+      <group position={[CLOSET_RIGHT_EDGE_X + PRODUCT_EDGE_GAP + LAUNDRY_DETERGENT_SIZE.width / 2, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + LAUNDRY_DETERGENT_SIZE.depth / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Lessive placard SDB' }}>
+        <LaundryDetergent />
+      </group>
+      <group position={[CLOSET_RIGHT_EDGE_X + PRODUCT_EDGE_GAP + LAUNDRY_DETERGENT_SIZE.width + PRODUCT_EDGE_GAP + FABRIC_SOFTENER_SIZE.width / 2, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + FABRIC_SOFTENER_SIZE.depth / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Adoucissant placard SDB' }}>
+        <FabricSoftener />
+      </group>
+
       {/* Porte-serviettes WY008-3 sur le mur Ouest SDB (à 111 cm du sol, 64 cm du mur Nord) */}
-      <group position={[BATH_WEST_WALL + 11, 111, BATH_NORTH_WALL + 64 + 20.1]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
+      <group position={[BATH_WEST_WALL + 11, TOWEL_RACK_BASE_Y, TOWEL_RACK_Z]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Porte-serviettes WY008-3' }}>
         <Wy0083 />
         {/* Grande serviette pliée sur l'étage haut */}
         <group position={[0, 21.6, -0.7]} userData={{ sceneItemRoot: true, itemName: 'Grande serviette rouge pliée' }}>

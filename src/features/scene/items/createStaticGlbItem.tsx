@@ -4,10 +4,11 @@ import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '../glbUtils';
 import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import type { SceneModelProps } from '@shared/types';
 
-/** Official IKEA GLB exports (and derived variants), converted from metres to centimetres. */
-export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY }: {
+/** Static GLB items, converted to scene centimetres (source metres by default). */
+export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY, scale = 100 }: {
   origin?: 'bottom' | 'top';
   rotationY?: number;
+  scale?: number;
 } = {}) {
   preloadSceneGLTF(path);
   return function StaticGlbItem({ onSize }: SceneModelProps) {
@@ -15,7 +16,7 @@ export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY
     useLayoutEffect(() => {
       scene.scale.set(1, 1, 1);
       removeGlbLines(scene);
-      scene.scale.setScalar(100);
+      scene.scale.setScalar(scale);
       // The first merge bakes the rotation into the geometry.
       if (rotationY !== undefined && !scene.userData.merged) scene.rotation.y = rotationY;
       mergeGlbByMaterial(scene);
