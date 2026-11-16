@@ -87,7 +87,7 @@
       "characters/rdr2-dog-poodle/three-quarter.png",
       "characters/rdr2-dog-poodle/back.png"
     ],
-    "forwardRotationY": 0,
+    "forwardRotationY": 3.141592653589793,
     "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   },
   {
@@ -109,7 +109,7 @@
       "characters/rdr2-dog-border-collie/three-quarter.png",
       "characters/rdr2-dog-border-collie/back.png"
     ],
-    "forwardRotationY": 0,
+    "forwardRotationY": 3.141592653589793,
     "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   },
   {
@@ -131,7 +131,7 @@
       "characters/rdr2-dog-labrador/three-quarter.png",
       "characters/rdr2-dog-labrador/back.png"
     ],
-    "forwardRotationY": 0,
+    "forwardRotationY": 3.141592653589793,
     "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   }
 ]
