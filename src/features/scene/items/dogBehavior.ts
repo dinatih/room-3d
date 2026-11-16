@@ -39,6 +39,7 @@ export type DogBehavior = ReturnType<typeof createDogBehavior>;
 export interface DogContext {
   id: string;
   walkSpeed?: number;
+  canWalk?: boolean;
   pauses?: DogAction[];
   root: THREE.Group;
   play: (action: DogAction, once?: boolean) => number;
@@ -146,7 +147,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
       return;
     }
     const target = pickDestination(state, id);
-    if (target) startDogTrip(state, context, target, Math.random() < DOG_ACTIVITY.walkChance ? 'walk' : 'run');
+    if (target) startDogTrip(state, context, target, context.canWalk !== false && Math.random() < DOG_ACTIVITY.walkChance ? 'walk' : 'run');
     return;
   }
   if (state.mode === 'eat') {

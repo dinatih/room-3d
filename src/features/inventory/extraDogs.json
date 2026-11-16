@@ -80,14 +80,15 @@
       "h": 50
     },
     "glbPath": "characters/rdr2-dog-poodle/dog.glb",
-    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "idleClip": "1374_creatures_mammal_dog_pers_normal_idle_variation_idle_b.ycd__idle",
     "notes": "Modèle animé importé. Dimensions de présentation estimées.",
     "photos": [
       "characters/rdr2-dog-poodle/front.png",
       "characters/rdr2-dog-poodle/three-quarter.png",
       "characters/rdr2-dog-poodle/back.png"
     ],
-    "forwardRotationY": 0
+    "forwardRotationY": 0,
+    "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   },
   {
     "id": "rdr2-dog-border-collie",
@@ -101,14 +102,15 @@
       "h": 55
     },
     "glbPath": "characters/rdr2-dog-border-collie/dog.glb",
-    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "idleClip": "1374_creatures_mammal_dog_pers_normal_idle_variation_idle_b.ycd__idle",
     "notes": "Modèle animé importé. Dimensions de présentation estimées.",
     "photos": [
       "characters/rdr2-dog-border-collie/front.png",
       "characters/rdr2-dog-border-collie/three-quarter.png",
       "characters/rdr2-dog-border-collie/back.png"
     ],
-    "forwardRotationY": 0
+    "forwardRotationY": 0,
+    "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   },
   {
     "id": "rdr2-dog-labrador",
@@ -122,13 +124,14 @@
       "h": 60
     },
     "glbPath": "characters/rdr2-dog-labrador/dog.glb",
-    "idleClip": "1195_creatures_mammal_dog_pers_action_idle_idle_variation_var_a.ycd__idle",
+    "idleClip": "1374_creatures_mammal_dog_pers_normal_idle_variation_idle_b.ycd__idle",
     "notes": "Modèle animé importé. Dimensions de présentation estimées.",
     "photos": [
       "characters/rdr2-dog-labrador/front.png",
       "characters/rdr2-dog-labrador/three-quarter.png",
       "characters/rdr2-dog-labrador/back.png"
     ],
-    "forwardRotationY": 0
+    "forwardRotationY": 0,
+    "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
   }
 ]

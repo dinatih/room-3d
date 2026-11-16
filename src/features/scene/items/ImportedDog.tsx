@@ -20,8 +20,8 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
   const life = useMemo(createDogBehavior, []);
   const active = useRef<AnimationAction | null>(null);
   const navigationEnabled = useNavigationEnabled();
-  const autonomous = !!agentId && !!walkClip && !!runClip && navigationEnabled;
-  const context = (): DogContext => ({ id: agentId!, root: root.current!, walkSpeed: 50, pauses: ['idle'], play(action) {
+  const autonomous = !!agentId && !!runClip && navigationEnabled;
+  const context = (): DogContext => ({ id: agentId!, root: root.current!, walkSpeed: 50, canWalk: !!walkClip, pauses: ['idle'], play(action) {
     const name = action === 'walk' ? walkClip : action === 'run' ? runClip : clip;
     const animation = animations.find(candidate => candidate.name === name);
     if (!animation) throw new Error(`Missing animation ${name}: ${path}`);
