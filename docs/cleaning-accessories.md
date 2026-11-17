@@ -14,3 +14,17 @@ Les reconstructions suivent les photos et restent approximatives. Le panier poss
 Pour inscrire les noms sur les bouteilles existantes et régénérer leurs rendus :
 `blender -b --python-exit-code 1 --python scripts/label-laundry-bottles.py`.
 Les textes « Lessive » et « Adoucissant » sont des maillages intégrés aux fichiers exportés.
+
+## Optimisation des exports
+
+Les pièces sont réunies par racine de mouvement, avec une primitive par matériau. Le panier utilise quatre panneaux avec une texture alpha découpée (`MASK`, seuil 0,5), des coins courbes et un fond arrondi intégré. Les segments des picots, poils et contours de mousse sont réduits sans supprimer de poils.
+
+Mesures dans un Canvas WebGL isolé, sans ombres (les passes d’ombre peuvent ajouter des appels dans le Studio) :
+
+| Modèle | Triangles avant → après | Appels de dessin après |
+| --- | --- | --- |
+| PLOGSVÄNG | 58 508 → 1 418 | 2 |
+| Éponge | 4 216 → 1 592 | 2 |
+| Brosse et pot | 61 542 → 15 846 | 7 (201 avant) |
+
+La galerie de la brosse contient les sept photos commerciales avant les trois rendus. Le bandeau corail est séparé géométriquement à sa hauteur avant attribution du matériau, afin de conserver la couleur autour des yeux.

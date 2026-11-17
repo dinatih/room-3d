@@ -65,7 +65,7 @@ export const INVENTORY: InventoryItem[] = [
     id: 'fish-toilet-brush-red', name: 'Brosse WC poisson avec distributeur — rouge/orange', brand: 'Generic',
     category: 'bathroom', qty: 1, price: '12,00', dims: { w: 11.2, d: 7.95, h: 42.8 },
     glbPath: 'items/cleaning-accessories/fish-toilet-brush.glb',
-    photos: ['items/cleaning-accessories/fish-toilet-brush-product.jpg', 'items/cleaning-accessories/fish-toilet-brush-three-quarter.png', 'items/cleaning-accessories/fish-toilet-brush-front.png', 'items/cleaning-accessories/fish-toilet-brush-back.png'],
+    photos: ['items/cleaning-accessories/fish-toilet-brush-product.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-2.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-3.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-4.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-5.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-6.jpg', 'items/cleaning-accessories/fish-toilet-brush-product-7.jpg', 'items/cleaning-accessories/fish-toilet-brush-three-quarter.png', 'items/cleaning-accessories/fish-toilet-brush-front.png', 'items/cleaning-accessories/fish-toilet-brush-back.png'],
     url: 'https://www.amazon.fr/dp/B0H45FDHR4?th=1',
     notes: 'Variante rouge/orange demandée. Prix utilisateur 12 €. Reconstitution Blender d’après les photos Amazon : réservoir et bouton, tête poisson double face, support ventilé assorti. Dimensions estimées à confirmer ; brosse représentée rangée dans son support, avec animation de sortie et rangement de la brosse.'
   },

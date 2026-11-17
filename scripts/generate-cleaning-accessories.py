@@ -5,6 +5,8 @@ References and pricing are recorded in docs/cleaning-accessories.md.
 """
 from pathlib import Path
 import math
+import json
+import struct
 import bpy
 from mathutils import Vector
 
@@ -21,7 +23,7 @@ def box(name, size, loc, material, bevel=.001):
     bpy.ops.mesh.primitive_cube_add(size=1, location=loc); o=bpy.context.object; o.name=name; o.dimensions=size
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True); o.data.materials.append(material)
     if bevel:
-        m=o.modifiers.new('Soft moulded edges','BEVEL'); m.width=bevel; m.segments=3; bpy.ops.object.modifier_apply(modifier=m.name)
+        m=o.modifiers.new('Soft moulded edges','BEVEL'); m.width=bevel; m.segments=2; bpy.ops.object.modifier_apply(modifier=m.name)
         m=o.modifiers.new('Face normals','WEIGHTED_NORMAL'); bpy.ops.object.modifier_apply(modifier=m.name)
     return o
 
@@ -29,14 +31,22 @@ def mesh(name, verts, faces, material):
     m=bpy.data.meshes.new(name); m.from_pydata(verts,[],faces); m.update(); o=bpy.data.objects.new(name,m); bpy.context.collection.objects.link(o); m.materials.append(material); return o
 
 def sphere(name, loc, size, material):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=24,ring_count=12,location=loc); o=bpy.context.object; o.name=name; o.scale=size; o.data.materials.append(material)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=12,ring_count=6,location=loc); o=bpy.context.object; o.name=name; o.scale=size; o.data.materials.append(material)
     for p in o.data.polygons: p.use_smooth=True
     return o
 
 def cyl(name, radius, depth, loc, material):
-    bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=radius,depth=depth,location=loc); o=bpy.context.object; o.name=name; o.data.materials.append(material); return o
+    bpy.ops.mesh.primitive_cylinder_add(vertices=8,radius=radius,depth=depth,location=loc); o=bpy.context.object; o.name=name; o.data.materials.append(material); return o
 
 def finish(slug, target, scale):
+    # Join by motion root: each material becomes one draw call per root.
+    roots={obj.parent for obj in bpy.context.scene.objects if obj.type=='MESH'}
+    for parent in roots:
+        meshes=[obj for obj in bpy.context.scene.objects if obj.type=='MESH' and obj.parent==parent]
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in meshes: obj.select_set(True)
+        bpy.context.view_layer.objects.active=meshes[0]
+        bpy.ops.object.join()
     objects=list(bpy.context.scene.objects)
     for obj in objects:
         if obj.type == 'MESH':
@@ -45,6 +55,17 @@ def finish(slug, target, scale):
             bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.normals_make_consistent(inside=False); bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.export_scene.gltf(filepath=str(OUT/f'{slug}.glb'),export_format='GLB',use_selection=True)
+    # glTF alpha MASK avoids transparency sorting and extra blended passes.
+    path=OUT/f'{slug}.glb'
+    data=path.read_bytes(); length=struct.unpack_from('<I',data,12)[0]
+    document=json.loads(data[20:20+length])
+    for material in document.get('materials',[]):
+        if material['name']=='White perforated plastic':
+            material['alphaMode']='MASK'; material['alphaCutoff']=.5
+    payload=json.dumps(document,separators=(',',':')).encode()
+    payload+=b' '*((-len(payload))%4)
+    tail=data[20+length:]
+    path.write_bytes(struct.pack('<III',0x46546c67,2,20+len(payload)+len(tail))+struct.pack('<II',len(payload),0x4e4f534a)+payload+tail)
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/f'{slug}.blend'))
     scene=bpy.context.scene; scene.render.engine='CYCLES'; scene.cycles.samples=12
     scene.render.resolution_x=480; scene.render.resolution_y=480; scene.render.resolution_percentage=100
@@ -58,24 +79,29 @@ def finish(slug, target, scale):
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 white=mat('White polypropylene',(.88,.88,.85))
-# Perforated side sheets: each cell connects its boundary to a circular opening.
-# Sheet thickness is real geometry, including the inside of every hole.
-def panel(axis, sign, length, halfdepth, cols):
-    verts=[]; faces=[]; rows=8; bottom=.009; top=.091
+# One reusable alpha-cutout cell, packed in the GLB; actual holes without geometry.
+perforated=mat('White perforated plastic',(.88,.88,.85))
+image=bpy.data.images.new('Circular ventilation alpha',width=128,height=128,alpha=True)
+pixels=[]
+for y in range(128):
+    for x in range(128):
+        hole=((x+.5)/128-.5)**2+((y+.5)/128-.5)**2 < .21**2
+        pixels.extend((.945,.945,.93,0 if hole else 1))
+image.pixels.foreach_set(pixels); image.pack()
+nodes=perforated.node_tree.nodes; links=perforated.node_tree.links
+tex=nodes.new('ShaderNodeTexImage'); tex.image=image
+shader=nodes.get('Principled BSDF'); links.new(tex.outputs['Color'],shader.inputs['Base Color']); links.new(tex.outputs['Alpha'],shader.inputs['Alpha'])
+perforated.surface_render_method='DITHERED'
+perforated.use_backface_culling=False
+
+def panel(axis,sign,length,halfdepth,cols):
     def point(u,z):
         taper=.83+.17*z/.1
         return (u*taper,sign*halfdepth*taper,z) if axis==0 else (sign*halfdepth*taper,u*taper,z)
-    for col in range(cols):
-        for row in range(rows):
-            u=-length/2+(col+.5)*length/cols; z=bottom+(row+.5)*(top-bottom)/rows
-            base=len(verts)
-            for outer in [True,False]:
-                for k in range(16):
-                    a=2*math.pi*k/16; c=math.cos(a); s=math.sin(a)
-                    r=min((length/cols/2)/max(abs(c),1e-9),((top-bottom)/rows/2)/max(abs(s),1e-9)) if outer else .0021
-                    verts.append(point(u+r*c,z+r*s))
-            for k in range(16): faces.append((base+k,base+(k+1)%16,base+16+(k+1)%16,base+16+k))
-    o=mesh('Circular perforations',verts,faces,white); m=o.modifiers.new('Plastic wall thickness','SOLIDIFY'); m.thickness=.0012; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
+    obj=mesh('Textured perforated wall',[point(-length/2,.008),point(length/2,.008),point(length/2,.092),point(-length/2,.092)],[(0,1,2,3)],perforated)
+    uv=obj.data.uv_layers.new()
+    for loop,co in zip(uv.data,[(0,0),(cols,0),(cols,8),(0,8)]): loop.uv=co
+
 # Rounded rectangular perimeter, with genuinely curved corners and a continuous lip.
 def rounded_ring(w,d,r,z):
     pts=[]
@@ -108,15 +134,18 @@ for sx in [-1,1]:
         o=mesh('Rounded moulded corner',verts,[(i,i+1,i+18,i+17) for i in range(16)],white)
         m=o.modifiers.new('Wall','SOLIDIFY'); m.thickness=.0012; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
         for f in o.data.polygons: f.use_smooth=True
-box('Closed base',(.166,.124,.003),(0,0,.0015),white,.0014)
-for z,w,d in [(.004,.169,.127),(.097,.2,.15)]:
-    pts=rounded_ring(w-.003,d-.003,.018,z)
-    curve=bpy.data.curves.new('Rolled rim','CURVE'); curve.dimensions='3D'; curve.bevel_depth=.0015; curve.bevel_resolution=4
-    spline=curve.splines.new('POLY'); spline.points.add(len(pts)-1)
-    for pt,co in zip(spline.points,pts): pt.co=(*co,1)
-    spline.use_cyclic_u=True
-    o=bpy.data.objects.new('Continuous rounded rim',curve); bpy.context.collection.objects.link(o); o.data.materials.append(white)
-    bpy.context.view_layer.objects.active=o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False)
+# Rounded floor follows the lower wall contour; no protruding rectangular plate.
+ring=rounded_ring(.198*.83,.148*.83,.017*.83,.001)
+n=len(ring)
+mesh('Integrated rounded floor',ring, [tuple(reversed(range(n)))],white)
+# Rounded top lip only; no separate bottom plate or rail.
+pts=rounded_ring(.197,.147,.018,.097)
+curve=bpy.data.curves.new('Rolled rim','CURVE'); curve.dimensions='3D'; curve.bevel_depth=.0015; curve.bevel_resolution=2
+spline=curve.splines.new('POLY'); spline.points.add(len(pts)-1)
+for pt,co in zip(spline.points,pts): pt.co=(*co,1)
+spline.use_cyclic_u=True
+o=bpy.data.objects.new('Continuous rounded rim',curve); bpy.context.collection.objects.link(o); o.data.materials.append(white)
+bpy.context.view_layer.objects.active=o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False)
 finish('plogsvaeng',(0,0,.045),.27)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -128,14 +157,14 @@ for material in [pink,red]:
     bump=nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value=.4; bump.inputs['Distance'].default_value=.0005; links.new(noise.outputs['Fac'],bump.inputs['Height']); links.new(bump.outputs['Normal'],p.inputs['Normal'])
 # Classic two-lobed heart; width 9 cm, depth 8.5 cm, thickness 3 cm (estimate).
 points=[]
-for k in range(128):
-    t=2*math.pi*k/128; points.append((16*math.sin(t)**3,13*math.cos(t)-5*math.cos(2*t)-2*math.cos(3*t)-math.cos(4*t)))
+for k in range(64):
+    t=2*math.pi*k/64; points.append((16*math.sin(t)**3,13*math.cos(t)-5*math.cos(2*t)-2*math.cos(3*t)-math.cos(4*t)))
 ymin=min(y for x,y in points); ymax=max(y for x,y in points)
 points=[(x/32*.09,-(y-(ymin+ymax)/2)/(ymax-ymin)*.085) for x,y in points]
 for name,z0,z1,material in [('Pink foam',0,.026,pink),('Red scouring layer',.026,.03,red)]:
     verts=[(x,y,z) for z in [z0,z1] for x,y in points]; n=len(points)
     faces=[tuple(reversed(range(n))),tuple(range(n,2*n))]+[(k,(k+1)%n,(k+1)%n+n,k+n) for k in range(n)]
-    o=mesh(name,verts,faces,material); m=o.modifiers.new('Soft foam outline','BEVEL'); m.width=.0007; m.segments=3; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
+    o=mesh(name,verts,faces,material); m=o.modifiers.new('Soft foam outline','BEVEL'); m.width=.0007; m.segments=2; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
 # Bake tangent-space normals so the pores also appear in the inventory WebGL viewer.
 bpy.context.scene.render.engine='CYCLES'
 bpy.context.scene.cycles.samples=1
@@ -163,9 +192,13 @@ for i in range(9):
     bpy.context.view_layer.objects.active=caddy
     mod=caddy.modifiers.new('Drain slot','BOOLEAN'); mod.object=cutter; mod.operation='DIFFERENCE'
     bpy.ops.object.modifier_apply(modifier=mod.name); bpy.data.objects.remove(cutter,do_unlink=True)
-for f in caddy.data.polygons:
-    if f.center.z>.118: f.material_index=1
+import bmesh
+bm=bmesh.new(); bm.from_mesh(caddy.data)
+bmesh.ops.bisect_plane(bm,geom=list(bm.verts)+list(bm.edges)+list(bm.faces),dist=.000001,plane_co=(0,0,.118),plane_no=(0,0,1))
+bm.to_mesh(caddy.data); bm.free(); caddy.data.update()
 caddy.data.materials.append(orange)
+for f in caddy.data.polygons:
+    if sum(caddy.data.vertices[i].co.z for i in f.vertices)/len(f.vertices)>.118: f.material_index=1
 for x in [-.036,.036]:
     sphere('White eye',(x,-.037,.132),(.007,.002,.007),white); sphere('Black pupil',(x,-.039,.132),(.004,.001,.004),black)
 caddy_objects=set(bpy.context.scene.objects)
