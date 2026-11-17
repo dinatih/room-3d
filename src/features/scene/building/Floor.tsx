@@ -215,8 +215,8 @@ export function Parquet() {
     const m = new THREE.MeshStandardMaterial({
       map: tex,
       roughness: 0.55,
-      // Priorité de profondeur sur l'herbe coplanaire, sans déplacer le sol.
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
+      // Grass already has a positive depth bias. Keep the parquet at its real
+      // depth so it cannot cover rugs and furniture just above the floor.
       metalness: 0.04,
       envMapIntensity: 0.6,
     });
