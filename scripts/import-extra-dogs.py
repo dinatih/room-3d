@@ -1,9 +1,9 @@
-"""Import the six supplied dog archives, retaining source rigs and animations."""
+"""Import the three supplied dog archives, retaining source rigs and animations."""
 import bpy,zipfile,tempfile,json,os,shutil,struct
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 source=Path.home()/'3D Resources/animals'
-items=[('animated-pitbull-dog','Pitbull',55),('labrador-dog-from-cotw-game','Labrador COTW',60),('bloodhund-from-cotw-game-ears-has-animglitch','Bloodhound COTW',65),('rdr2-dog-poodle','Caniche RDR2',50),('rdr2-dog-border-collie','Border Collie RDR2',55),('rdr2-dog-labrador','Labrador RDR2',60)]
+items=[('animated-pitbull-dog','Pitbull',55),('labrador-dog-from-cotw-game','Labrador COTW',60),('bloodhund-from-cotw-game-ears-has-animglitch','Bloodhound COTW',65)]
 records=[]
 for key,name,height in items:
  work=Path(tempfile.mkdtemp(prefix='room-dog-'))
