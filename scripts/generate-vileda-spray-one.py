@@ -109,6 +109,9 @@ rod('Reservoir cap', (0, -.018, .422), (0, -.018, .438), .019, grey)
 rod('Handle lower collar', (0, 0, 1.20), (0, 0, 1.245), .014, grey)
 tube('Ergonomic red loop grip', [(0, 0, 1.23), (.025, 0, 1.26), (.075, 0, 1.29), (.077, 0, 1.332), (.045, 0, 1.353), (0, 0, 1.34)], .012, red, True)
 tube('Black squeeze trigger', [(.005, -.002, 1.25), (.030, -.002, 1.278), (.060, -.002, 1.285)], .006, grey)
+# Orient the grip and its trigger along the head's depth, around the shaft axis.
+for name in ('Ergonomic red loop grip', 'Black squeeze trigger'):
+    bpy.data.objects[name].rotation_euler.z = math.pi / 2
 # Raised white product lettering on the upper head surface.
 bpy.ops.object.text_add(location=(-.14, -.018, .033))
 t = bpy.context.object; t.name = 'Vileda head branding'; t.data.body = 'vileda   1·2 SPRAY ONE'
