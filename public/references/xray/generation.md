@@ -1,5 +1,14 @@
 # Références radiographiques
 
+## Diagnostic du fichier source (vérification ultérieure)
+
+Source réellement utilisée par les scripts : `sources_backup/characters/lara/lara_perfect.blend`.
+Les gros plans rendus directement depuis ce fichier, sans réparation, reproduisent les mêmes plis, surépaisseurs entre pouce et index et irrégularités de bout de doigt que l’export. L’aspect problématique est donc déjà présent dans le maillage source ; il ne naît pas uniquement à l’export.
+
+Correction du diagnostic initial : après soudure des doublons de couture, `body_nude_hands` a 1 444 sommets dans les deux fichiers, avec seulement deux contours ouverts de 34 sommets chacun, aux poignets. Aucun bord ouvert n’a été détecté aux extrémités des doigts. La qualification antérieure de « bouts de doigts ouverts » n’était pas justifiée. Le nombre de faces diffère (2 782 source contre 2 816 export), ce qui mérite une investigation séparée, sans prouver une corruption à l’export.
+
+L’application impose explicitement `setPartVisibility(parts.gloves, true)` et `setPartVisibility(parts.hands, false)` dans `applyClothingAndAccessoriesVisibility`, fichier `src/features/scene/characterParts.ts`. Cela explique directement pourquoi on ne peut pas afficher les mains nues actuellement ; le motif historique de cette décision n’est pas établi par cette lecture seule. Ni le fichier source ni l’export ni le rig n’ont été modifiés pendant ce diagnostic.
+
 ## Corrections des références Lara
 
 Taille déclarée dans `src/features/scene/characterConfig.ts`, entrée `native` : **173,4 cm (1,734 m)**. Les proportions graphiques existantes sont conservées ; les guides numériques non mesurés des épaules, hanches et genoux ne sont plus présentés comme des mesures exactes sur la planche anatomique.
