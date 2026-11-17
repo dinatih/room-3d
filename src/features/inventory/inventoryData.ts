@@ -46,6 +46,16 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'kabba-laundry-bag', name: 'Cabas KABBA rouge MAXI FAMILLE — linge sale', brand: 'Maxi Bazar',
+    category: 'bathroom', qty: 1, price: '5,99', dims: { w: 69.46, d: 28.01, h: 77.03 },
+    glbPath: 'items/kabba-laundry-bag/KabbaLaundryBag.glb',
+    photos: ['items/kabba-laundry-bag/product-1.jpg', 'items/kabba-laundry-bag/product-2.jpg', 'items/kabba-laundry-bag/product-3.jpg', 'items/kabba-laundry-bag/KabbaLaundryBag-three-quarter.png', 'items/kabba-laundry-bag/KabbaLaundryBag-front.png', 'items/kabba-laundry-bag/KabbaLaundryBag-back.png'],
+    url: 'https://maxibazar.fr/sac-multi-usages-xxl-70x53x30cm',
+    location: 'Sous l’étagère triangulaire du placard SDB, suspendu à la tringle',
+    notes: 'Sac personnel à linge sale, rouge imprimé MAXI FAMILLE. Réf. Maxi Bazar 2101000082, prix de la fiche 5,99 €. Dimensions annoncées du corps 70 × 53 × 30 cm ; la photo cotée indique 59 × 50 × 28 cm. Reconstitution souple et légèrement affaissée, hauteur avec anses environ 77 cm. Trois photos commerciales avant les rendus Blender.'
+  },
+
+  {
     id: 'temu-sock-dryer-20', name: 'Séchoir à chaussettes — 20 pinces, gris', brand: 'LDQ / Temu',
     category: 'future-purchases', qty: 0, price: '7,80', dims: { w: 37, d: 10, h: 19.5 },
     glbPath: 'items/temu-sock-dryer-20/SockDryer20.glb',
