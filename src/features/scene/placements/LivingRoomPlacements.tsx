@@ -738,7 +738,7 @@ export function LivingRoomDecor() {
           {/* KOPPLA au bord avant de la deuxième tablette, prises vers le haut. */}
           <group position={[30, 22.5, 26 - 5.8164 / 2]} userData={{ sceneItemRoot: true, itemName: 'KOPPLA Prise quadruple' }}><Koppla /></group>
           {/* Rangement détaché de l'aspirateur, comme sur les photos. */}
-          <group position={[0.8 + 17.1078 / 2, 54.5, 13]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Aspirateur Rowenta — tube et brosse' }}>
+          <group position={[0.8 + 17.1078 / 2, 54.5, 13]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Aspirateur Rowenta — tube et brosse' }}>
             <VacuumCleanerPart part="VacuumTube" />
           </group>
           <group position={[39, 54.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Aspirateur Rowenta — bloc moteur' }}>
