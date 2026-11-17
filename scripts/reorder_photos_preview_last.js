@@ -94,8 +94,8 @@ invCode = invCode.replace(
   category: 'walkers',
   qty: 1,
   dims: { w: 40, d: 80, h: 40 },
-  glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
-  photos: ['characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png'],
+  glbPath: 'characters/ushiro/ushiro.glb',
+  photos: ['characters/ushiro/three-quarter.png'],
   notes: \`Personnage : Chien Shiba Inu (Ushiro).\`
 });`
 );

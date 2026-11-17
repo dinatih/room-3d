@@ -1,7 +1,7 @@
 // Rebuild preview choices from each dog's embedded GLB animation catalog.
 const fs = require('node:fs');
 const dogs = require('../src/features/inventory/extraDogs.json');
-const options = Object.fromEntries(dogs.map(dog => {
+const options = Object.fromEntries([...dogs, { id: 'ushiro', glbPath: 'characters/ushiro/ushiro.glb' }].map(dog => {
   const buffer = fs.readFileSync(`public/${dog.glbPath}`);
   const document = JSON.parse(buffer.subarray(20, 20 + buffer.readUInt32LE(12)).toString());
   if (!document.animations?.length) throw new Error(`No animations: ${dog.id}`);

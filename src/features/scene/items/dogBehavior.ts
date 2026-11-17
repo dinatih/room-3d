@@ -19,7 +19,7 @@ export const DOG_ACTIVITY = {
 // Ulotte: rear planted paw travels 9.25 cm backwards over frames 7–19 at 24 fps.
 export const DOG_WALK_SPEED = { shiba: 50, ulotte: 18.5 } as const;
 export const DOG_CLIPS = {
-  shiba: { idle: 'Dog|Idle', rest: 'Dog|SitDown', walk: 'Dog|Walk', run: 'Dog|Run', jump: 'Dog|Jump' },
+  shiba: { idle: 'standing_skeletal.3', rest: 'sitting_skeletal.3', walk: 'walk_fwd 29', run: 'run_fwd 13', jump: 'jump 22' },
   ulotte: { idle: 'idle-1', rest: 'idle-2', walk: 'walk', run: 'run', jump: 'jump', eat: 'eating' },
 };
 export type DogAction = 'idle' | 'rest' | 'walk' | 'run' | 'jump' | 'eat';

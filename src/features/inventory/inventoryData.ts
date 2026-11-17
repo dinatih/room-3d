@@ -72,15 +72,14 @@ export const INVENTORY: InventoryItem[] = [
   ...householdShowcaseItems,
   {
     id: 'ushiro',
-    referenceSheet: 'references/xray/ushiro-xray.png',
     name: 'Chien Ushiro (Shiba Inu)',
     brand: 'Animal',
     category: 'animals',
     qty: 1,
-    dims: { w: 40, d: 80, h: 40 },
-    glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
-    photos: ['characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png'],
-    notes: `Personnage : Chien Shiba Inu (Ushiro).`
+    dims: { w: 38.04, d: 40, h: 40 },
+    glbPath: 'characters/ushiro/ushiro.glb',
+    photos: ['characters/ushiro/three-quarter.png', 'characters/ushiro/front.png', 'characters/ushiro/back.png'],
+    notes: `Shiba Inu détaillé. Cinq animations natives et 119 transferts expérimentaux du Pitbull ; retargeting à affiner.`
   },
   {
     id: 'ulotte',

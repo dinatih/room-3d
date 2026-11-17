@@ -59,7 +59,7 @@ allItemGlbs.forEach(glbFullPath => {
 console.log('=== 2. GENERATING PREVIEWS FOR CHARACTERS ===');
 renderGlbThumbnail('characters/lara/lara_native.glb', 'characters/lara/lara_native_3d_preview.png');
 renderGlbThumbnail('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_3d_preview.png');
-renderGlbThumbnail('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png');
+renderGlbThumbnail('characters/ushiro/ushiro.glb', 'characters/ushiro/three-quarter.png');
 
 // 3. Update inventoryData.ts to append or include preview images for each item with glbPath
 console.log('=== 3. UPDATING inventoryData.ts ===');

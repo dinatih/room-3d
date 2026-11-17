@@ -1,4 +1,4 @@
-import { PITBULL_COMPARISON_CLIPS, pitbullAnimationChoices, prioritizePitbullAnimations } from './pitbullAnimationChoices';
+import { pitbullAnimationChoices, prioritizePitbullAnimations } from './pitbullAnimationChoices';
 import dogAnimationOptions from './dogAnimationOptions.json';
 import '../scene/utils/zeroEnergyLights';
 import { disposeModelResources } from '../scene/utils/disposeModelResources';
@@ -1093,7 +1093,7 @@ export function InventoryPreview({
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
     if (item.id === 'animated-pitbull-dog') return pitbullAnimationChoices;
-    if (item.id === 'ushira') return prioritizePitbullAnimations(dogAnimationOptions.ushira);
+    if (['ushiro', 'shiba-inu'].includes(item.id)) return prioritizePitbullAnimations(dogAnimationOptions.ushiro);
     if (item.id in dogAnimationOptions) return dogAnimationOptions[item.id as keyof typeof dogAnimationOptions];
     if (item.id === 'black-hornet-drone' || item.id === 'ring-drone-cam') return [
       { value: 'Drone_Hover', label: 'Vol stationnaire' },
@@ -1102,18 +1102,6 @@ export function InventoryPreview({
       { value: 'Drone_Landed', label: 'Au sol' },
     ];
     if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
-    if (['ushiro', 'shiba-inu'].includes(item.id)) {
-      const comparisons = PITBULL_COMPARISON_CLIPS;
-      return [
-        ...comparisons,
-        { value: 'idle', label: 'Idle' },
-        { value: 'jump', label: 'Jump' },
-        { value: 'run', label: 'Run' },
-        { value: 'sitdown', label: 'SitDown' },
-        { value: 'walk', label: 'Walk' },
-        ...dogAnimationOptions['animated-pitbull-dog'].filter(option => !comparisons.some(comparison => comparison.value === option.value)),
-      ];
-    }
     if (['jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish'].includes(item.id)) {
       return [
         { value: 'idle', label: 'Idle' },

@@ -79,7 +79,7 @@ import { resolveAnimationId, resolveAnimationPath }    from './animations/animat
 import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
 import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { duoSessionManager }     from './ai/duoSessionManager';
-import { LoadingShiba } from './LoadingShiba';
+import { LoadingBall } from './LoadingBall';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { getObjectActionIds } from './objectActions';
@@ -790,7 +790,7 @@ export function Studio() {
 
 
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
-  const [showLoadingShiba, setShowLoadingShiba] = useState(true);
+  const [showLoadingBall, setShowLoadingBall] = useState(true);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
 
   const handleAssetsLoaded = useCallback(() => {
@@ -874,7 +874,7 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
-    setShowLoadingShiba(false);
+    setShowLoadingBall(false);
     revealScene();
     const raytracingPreset = getRaytracingPreset();
     if (raytracingPreset === 'iso' || raytracingPreset === 'magazine') {
@@ -909,9 +909,9 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      {showLoadingShiba && <>
+      {showLoadingBall && <>
         <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
-        <LoadingShiba />
+        <LoadingBall />
       </>}
       <Canvas
         style={{ width: '100%', height: '100%' }}

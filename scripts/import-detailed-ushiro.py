@@ -1,11 +1,11 @@
-"""Import UshirA and retarget the original Pitbull catalog for comparison."""
+"""Import detailed Ushiro and retarget the original Pitbull catalog for comparison."""
 from pathlib import Path
 import bpy, math, os, zipfile, tempfile
 from mathutils import Vector, Matrix, Quaternion
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT/'public/characters/ushira'
+OUT=ROOT/'public/characters/ushiro'
 OUT.mkdir(parents=True,exist_ok=True)
-work=Path(tempfile.mkdtemp(prefix='ushira-source-'))
+work=Path(tempfile.mkdtemp(prefix='ushiro-source-'))
 with zipfile.ZipFile(Path.home()/'3D Resources/animals/shiba-inu-texture-updated.zip') as archive:archive.extractall(work)
 bpy.ops.wm.open_mainfile(filepath=str(work/'source/Shibaa.blend'))
 for obj in list(bpy.context.scene.objects):
@@ -16,6 +16,25 @@ native_actions=set(bpy.data.actions)
 for image in bpy.data.images:
  path=work/'textures'/Path(image.filepath).name
  if path.is_file():image.filepath=str(path);image.reload();image.pack()
+# The source eyes use an Add Shader graph unsupported by glTF. Connect their
+# existing diffuse atlas through Principled so the iris survives the export.
+eyes=bpy.data.materials['Material_0']
+atlas=next(n.image for n in eyes.node_tree.nodes if n.type=='TEX_IMAGE' and n.image)
+eyes.node_tree.nodes.clear()
+shader=eyes.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
+shader.inputs['Roughness'].default_value=0.3
+texture=eyes.node_tree.nodes.new('ShaderNodeTexImage');texture.image=atlas
+output=eyes.node_tree.nodes.new('ShaderNodeOutputMaterial')
+eyes.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color'])
+eyes.node_tree.links.new(shader.outputs['BSDF'],output.inputs['Surface'])
+body=bpy.data.materials['Material.001']
+normal=next(n for n in body.node_tree.nodes if n.type=='NORMAL_MAP')
+normal_texture=next(n for n in body.node_tree.nodes if n.type=='TEX_IMAGE' and n.image and 'Normal' in n.image.name)
+for link in list(body.node_tree.links):
+ if link.to_node==normal:body.node_tree.links.remove(link)
+normal_texture.image.colorspace_settings.name='Non-Color'
+normal.inputs['Strength'].default_value=1
+body.node_tree.links.new(normal_texture.outputs['Color'],normal.inputs['Color'])
 before=set(bpy.data.objects)
 bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/characters/animated-pitbull-dog/dog.glb'))
 source_objects=set(bpy.data.objects)-before
@@ -94,6 +113,6 @@ for result,(original,_) in zip(new_actions,clips):result.name=original
 bpy.ops.object.select_all(action='DESELECT')
 for obj in target_objects:
  obj.hide_set(False);obj.hide_viewport=False;obj.hide_render=False;obj.select_set(True)
-bpy.ops.export_scene.gltf(filepath=str(OUT/'ushira.glb'),export_format='GLB',use_selection=True,export_animations=True,export_skins=True,export_apply=False,export_animation_mode='ACTIONS',export_force_sampling=False)
+bpy.ops.export_scene.gltf(filepath=str(OUT/'ushiro.glb'),export_format='GLB',use_selection=True,export_animations=True,export_skins=True,export_apply=False,export_animation_mode='ACTIONS',export_force_sampling=False)
 print('OUTPUT',OUT,flush=True)
 os._exit(0)

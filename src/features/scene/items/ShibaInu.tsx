@@ -7,7 +7,7 @@ import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles'
 import { computeSteeringVector, computeRotYStep, reserveAgentDestination } from '../ai/agent/agentAvoidance';
 import { useRef, useLayoutEffect, useEffect, useState, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, useHelper } from '@react-three/drei';
+import { useHelper } from '@react-three/drei';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { useGLTFClone } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
@@ -21,9 +21,9 @@ import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { getObjectActionIds } from '../objectActions';
 import { getAnimationOriginTransform } from '../animations/animationResolver';
 
-const GLB_PATH = '/characters/ushiro/shiba_inu_dog_ushiro.glb';
+const GLB_PATH = '/characters/ushiro/ushiro.glb';
 const DANCE_RADIUS = 75; // cm du partenaire
-const WALK_SPEED = 50; // cm/s, approche avec Dog|Walk
+const WALK_SPEED = 50; // cm/s, approche avec le clip de marche transféré
 
 function dogDanceTarget(x: number, y: number, z: number, yaw: number) {
   const { offset, rotY } = getAnimationOriginTransform('ff-dancewithdog');
@@ -38,18 +38,18 @@ function dogDanceTarget(x: number, y: number, z: number, yaw: number) {
 }
 
 function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.AnimationClip {
-  const name = animations.some(clip => clip.name === keyword) ? keyword : Object.values(DOG_CLIPS.shiba).find(name => name.toLowerCase().endsWith(`|${keyword.toLowerCase()}`));
+  const name = keyword in DOG_CLIPS.shiba ? DOG_CLIPS.shiba[keyword as keyof typeof DOG_CLIPS.shiba] : keyword;
   const clip = animations.find(clip => clip.name === name);
   if (!clip || clip.duration <= 0) throw new Error(`Ushiro : animation invalide ${keyword}`);
   return clip;
 }
 
-export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize, previewModelPath }: { isPreview?: boolean, previewModelPath?: string, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
+export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const navigationEnabled = useNavigationEnabled();
   const routeRef = useRef(createRouteState());
   const life = useMemo(createDogBehavior, []);
   const activeAction = useRef<THREE.AnimationAction | null>(null);
-  const { scene, animations } = useGLTFClone(isPreview && previewModelPath ? previewModelPath : GLB_PATH);
+  const { scene, animations } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const danceRef = useRef({ owner: null as string | null, jumping: false });
@@ -74,7 +74,12 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     scene.position.set(0, 0, 0);
     scene.rotation.set(0, 0, 0);
 
-    const rawBox = glbLocalBBox(scene);
+    const sizingMixer = new THREE.AnimationMixer(scene);
+    sizingMixer.clipAction(findDogClip(animations, 'idle')).play();
+    sizingMixer.update(0);
+    const rawBox = glbLocalBBox(scene, true);
+    sizingMixer.stopAllAction();
+    sizingMixer.uncacheRoot(scene);
     const rawSize = rawBox.getSize(new THREE.Vector3());
 
     const targetHeight = 40; // 40 cm au garrot
@@ -82,7 +87,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     const scaleFactor = targetHeight / rawSize.y;
 
     scene.scale.setScalar(scaleFactor);
-    scene.position.set(0, 0, 0);
+    scene.position.set(-(rawBox.min.x + rawBox.max.x) / 2 * scaleFactor, -rawBox.min.y * scaleFactor, -(rawBox.min.z + rawBox.max.z) / 2 * scaleFactor);
 
     const finalSize = new THREE.Vector3(
       rawSize.x * scaleFactor,
@@ -93,7 +98,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
       radius: Math.min(finalSize.x, finalSize.z) / 2,
       height: targetHeight,
     });
-    setBounds({ size: finalSize, center: rawBox.getCenter(new THREE.Vector3()).multiplyScalar(scaleFactor) });
+    setBounds({ size: finalSize, center: new THREE.Vector3(0, finalSize.y / 2, 0) });
 
     scene.traverse(c => {
       const m = c as THREE.Mesh;
@@ -187,8 +192,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     if (isPreview && dancePreview) {
       // Le personnage pilote la timeline ; le compagnon ne doit ni la modifier ni l'avancer.
       const time = useAnimPreviewStore.getState().currentTime;
-      const clip = animations.find(clip => clip.name === 'Dog|Jump');
-      if (!clip) throw new Error('Shiba choreography requires Dog|Jump');
+      const clip = animations.find(clip => clip.name === DOG_CLIPS.shiba.jump);
+      if (!clip) throw new Error(`Shiba choreography requires ${DOG_CLIPS.shiba.jump}`);
       const action = mixerRef.current.clipAction(clip);
       action.time = time % clip.duration;
       action.paused = true;
@@ -236,8 +241,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           dance.owner = dancingId;
           dance.jumping = false;
           mixerRef.current.stopAllAction();
-          const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
-          if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
+          const walkClip = animations.find(clip => clip.name === DOG_CLIPS.shiba.walk);
+          if (!walkClip) throw new Error(`Shiba choreography requires ${DOG_CLIPS.shiba.walk}`);
           activeAction.current = mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
         }
         const target = dogDanceTarget(dancingChar.x, dancingChar.y, dancingChar.z, dancingChar.yaw);
@@ -256,8 +261,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           if (dance.jumping) {
             dance.jumping = false;
             mixerRef.current.stopAllAction();
-            const walkClip = animations.find(clip => clip.name === 'Dog|Walk');
-            if (!walkClip) throw new Error('Shiba choreography requires Dog|Walk');
+            const walkClip = animations.find(clip => clip.name === DOG_CLIPS.shiba.walk);
+            if (!walkClip) throw new Error(`Shiba choreography requires ${DOG_CLIPS.shiba.walk}`);
             activeAction.current = mixerRef.current.clipAction(walkClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
           }
           if (next.x !== before.x || next.z !== before.z) modelRef.current.rotation.y = computeRotYStep(modelRef.current.rotation.y, Math.atan2(next.x - before.x, next.z - before.z), Math.PI, delta);
@@ -267,8 +272,8 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
           if (!dance.jumping) {
             dance.jumping = true;
             mixerRef.current.stopAllAction();
-            const jumpClip = animations.find(clip => clip.name === 'Dog|Jump');
-            if (!jumpClip) throw new Error('Shiba choreography requires Dog|Jump');
+            const jumpClip = animations.find(clip => clip.name === DOG_CLIPS.shiba.jump);
+            if (!jumpClip) throw new Error(`Shiba choreography requires ${DOG_CLIPS.shiba.jump}`);
             activeAction.current = mixerRef.current.clipAction(jumpClip).setLoop(THREE.LoopRepeat, Infinity).reset().play();
           }
         }
@@ -296,7 +301,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     }
   });
 
-  useAnimalCamera('shiba', modelRef, scene, isPreview, 'Dogger_head_j', 'Dogger_jaw_j');
+  useAnimalCamera('shiba', modelRef, scene, isPreview, 'head_jnt40', 'jaw_jnt41');
 
   return (
     <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}
@@ -310,5 +315,3 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     </group>
   );
 }
-
-useGLTF.preload(GLB_PATH);

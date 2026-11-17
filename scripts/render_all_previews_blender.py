@@ -93,5 +93,5 @@ if __name__ == '__main__':
     print("=== Rendering Characters ===")
     render_model('characters/lara/lara_native.glb', 'characters/lara/lara_native_3d_preview.png')
     render_model('characters/xbot/Xbot_official.glb', 'characters/xbot/Xbot_official_3d_preview.png')
-    render_model('characters/ushiro/shiba_inu_dog_ushiro.glb', 'characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png')
+    render_model('characters/ushiro/ushiro.glb', 'characters/ushiro/three-quarter.png')
     render_model('items/robin-bird/model.glb', 'items/robin-bird/model_3d_preview.png')

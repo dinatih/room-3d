@@ -286,7 +286,7 @@ CHARACTERS.forEach(char => {
           previewHairColor={actionState?.previewHairColor}
         />
         {!actionState?.duoAnimDef && resolveAnimationId(actionState?.characterAnim || 'idle') === 'ff-dancewithdog' &&
-          <ShibaInu isPreview dancePreview previewAnim="Dog|Jump" onSize={onSize} />}
+          <ShibaInu isPreview dancePreview previewAnim="jump 22" onSize={onSize} />}
       </>
     );
   };
@@ -300,9 +300,6 @@ for (const [id, Model] of [
     return <Model isPreview previewAnim={actionState.characterAnim} onSize={onSize} />;
   };
 }
-SCENE_REGISTRY['ushiro'] = function UshiroComparisonPreview({ actionState, onSize }: SceneItemProps) {
-  return <ShibaInu isPreview previewModelPath="/characters/ushiro/shiba_inu_pitbull_preview.glb" previewAnim={actionState.characterAnim} onSize={onSize} />;
-};
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 SCENE_REGISTRY['ulotte-bowl'] = DogBowl;
 SCENE_REGISTRY['ulotte'] = function UlottePreview({ actionState, onSize }: SceneItemProps) {
