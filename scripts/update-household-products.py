@@ -44,12 +44,8 @@ for mat in doc['materials']:
     elif mat['name'] == 'plastic lid':
         clear_material(mat, .5, .23, 1.46)
 write_glb(spray, doc, rest)
-cif = copy.deepcopy(doc)
-for mat in cif['materials']:
-    if mat['name'] == 'Material.002':
-        clear_material(mat, .94, .08, 1.333)
-        mat['name'] = 'Clear cleaning liquid'
-write_glb(ITEMS / 'cif-infinite-clean/CifInfiniteClean.glb', cif, rest)
+# The dedicated Cif pump and photographed labels are generated separately by
+# generate-cif-infinite-clean.py; do not overwrite them with the generic spray.
 
 soap = ITEMS / 'tackan distributeur savon blanc/TACKAN distributeur savon blanc.glb'
 doc, rest = read_glb(soap)
