@@ -111,9 +111,9 @@ export function KitchenFurnishings() {
         <KallaxCuisineDrona />
       </group>
 
-      {/* Case droite du Kallax, juste sous l'étage du four (ouverture vers -Z local). */}
+      {/* Case gauche depuis la cuisine, juste sous l'étage du four (ouverture vers -Z local). */}
       <group position={KALLAX_CUISINE_POSITION} rotation-y={KALLAX_CUISINE_ROTATION}>
-        <group position={[-17.5, 76.5 + KALLAX_FRAME, -10]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean Kallax cuisine' }}>
+        <group position={[17.5, 76.5 + KALLAX_FRAME, -10]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean Kallax cuisine' }}>
           <CifInfiniteClean />
         </group>
       </group>
