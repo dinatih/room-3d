@@ -9,7 +9,7 @@ import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGr
 import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
-import { SprayCleaner, CifInfiniteClean } from '../items/CleaningProducts';
+import { W5Bleach, CifInfiniteClean } from '../items/CleaningProducts';
 import { SevenProngHook } from '../items/SevenProngHook';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
@@ -132,7 +132,7 @@ export function KitchenFurnishings() {
 
       {/* Spray sur le fond du meuble sous évier : pieds de 10 cm + panneau supérieur à 1,92 cm. */}
       <group position={[KITCHEN_WEST_WALL + 20, 10 + 1.92, ROOM_D + 15]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant sous évier cuisine' }}>
-        <SprayCleaner />
+        <W5Bleach />
       </group>
 
       {/* Fixation sur la sous-face de la planche basse (153 cm), à la jonction évier/plaques.

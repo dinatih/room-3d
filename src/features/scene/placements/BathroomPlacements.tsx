@@ -32,7 +32,7 @@ import { TowelFoldedRed, TowelHangingLargeRed, TowelHangingSmallRed } from '../i
 import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin';
 import { CecotecReadywarm } from '../items/CecotecReadywarm';
-import { CifInfiniteClean, TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
+import { CifInfiniteClean, W5Bleach, Plogsvaeng, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
 import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
 import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '../items/SdbLaundryHook';
@@ -236,7 +236,15 @@ export function BathroomFurnishings() {
 
       {/* Spray transparent au sol, au milieu du passage entre le WC et le meuble vasque. */}
       <group position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant transparent SDB' }}>
-        <NavigationObstacle id="spray-cleaner-bath"><TransparentSprayCleaner /></NavigationObstacle>
+        <NavigationObstacle id="spray-cleaner-bath"><W5Bleach /></NavigationObstacle>
+      </group>
+
+      {/* GREJIG côté droit du placard : gauche vue depuis la SDB = +X.
+          Support à 17 cm ; rangement de 20 × 15 cm au fond gauche. */}
+      <group position={[SDB_CLOSET_X - SDB_CLOSET_W / 4, 17, SDB_CLOSET_Z + 20]}>
+        <group position={[17, 0, 5]} userData={{ sceneItemRoot: true, itemName: 'PLOGSVÄNG placard SDB' }}><Plogsvaeng /></group>
+        <group position={[1, 0, 3]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean placard SDB' }}><CifInfiniteClean /></group>
+        <group position={[-18, 0, 3]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Javel W5 placard SDB' }}><W5Bleach /></group>
       </group>
 
       {/* Un seul crochet sous l'étagère, à droite côté douche. */}

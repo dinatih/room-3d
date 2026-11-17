@@ -1,0 +1,7 @@
+{
+  "tool": "image_gen.imagegen (built-in)",
+  "source": "User-supplied W5 bleach bottle photo",
+  "output": "public/items/w5-bleach/label.png",
+  "transparent_background": true,
+  "prompt": "Extract ONLY the oval W5 SPRAY NETTOYANT JAVEL label from the provided bottle photo. This is an exact label cutout for a 3D texture: preserve the original yellow blue red graphics, W5 logo, sink/oven photos and the words SPRAY NETTOYANT JAVEL and 1 litre. Remove the white bottle and all surroundings and FanDeLidl watermark. Output the complete oval sticker tightly framed, front facing, with genuinely transparent background outside its outline. Do not include any bottle, nozzle, cap or shadows outside the label. Preserve the original label as closely as possible, do not redesign."
+}
