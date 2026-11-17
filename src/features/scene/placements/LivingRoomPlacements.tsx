@@ -332,23 +332,26 @@ export function DeskDecor() {
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
-          <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Support ordinateur GRIFFIN' }}>
-            <LaptopStand />
-          </group>
-          <group userData={{
-            sceneItemRoot: true,
-            skipMerge: true,
-            itemName: 'Ordinateur Portable',
-            hoverAction: {
-              label: 'Framework Laptop 13',
-              actions: [
-                'smart-object:::desk-bollsidan-2:::work-standing',
-                ...getObjectActionIds('laptop'),
-              ]
-            }
-          }}>
-            <group position={[0, LAPTOP_STAND_CENTER_HEIGHT, 0]} rotation={[LAPTOP_STAND_TILT, 0, 0]}>
-              <Laptop />
+          {/* 12 cm vers le fond du plateau, dans le repère retourné des accessoires. */}
+          <group position={[0, 0, -12]}>
+            <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Support ordinateur GRIFFIN' }}>
+              <LaptopStand />
+            </group>
+            <group userData={{
+              sceneItemRoot: true,
+              skipMerge: true,
+              itemName: 'Ordinateur Portable',
+              hoverAction: {
+                label: 'Framework Laptop 13',
+                actions: [
+                  'smart-object:::desk-bollsidan-2:::work-standing',
+                  ...getObjectActionIds('laptop'),
+                ]
+              }
+            }}>
+              <group position={[0, LAPTOP_STAND_CENTER_HEIGHT, 0]} rotation={[LAPTOP_STAND_TILT, 0, 0]}>
+                <Laptop />
+              </group>
             </group>
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Smartphone' }}>
