@@ -48,6 +48,12 @@ const HEATER_DEPTH = 18;
 const CLOSET_RIGHT_EDGE_X = SDB_CLOSET_X - SDB_CLOSET_W / 2;
 const CLOSET_SHELF_FRONT_Z = SDB_CLOSET_Z + SDB_CLOSET_D / 2;
 const PRODUCT_EDGE_GAP = 1;
+const VILEDA_PARKING_Z = CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + VILEDA_SPRAY_ONE_SIZE.depth / 2;
+// The whole 40 cm pad must clear the diagonal, including its far rear corner.
+const VILEDA_PARKING_X = DiagWall.A.x + (
+  VILEDA_PARKING_Z + VILEDA_SPRAY_ONE_SIZE.depth / 2
+  + PRODUCT_EDGE_GAP * Math.sqrt(1 + DiagWall.slope ** 2) - DiagWall.A.z
+) / DiagWall.slope - VILEDA_SPRAY_ONE_SIZE.width / 2;
 // Right from the bathroom is the shower side; keep the existing bag shape.
 const LAUNDRY_HOOK_X = CLOSET_RIGHT_EDGE_X + 38;
 const LAUNDRY_HOOK_Z = CLOSET_SHELF_FRONT_Z + 30;
@@ -245,7 +251,7 @@ export function BathroomFurnishings() {
 
       {/* Lessive et adoucissant sur la tablette, au bord avant droit depuis la SDB. */}
       {/* Gauche depuis la SDB = +X : au sol derrière le rail, sous la tablette. */}
-      <group position={[SDB_CLOSET_X + SDB_CLOSET_W / 2 - PRODUCT_EDGE_GAP - VILEDA_SPRAY_ONE_SIZE.width / 2, 0, CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + VILEDA_SPRAY_ONE_SIZE.depth / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Balai Vileda 1-2-Spray ONE' }}>
+      <group position={[VILEDA_PARKING_X, 0, VILEDA_PARKING_Z]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Balai Vileda 1-2-Spray ONE' }}>
         <ViledaSprayOne />
       </group>
 
