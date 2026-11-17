@@ -38,18 +38,18 @@ function dogDanceTarget(x: number, y: number, z: number, yaw: number) {
 }
 
 function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.AnimationClip {
-  const name = keyword.includes('|') ? keyword : Object.values(DOG_CLIPS.shiba).find(name => name.toLowerCase().endsWith(`|${keyword.toLowerCase()}`));
+  const name = animations.some(clip => clip.name === keyword) ? keyword : Object.values(DOG_CLIPS.shiba).find(name => name.toLowerCase().endsWith(`|${keyword.toLowerCase()}`));
   const clip = animations.find(clip => clip.name === name);
   if (!clip || clip.duration <= 0) throw new Error(`Ushiro : animation invalide ${keyword}`);
   return clip;
 }
 
-export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
+export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize, previewModelPath }: { isPreview?: boolean, previewModelPath?: string, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const navigationEnabled = useNavigationEnabled();
   const routeRef = useRef(createRouteState());
   const life = useMemo(createDogBehavior, []);
   const activeAction = useRef<THREE.AnimationAction | null>(null);
-  const { scene, animations } = useGLTFClone(GLB_PATH);
+  const { scene, animations } = useGLTFClone(isPreview && previewModelPath ? previewModelPath : GLB_PATH);
   const { invalidate } = useThree();
   const mixerRef   = useRef<THREE.AnimationMixer | null>(null);
   const danceRef = useRef({ owner: null as string | null, jumping: false });

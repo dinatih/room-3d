@@ -1106,6 +1106,7 @@ export function InventoryPreview({
         { value: 'run', label: 'Run' },
         { value: 'sitdown', label: 'SitDown' },
         { value: 'walk', label: 'Walk' },
+        ...dogAnimationOptions['animated-pitbull-dog'],
       ];
     }
     if (['jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish'].includes(item.id)) {
