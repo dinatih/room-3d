@@ -1,6 +1,24 @@
 # Références radiographiques
 
+## Corrections des références Lara
+
+Taille déclarée dans `src/features/scene/characterConfig.ts`, entrée `native` : **173,4 cm (1,734 m)**. Les proportions graphiques existantes sont conservées ; les guides numériques non mesurés des épaules, hanches et genoux ne sont plus présentés comme des mesures exactes sur la planche anatomique.
+
+Les surfaces des mains du modèle source présentent des bouts de doigts ouverts et des coutures superposées. Le rendu anatomique joint temporairement bras et mains, soude les doublons à la précision flottante du maillage, ferme les bords ouverts et recalcule les normales. Ces opérations ne concernent que la scène Blender en mémoire : aucun fichier 3D ni rig source n’est enregistré ou exporté. La géométrie des doigts reste celle du modèle ; ce traitement répare la surface, sans recréer une nouvelle anatomie des mains.
+
+La tresse existante est rendue uniquement dans le profil anatomique, après calcul du cadrage commun au corps. Les radiographies sont corrigées avec l’outil intégré image_gen : radius/ulna sur l’avant-bras, humérus sur le bras, bassin sur l’aile iliaque et non sur le marqueur de hanche. Elles restent illustratives, sans certification anatomique ou métrologique.
+
 ## Ajout anatomique Native
+
+### Prompt final de correction de la radiographie habillée
+
+Edit only these THREE items on this existing radiographic reference board. (1) In ANTERIOR / FACE panel the label "Radius" currently points to the upper arm incorrectly. Move ONLY its leader-line endpoint to a forearm bone halfway BETWEEN the ELBOW joint and WRIST on the viewer-right arm (thumb-side radius), alongside the Ulna forearm annotation. Radius and Ulna must point to two separate forearm bones. (2) "Bassin" must be renamed "Bassin (pelvis)" and its leader must point directly into the broad iliac wing bone ABOVE hip joint, not to hip/femur joint circle. (3) Add small text "Taille : 173,4 cm (1,734 m)" near bottom-left scale. Absolutely preserve EVERYTHING ELSE, especially the CORRECT existing HUMÉRUS label below viewer-left arm and its leader to upper-arm shaft. Do not move, rewrite or redraw HUMÉRUS or its leader. Keep original hands, skeleton, braid, clothing and body proportions as they are. Preserve exact four orthographic views, framing, scale, T-pose, grid and colors.
+
+
+### Prompt de correction de la radiographie anatomique
+
+Edit this educational medical SKELETON / RIG reference diagram. Clinical bones-only radiograph, no realistic skin or soft tissues, only faint neutral mannequin contour for proportion reference. Keep composition, exact size/scale, four orthographic projections and T-pose. Correct text height to "Hauteur : 173,4 cm (1,734 m)" and "Sommet du crâne : 1,734 m". Ruler's 170 cm line stays where it is below skull top; never resize figure. Delete unverified numeric shoulder, hip, knee heights in right-hand box, keep soles 0.00. Correct annotation leader endpoints: HUMÉRUS points to shaft of upper arm BETWEEN SHOULDER AND ELBOW. RADIUS and ULNA point to the two separate forearm bones BETWEEN ELBOW AND WRIST, never to ribs, abdomen or spine. Show correct one humerus and two forearm bones per arm; thumb-side radius, little-finger-side ulna. "Bassin (pelvis)" points to broad iliac wing BONE above hip socket, not hip joint circle. Move arm labels near the outstretched arms to make correct leaders readable; no arm labels on torso. Add segmented horizontal braid extending backwards from head ONLY IN SIDE PROFILE panel. Keep braid absent from other views. Hands: 5 anatomical digits. Medical cyan-white bones, blue/green rig and circular markers on dark metric grid. Footer illustrative anatomy, not actual rig extraction. Educational clinical technical diagram, no erotic content.
+
 
 Quatre rendus gris neutres du corps sans tenue ni équipement : `lara-native-anatomical-{anterior,lateral,posterior,dorsal}.png`, produits par `ALSOFT_DRIVERS=null blender -b -t 4 --python-exit-code 1 --python scripts/render-lara-reference.py -- --anatomical`. Le matériau uniforme retire les textures de tenue ; la surface pelvienne du modèle sert à fermer la silhouette. Aucun export 3D ni changement du fichier source.
 

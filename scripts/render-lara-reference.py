@@ -6,6 +6,7 @@ Anatomical: append -- --anatomical (neutral clay surface, no equipment).
 from pathlib import Path
 import sys
 import bpy
+import bmesh
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,25 @@ for obj in bpy.context.scene.objects:
                 material.diffuse_color = (0.5, 0.58, 0.62, 1)
             for slot in obj.material_slots:
                 slot.material = material
+if anatomical:
+    # The bare-hand source has torn tips and overlapping wrist surfaces.
+    # Close/weld arms/hands only in this disposable render scene.
+    # Never export or save this temporary geometry to the source asset.
+    bpy.ops.object.select_all(action='DESELECT')
+    for name in ['arms', 'body_nude_hands']:
+        bpy.data.objects[name].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects['body_nude_hands']
+    bpy.ops.object.join()
+    hands = bpy.context.object
+    surface = bmesh.new()
+    surface.from_mesh(hands.data)
+    # Match the source mesh's float precision when welding UV seam duplicates.
+    bmesh.ops.remove_doubles(surface, verts=list(surface.verts), dist=2 ** -23)
+    bmesh.ops.holes_fill(surface, edges=[edge for edge in surface.edges if edge.is_boundary])
+    bmesh.ops.recalc_face_normals(surface, faces=list(surface.faces))
+    surface.to_mesh(hands.data)
+    surface.free()
+    hands.data.update()
 meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH' and not o.hide_render]
 points = [o.matrix_world @ Vector(v) for o in meshes for v in o.bound_box]
 low = Vector(tuple(min(p[i] for p in points) for i in range(3)))
@@ -71,6 +91,9 @@ camera = bpy.data.objects.new('OrthographicReference', data)
 scene.collection.objects.link(camera)
 scene.camera = camera
 for label, direction in [('anterior', (0, -1, 0)), ('lateral', (1, 0, 0)), ('posterior', (0, 1, 0)), ('dorsal', (0, 0, 1))]:
+    if anatomical:
+        # Show the existing braid only in profile; keep the body framing common.
+        bpy.data.objects['braid'].hide_render = label != 'lateral'
     camera.location = center + Vector(direction) * 4
     camera.rotation_euler = (center - camera.location).to_track_quat('-Z', 'Y').to_euler()
     prefix = 'lara-native-anatomical' if anatomical else 'lara-native'
