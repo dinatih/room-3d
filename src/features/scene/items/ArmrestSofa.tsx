@@ -1,307 +1,79 @@
-/**
- * ArmrestSofa.tsx — Tectake Sintra Garden Sofa and Sun Lounger.
- * Procedural implementation with high fidelity.
- * Center seat: width=115, depth=61, height=41 cm.
- * Foldable armrests: length=34.25, depth=61, thickness=6 cm.
- * Seat height with cushion: 48 cm. Total height: 89 cm.
- * Independent left/right folding animations (75 to 0 degrees).
- */
-import { useLayoutEffect, useMemo, useRef } from 'react';
+/** Photo-referenced TecTake Sintra GLB, with independently reversible arm clips. */
+import { useLayoutEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { SceneItemProps } from '@shared/types';
+import { glbLocalBBox } from '../glbUtils';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
+import { useDoorOpen } from './useDoorOpen';
 
-// ── Texture Generators ───────────────────────────────────────────────────────
+const PATH = '/items/armrest-sofa-gris/TectakeSintra.glb';
+const ARMS = [
+  { node: 'ArmLeft', clip: 'left_flatten', id: 'sofa-arm-left', label: 'Accoudoir Gauche' },
+  { node: 'ArmRight', clip: 'right_flatten', id: 'sofa-arm-right', label: 'Accoudoir Droit' },
+] as const;
+preloadSceneGLTF(PATH);
 
-function createRattanTextures() {
-  const size = 256;
-  const cols = 16;
-  const step = size / cols; // 16px
-  const pad = 1.5;
-
-  const colorCanvas = document.createElement('canvas');
-  colorCanvas.width = size;
-  colorCanvas.height = size;
-  const colorCtx = colorCanvas.getContext('2d')!;
-
-  const bumpCanvas = document.createElement('canvas');
-  bumpCanvas.width = size;
-  bumpCanvas.height = size;
-  const bumpCtx = bumpCanvas.getContext('2d')!;
-
-  // Dark charcoal base
-  colorCtx.fillStyle = '#2c2e30';
-  colorCtx.fillRect(0, 0, size, size);
-
-  bumpCtx.fillStyle = '#000000';
-  bumpCtx.fillRect(0, 0, size, size);
-
-  for (let r = 0; r < cols; r++) {
-    for (let c = 0; c < cols; c++) {
-      const x = c * step;
-      const y = r * step;
-
-      const horizontal = (r + c) % 2 === 0;
-      const gradientAxis = horizontal
-        ? [x, y + pad, x, y + step - pad] as const
-        : [x + pad, y, x + step - pad, y] as const;
-      const colors = horizontal
-        ? ['#1c1d1e', '#525558', '#6a6d70', '#525558', '#1c1d1e']
-        : ['#161718', '#484b4d', '#5d6063', '#484b4d', '#161718'];
-      const colorGrad = colorCtx.createLinearGradient(...gradientAxis);
-      [0, 0.3, 0.5, 0.7, 1].forEach((stop, i) => colorGrad.addColorStop(stop, colors[i]));
-      colorCtx.fillStyle = colorGrad;
-      colorCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-      colorCtx.strokeStyle = '#121314';
-      colorCtx.lineWidth = 1;
-      colorCtx.strokeRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-
-      const bumpGrad = bumpCtx.createLinearGradient(...gradientAxis);
-      bumpGrad.addColorStop(0, '#000000');
-      bumpGrad.addColorStop(0.5, '#ffffff');
-      bumpGrad.addColorStop(1, '#000000');
-      bumpCtx.fillStyle = bumpGrad;
-      bumpCtx.fillRect(x + pad, y + pad, step - 2 * pad, step - 2 * pad);
-    }
-  }
-
-  const colorTex = new THREE.CanvasTexture(colorCanvas);
-  colorTex.wrapS = THREE.RepeatWrapping;
-  colorTex.wrapT = THREE.RepeatWrapping;
-  colorTex.repeat.set(6, 3);
-
-  const bumpTex = new THREE.CanvasTexture(bumpCanvas);
-  bumpTex.wrapS = THREE.RepeatWrapping;
-  bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(6, 3);
-
-  return { colorTex, bumpTex };
-}
-
-function createFabricTexture() {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  // Anthracite/Dark Gray base
-  ctx.fillStyle = '#3a3c3e';
-  ctx.fillRect(0, 0, size, size);
-
-  // Micro-weave grid pattern
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-  for (let i = 0; i < size; i += 2) {
-    ctx.fillRect(i, 0, 1, size);
-    ctx.fillRect(0, i, size, 1);
-  }
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-  for (let i = 1; i < size; i += 2) {
-    ctx.fillRect(i, 0, 1, size);
-    ctx.fillRect(0, i, size, 1);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(16, 16);
-  return texture;
-}
-
-// ── ArmrestSofa Component ─────────────────────────────────────────────────────
-
-export function ArmrestSofa({ actionState = {}, onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
+export function ArmrestSofa({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
+  const { scene, animations } = useGLTFClone(PATH);
+  const leftFlat = useDoorOpen('sofa-arm-left', isPreview, actionState);
+  const rightFlat = useDoorOpen('sofa-arm-right', isPreview, actionState);
   const { invalidate } = useThree();
+  const runtime = useRef<{ mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[] } | null>(null);
 
-  const leftGroupRef = useRef<THREE.Group>(null);
-  const rightGroupRef = useRef<THREE.Group>(null);
-
-  // Check if armrests are flat (toggled ON in actionState)
-  const leftFlat = !!actionState['sofa-arm-left'];
-  const rightFlat = !!actionState['sofa-arm-right'];
-
-  // Angle state refs (in radians)
-  // Visual Left (+Z = 57.5): Upright angle is -1.309 rad, Flat is 0
-  // Visual Right (-Z = -57.5): Upright angle is 1.309 rad, Flat is 0
-  const leftAngleRef = useRef(leftFlat ? 0 : -1.309);
-  const rightAngleRef = useRef(rightFlat ? 0 : 1.309);
-
-  // Set sizing bounding box once & initialize armrest rotations
   useLayoutEffect(() => {
-    onSize?.(new THREE.Vector3(157, 89, 61));
-    if (leftGroupRef.current) {
-      leftGroupRef.current.rotation.x = leftAngleRef.current;
+    scene.scale.set(1, 1, 1);
+    scene.position.set(0, 0, 0);
+    scene.traverse(child => {
+      if ((child as THREE.Mesh).isMesh) child.castShadow = child.receiveShadow = true;
+    });
+    const mixer = new THREE.AnimationMixer(scene);
+    const actions = ARMS.map(arm => {
+      const clip = animations.find(a => a.name === arm.clip);
+      const node = scene.getObjectByName(arm.node);
+      if (!clip || !node) throw new Error(`Sintra: missing ${arm.node} / ${arm.clip}`);
+      node.userData.hoverAction = { label: arm.label, actionId: arm.id };
+      node.traverse(child => { if ((child as THREE.Mesh).isMesh) child.userData.birdPerch = true; });
+      const action = mixer.clipAction(clip).play();
+      action.paused = true;
+      return action;
+    });
+    mixer.update(0);
+    scene.scale.setScalar(100);
+    const box = glbLocalBBox(scene);
+    scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+    scene.userData.skipMerge = scene.userData.sceneItemRoot = true;
+    runtime.current = { mixer, actions };
+    return () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); runtime.current = null; };
+  }, [scene, animations]);
+
+  useLayoutEffect(() => {
+    const rt = runtime.current!;
+    const times = rt.actions.map(a => a.time);
+    for (const [i, flat] of [leftFlat, rightFlat].entries()) {
+      rt.actions[i].time = flat ? rt.actions[i].getClip().duration : 0;
     }
-    if (rightGroupRef.current) {
-      rightGroupRef.current.rotation.x = rightAngleRef.current;
-    }
-  }, [onSize]);
+    rt.mixer.update(0);
+    onSize?.(glbLocalBBox(scene).getSize(new THREE.Vector3()));
+    rt.actions.forEach((a, i) => { a.time = times[i]; });
+    rt.mixer.update(0);
+    invalidate();
+  }, [scene, animations, leftFlat, rightFlat, onSize, invalidate]);
 
-  // Procedural textures and materials
-  const { colorTex, bumpTex, fabricTex } = useMemo(() => {
-    const rattan = createRattanTextures();
-    const fabric = createFabricTexture();
-    return {
-      colorTex: rattan.colorTex,
-      bumpTex: rattan.bumpTex,
-      fabricTex: fabric,
-    };
-  }, []);
-
-  const rattanMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: colorTex,
-    bumpMap: bumpTex,
-    bumpScale: 0.05,
-    roughness: 0.85,
-    metalness: 0.05,
-  }), [colorTex, bumpTex]);
-
-  const fabricMat = useMemo(() => new THREE.MeshStandardMaterial({
-    map: fabricTex,
-    roughness: 0.9,
-    metalness: 0.02,
-  }), [fabricTex]);
-
-  const metalMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x1d1d1d,
-    roughness: 0.5,
-    metalness: 0.7,
-  }), []);
-
-  const feetMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0x0f0f0f,
-    roughness: 0.9,
-  }), []);
-
-  // Geometries
-  const seatFrameRimGeo = useMemo(() => new RoundedBoxGeometry(61, 8, 115, 3, 1), []);
-  const centerCushionGeo = useMemo(() => new RoundedBoxGeometry(56, 7, 115, 4, 1.5), []);
-  const backrestFrameGeo = useMemo(() => new RoundedBoxGeometry(4, 48, 115, 3, 1), []);
-
-  const armFrameGeo = useMemo(() => new RoundedBoxGeometry(61, 6, 34.25, 3, 1), []);
-  const armCushionGeo = useMemo(() => new RoundedBoxGeometry(56, 7, 34.25, 4, 1.5), []);
-
-  const pillowGeo = useMemo(() => new RoundedBoxGeometry(14, 47, 53, 4, 2.5), []);
-
-  // Frame details
-  const supportBeamGeo = useMemo(() => new THREE.BoxGeometry(2, 2, 110), []);
-  const legGeo = useMemo(() => new THREE.BoxGeometry(3, 35, 3), []);
-  const legStretcherGeo = useMemo(() => new THREE.BoxGeometry(45, 2, 2.5), []);
-  const footGeo = useMemo(() => new THREE.CylinderGeometry(2, 2, 1, 16), []);
-
-  // Animation logic in render loop
-  useFrame((_, delta) => {
-    const targetLeft = leftFlat ? 0 : -1.309;
-    const targetRight = rightFlat ? 0 : 1.309;
-    if (leftAngleRef.current === targetLeft && rightAngleRef.current === targetRight) return;
-
+  useFrame((_, dt) => {
+    const rt = runtime.current;
+    if (!rt || (isPreview && actionState.previewPaused)) return;
     let changed = false;
-
-    // Smoothly interpolate left armrest angle (+Z)
-    const diffLeft = targetLeft - leftAngleRef.current;
-    if (Math.abs(diffLeft) > 0.002) {
-      leftAngleRef.current += diffLeft * Math.min(delta * 7, 1);
+    for (const [i, flat] of [leftFlat, rightFlat].entries()) {
+      const action = rt.actions[i];
+      const duration = action.getClip().duration;
+      const target = flat ? duration : 0;
+      if (action.time === target) continue;
+      action.time = THREE.MathUtils.clamp(action.time + (flat ? dt : -dt), 0, duration);
       changed = true;
-    } else {
-      leftAngleRef.current = targetLeft;
     }
-
-    // Smoothly interpolate right armrest angle (-Z)
-    const diffRight = targetRight - rightAngleRef.current;
-    if (Math.abs(diffRight) > 0.002) {
-      rightAngleRef.current += diffRight * Math.min(delta * 7, 1);
-      changed = true;
-    } else {
-      rightAngleRef.current = targetRight;
-    }
-
-    if (leftGroupRef.current) {
-      leftGroupRef.current.rotation.x = leftAngleRef.current;
-    }
-    if (rightGroupRef.current) {
-      rightGroupRef.current.rotation.x = rightAngleRef.current;
-    }
-
-    if (changed) {
-      invalidate();
-    }
+    if (changed) { rt.mixer.update(0); invalidate(); }
   });
 
-  return (
-    <group rotation={[0, -Math.PI / 2, 0]}>
-      {/* ── 1. BASE FRAME & LEGS ────────────────────────────────────────────── */}
-      {/* Rattan Seat Rim */}
-      <mesh geometry={seatFrameRimGeo} material={rattanMat} position={[0, 37, 0]} castShadow receiveShadow />
-
-      {/* Under-seat Metal Support Beams */}
-      <mesh geometry={supportBeamGeo} material={metalMat} position={[-20, 32, 0]} castShadow />
-      <mesh geometry={supportBeamGeo} material={metalMat} position={[20, 32, 0]} castShadow />
-
-      {/* Splayed Trapeze Legs with Horizontal Crossbars (Left Z < 0, Right Z > 0) */}
-      {[-1, 1].map((side) => {
-        const zPivot = side * 42;
-        const zBase = side * 54;
-        return (
-          <group key={side}>
-            {/* Front & Back splayed legs */}
-            {[-22, 22].map((x) => (
-              <group key={x}>
-                <mesh
-                  geometry={legGeo}
-                  material={metalMat}
-                  position={[x, 16.5, (zPivot + zBase) / 2]}
-                  rotation={[side * -0.36, 0, 0]}
-                  castShadow
-                />
-                <mesh geometry={footGeo} material={feetMat} position={[x, 0.5, zBase]} />
-              </group>
-            ))}
-            {/* Horizontal reinforcing stretcher bar */}
-            <mesh
-              geometry={legStretcherGeo}
-              material={metalMat}
-              position={[0, 10, (zPivot + zBase) / 2]}
-              rotation={[side * -0.36, 0, 0]}
-              castShadow
-            />
-          </group>
-        );
-      })}
-
-
-      {/* ── 2. STATIC SEAT & BACKREST CUSHIONS ──────────────────────────────── */}
-      {/* Center Seat Cushion */}
-      <mesh userData={{ birdPerch: true, seatSurface: true }} geometry={centerCushionGeo} material={fabricMat} position={[0, 44.5, 0]} castShadow receiveShadow />
-
-      {/* Tilted Rattan Backrest Panel (Pivot at top back of seat rim) */}
-      <group position={[-30.5, 41, 0]} rotation={[0, 0, 0.14]}>
-        <mesh userData={{ birdPerch: true }} geometry={backrestFrameGeo} material={rattanMat} position={[-2, 24, 0]} castShadow receiveShadow />
-        
-        {/* Cushions lean back with the backrest */}
-        <mesh geometry={pillowGeo} material={fabricMat} position={[9, 24, -27]} rotation={[0, 0, -0.05]} castShadow />
-        <mesh geometry={pillowGeo} material={fabricMat} position={[9, 24, 27]} rotation={[0, 0, -0.05]} castShadow />
-      </group>
-
-
-      {/* ── 3. ANIMATED LEFT ARMREST (Visual Left in room = +Z 57.5) ────────────── */}
-      {/* Pivot at Z = 57.5, Y = 41. Local armrest extends into +Z */}
-      <group ref={leftGroupRef} position={[0, 41, 57.5]} rotation={[leftAngleRef.current, 0, 0]} userData={{ hoverAction: { label: 'Accoudoir Gauche', actionId: 'sofa-arm-left' } }}>
-        {/* Rattan Armrest Frame */}
-        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, 17.125]} castShadow receiveShadow />
-        {/* Left Cushion Section */}
-        <mesh userData={{ birdPerch: true }} geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, 17.125]} castShadow receiveShadow />
-      </group>
-
-
-      {/* ── 4. ANIMATED RIGHT ARMREST (Visual Right in room = -Z -57.5) ──────────── */}
-      {/* Pivot at Z = -57.5, Y = 41. Local armrest extends into -Z */}
-      <group ref={rightGroupRef} position={[0, 41, -57.5]} rotation={[rightAngleRef.current, 0, 0]} userData={{ hoverAction: { label: 'Accoudoir Droit', actionId: 'sofa-arm-right' } }}>
-        {/* Rattan Armrest Frame */}
-        <mesh geometry={armFrameGeo} material={rattanMat} position={[0, -3, -17.125]} castShadow receiveShadow />
-        {/* Right Cushion Section */}
-        <mesh userData={{ birdPerch: true }} geometry={armCushionGeo} material={fabricMat} position={[0, 3.5, -17.125]} castShadow receiveShadow />
-      </group>
-    </group>
-  );
+  return <primitive object={scene} />;
 }
