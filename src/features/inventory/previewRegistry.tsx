@@ -423,3 +423,7 @@ for (const dog of extraDogs) {
     return <ImportedDog path={"/" + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} heading={dog.forwardRotationY} isPreview previewAnim={actionState?.characterAnim} onSize={onSize} />;
   };
 }
+
+SCENE_REGISTRY['dachshund-sculpt'] = function DachshundSculptPreview({ onSize, actionState }) {
+  return <ImportedDog path="/characters/dachshund-sculpt/dog.glb" height={30} clip="idle 50" isPreview previewAnim={actionState?.characterAnim} onSize={onSize} />;
+};

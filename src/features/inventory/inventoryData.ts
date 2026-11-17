@@ -110,6 +110,16 @@ export const INVENTORY: InventoryItem[] = [
     notes: `Shiba Inu détaillé. Cinq animations natives et 119 transferts expérimentaux du Pitbull ; retargeting à affiner.`
   },
   {
+    id: 'dachshund-sculpt',
+    name: 'Teckel sculpté — comparaison Pitbull',
+    brand: 'Animal', category: 'animals', qty: 1,
+    dims: { w: 16.55, d: 67.54, h: 30 },
+    glbPath: 'characters/dachshund-sculpt/dog.glb',
+    referenceSheet: 'references/xray/ulotte-xray.png',
+    photos: ['characters/dachshund-sculpt/three-quarter.png', 'characters/dachshund-sculpt/front.png', 'characters/dachshund-sculpt/back.png'],
+    notes: 'Variante de comparaison indépendante d’Ulotte. Squelette adapté du Pitbull et catalogue de 119 animations transférées. Sculpt original conservé.',
+  },
+  {
     id: 'ulotte',
     referenceSheet: 'references/xray/ulotte-xray.png',
     name: 'Chienne Ulotte (Teckel)',

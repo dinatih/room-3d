@@ -1093,6 +1093,7 @@ export function InventoryPreview({
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
     if (item.id === 'animated-pitbull-dog') return pitbullAnimationChoices;
+    if (item.id === 'dachshund-sculpt') return prioritizePitbullAnimations(dogAnimationOptions['dachshund-sculpt']);
     if (['ushiro', 'shiba-inu'].includes(item.id)) {
       const nativeClips = [
         { value: 'standing_skeletal.3', label: 'standing_skeletal.3 — Debout (native)' },
