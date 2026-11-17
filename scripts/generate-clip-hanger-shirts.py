@@ -2,7 +2,7 @@
 Run: blender -b --python-exit-code 1 --python scripts/generate-clip-hanger-shirts.py
 Metres, Blender Z-up. Hanger width 44 cm estimated from photos (no CAD dimensions).
 Garment measurements estimated: L 72 cm long, 54 cm chest width; XL +4%.
-Cloth normals, seams and folds exported as meshes, no procedural runtime geometry.
+Blender Cloth gravity simulation baked into static meshes; no runtime solver.
 """
 from pathlib import Path
 import math
@@ -114,120 +114,20 @@ REPORT['hookContactFromTopCm'] = .3
 hanger.hide_render = True
 
 
+# Use the real Blender Cloth solver, bake the result before GLB export.
+import sys
+sys.path.insert(0, str(ROOT / 'scripts'))
+from black_shirt_cloth import garment as simulate_garment
+
+
 def garment(hanging=False, scale=1):
-    objects = []
-    half = .27
-    # x is width; z runs from the hem to the shoulders in the pattern.
-    # Open front and back neckline, hem and sleeve cuffs are physically separate.
-    def top(x, back):
-        a = abs(x)
-        if a <= .09:
-            return .72 - ((.017 if back else .115)*(1-a/.09))
-        return .72 - .045*((a-.09)/(.27-.09))
-
-    def cloth(x, z, side):
-        if hanging:
-            # Collar pinch gathers the shoulders; gravity releases folds below it.
-            height = z/.72
-            gather = 1 - .65*height**4
-            xx = x*gather*.72
-            zz = z - .15*(abs(x)/.43)**1.2 * height
-            pleat = .009*math.sin(x*46+z*2)*(.3+.7*height) + .004*math.sin(x*89-z*5)
-            depth = .012 + .012*(1-height)
-            yy = side*depth + pleat
-            # Back collar centre is the cloth attachment at (0,0,.703).
-            yy -= .012*height**10
-        else:
-            xx, zz = x, z
-            yy = side*(.004+.003*math.sin(z*29+x*22)**2)
-            yy += .0018*math.sin(x*61+z*24)*math.sin(z*math.pi/.72)
-        # Add short, decaying tension creases near armpits and the lower hem.
-        yy += .003*math.sin(z*85+abs(x)*25)*math.exp(-((z-.43)/.10)**2)*(abs(x)/.43)**2
-        return Vector((xx*scale, yy*scale, zz*scale))
-
-    def surface(name, rows):
-        verts = [v for row in rows for v in row]; n = len(rows[0]); faces=[]
-        for j in range(len(rows)-1):
-            for i in range(n-1):
-                a=j*n+i; faces.append((a,a+1,a+1+n,a+n))
-        mesh=bpy.data.meshes.new(name); mesh.from_pydata(verts, [], faces); mesh.update()
-        o=bpy.data.objects.new(name,mesh); bpy.context.collection.objects.link(o); o.data.materials.append(cotton)
-        # UVs follow the original fabric pattern rather than generated world space.
-        uv = mesh.uv_layers.new(name='Fabric UV')
-        for p in mesh.polygons:
-            for li in p.loop_indices:
-                vi = mesh.loops[li].vertex_index
-                uv.data[li].uv = ((vi % n)/(n-1), (vi//n)/(len(rows)-1))
-        for p in mesh.polygons: p.use_smooth=True
-        objects.append(o)
-        return o
-
-    for side in (-1, 1):
-        back = side == 1
-        rows=[]
-        for j in range(41):
-            t=j/40
-            row=[]
-            for i in range(41):
-                x=-half+2*half*i/40
-                # A slight taper at the waist and softly scalloped hem.
-                xx=x*(1-.025*math.sin(t*math.pi))
-                z=t*top(x,back)+.003*math.cos(x*17)*(1-t)
-                row.append(cloth(xx,z,side))
-            rows.append(row)
-        o=surface(('Back' if back else 'Front')+' cotton panel', rows)
-        if side == -1:
-            for p in o.data.polygons: p.flip()
-        for sign in (-1,1):
-            rows=[]
-            for j in range(17):
-                t=j/16
-                row=[]
-                for i in range(17):
-                    u=i/16
-                    x=sign*(half+.145*u)
-                    z=(.445+.23*t)*(1-u)+(.405+.155*t)*u
-                    row.append(cloth(x,z,side))
-                rows.append(row)
-            o=surface('Short sleeve cotton panel',rows)
-            # All normals are recalculated below after shoulder/side bridges.
-
-    def seam(name, coords, material=rib, radius=.0014):
-        o=tube(name,[cloth(x,z,s) for x,z,s in coords],radius*scale,material)
-        objects.append(o)
-
-    # Close sides and shoulders, preserving actual sleeve, collar and hem openings.
-    for sign in (-1,1):
-        surface('Side seam bridge', [[cloth(sign*half,.003+(.445-.003)*j/32,s) for s in (-1,1)] for j in range(33)])
-        surface('Shoulder seam bridge', [[cloth(sign*(.09+.18*j/24),top(sign*(.09+.18*j/24),False),s) for s in (-1,1)] for j in range(25)])
-        for edge in (0,1):
-            surface('Sleeve seam bridge', [[cloth(sign*(half+.145*j/20),(.445+.23*edge)*(1-j/20)+(.405+.155*edge)*j/20,s) for s in (-1,1)] for j in range(21)])
-        for side in (-1,1):
-            seam('Sleeve cuff hem',[(sign*.415,.405+.155*j/20,side) for j in range(21)])
-            seam('Sleeve cuff stitching',[(sign*.410,.406+.155*j/20,side) for j in range(21)],thread,.00045)
-            seam('Torso side stitching',[(sign*.268,.01+.43*j/32,side) for j in range(33)],thread,.00045)
-    for side in (-1,1):
-        seam('V neck rib binding',[(x,top(x,side==1),side) for x in [-.09+.18*j/32 for j in range(33)]],rib,.0038)
-        for offset in (.008,.012):
-            seam('Double stitched hem',[(x,offset+.003*math.cos(x*17),side) for x in [-half+2*half*j/48 for j in range(49)]],thread,.0005)
-    # Recalculate the garment shell normals consistently using its joined topology.
-    bpy.ops.object.select_all(action='DESELECT')
-    for o in objects:o.select_set(True)
-    bpy.context.view_layer.objects.active=objects[0]; bpy.ops.object.join()
-    o=bpy.context.object
-    bm=bmesh.new();bm.from_mesh(o.data)
-    bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.00001)
-    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(o.data);bm.free()
-    # Flat variant lies on a horizontal surface; hanging variant stays vertical.
-    if not hanging:
-        for v in o.data.vertices:
-            x,y,z=v.co;v.co=(x,z-.36*scale,-y+.012*scale)
-    return o
+    return simulate_garment(hanging, scale, cotton)
 
 
 flat=garment(False)
 flat=export([flat],SHIRTS/'TShirtBlackFlatL.glb');flat.hide_render=True
-xl=garment(False,1.04)
+xl=flat.copy();xl.data=flat.data.copy();bpy.context.collection.objects.link(xl);xl.hide_render=True
+for v in xl.data.vertices:v.co*=1.04
 xl=export([xl],SHIRTS/'TShirtBlackFlatXL.glb');xl.hide_render=True
 hung=garment(True)
 hung=export([hung],SHIRTS/'TShirtBlackHanging.glb');hung.hide_render=True
