@@ -34,6 +34,7 @@ import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin'
 import { CecotecReadywarm } from '../items/CecotecReadywarm';
 import { CifInfiniteClean, TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
 import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
+import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
 
@@ -225,6 +226,11 @@ export function BathroomFurnishings() {
       </group>
 
       {/* Lessive et adoucissant sur la tablette, au bord avant droit depuis la SDB. */}
+      {/* Gauche depuis la SDB = +X : au sol derrière le rail, sous la tablette. */}
+      <group position={[SDB_CLOSET_X + SDB_CLOSET_W / 2 - PRODUCT_EDGE_GAP - VILEDA_SPRAY_ONE_SIZE.width / 2, 0, CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + VILEDA_SPRAY_ONE_SIZE.depth / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Balai Vileda 1-2-Spray ONE' }}>
+        <ViledaSprayOne />
+      </group>
+
       <group position={[CLOSET_RIGHT_EDGE_X + PRODUCT_EDGE_GAP + LAUNDRY_DETERGENT_SIZE.width / 2, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + PRODUCT_EDGE_GAP + LAUNDRY_DETERGENT_SIZE.depth / 2]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Lessive placard SDB' }}>
         <LaundryDetergent />
       </group>

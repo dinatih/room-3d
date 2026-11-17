@@ -46,6 +46,15 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'vileda-spray-one', name: 'Balai à plat vaporisateur 1-2-Spray ONE', brand: 'Vileda',
+    category: 'bathroom', qty: 1, price: '21,99', dims: { w: 40, d: 14, h: 136.5 },
+    glbPath: 'items/vileda-spray-one/ViledaSprayOne.glb',
+    photos: ['items/vileda-spray-one/preview-three-quarter.png', 'items/vileda-spray-one/preview-front.png', 'items/vileda-spray-one/preview-back.png'],
+    url: 'https://www.lidl.fr/p/vileda-balai-a-plat-vaporisateur-1-2-spray-one/p100408536',
+    location: 'Placard SDB — côté gauche',
+    notes: 'Reconstitution Blender d’après les photos produit : manche rouge, poignée à gâchette, réservoir gris amovible, articulation et housse microfibre blanche à fibres rouges. Hauteur Lidl 136,5 cm ; tête estimée à 40 × 14 cm. Rangé debout au sol, à gauche depuis la salle de bains, sous la tablette.'
+  },
+  {
     id: 'ikea-plogsvaeng', name: 'PLOGSVÄNG — rangement perforé blanc', brand: 'IKEA',
     category: 'bathroom', qty: 1, price: '0,49', dims: { w: 20, d: 15, h: 10 },
     glbPath: 'items/cleaning-accessories/plogsvaeng.glb',
