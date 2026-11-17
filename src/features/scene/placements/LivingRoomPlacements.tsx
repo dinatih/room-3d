@@ -24,6 +24,7 @@ import { KallaxNW, KallaxNWDrona, KallaxNWMannequins } from '../items/KallaxNW';
 import { KALLAX_NW_POSITION, KALLAX_NW_ROTATION } from '../items/dronaStorage';
 import { JblCharge3 } from '../items/JblCharge3';
 import { MackaparGroup, MackaparDrona, MackaparHangers } from '../items/MackaparGroup';
+import { ClipHanger16Loaded } from '../items/ClipHanger16';
 import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
@@ -107,6 +108,8 @@ const MEUBLE_T_Y = KALLAX_SE_TOP + 50; // dessus kallax SE + freezer
 
 const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X = 32; // contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
+// Measured on the upper cylindrical rail in the MACKAPÄR GLB (centre ≈188 cm).
+const MACK_UPPER_RAIL_TOP = 189.08;
 const MACK_HALF_DEPTH = 16.035; // structure du meuble seule, sans les Drona du haut qui débordent
 const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH; // plaqué contre Kallax Cuisine
 const DRONA_HALF_WIDTH = 16.64; // largeur du GLB Drona (33,28 cm), orientée le long de Z une fois pivotée de 90°
@@ -720,6 +723,13 @@ export function LivingRoomDecor() {
       {/* Cintres et vêtements Mackapär (T-shirt noir + cintres Spruttig) */}
       <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, itemName: 'Cintres et T-shirt Mackapär' }}>
         <MackaparHangers />
+      </group>
+
+      {/* Barre haute, côté mur : sommet extérieur du fil à 3 mm du contact.
+          Le bord gauche du tissu reste à environ 2 cm du mur Ouest.
+          Les pinces 1, 6 et 16 décalent les vêtements de la barre basse. */}
+      <group position={[MACK_X - 2, MACK_UPPER_RAIL_TOP + 0.3, MACK_Z + 0.8]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Séchoir inox 16 pinces — trois tee-shirts noirs' }}>
+        <ClipHanger16Loaded />
       </group>
 
       {/* Cintres Penderie Mulig */}

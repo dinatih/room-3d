@@ -58,7 +58,6 @@ import { Backpack } from './items/Backpack';
 import { JordanHexMule } from './items/JordanHexMule';
 import { SummerOutdoorBoot } from './items/SummerOutdoorBoot';
 import { WinterOutdoorBoot } from './items/WinterOutdoorBoot';
-import { TShirt } from './items/TShirt';
 import { MaillotInyeong } from './items/MaillotInyeong';
 import { MannequinHead, LaraWigBust } from './items/MannequinHead';
 import { DoorEntry } from './items/DoorEntry';
@@ -144,8 +143,6 @@ const PROCEDURAL_GRID_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'jordan-hex-mule': JordanHexMule,
   'summer-outdoor-boot': SummerOutdoorBoot,
   'winter-outdoor-boot': WinterOutdoorBoot,
-  'tshirt-noir-L': TShirt,
-  'tshirt-noir-XL': TShirt,
   'maillot-coreen-inyeong': MaillotInyeong,
   'mannequin-head': MannequinHead,
   'door-entry': DoorEntry,

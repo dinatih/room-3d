@@ -121,7 +121,6 @@ import { GoogleNestMini }                             from '@features/scene/item
 import { Lagerpoppel00561816 }                         from '@features/scene/items/Lagerpoppel00561816';
 
 import { Smorkull } from '@features/scene/items/Smorkull';
-import { TShirt } from '@features/scene/items/TShirt';
 import { MaillotInyeong } from '@features/scene/items/MaillotInyeong';
 import { DoubleVenusPendant } from '@features/scene/items/DoubleVenusPendant';
 
@@ -256,8 +255,6 @@ export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
   'vihals-chair':           Vihals,
   'google-nest-mini':       GoogleNestMini,
   'lagerpoppel00561816':    Lagerpoppel00561816,
-  'tshirt-noir-L':          TShirt,
-  'tshirt-noir-XL':         TShirt,
   'maillot-coreen-inyeong': MaillotInyeong,
   'double-venus-pendant':   DoubleVenusPendant,
 

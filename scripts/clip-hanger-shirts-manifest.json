@@ -1,0 +1,43 @@
+{
+  "ClipHanger16.glb": {
+    "triangles": 7880,
+    "dimensionsCm": [
+      44.16188049316406,
+      1.1565022468566895,
+      23.43828010559082
+    ]
+  },
+  "hookContactFromTopCm": 0.3,
+  "TShirtBlackFlatL.glb": {
+    "triangles": 13184,
+    "dimensionsCm": [
+      83.27999877929688,
+      72.67263793945312,
+      2.207125425338745
+    ]
+  },
+  "TShirtBlackFlatXL.glb": {
+    "triangles": 13184,
+    "dimensionsCm": [
+      86.61119842529297,
+      75.57953643798828,
+      2.295410633087158
+    ]
+  },
+  "TShirtBlackHanging.glb": {
+    "triangles": 13184,
+    "dimensionsCm": [
+      56.10935592651367,
+      6.7938385009765625,
+      70.93578338623047
+    ]
+  },
+  "ClipHanger16Loaded.glb": {
+    "triangles": 47432,
+    "dimensionsCm": [
+      47.79384231567383,
+      56.10935592651367,
+      93.97761535644531
+    ]
+  }
+}

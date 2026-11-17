@@ -2,7 +2,7 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
-import { TShirt } from './TShirt';
+import { TShirtHanging } from './TShirt';
 import { DroneCell, DF } from './Drona';
 import type { SceneModelProps } from '@shared/types';
 
@@ -34,10 +34,9 @@ export function MackaparHangers() {
       />
 
       {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
-      <TShirt
-        position={[0, BOTTOM_RAIL_Y, HANGER_Z[0]]}
-        rotation={[0, -HANGER_ROTS[0], 0]}
-      />
+      <group position={[0, BOTTOM_RAIL_Y - 8, HANGER_Z[0]]} rotation={[0, -HANGER_ROTS[0], 0]}>
+        <TShirtHanging />
+      </group>
     </>
   );
 }
