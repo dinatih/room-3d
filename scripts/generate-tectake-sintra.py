@@ -123,19 +123,35 @@ for x in [-.42,.42]:
         sign=1 if x>0 else -1
         beam('Splayed steel leg',(sign*.54,y,.012),(x,y,.355),.03,.03,metal)
         box('Adjustable rubber foot',(.034,.034,.012),(sign*.54,y,.006),rubber,.003)
-    beam('Woven lower stretcher',(x*1.16,-.225,.10),(x*1.16,.225,.10),.025,.022,rattan)
+    beam('Steel lower stretcher',(x*1.16,-.225,.10),(x*1.16,.225,.10),.025,.022,metal)
 for y in [-.22,.22]:beam('Under-seat cross member',(-.54,y,.325),(.54,y,.325),.025,.025,metal)
-# Slightly reclining back, kept within the 61 cm depth envelope.
-back=box('Woven full back panel',(1.17,.035,.48),(0,.254,.65),rattan);back.rotation_euler.x=math.radians(-7)
-for x in [-.54,0,.54]:beam('Rear upright',(x,.225,.36),(x,.285,.875),.022,.022,metal)
+# Set the back behind the full seat cushion, including its rear sewn edge.
+# The manufacturer's nominal depth must not force upholstery through the panel.
+back_y=.33;back_angle=math.radians(-7);back_thickness=.035
+back=box('Woven full back panel',(1.17,back_thickness,.48),(0,back_y,.65),rattan);back.rotation_euler.x=back_angle
+def back_rear_y(z):
+    return back_y-math.tan(back_angle)*(z-.65)+back_thickness/(2*math.cos(back_angle))
+for x in [-.54,0,.54]:
+    lower=(x,back_rear_y(.395)+.011,.395)
+    beam('Rear upright',lower,(x,back_rear_y(.875)+.011,.875),.022,.022,metal)
+    beam('Back support bracket',(x,.225,.325),lower,.022,.022,metal)
 # Dedicated seat node keeps bird/seat semantics independent of the back cushions.
 bpy.ops.object.empty_add();seatroot=bpy.context.object;seatroot.name='SeatSurface'
-cushion('Main seat cushion',(1.15,.56,.07),(0,0,.445),parent=seatroot)
+upholstery=[cushion('Main seat cushion',(1.15,.56,.07),(0,0,.445),parent=seatroot)]
 for x in [-.27,.27]:
-    cushion('Loose back pillow',(.53,.47,.14),(x,.160,.648),(math.radians(82),0,0))
+    upholstery.append(cushion('Loose back pillow',(.53,.47,.14),(x,.210,.648),(math.radians(82),0,0)))
     # A short visible back tie and a zipper pull on the removable covers.
-    box('Back pillow retaining strap',(.025,.006,.13),(x,.292,.56),cloth,.002)
-    box('Small zipper pull',(.007,.002,.015),(x+.22,.260,.47),metal,.001)
+    strap=box('Back pillow retaining strap',(.025,.006,.13),(x,back_rear_y(.56)+.004,.56),cloth,.002);strap.rotation_euler.x=back_angle
+    box('Small zipper pull',(.007,.002,.015),(x+.22,.185,.47),metal,.001)
+
+# Verify the entire upholstery against the inclined front plane before batching.
+# This also catches a seat cushion protruding through the bottom of the back.
+bpy.context.view_layer.update()
+inverse_back=back.matrix_world.inverted()
+for part in upholstery:
+    gap=min(-back_thickness/2-(inverse_back @ part.matrix_world @ v.co).y for v in part.data.vertices)
+    assert gap>0, f'{part.name} crosses the back panel by {-gap*100:.2f} cm'
+    print(f'Back clearance: {part.name}: {gap*100:.2f} cm')
 
 # Separate pivots and clips; at rest the two ends are raised.
 roots=[]
