@@ -1,5 +1,7 @@
 # Références radiographiques
 
+Les quatre rendus orthographiques anatomiques sans tenue ont été retirés de l’inventaire et du dossier public à la demande de l’utilisateur, en raison de l’aspect des mains du modèle source. Les descriptions ci-dessous conservent leur provenance historique comme références de génération de la radiographie anatomique, qui reste disponible avec la radiographie habillée et les quatre vues orthographiques habillées.
+
 ## Diagnostic du fichier source (vérification ultérieure)
 
 Source réellement utilisée par les scripts : `sources_backup/characters/lara/lara_perfect.blend`.

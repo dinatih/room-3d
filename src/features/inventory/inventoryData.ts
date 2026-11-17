@@ -517,7 +517,6 @@ sortedCharacters.forEach(char => {
     const photos = char.id === 'native'
       ? [
         ...['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-${view}.png`),
-        ...['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-anatomical-${view}.png`),
         'references/xray/lara-native-anatomical-xray.png',
       ]
       : char.path.includes('xbot')
