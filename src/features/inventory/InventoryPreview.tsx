@@ -1,3 +1,4 @@
+import { PITBULL_COMPARISON_CLIPS, pitbullAnimationChoices, prioritizePitbullAnimations } from './pitbullAnimationChoices';
 import dogAnimationOptions from './dogAnimationOptions.json';
 import '../scene/utils/zeroEnergyLights';
 import { disposeModelResources } from '../scene/utils/disposeModelResources';
@@ -1091,6 +1092,8 @@ export function InventoryPreview({
 
   const animalAnimOptions = useMemo(() => {
     if (!item?.id) return undefined;
+    if (item.id === 'animated-pitbull-dog') return pitbullAnimationChoices;
+    if (item.id === 'ushira') return prioritizePitbullAnimations(dogAnimationOptions.ushira);
     if (item.id in dogAnimationOptions) return dogAnimationOptions[item.id as keyof typeof dogAnimationOptions];
     if (item.id === 'black-hornet-drone' || item.id === 'ring-drone-cam') return [
       { value: 'Drone_Hover', label: 'Vol stationnaire' },
@@ -1100,11 +1103,7 @@ export function InventoryPreview({
     ];
     if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
     if (['ushiro', 'shiba-inu'].includes(item.id)) {
-      const comparisons = [
-        { value: 'idle 50', label: 'idle 50 — Attente (Pitbull)' },
-        { value: 'walk_fwd 29', label: 'walk_fwd 29 — Marche (Pitbull)' },
-        { value: 'run_fwd 13', label: 'run_fwd 13 — Course (Pitbull)' },
-      ];
+      const comparisons = PITBULL_COMPARISON_CLIPS;
       return [
         ...comparisons,
         { value: 'idle', label: 'Idle' },

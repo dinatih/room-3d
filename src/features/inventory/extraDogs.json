@@ -133,5 +133,26 @@
     ],
     "forwardRotationY": 3.141592653589793,
     "runClip": "1190_creatures_mammal_dog_pers_action_gallop.ycd__move"
+  },
+  {
+    "id": "ushira",
+    "name": "UshirA (Shiba Inu détaillé)",
+    "brand": "",
+    "category": "animals",
+    "qty": 1,
+    "dims": {
+      "w": 38.04,
+      "d": 40.0,
+      "h": 40
+    },
+    "glbPath": "characters/ushira/ushira.glb",
+    "idleClip": "standing_skeletal.3",
+    "forwardRotationY": 0,
+    "notes": "Second Shiba conservé pour comparaison avec Ushiro. Cinq animations natives et retargeting expérimental des animations du Pitbull ; appuis à vérifier.",
+    "photos": [
+      "characters/ushira/three-quarter.png",
+      "characters/ushira/front.png",
+      "characters/ushira/back.png"
+    ]
   }
 ]
