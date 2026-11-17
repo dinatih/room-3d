@@ -1100,13 +1100,19 @@ export function InventoryPreview({
     ];
     if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
     if (['ushiro', 'shiba-inu'].includes(item.id)) {
+      const comparisons = [
+        { value: 'idle 50', label: 'idle 50 — Attente (Pitbull)' },
+        { value: 'walk_fwd 29', label: 'walk_fwd 29 — Marche (Pitbull)' },
+        { value: 'run_fwd 13', label: 'run_fwd 13 — Course (Pitbull)' },
+      ];
       return [
+        ...comparisons,
         { value: 'idle', label: 'Idle' },
         { value: 'jump', label: 'Jump' },
         { value: 'run', label: 'Run' },
         { value: 'sitdown', label: 'SitDown' },
         { value: 'walk', label: 'Walk' },
-        ...dogAnimationOptions['animated-pitbull-dog'],
+        ...dogAnimationOptions['animated-pitbull-dog'].filter(option => !comparisons.some(comparison => comparison.value === option.value)),
       ];
     }
     if (['jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish'].includes(item.id)) {

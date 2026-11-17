@@ -46,6 +46,41 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   ...householdShowcaseItems,
+  {
+    id: 'ushiro',
+    referenceSheet: 'references/xray/ushiro-xray.png',
+    name: 'Chien Ushiro (Shiba Inu)',
+    brand: 'Animal',
+    category: 'animals',
+    qty: 1,
+    dims: { w: 40, d: 80, h: 40 },
+    glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
+    photos: ['characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png'],
+    notes: `Personnage : Chien Shiba Inu (Ushiro).`
+  },
+  {
+    id: 'ulotte',
+    referenceSheet: 'references/xray/ulotte-xray.png',
+    name: 'Chienne Ulotte (Teckel)',
+    brand: 'Animal',
+    category: 'animals',
+    qty: 1,
+    dims: { w: 19.2, d: 50.2, h: 30 },
+    glbPath: 'characters/ulotte/ulotte.glb',
+    photos: ['characters/ulotte/ulotte_3d_preview.png'],
+    notes: `Chienne teckel Ulotte. Animations : repos debout, repos assis, s'assoir, se coucher, frétiller, aboyer, se gratter, creuser, marche, course, saut et repas.`
+  },
+  {
+    id: 'robin-bird',
+    name: 'Oiseau Robin',
+    brand: 'Animal',
+    category: 'animals',
+    qty: 1,
+    dims: { w: 10, d: 10, h: 10 },
+    glbPath: 'characters/robin/robin.glb',
+    photos: ['characters/robin/robin_3d_preview.png'],
+    notes: `Personnage : Oiseau Robin.`
+  },
   ...extraDogs,
   // Imported household products and red hats.
   {"id": "spray-cleaner", "name": "Spray nettoyant", "brand": "", "category": "bathroom", "qty": 1, "dims": {"w": 14.18, "d": 6.59, "h": 29.37}, "glbPath": "items/spray-cleaner/SprayCleaner.glb", "photos": ["items/spray-cleaner/preview-three-quarter.png", "items/spray-cleaner/preview-front.png", "items/spray-cleaner/preview-back.png"], "notes": "Pulvérisateur texturé importé de Spray+cleaner.zip. Échelle estimée."},
@@ -499,18 +534,7 @@ sortedCharacters.forEach(char => {
   }
 });
 
-INVENTORY.push({
-  id: 'ushiro',
-  referenceSheet: 'references/xray/ushiro-xray.png',
-  name: 'Chien Ushiro (Shiba Inu)',
-  brand: 'Animal',
-  category: 'animals',
-  qty: 1,
-  dims: { w: 40, d: 80, h: 40 },
-  glbPath: 'characters/ushiro/shiba_inu_dog_ushiro.glb',
-  photos: ['characters/ushiro/shiba_inu_dog_ushiro_3d_preview.png'],
-  notes: `Personnage : Chien Shiba Inu (Ushiro).`
-});
+
 
 INVENTORY.push({
   id: 'ulotte-bowl', name: 'Gamelle d’Ulotte', brand: 'Animal', category: 'decor', qty: 1,
@@ -518,30 +542,9 @@ INVENTORY.push({
   notes: 'Gamelle de repas d’Ulotte, dans le jardin du voisin Est.'
 });
 
-INVENTORY.push({
-  id: 'ulotte',
-  referenceSheet: 'references/xray/ulotte-xray.png',
-  name: 'Chienne Ulotte (Teckel)',
-  brand: 'Animal',
-  category: 'animals',
-  qty: 1,
-  dims: { w: 19.2, d: 50.2, h: 30 },
-  glbPath: 'characters/ulotte/ulotte.glb',
-  photos: ['characters/ulotte/ulotte_3d_preview.png'],
-  notes: `Chienne teckel Ulotte. Animations : repos debout, repos assis, s'assoir, se coucher, frétiller, aboyer, se gratter, creuser, marche, course, saut et repas.`
-});
 
-INVENTORY.push({
-  id: 'robin-bird',
-  name: 'Oiseau Robin',
-  brand: 'Animal',
-  category: 'animals',
-  qty: 1,
-  dims: { w: 10, d: 10, h: 10 },
-  glbPath: 'characters/robin/robin.glb',
-  photos: ['characters/robin/robin_3d_preview.png'],
-  notes: `Personnage : Oiseau Robin.`
-});
+
+
 
 INVENTORY.push({
   id: 'black-hornet-drone',
