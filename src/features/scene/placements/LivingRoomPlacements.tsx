@@ -43,6 +43,7 @@ import { Spruttig20317079 } from '../items/Spruttig20317079';
 import { Laptop } from '../items/Laptop';
 import { LaptopStand, LAPTOP_STAND_TILT, LAPTOP_STAND_CENTER_HEIGHT } from '../items/LaptopStand';
 import { Phone } from '../items/Phone';
+import { HeartEarbudsUnlit } from '../items/HeartEarbudsUnlit';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
 import { Backpack } from '../items/Backpack';
 import { createStaticGlbItem } from '../items/createStaticGlbItem';
@@ -361,6 +362,10 @@ export function DeskDecor() {
             <group position={[22, 0, 2]} rotation={[0, 0.15, 0]}>
               <Phone />
             </group>
+          </group>
+          {/* Sur le même plateau mobile que le téléphone, juste à sa gauche. */}
+          <group position={[12, 0, 4]} userData={{ sceneItemRoot: true, itemName: 'Écouteurs cœur sans lumière' }}>
+            <HeartEarbudsUnlit />
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
             <group position={[-22, 0, -7]}>

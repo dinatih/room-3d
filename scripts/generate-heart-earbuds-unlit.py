@@ -70,10 +70,12 @@ transform=Matrix.Translation(pivot)@Matrix.Rotation(math.radians(-105),4,'X')@Ma
 for obj in [lid,liner]:obj.matrix_world=transform@obj.matrix_world
 # Two glossy heart shells and silicone in-ear ends, outside the case for inspection.
 for x,y,angle in [(-.019,-.027,-.18),(.017,-.035,.2)]:
-    shell=heart('Heart touch face',x,y,.0065,.021,.010,red);shell.rotation_euler.z=angle
-    sphere('Red in-ear housing',(x,y+.006,.007),(.007,.008,.0065),red)
-    sphere('Silicone ear tip',(x,y+.014,.006),(.005,.0055,.0047),red)
-    sphere('Dark acoustic opening',(x,y+.0185,.006),(.0028,.0006,.0025),black)
+    # The touch face points up; the acoustic housing and silicone tip sit underneath.
+    shell=heart('Heart touch face',x,y,.018,.021,.010,red)
+    shell.data.transform(Matrix.Translation(Vector((x,y,0)))@Matrix.Rotation(angle,4,'Z')@Matrix.Translation(Vector((-x,-y,0))))
+    sphere('Red in-ear housing',(x,y,.010),(.007,.008,.0065),red)
+    sphere('Silicone ear tip',(x,y+.001,.0047),(.005,.0055,.0047),red)
+    sphere('Downward acoustic opening',(x,y+.001,.0006),(.0028,.0025,.0006),black)
 # Rear USB-C recess and wrist strap loop (no LED strip or emission materials).
 box('USB C socket',(.008,.0007,.0027),(0,.0255,.008),black,.0007)
 bpy.ops.mesh.primitive_torus_add(major_segments=16,minor_segments=6,location=(.030,.015,.017),major_radius=.004,minor_radius=.0015)

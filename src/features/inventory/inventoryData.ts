@@ -46,8 +46,8 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
-    id: 'heart-earbuds-unlit', name: 'Écouteurs cœur sans lumière — rouges', brand: 'Temu',
-    category: 'tech', qty: 1, price: '13,00', dims: { w: 7.15, d: 8.01, h: 4.44 },
+    id: 'heart-earbuds-unlit', location: 'Bureau 2, à côté du téléphone', name: 'Écouteurs cœur sans lumière — rouges', brand: 'Temu',
+    category: 'tech', qty: 1, price: '13,00', dims: { w: 6.55, d: 8.21, h: 4.44 },
     glbPath: 'items/heart-earbuds-unlit/HeartEarbudsUnlit.glb',
     photos: ['items/heart-earbuds-unlit/product-1.jpg', 'items/heart-earbuds-unlit/product-2.jpg', 'items/heart-earbuds-unlit/product-3.jpg', 'items/heart-earbuds-unlit/product-4.jpg', 'items/heart-earbuds-unlit/product-5.jpg', 'items/heart-earbuds-unlit/product-6.jpg', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-three-quarter.png', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-front.png', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-back.png'],
     url: 'https://www.temu.com/fr/ecouteurs-g-606750782628703.html',
