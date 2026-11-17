@@ -134,10 +134,14 @@ for sx in [-1,1]:
         o=mesh('Rounded moulded corner',verts,[(i,i+1,i+18,i+17) for i in range(16)],white)
         m=o.modifiers.new('Wall','SOLIDIFY'); m.thickness=.0012; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
         for f in o.data.polygons: f.use_smooth=True
-# Rounded floor follows the lower wall contour; no protruding rectangular plate.
-ring=rounded_ring(.198*.83,.148*.83,.017*.83,.001)
-n=len(ring)
-mesh('Integrated rounded floor',ring, [tuple(reversed(range(n)))],white)
+# Closed opaque 2 mm floor. A downward single face was culled from above
+# by the scene's front-sided material merge, exposing the GREJIG underneath.
+bottom=rounded_ring(.198*.83,.148*.83,.017*.83,0)
+top=rounded_ring(.198*.83,.148*.83,.017*.83,.002)
+n=len(bottom)
+faces=[tuple(reversed(range(n))),tuple(n+i for i in range(n))]
+faces.extend((i,(i+1)%n,n+(i+1)%n,n+i) for i in range(n))
+mesh('Solid opaque rounded floor',bottom+top,faces,white)
 # Rounded top lip only; no separate bottom plate or rail.
 pts=rounded_ring(.197,.147,.018,.097)
 curve=bpy.data.curves.new('Rolled rim','CURVE'); curve.dimensions='3D'; curve.bevel_depth=.0015; curve.bevel_resolution=2
@@ -147,6 +151,8 @@ spline.use_cyclic_u=True
 o=bpy.data.objects.new('Continuous rounded rim',curve); bpy.context.collection.objects.link(o); o.data.materials.append(white)
 bpy.context.view_layer.objects.active=o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False)
 finish('plogsvaeng',(0,0,.045),.27)
+if '--only-plogsvaeng' in __import__('sys').argv:
+    __import__('os')._exit(0)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 pink=mat('Pink porous foam',(.88,.33,.48),.95); red=mat('Red abrasive polyester',(.38,.008,.025),1)

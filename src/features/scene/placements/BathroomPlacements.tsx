@@ -37,6 +37,7 @@ import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
 import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '../items/SdbLaundryHook';
 import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
+import { ToiletPaperRoll, PaperTowelRoll, TOILET_PAPER_DIAMETER, PAPER_TOWEL_DIAMETER } from '../items/PaperRolls';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL, DiagWall } from '../wallData';
 
@@ -231,6 +232,29 @@ export function BathroomFurnishings() {
             </>}
           </group>
           {id === 'drona-bathroom-west' && <group position={[0, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean SDB Ouest' }}><CifInfiniteClean /></group>}
+          {id === 'drona-bathroom-west' && <>
+            <group position={[-9, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Papier WC DRÖNA SDB Ouest' }}><ToiletPaperRoll /></group>
+            <group position={[9, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Essuie-tout DRÖNA SDB Ouest' }}><PaperTowelRoll /></group>
+          </>}
+        </group>
+      ))}
+
+      {/* Couvercle du réservoir mesuré dans le GLB : 83,82 cm, WC posé à Y=1.
+          Rouleau à gauche du bouton, sans recouvrir la commande de chasse. */}
+      <group position={[BATH_WEST_WALL + 60 - 10, 1 + 83.82, BATH_NORTH_WALL + TOILET_D / 2 + 1.5 - 25.8]} userData={{ sceneItemRoot: true, itemName: 'Papier WC sur réservoir' }}>
+        <ToiletPaperRoll />
+      </group>
+
+      {/* Six WC (3 × 2) et quatre essuie-tout (2 × 2), sur la tablette
+          triangulaire : les rangées reculent du mur diagonal côté étroit. */}
+      {Array.from({ length: 6 }, (_, i) => (
+        <group key={`closet-wc-${i}`} position={[CLOSET_RIGHT_EDGE_X + 12 + (i % 3) * (TOILET_PAPER_DIAMETER + PRODUCT_EDGE_GAP), SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 30 + Math.floor(i / 3) * (TOILET_PAPER_DIAMETER + PRODUCT_EDGE_GAP)]} userData={{ sceneItemRoot: true, itemName: `Papier WC placard SDB ${i + 1}` }}>
+          <ToiletPaperRoll />
+        </group>
+      ))}
+      {Array.from({ length: 4 }, (_, i) => (
+        <group key={`closet-towel-${i}`} position={[CLOSET_RIGHT_EDGE_X + 51 + (i % 2) * (PAPER_TOWEL_DIAMETER + PRODUCT_EDGE_GAP), SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 11 + Math.floor(i / 2) * (PAPER_TOWEL_DIAMETER + PRODUCT_EDGE_GAP)]} userData={{ sceneItemRoot: true, itemName: `Essuie-tout placard SDB ${i + 1}` }}>
+          <PaperTowelRoll />
         </group>
       ))}
 

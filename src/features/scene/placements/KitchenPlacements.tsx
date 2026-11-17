@@ -10,6 +10,7 @@ import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
 import { W5Bleach, CifInfiniteClean } from '../items/CleaningProducts';
+import { PaperTowelRoll } from '../items/PaperRolls';
 import { SevenProngHook } from '../items/SevenProngHook';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
@@ -115,6 +116,9 @@ export function KitchenFurnishings() {
       <group position={KALLAX_CUISINE_POSITION} rotation-y={KALLAX_CUISINE_ROTATION}>
         <group position={[17.5, 76.5 + KALLAX_FRAME, -10]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean Kallax cuisine' }}>
           <CifInfiniteClean />
+        </group>
+        <group position={[27, 76.5 + KALLAX_FRAME, -10]} userData={{ sceneItemRoot: true, itemName: 'Essuie-tout Kallax cuisine' }}>
+          <PaperTowelRoll />
         </group>
       </group>
 
