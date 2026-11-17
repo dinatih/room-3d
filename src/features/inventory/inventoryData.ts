@@ -46,8 +46,17 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'temu-grill-tongs', name: 'Pince inox pour grillades — poignées rouges', brand: 'Temu',
+    category: 'kitchen', qty: 1, price: '3,80', dims: { w: 10.2, d: 25.8, h: 1.45 },
+    glbPath: 'items/temu-grill-tongs/GrillTongs.glb',
+    photos: ['items/temu-grill-tongs/product-1.jpg', 'items/temu-grill-tongs/product-2.jpg', 'items/temu-grill-tongs/product-3.jpg', 'items/temu-grill-tongs/product-4.jpg', 'items/temu-grill-tongs/product-5.jpg', 'items/temu-grill-tongs/product-6.jpg', 'items/temu-grill-tongs/product-7.jpg', 'items/temu-grill-tongs/product-8.jpg', 'items/temu-grill-tongs/GrillTongs-three-quarter.png', 'items/temu-grill-tongs/GrillTongs-front.png', 'items/temu-grill-tongs/GrillTongs-back.png'],
+    url: 'https://www.temu.com/fr/pince-g-601099729677712.html',
+    notes: 'Pince de cuisine et barbecue en inox, poignées antidérapantes rouges, ressort en U et mâchoires dentées. Longueur 25,8 cm et ouverture 10,2 cm selon la photo cotée ; épaisseur de la bande estimée. Prix utilisateur 3,80 €. Reconstitution Blender présentée ouverte et posée à plat. Huit images commerciales avant les trois rendus.'
+  },
+
+  {
     id: 'heart-earbuds-unlit', location: 'Bureau 2, à côté du téléphone', name: 'Écouteurs cœur sans lumière — rouges', brand: 'Temu',
-    category: 'tech', qty: 1, price: '13,00', dims: { w: 6.55, d: 8.21, h: 4.44 },
+    category: 'tech', qty: 1, price: '13,00', dims: { w: 6.55, d: 8.15, h: 4.44 },
     glbPath: 'items/heart-earbuds-unlit/HeartEarbudsUnlit.glb',
     photos: ['items/heart-earbuds-unlit/product-1.jpg', 'items/heart-earbuds-unlit/product-2.jpg', 'items/heart-earbuds-unlit/product-3.jpg', 'items/heart-earbuds-unlit/product-4.jpg', 'items/heart-earbuds-unlit/product-5.jpg', 'items/heart-earbuds-unlit/product-6.jpg', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-three-quarter.png', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-front.png', 'items/heart-earbuds-unlit/HeartEarbudsUnlit-back.png'],
     url: 'https://www.temu.com/fr/ecouteurs-g-606750782628703.html',

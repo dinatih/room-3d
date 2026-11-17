@@ -70,12 +70,34 @@ transform=Matrix.Translation(pivot)@Matrix.Rotation(math.radians(-105),4,'X')@Ma
 for obj in [lid,liner]:obj.matrix_world=transform@obj.matrix_world
 # Two glossy heart shells and silicone in-ear ends, outside the case for inspection.
 for x,y,angle in [(-.019,-.027,-.18),(.017,-.035,.2)]:
-    # The touch face points up; the acoustic housing and silicone tip sit underneath.
-    shell=heart('Heart touch face',x,y,.018,.021,.010,red)
-    shell.data.transform(Matrix.Translation(Vector((x,y,0)))@Matrix.Rotation(angle,4,'Z')@Matrix.Translation(Vector((-x,-y,0))))
-    sphere('Red in-ear housing',(x,y,.010),(.007,.008,.0065),red)
-    sphere('Silicone ear tip',(x,y+.001,.0047),(.005,.0055,.0047),red)
-    sphere('Downward acoustic opening',(x,y+.001,.0006),(.0028,.0025,.0006),black)
+    # Flat heart face, tapering rear pyramid, soft silicone tip at its apex.
+    shell=heart('Heart touch face',x,y,.020,.021,.004,red)
+    outline=[]
+    for k in range(48):
+        t=2*math.pi*k/48;outline.append((16*math.sin(t)**3,13*math.cos(t)-5*math.cos(2*t)-2*math.cos(3*t)-math.cos(4*t)))
+    ymin=min(v for u,v in outline);ymax=max(v for u,v in outline)
+    outline=[(u/32*.021,(v-(ymin+ymax)/2)/(ymax-ymin)*.021*.95) for u,v in outline]
+    verts=[]
+    for factor,z in [(1,.018),(.92,.016),(.22,.006)]:
+        verts.extend((x+u*factor,y+v*factor-.001*(1-factor),z) for u,v in outline)
+    n=len(outline);faces=[]
+    for ring in range(2):faces.extend((ring*n+i,ring*n+(i+1)%n,(ring+1)*n+(i+1)%n,(ring+1)*n+i) for i in range(n))
+    faces.append(tuple(reversed(range(2*n,3*n))))
+    back=mesh('Heart pyramid rear',verts,faces,red)
+    for poly in back.data.polygons:poly.use_smooth=True
+    rotation=Matrix.Translation(Vector((x,y,0)))@Matrix.Rotation(angle,4,'Z')@Matrix.Translation(Vector((-x,-y,0)))
+    for obj in [shell,back]:obj.data.transform(rotation)
+    tip=sphere('Soft silicone apex tip',(x,y-.001,.0035),(.0027,.003,.0035),red)
+    opening=sphere('Downward acoustic opening',(x,y-.001,.0003),(.0016,.0018,.0003),black)
+    # In a face-on view the heart must hide every vertex of the soft tip.
+    from mathutils.bvhtree import BVHTree
+    bpy.context.view_layer.update()
+    silhouette=BVHTree.FromPolygons([v.co for v in shell.data.vertices],[tuple(f.vertices) for f in shell.data.polygons])
+    for obj in [tip,opening]:
+        for vertex in obj.data.vertices:
+            point=obj.matrix_world@vertex.co
+            hit=silhouette.ray_cast(Vector((point.x,point.y,.1)),Vector((0,0,-1)))[0]
+            if hit is None: raise ValueError('Silicone tip protrudes beyond the heart silhouette')
 # Rear USB-C recess and wrist strap loop (no LED strip or emission materials).
 box('USB C socket',(.008,.0007,.0027),(0,.0255,.008),black,.0007)
 bpy.ops.mesh.primitive_torus_add(major_segments=16,minor_segments=6,location=(.030,.015,.017),major_radius=.004,minor_radius=.0015)
