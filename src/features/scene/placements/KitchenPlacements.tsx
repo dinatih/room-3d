@@ -10,6 +10,7 @@ import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
 import { SprayCleaner, CifInfiniteClean } from '../items/CleaningProducts';
+import { SevenProngHook } from '../items/SevenProngHook';
 import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Citronhaj40553211 } from '../items/Citronhaj40553211';
@@ -132,6 +133,13 @@ export function KitchenFurnishings() {
       {/* Spray sur le fond du meuble sous évier : pieds de 10 cm + panneau supérieur à 1,92 cm. */}
       <group position={[KITCHEN_WEST_WALL + 20, 10 + 1.92, ROOM_D + 15]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant sous évier cuisine' }}>
         <SprayCleaner />
+      </group>
+
+      {/* Fixation sur la sous-face de la planche basse (153 cm), à la jonction évier/plaques.
+          La platine de 5 cm reste entièrement à gauche du caisson de hotte (X local 40). */}
+      <group position={[KITCHEN_WEST_WALL + 40 - 5 / 2, HOOD_CABINET_BOTTOM_TOP - 1.8, ROOM_D + 32]}
+        userData={{ sceneItemRoot: true, itemName: 'Crochet rotatif blanc à 7 griffes' }}>
+        <SevenProngHook />
       </group>
 
       {/* LILLHAVET — égouttoir dans le meuble haut cuisine */}

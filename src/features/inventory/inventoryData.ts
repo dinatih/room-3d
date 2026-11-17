@@ -46,6 +46,16 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'temu-seven-hook', name: 'Crochet rotatif adhésif à 7 griffes — blanc', brand: 'AQUASAFE / Temu',
+    category: 'kitchen', qty: 1, price: '4,60', dims: { w: 9, d: 9, h: 10 },
+    glbPath: 'items/temu-seven-hook/SevenProngHook.glb',
+    photos: ['items/temu-seven-hook/product-1.jpg', 'items/temu-seven-hook/product-2.jpg', 'items/temu-seven-hook/product-3.jpg', 'items/temu-seven-hook/product-4.jpg', 'items/temu-seven-hook/product-5.jpg', 'items/temu-seven-hook/product-6.jpg', 'items/temu-seven-hook/SevenProngHook-three-quarter.png', 'items/temu-seven-hook/SevenProngHook-front.png', 'items/temu-seven-hook/SevenProngHook-back.png'],
+    url: 'https://www.temu.com/fr/crochet-g-607645746483736.html',
+    location: 'Sous le meuble haut cuisine, entre les plaques et l’évier',
+    notes: 'Modèle blanc, sept griffes et bras articulé. Dimensions de la photo fabricant : 9 cm de large, 10 cm de haut, fixation 5 cm. Prix utilisateur 4,60 €. La fiche présente un lot de deux ; un crochet est représenté et placé dans la scène. Platine fixée à la sous-face de la planche basse à 153 cm, à gauche de la hotte.'
+  },
+
+  {
     id: 'vileda-spray-one', name: 'Balai à plat vaporisateur 1-2-Spray ONE', brand: 'Vileda',
     category: 'bathroom', qty: 1, price: '21,99', dims: { w: 40, d: 14, h: 136.5 },
     glbPath: 'items/vileda-spray-one/ViledaSprayOne.glb',
