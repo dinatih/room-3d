@@ -1,14 +1,17 @@
 """Render Native Lara orthographic PNG references without writing any 3D asset.
 
 Run: blender -b -t 4 --python scripts/render-lara-reference.py
+Anatomical: append -- --anatomical (neutral clay surface, no equipment).
 """
 from pathlib import Path
+import sys
 import bpy
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'public/references/xray'
 OUT.mkdir(parents=True, exist_ok=True)
+anatomical = '--anatomical' in sys.argv
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=str(ROOT / 'public/characters/lara/lara_native.glb'))
 # Display only the original clothed outfit, excluding alternate body/hair meshes.
@@ -21,6 +24,19 @@ hidden = {
 for obj in bpy.context.scene.objects:
     if obj.type == 'MESH':
         obj.hide_render = obj.name in hidden
+        if anatomical:
+            obj.hide_render = obj.name not in {
+                'body_nude_torso', 'body_nude_legs', 'body_nude_feet',
+                'body_nude_hands', 'body_nude_panties', 'arms', 'face',
+                'eyes', 'eye2', 'lashes', 'hair_base',
+            }
+            # Neutral anatomical mannequin: no outfit textures or accessories.
+            material = bpy.data.materials.get('AnatomicalClay')
+            if material is None:
+                material = bpy.data.materials.new('AnatomicalClay')
+                material.diffuse_color = (0.5, 0.58, 0.62, 1)
+            for slot in obj.material_slots:
+                slot.material = material
 meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH' and not o.hide_render]
 points = [o.matrix_world @ Vector(v) for o in meshes for v in o.bound_box]
 low = Vector(tuple(min(p[i] for p in points) for i in range(3)))
@@ -57,6 +73,7 @@ scene.camera = camera
 for label, direction in [('anterior', (0, -1, 0)), ('lateral', (1, 0, 0)), ('posterior', (0, 1, 0)), ('dorsal', (0, 0, 1))]:
     camera.location = center + Vector(direction) * 4
     camera.rotation_euler = (center - camera.location).to_track_quat('-Z', 'Y').to_euler()
-    scene.render.filepath = str(OUT / f'lara-native-{label}.png')
+    prefix = 'lara-native-anatomical' if anatomical else 'lara-native'
+    scene.render.filepath = str(OUT / f'{prefix}-{label}.png')
     bpy.ops.render.render(write_still=True)
 print('Orthographic reference images saved; source model unchanged.')

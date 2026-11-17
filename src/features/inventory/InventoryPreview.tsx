@@ -1599,14 +1599,6 @@ export function InventoryPreview({
       </ViewControlBar>
     )}
     {isWigItem && item && <WigFitPanel key={item.id} wigId={item.id} />}
-    {referenceSheet && hasPhotos && (
-      <div className="d-flex flex-wrap align-items-center gap-2 p-2 border-top small">
-        <button type="button" className="btn btn-sm btn-outline-info" aria-pressed={showingPhotos && photos![photoIdx] === referenceSheet} onClick={() => { setPhotoIdx(photos!.indexOf(referenceSheet)); setViewMode('photos'); }}>
-          <i className="bi bi-image me-1" aria-hidden="true" />Référence radiographique
-        </button>
-        <span className="text-muted">Planche illustrative · Squelette et rig de référence</span>
-      </div>
-    )}
     {item && hasPhotos && showPhotoGallery && (
       <div style={{ display: 'flex', overflowX: 'auto', gap: 6, padding: '8px', width: '100%', background: '#eaeaea' }}>
         {has3D && (

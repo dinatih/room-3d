@@ -1,5 +1,13 @@
 # Références radiographiques
 
+## Ajout anatomique Native
+
+Quatre rendus gris neutres du corps sans tenue ni équipement : `lara-native-anatomical-{anterior,lateral,posterior,dorsal}.png`, produits par `ALSOFT_DRIVERS=null blender -b -t 4 --python-exit-code 1 --python scripts/render-lara-reference.py -- --anatomical`. Le matériau uniforme retire les textures de tenue ; la surface pelvienne du modèle sert à fermer la silhouette. Aucun export 3D ni changement du fichier source.
+
+Planche `lara-native-anatomical-xray.png` produite avec l’outil intégré image_gen, à partir de ces quatre rendus. Prompt :
+
+Scientific educational anatomy reference for rigging an adult female 3D mannequin. Use the four supplied gray anatomical mannequin orthographic renders as exact silhouette/proportion references: front, side, rear, top. Create a landscape radiographic reference sheet, blue-grey/cyan anatomical skeleton on black metric grid, overlay blue/green rig bones and circular joint markers. Clinical nonsexual anatomy illustration, external surface a faint translucent smooth mannequin outline, no explicit genital details, no clothing or equipment, no glasses, no backpack, no holsters, no boots. Preserve the actual adult Lara Native mannequin proportions in references. Strict T-pose, arms horizontal in front and rear, seen end-on at shoulders in profile, never dangling; all four projections orthographic. Upper row anterior/lateral/posterior must have EXACT same scale, height, baseline and joint heights with continuous horizontal dashed guides at skull TOP, shoulders, hips, knees, soles. Bottom framed DORSAL top view at same metric scale. All limbs and complete body fully framed. Labels French: "LARA NATIVE — ANATOMIE", "ANTERIOR / FACE", "LATERAL / PROFIL", "POSTERIOR / DOS", "DORSAL / DESSUS". Annotate crâne, clavicule, humérus, radius, ulna, colonne, bassin, fémur, tibia, cheville. Metric rulers and small anatomy/rig legend. Footer "Référence illustrative — squelette et rig conceptuels". Radiographic anatomy focus, not skin realism.
+
 Images illustratives produites avec l’outil intégré image_gen à partir des trois planches fournies par l’utilisateur. Elles ne sont pas extraites des modèles ou de leurs rigs. Aucun fichier 3D n’est modifié.
 
 Les instructions demandent une échelle orthographique commune et des guides horizontaux alignés. Ces illustrations génératives ne constituent pas des dessins techniques calibrés : l’alignement anatomique au pixel près n’est pas garanti.

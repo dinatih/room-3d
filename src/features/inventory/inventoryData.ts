@@ -456,7 +456,11 @@ const sortedCharacters = [
 sortedCharacters.forEach(char => {
   if (!INVENTORY.some((item: InventoryItem) => item.id === char.id)) {
     const photos = char.id === 'native'
-      ? ['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-${view}.png`)
+      ? [
+        ...['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-${view}.png`),
+        ...['anterior', 'lateral', 'posterior', 'dorsal'].map(view => `references/xray/lara-native-anatomical-${view}.png`),
+        'references/xray/lara-native-anatomical-xray.png',
+      ]
       : char.path.includes('xbot')
       ? ['characters/xbot/Xbot_official_3d_preview.png']
       : (!char.isLara ? [char.path.replace(/\.glb$/, '_3d_preview.png')] : undefined);
