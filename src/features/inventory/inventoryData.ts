@@ -46,6 +46,16 @@ export interface Category {
 
 export const INVENTORY: InventoryItem[] = [
   {
+    id: 'temu-sock-dryer-20', name: 'Séchoir à chaussettes — 20 pinces, gris', brand: 'LDQ / Temu',
+    category: 'future-purchases', qty: 0, price: '7,80', dims: { w: 37, d: 10, h: 19.5 },
+    glbPath: 'items/temu-sock-dryer-20/SockDryer20.glb',
+    photos: ['items/temu-sock-dryer-20/product-1.jpg', 'items/temu-sock-dryer-20/product-2.jpg', 'items/temu-sock-dryer-20/product-3.jpg', 'items/temu-sock-dryer-20/product-4.jpg', 'items/temu-sock-dryer-20/product-5.jpg', 'items/temu-sock-dryer-20/product-6.jpg', 'items/temu-sock-dryer-20/SockDryer20-three-quarter.png', 'items/temu-sock-dryer-20/SockDryer20-front.png', 'items/temu-sock-dryer-20/SockDryer20-back.png'],
+    url: 'https://www.temu.com/fr/sechoir-20-pinces-g-607236952849850.html',
+    tags: ['achat futur', 'buanderie', 'séchage'], location: 'Liste des achats futurs — non possédé',
+    notes: 'Achat futur : un séchoir envisagé à 7,80 € (prix utilisateur), aucun exemplaire possédé et aucun placement dans l’appartement. Modèle gris de la photo principale : cadre arrondi, deux rangées de dix pinces inox avec protections grises et crochet suspendu. Largeur 37 cm et profondeur 10 cm selon la photo cotée ; hauteur et détails des pinces estimés. Six photos commerciales avant les trois rendus Blender.'
+  },
+
+  {
     id: 'temu-grill-tongs', name: 'Pince inox pour grillades — poignées rouges', brand: 'Temu',
     category: 'kitchen', qty: 1, price: '3,80', dims: { w: 10.2, d: 25.8, h: 1.45 },
     glbPath: 'items/temu-grill-tongs/GrillTongs.glb',
@@ -960,6 +970,7 @@ export const STORAGE_SPACES: StorageSpace[] = [
 
 export const CATEGORIES: Category[] = [
   { id: 'all',          label: 'Tout' },
+  { id: 'future-purchases', label: '🛍️ Achats futurs' },
   { id: 'characters',   label: '👥 Personnages' },
   { id: 'animals',      label: '🐾 Animaux' },
   { id: 'robots',       label: '🤖 Robots' },

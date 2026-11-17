@@ -39,6 +39,7 @@ function getCategoryEmoji(cat: string) {
     case 'clothing': return '👕';
     case 'decor': return '🪴';
     case 'consumable': return '🛒';
+    case 'future-purchases': return '🛍️';
     case 'characters': return '🚶';
     case 'robots': return '🤖';
     case 'animals': return '🐾';
