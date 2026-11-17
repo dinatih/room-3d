@@ -15,6 +15,7 @@ export const INVENTORY_SMART_OBJECT_IDS: Record<string, readonly string[]> = {
   'havback49514017': ['vasque-sdb'],
 };
 const OBJECT_ACTIONS: Record<string, readonly string[]> = {
+  'fish-toilet-brush-red': ['brush-lift'],
   'microduck': ['microduck-motion', 'microduck-replay', 'microduck-autonomous'],
   'raph-rover': ['raph-rover-motion', 'raph-rover-replay', 'raph-rover-autonomous'],
   'unitree-h2': ['unitree-h2-motion', 'unitree-h2-replay'],

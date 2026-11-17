@@ -76,17 +76,47 @@ def panel(axis, sign, length, halfdepth, cols):
                     verts.append(point(u+r*c,z+r*s))
             for k in range(16): faces.append((base+k,base+(k+1)%16,base+16+(k+1)%16,base+16+k))
     o=mesh('Circular perforations',verts,faces,white); m=o.modifiers.new('Plastic wall thickness','SOLIDIFY'); m.thickness=.0012; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
-for axis, length, dep, cols in [(0,.18,.073,18),(1,.13,.098,13)]:
+# Rounded rectangular perimeter, with genuinely curved corners and a continuous lip.
+def rounded_ring(w,d,r,z):
+    pts=[]
+    for cx,cy,angle in [(w/2-r,d/2-r,0),(-w/2+r,d/2-r,90),(-w/2+r,-d/2+r,180),(w/2-r,-d/2+r,270)]:
+        for i in range(13):
+            t=math.radians(angle+i*90/12); pts.append((cx+r*math.cos(t),cy+r*math.sin(t),z))
+    return pts
+
+def rounded_shell(name,w,d,h,r,thickness,material):
+    rings=[rounded_ring(w*.84,d*.84,r*.84,0),rounded_ring(w,d,r,h),rounded_ring(w-2*thickness,d-2*thickness,r-thickness,h),rounded_ring(w*.84-2*thickness,d*.84-2*thickness,r*.84-thickness,thickness)]
+    n=len(rings[0]); faces=[]
+    for k in range(3):
+        faces.extend((k*n+i,k*n+(i+1)%n,(k+1)*n+(i+1)%n,(k+1)*n+i) for i in range(n))
+    faces.extend([tuple(reversed(range(n))),tuple(3*n+i for i in range(n))])
+    obj=mesh(name,[v for ring in rings for v in ring],faces,material)
+    for face in obj.data.polygons: face.use_smooth=len(face.vertices)==4
+    return obj
+# Shortened flat perforated panels end exactly where each rounded corner begins.
+for axis,length,dep,cols in [(0,.164,.074,16),(1,.114,.099,11)]:
     for sign in [-1,1]: panel(axis,sign,length,dep,cols)
-box('Closed base',(.167,.124,.003),(0,0,.0015),white,.002)
-# Corner posts follow the taper, and continuous rims close the panel borders.
-for x in [-1,1]:
-    for y in [-1,1]:
-        o=box('Tapered corner',(.01,.01,.098),(x*.087,y*.062,.05),white,.004)
-        o.rotation_euler=(y*-.11,x*.14,0)
-for z,w,d in [(.006,.168,.126),(.096,.2,.15)]:
-    for y in [-1,1]: box('Long rim',(w,.004,.008),(0,y*(d/2-.002),z),white,.002)
-    for x in [-1,1]: box('Short rim',(.004,d,.008),(x*(w/2-.002),0,z),white,.002)
+# Corner arcs are continuous sheets, following the same taper as the perforations.
+for sx in [-1,1]:
+    for sy in [-1,1]:
+        verts=[]
+        for z in [.002,.096]:
+            taper=.83+.17*z/.1
+            for i in range(17):
+                t=i*math.pi/32
+                verts.append((sx*(.082+.017*math.cos(t))*taper,sy*(.057+.017*math.sin(t))*taper,z))
+        o=mesh('Rounded moulded corner',verts,[(i,i+1,i+18,i+17) for i in range(16)],white)
+        m=o.modifiers.new('Wall','SOLIDIFY'); m.thickness=.0012; bpy.context.view_layer.objects.active=o; bpy.ops.object.modifier_apply(modifier=m.name)
+        for f in o.data.polygons: f.use_smooth=True
+box('Closed base',(.166,.124,.003),(0,0,.0015),white,.0014)
+for z,w,d in [(.004,.169,.127),(.097,.2,.15)]:
+    pts=rounded_ring(w-.003,d-.003,.018,z)
+    curve=bpy.data.curves.new('Rolled rim','CURVE'); curve.dimensions='3D'; curve.bevel_depth=.0015; curve.bevel_resolution=4
+    spline=curve.splines.new('POLY'); spline.points.add(len(pts)-1)
+    for pt,co in zip(spline.points,pts): pt.co=(*co,1)
+    spline.use_cyclic_u=True
+    o=bpy.data.objects.new('Continuous rounded rim',curve); bpy.context.collection.objects.link(o); o.data.materials.append(white)
+    bpy.context.view_layer.objects.active=o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False)
 finish('plogsvaeng',(0,0,.045),.27)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -126,15 +156,19 @@ finish('heart-sponge',(0,0,.012),.14)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 white=mat('Ivory PP',(.86,.87,.83)); orange=mat('Coral red orange PP',(.95,.065,.025)); grey=mat('Dark bristles',(.075,.085,.08),.8); black=mat('Eyes',(.008,.009,.01)); glass=mat('Frosted reservoir',(.66,.76,.75),.22)
 # Ventilated fish-shaped caddy, open top with separate inner walls.
-box('Caddy base',(.112,.075,.008),(0,0,.004),white,.003)
-box('Rear shell',(.112,.004,.14),(0,.035,.075),orange,.002)
-for x in [-.054,.054]: box('Caddy side',(.004,.07,.14),(x,0,.075),white,.002)
-for i in range(11):
-    x=(i-5)*.0097
-    box('Ventilation rib',(.0065,.004,.105),(x,-.035,.059),white,.003)
-box('Coral upper band',(.112,.006,.033),(0,-.034,.13),orange,.003)
-for x in [-.04,.04]:
-    sphere('White eye',(x,-.039,.132),(.007,.002,.007),white); sphere('Black pupil',(x,-.041,.132),(.004,.001,.004),black)
+caddy=rounded_shell('Rounded ventilated caddy',.112,.075,.148,.023,.003,white)
+# Real vertical drain slots cut through the rounded front shell.
+for i in range(9):
+    cutter=box('Slot cutter',(.0045,.03,.099),((i-4)*.010,-.035,.058),white,.0022)
+    bpy.context.view_layer.objects.active=caddy
+    mod=caddy.modifiers.new('Drain slot','BOOLEAN'); mod.object=cutter; mod.operation='DIFFERENCE'
+    bpy.ops.object.modifier_apply(modifier=mod.name); bpy.data.objects.remove(cutter,do_unlink=True)
+for f in caddy.data.polygons:
+    if f.center.z>.118: f.material_index=1
+caddy.data.materials.append(orange)
+for x in [-.036,.036]:
+    sphere('White eye',(x,-.037,.132),(.007,.002,.007),white); sphere('Black pupil',(x,-.039,.132),(.004,.001,.004),black)
+caddy_objects=set(bpy.context.scene.objects)
 # Stored brush head with rear bristles and fish tail visible inside the caddy.
 sphere('Fish brush body',(0,0,.091),(.037,.018,.049),white)
 for ix in range(-5,6):
@@ -150,4 +184,14 @@ for i in range(7): cyl('Coral neck grip ring',.0105,.002,(0,0,.145+i*.004),orang
 box('Liquid reservoir handle',(.027,.024,.105),(0,0,.355),glass,.011)
 box('Coral screw cap',(.028,.025,.023),(0,0,.4165),orange,.009)
 box('Liquid release button',(.014,.006,.033),(0,-.013,.36),orange,.006)
+# Keep all movable pieces under one named root for the shared lift action.
+bpy.ops.object.empty_add(); brush=bpy.context.object; brush.name='BrushLift'
+for obj in list(bpy.context.scene.objects):
+    if obj not in caddy_objects and obj != brush: obj.parent=brush
+brush.location.z=0
+brush.keyframe_insert(data_path='location',frame=1)
+brush.location.z=.18
+brush.keyframe_insert(data_path='location',frame=25)
+brush.animation_data.action.name='brush_lift'
+bpy.context.scene.frame_set(1)
 finish('fish-toilet-brush',(0,0,.212),.53)

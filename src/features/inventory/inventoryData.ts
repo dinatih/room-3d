@@ -49,7 +49,7 @@ export const INVENTORY: InventoryItem[] = [
     id: 'ikea-plogsvaeng', name: 'PLOGSVÄNG — rangement perforé blanc', brand: 'IKEA',
     category: 'bathroom', qty: 1, price: '0,49', dims: { w: 20, d: 15, h: 10 },
     glbPath: 'items/cleaning-accessories/plogsvaeng.glb',
-    photos: ['items/cleaning-accessories/plogsvaeng-three-quarter.png', 'items/cleaning-accessories/plogsvaeng-front.png', 'items/cleaning-accessories/plogsvaeng-back.png'],
+    photos: ['items/cleaning-accessories/plogsvaeng-product.jpg', 'items/cleaning-accessories/plogsvaeng-three-quarter.png', 'items/cleaning-accessories/plogsvaeng-front.png', 'items/cleaning-accessories/plogsvaeng-back.png'],
     url: 'https://www.ikea.com/fr/fr/p/plogsvaeng-rangement-blanc-20593454/',
     notes: 'Référence IKEA 205.934.54. Dimensions fabricant 15 × 20 × 10 cm. Reconstitution Blender d’après les photos : fond fermé, parois perforées et bord supérieur.'
   },
@@ -57,7 +57,7 @@ export const INVENTORY: InventoryItem[] = [
     id: 'temu-heart-sponge', name: 'Éponges cœur roses et rouges — lot de 10', brand: 'Temu',
     category: 'bathroom', qty: 1, price: '4,49', dims: { w: 9, d: 8.5, h: 3 },
     glbPath: 'items/cleaning-accessories/heart-sponge.glb',
-    photos: ['items/cleaning-accessories/heart-sponge-three-quarter.png', 'items/cleaning-accessories/heart-sponge-front.png', 'items/cleaning-accessories/heart-sponge-back.png'],
+    photos: ['items/cleaning-accessories/heart-sponge-product.jpg', 'items/cleaning-accessories/heart-sponge-three-quarter.png', 'items/cleaning-accessories/heart-sponge-front.png', 'items/cleaning-accessories/heart-sponge-back.png'],
     url: 'https://www.temu.com/fr/eponges-coeur-g-605625769644612.html',
     notes: '1 lot de 10 éponges à 4,49 € le lot (prix utilisateur). Modèle 3D et dimensions pour une seule éponge ; dimensions estimées à confirmer. Mousse rose et couche abrasive rouge en polyester, d’après les photos de la variante Love Cleaning Sponges 10 Pcs.'
   },
@@ -65,9 +65,9 @@ export const INVENTORY: InventoryItem[] = [
     id: 'fish-toilet-brush-red', name: 'Brosse WC poisson avec distributeur — rouge/orange', brand: 'Generic',
     category: 'bathroom', qty: 1, price: '12,00', dims: { w: 11.2, d: 7.95, h: 42.8 },
     glbPath: 'items/cleaning-accessories/fish-toilet-brush.glb',
-    photos: ['items/cleaning-accessories/fish-toilet-brush-three-quarter.png', 'items/cleaning-accessories/fish-toilet-brush-front.png', 'items/cleaning-accessories/fish-toilet-brush-back.png'],
+    photos: ['items/cleaning-accessories/fish-toilet-brush-product.jpg', 'items/cleaning-accessories/fish-toilet-brush-three-quarter.png', 'items/cleaning-accessories/fish-toilet-brush-front.png', 'items/cleaning-accessories/fish-toilet-brush-back.png'],
     url: 'https://www.amazon.fr/dp/B0H45FDHR4?th=1',
-    notes: 'Variante rouge/orange demandée. Prix utilisateur 12 €. Reconstitution Blender d’après les photos Amazon : réservoir et bouton, tête poisson double face, support ventilé assorti. Dimensions estimées à confirmer ; brosse représentée rangée dans son support, sans animation.'
+    notes: 'Variante rouge/orange demandée. Prix utilisateur 12 €. Reconstitution Blender d’après les photos Amazon : réservoir et bouton, tête poisson double face, support ventilé assorti. Dimensions estimées à confirmer ; brosse représentée rangée dans son support, avec animation de sortie et rangement de la brosse.'
   },
   ...householdShowcaseItems,
   {

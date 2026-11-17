@@ -1,3 +1,4 @@
+import { FishToiletBrush } from '@features/scene/items/FishToiletBrush';
 import extraDogs from './extraDogs.json';
 import { ImportedDog } from '@features/scene/items/ImportedDog';
 import { Microduck } from '@features/scene/items/Microduck';
@@ -147,6 +148,7 @@ export const PREVIEW_ROTATION_Y: Record<string, number> = {
 };
 
 export const SCENE_REGISTRY: Record<string, ComponentType<SceneItemProps>> = {
+  'fish-toilet-brush-red': FishToiletBrush,
   'microduck': Microduck,
   'jumper-robot': Jumper,
   'unitree-h2': UnitreeH2,
