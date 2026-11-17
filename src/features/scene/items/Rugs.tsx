@@ -17,18 +17,8 @@ function createRug(prefix: 'grand' | 'petit') {
       scene.children.filter(c => c.name.startsWith(other)).forEach(c => c.removeFromParent());
       scene.scale.setScalar(100);
       mergeGlbByMaterial(scene);
-      scene.traverse(obj => {
-        if (!(obj as THREE.Mesh).isMesh) return;
-        const mats = Array.isArray((obj as THREE.Mesh).material)
-          ? ((obj as THREE.Mesh).material as THREE.Material[])
-          : [(obj as THREE.Mesh).material as THREE.Material];
-        for (const m of mats) {
-          m.polygonOffset = true;
-          m.polygonOffsetFactor = -4;
-          m.polygonOffsetUnits = -4;
-          m.needsUpdate = true;
-        }
-      });
+      // Placements lift the rugs above the floor. A depth bias here would also
+      // pull them in front of furniture feet, especially in orthographic views.
       const box = glbLocalBBox(scene);
       scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
       onSize?.(box.getSize(new THREE.Vector3()));
