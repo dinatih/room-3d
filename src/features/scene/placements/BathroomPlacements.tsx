@@ -34,9 +34,11 @@ import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin'
 import { CecotecReadywarm } from '../items/CecotecReadywarm';
 import { CifInfiniteClean, TransparentSprayCleaner, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
 import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
+import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
+import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '../items/SdbLaundryHook';
 import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
 
-import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL } from '../wallData';
+import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL, DiagWall } from '../wallData';
 
 const TOWEL_RACK_BASE_Y = 111;
 const TOWEL_RACK_Z = BATH_NORTH_WALL + 64 + 20.1;
@@ -46,6 +48,12 @@ const HEATER_DEPTH = 18;
 const CLOSET_RIGHT_EDGE_X = SDB_CLOSET_X - SDB_CLOSET_W / 2;
 const CLOSET_SHELF_FRONT_Z = SDB_CLOSET_Z + SDB_CLOSET_D / 2;
 const PRODUCT_EDGE_GAP = 1;
+// Right from the bathroom is the shower side; keep the existing bag shape.
+const LAUNDRY_HOOK_X = CLOSET_RIGHT_EDGE_X + 38;
+const LAUNDRY_HOOK_Z = CLOSET_SHELF_FRONT_Z + 30;
+const LAUNDRY_HOOK_BASE_Y = SDB_CLOSET_SHELF_TOP - 2 - LAUNDRY_HOOK_HEIGHT;
+// Align the bag's broad faces with the diagonal wall so it fits below the shelf.
+const LAUNDRY_BAG_ROTATION_Y = Math.PI + Math.atan(-DiagWall.slope);
 
 // Retrait de 5 cm sur chaque bord pour dégager l'accès aux meubles et boîtes DRÖNA.
 const TOILET_OBSTACLE_INSET = 5;
@@ -223,6 +231,16 @@ export function BathroomFurnishings() {
       {/* Spray transparent au sol, au milieu du passage entre le WC et le meuble vasque. */}
       <group position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant transparent SDB' }}>
         <NavigationObstacle id="spray-cleaner-bath"><TransparentSprayCleaner /></NavigationObstacle>
+      </group>
+
+      {/* Un seul crochet sous l'étagère, à droite côté douche. */}
+      <group position={[LAUNDRY_HOOK_X, LAUNDRY_HOOK_BASE_Y, LAUNDRY_HOOK_Z]}
+        rotation-y={LAUNDRY_BAG_ROTATION_Y} userData={{ sceneItemRoot: true, itemName: 'Crochet du sac à linge SDB' }}>
+        <SdbLaundryHook />
+        <group position={[0, LAUNDRY_HOOK_GRIP_HEIGHT - KABBA_HANDLE_HEIGHT, 0]}
+          userData={{ sceneItemRoot: true, itemName: 'Sac KABBA rouge — linge sale' }}>
+          <KabbaLaundryBag />
+        </group>
       </group>
 
       {/* Lessive et adoucissant sur la tablette, au bord avant droit depuis la SDB. */}

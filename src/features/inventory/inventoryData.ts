@@ -51,7 +51,7 @@ export const INVENTORY: InventoryItem[] = [
     glbPath: 'items/kabba-laundry-bag/KabbaLaundryBag.glb',
     photos: ['items/kabba-laundry-bag/product-1.jpg', 'items/kabba-laundry-bag/product-2.jpg', 'items/kabba-laundry-bag/product-3.jpg', 'items/kabba-laundry-bag/KabbaLaundryBag-three-quarter.png', 'items/kabba-laundry-bag/KabbaLaundryBag-front.png', 'items/kabba-laundry-bag/KabbaLaundryBag-back.png'],
     url: 'https://maxibazar.fr/sac-multi-usages-xxl-70x53x30cm',
-    location: 'Sous l’étagère triangulaire du placard SDB, suspendu à la tringle',
+    location: 'Sous l’étagère triangulaire du placard SDB, sur un crochet côté douche',
     notes: 'Sac personnel à linge sale, rouge imprimé MAXI FAMILLE. Réf. Maxi Bazar 2101000082, prix de la fiche 5,99 €. Dimensions annoncées du corps 70 × 53 × 30 cm ; la photo cotée indique 59 × 50 × 28 cm. Reconstitution souple et légèrement affaissée, hauteur avec anses environ 77 cm. Trois photos commerciales avant les rendus Blender.'
   },
 
