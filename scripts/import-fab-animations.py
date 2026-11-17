@@ -334,6 +334,7 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
             for segment in [1, 2]:
                 children[f'{side}Hand{finger}{segment}'] = f'{side}Hand{finger}{segment + 1}'
+    original_rest = {name: rotation.copy() for name, rotation in source_rest.items()}
     for name, child in children.items():
         if name not in mapping or child not in mapping:
             continue
@@ -376,7 +377,14 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
             if i in by_index:
                 name = by_index[i]
                 world_quat = alignment @ sampled[name].to_quaternion()
-                desired[i] = world_quat @ source_rest[name].inverted() @ target_worlds[i].to_quaternion()
+                if re.fullmatch(r'(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)[123]', name):
+                    # Change the motion's basis as well as its rest direction.
+                    # Editing only source_rest injects a rotation even at bind pose.
+                    basis = source_rest[name] @ original_rest[name].inverted()
+                    delta = world_quat @ original_rest[name].inverted()
+                    desired[i] = basis @ delta @ basis.inverted() @ target_worlds[i].to_quaternion()
+                else:
+                    desired[i] = world_quat @ source_rest[name].inverted() @ target_worlds[i].to_quaternion()
                 local = (parent_quat.inverted() @ desired[i]).normalized()
                 values = rotations[i]
                 if values and local.dot(Quaternion((values[-1], *values[-4:-1]))) < 0:
