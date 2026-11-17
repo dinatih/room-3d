@@ -1,10 +1,27 @@
-"""Render six diagnostic poses offline; output: /tmp/dachshund-review/."""
+"""Render eight phases per base clip plus three views of the rest pose."""
 from pathlib import Path
-import bpy
+import bpy, os
 from mathutils import Vector
-bpy.ops.wm.open_mainfile(filepath=str(Path(__file__).resolve().parents[1]/'artifacts/dachshund-sculpt/dachshund.blend'))
-s=bpy.context.scene;s.render.engine='BLENDER_WORKBENCH';s.display.shading.color_type='MATERIAL';s.render.resolution_x=700;s.render.resolution_y=500;s.render.resolution_percentage=100
+ROOT=Path(__file__).resolve().parents[1]
+OUT=ROOT/'artifacts/dachshund-sculpt/review';OUT.mkdir(parents=True,exist_ok=True)
+bpy.ops.wm.open_mainfile(filepath=str(ROOT/'artifacts/dachshund-sculpt/dachshund.blend'))
+s=bpy.context.scene;s.render.engine='BLENDER_WORKBENCH';s.display.shading.color_type='VERTEX';s.display.shading.light='STUDIO';s.display.shading.show_shadows=True;s.display.shading.show_cavity=True
+s.render.resolution_x=480;s.render.resolution_y=360;s.render.resolution_percentage=100
+s.world=bpy.data.worlds.new('Review background');s.world.color=(.18,.18,.18)
+s.display.shading.background_type='WORLD'
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
-bpy.ops.object.camera_add(location=(2.5,0,1));s.camera=bpy.context.object;s.camera.data.type='ORTHO';s.camera.data.ortho_scale=2.6;s.camera.rotation_euler=(Vector((0,.2,.35))-s.camera.location).to_track_quat('-Z','Y').to_euler()
-for label,name in [('idle','idle 50'),('walk','walk_fwd 29'),('run','run_fwd 13'),('sit','idle_sit_pose 2'),('lay','idle_lay_pose 2'),('jump','jump 22')]:
- a=bpy.data.actions[name];rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0];s.frame_set(int(sum(a.frame_range)/2));s.render.filepath='/tmp/dachshund-review/'+label+'.png';bpy.ops.render.render(write_still=True)
+bpy.ops.mesh.primitive_plane_add(size=200);plane=bpy.context.object;plane.name='Review floor';plane.location.z=-.002;plane.color=(.28,.28,.28,1)
+bpy.ops.object.camera_add();s.camera=bpy.context.object;s.camera.data.type='ORTHO';s.camera.data.ortho_scale=2.35
+center=Vector((0,.20,.42))
+def camera(offset):
+ s.camera.location=center+Vector(offset);s.camera.rotation_euler=(center-s.camera.location).to_track_quat('-Z','Y').to_euler()
+camera((3,0,.25))
+for label,name in [('idle','idle 50'),('walk','walk_fwd 29'),('run','run_fwd 13')]:
+ a=bpy.data.actions[name];rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0];start,end=a.frame_range
+ for i in range(8):
+  frame=start+(end-start)*i/8;s.frame_set(int(frame),subframe=frame%1)
+  s.render.filepath=str(OUT/f'{label}-{i}.png');bpy.ops.render.render(write_still=True)
+rig.animation_data.action=bpy.data.actions['idle 50'];rig.animation_data.action_slot=rig.animation_data.action.slots[0];s.frame_set(0)
+for name,offset in [('front',(0,-3,.35)),('three-quarter',(2,-3,.7)),('back',(-2,3,.5))]:
+ camera(offset);s.render.filepath=str(ROOT/f'public/characters/dachshund-sculpt/{name}.png');bpy.ops.render.render(write_still=True)
+print('REVIEW_RENDERED',flush=True);os._exit(0)

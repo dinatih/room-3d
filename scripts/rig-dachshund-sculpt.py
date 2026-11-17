@@ -1,199 +1,187 @@
-"""Build the inventory comparison rig. Run with blender -b -t 2 --python this-file.
-
-The donor hierarchy and local rotation axes are retained; bind pivots are fitted
-independently to the sculpt. Source archives are never modified.
+"""Rebuild the sculpt rig; export ONLY idle, walk and run for visual approval.
+blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/rig-dachshund-sculpt.py
+Coordinates below are anatomical landmarks measured on the original sculpt.
 """
-import bpy, json, math, os
 from pathlib import Path
-from mathutils import Vector
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'public/characters/dachshund-sculpt'
-OUT.mkdir(parents=True, exist_ok=True)
-EDITABLE = ROOT / 'artifacts/dachshund-sculpt'
-EDITABLE.mkdir(parents=True, exist_ok=True)
-import runpy
-runpy.run_path(str(ROOT / 'scripts/inspect-dachshund-sculpt.py'), run_name='__main__')
-rig = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
-meshes = [bpy.data.objects[n] for n in ['CocoSculpt', 'Eyes', 'EyeSparklies']]
-for obj in list(bpy.data.objects):
-    if obj != rig and obj not in meshes:
-        bpy.data.objects.remove(obj, do_unlink=True)
-bpy.context.view_layer.objects.active = rig
-rig.select_set(True)
-bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-rig.select_set(False)
-rig.animation_data.action = None
-for track in list(rig.animation_data.nla_tracks): rig.animation_data.nla_tracks.remove(track)
-for bone in rig.pose.bones:
-    bone.matrix_basis.identity()
-# Sculpt floor is -0.0973 in Blender coordinates.
-floor = min((meshes[0].matrix_world @ v.co).z for v in meshes[0].data.vertices)
+import bpy, math, os, tempfile, zipfile, json
+from mathutils import Vector, Matrix
+ROOT=Path(__file__).resolve().parents[1]
+OUT=ROOT/'public/characters/dachshund-sculpt'
+EDIT=ROOT/'artifacts/dachshund-sculpt'
+REVIEW=Path('/tmp/dachshund-review');REVIEW.mkdir(exist_ok=True)
+CLIPS=['idle 50','walk_fwd 29','run_fwd 13']
+bpy.ops.wm.read_factory_settings(use_empty=True)
+with tempfile.TemporaryDirectory() as directory:
+    with zipfile.ZipFile(Path.home()/'3D Resources/animals/dachshund-sculpt.zip') as archive:
+        path=Path(directory)/'source.glb';path.write_bytes(archive.read('source/CocoSculpt.glb'))
+    bpy.ops.import_scene.gltf(filepath=str(path))
+meshes=list(bpy.context.scene.objects)
+body=bpy.data.objects['CocoSculpt']
+floor=min((body.matrix_world@v.co).z for v in body.data.vertices)
 for obj in meshes:
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    obj.select_set(False)
-    for vertex in obj.data.vertices: vertex.co.z -= floor
-# A 60k vertex presentation budget preserves the sculpt silhouette while
-# avoiding deformation of all 350k source vertices on every animation frame.
-body = meshes[0]
-bpy.context.view_layer.objects.active = body
-reduction = body.modifiers.new('Presentation mesh — 60k vertices', 'DECIMATE')
-reduction.ratio = 60000 / len(body.data.vertices)
-bpy.ops.object.modifier_apply(modifier=reduction.name)
-# Piecewise longitudinal fit follows pelvis, chest, skull and nose landmarks.
-def interpolate(value, knots):
-    index = next((i for i in range(len(knots)-1) if value <= knots[i+1][0]), len(knots)-2)
-    a,b = knots[index],knots[index+1]
-    return a[1]+(value-a[0])*(b[1]-a[1])/(b[0]-a[0])
-def fit(p):
-    return Vector((p.x*1.35,
-        interpolate(p.y,[(-.70,-.80),(-.408,-.57),(-.218,-.30),(.195,.59),(.519,1.23)]),
-        interpolate(p.z,[(0,0),(.11,.14),(.31,.27),(.55,.43),(.74,.86)])))
-translation_ratio = fit(Vector((0,.195,.55))).z / .55
-inv = rig.matrix_world.inverted()
-bpy.context.view_layer.objects.active = rig
-rig.select_set(True)
-bpy.ops.object.mode_set(mode='EDIT')
-major = {'Hips','Spine','Spine1','Spine2','Spine3','Spine4','Neck01','Neck02','Neck03','Head'}
+    bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
+    bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
+    for v in obj.data.vertices:v.co.z-=floor
+bpy.context.view_layer.objects.active=body
+modifier=body.modifiers.new('60k presentation mesh','DECIMATE');modifier.ratio=60000/len(body.data.vertices)
+bpy.ops.object.modifier_apply(modifier=modifier.name)
+# Each head and tail is an actual joint, rather than a scaled donor bone vector.
+heads={'Hips':(0,.60,.46),'Spine':(0,.43,.46),'Spine1':(0,.26,.46),'Spine2':(0,.09,.47),'Spine3':(0,-.08,.48),'Spine4':(0,-.22,.48),'Neck01':(0,-.33,.54),'Neck02':(0,-.40,.61),'Neck03':(0,-.47,.68),'Head':(0,-.55,.73)}
+parents={name:previous for previous,name in zip(heads,list(heads)[1:])}
+ends={'Head':(0,-.76,.68)}
+for side,sign in [('Left',1),('Right',-1)]:
+    chain=[('Shoulder',(.06,-.19,.43)),('Arm',(.115,-.17,.33)),('ForeArm',(.10,-.055,.18)),('Hand',(.10,-.105,.065)),('HandMiddle1',(.10,-.18,.035))]
+    rear=[('Pelvis',(.07,.60,.43)),('UpLeg',(.125,.62,.37)),('Leg',(.14,.56,.23)),('Foot',(.13,.735,.11)),('ToeBase',(.135,.675,.035))]
+    for items,parent in [(chain,'Spine4'),(rear,'Hips')]:
+        for name,point in items:
+            key=side+name;heads[key]=(point[0]*sign,point[1],point[2]);parents[key]=parent;parent=key
+        ends[parent]=(heads[parent][0],heads[parent][1]-.045,heads[parent][2])
+    for i,point in enumerate([(.12,-.47,.76),(.17,-.43,.66),(.17,-.40,.55)],1):
+        name=side+('Ear' if i==1 else 'Ear'+str(i));heads[name]=(sign*point[0],point[1],point[2]);parents[name]='Head' if i==1 else side+('Ear' if i==2 else 'Ear2')
+    ends[side+'Ear3']=(sign*.16,-.39,.51)
+# Centreline measured in transverse sections through the sculpt's isolated tail.
+tail=[(0,.78,.422),(0,.85,.388),(0,.92,.379),(0,.99,.382),(0,1.06,.394),(0,1.13,.415),(0,1.20,.444),(0,1.23,.462)]
+for i in range(7):
+    name=f'Tail{i+1:02d}';heads[name]=tail[i];ends[name]=tail[i+1];parents[name]='Hips' if i==0 else f'Tail{i:02d}'
+children={parent:child for child,parent in parents.items() if not child.startswith(('Left','Right','Tail'))}
 for side in ['Left','Right']:
-    major.update(side+n for n in ['Shoulder','Shoulder01','Arm','ForeArm','Hand','HandMiddle1','Pelvis','UpLeg','Leg','Foot','ToeBase','Ear','Ear2','Ear3'])
-major.update('Tail%02d'%i for i in range(1,8))
-for bone in rig.data.edit_bones:
-    h = rig.matrix_world @ bone.head
-    delta = bone.tail-bone.head
-    bone.head = inv @ fit(h)
-    bone.tail = bone.head + delta * translation_ratio
-    bone.use_deform = bone.name in major
-bpy.ops.object.mode_set(mode='OBJECT')
-rig.select_set(False)
-# The small separate eye meshes follow the skull rigidly.
+    for suffixes in [('Shoulder','Arm','ForeArm','Hand','HandMiddle1'),('Pelvis','UpLeg','Leg','Foot','ToeBase'),('Ear','Ear2','Ear3')]:
+        for a,b in zip(suffixes,suffixes[1:]):children[side+a]=side+b
+arm=bpy.data.armatures.new('Teckel anatomical skeleton');rig=bpy.data.objects.new('DachshundRig',arm);bpy.context.collection.objects.link(rig)
+bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
+for name,point in heads.items():
+    b=arm.edit_bones.new(name);b.head=point;b.tail=ends[name] if name in ends else heads[children[name]]
+    b.align_roll(Vector((1,0,0)))
+for name,parent in parents.items():
+    b=arm.edit_bones[name];b.parent=arm.edit_bones[parent]
+    b.use_connect=(b.head-b.parent.tail).length<1e-6
+bpy.ops.object.mode_set(mode='OBJECT');rig.show_in_front=True
+# Closed weighting proxy keeps the heat solver independent of sculpt internals.
+proxy=body.copy();proxy.data=body.data.copy();bpy.context.collection.objects.link(proxy)
+bpy.ops.object.select_all(action='DESELECT');proxy.select_set(True);bpy.context.view_layer.objects.active=proxy
+mod=proxy.modifiers.new('Closed weighting volume','REMESH');mod.mode='VOXEL';mod.voxel_size=.008
+bpy.ops.object.modifier_apply(modifier=mod.name)
+rig.select_set(True);bpy.context.view_layer.objects.active=rig;bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+if any(not v.groups for v in proxy.data.vertices):raise RuntimeError('Heat weighting failed')
+bpy.ops.object.select_all(action='DESELECT');body.select_set(True);bpy.context.view_layer.objects.active=body
+mod=body.modifiers.new('Surface weights','DATA_TRANSFER');mod.object=proxy;mod.use_vert_data=True;mod.data_types_verts={'VGROUP_WEIGHTS'};mod.vert_mapping='POLYINTERP_NEAREST'
+bpy.ops.object.datalayout_transfer(modifier=mod.name);bpy.ops.object.modifier_apply(modifier=mod.name)
+bpy.data.objects.remove(proxy,do_unlink=True)
 for obj in meshes:
-    bpy.ops.object.select_all(action='DESELECT')
-    obj.select_set(True); rig.select_set(True)
-    bpy.context.view_layer.objects.active = rig
-    if obj == meshes[0]:
-        # Build heat weights on a closed voxel proxy, then interpolate onto
-        # the sculpt. This removes the sculpt's overlapping internal surfaces
-        # from the heat solver without altering its visible geometry.
-        proxy = obj.copy(); proxy.data = obj.data.copy()
-        bpy.context.collection.objects.link(proxy)
-        bpy.ops.object.select_all(action='DESELECT')
-        proxy.select_set(True); bpy.context.view_layer.objects.active = proxy
-        remesh = proxy.modifiers.new('Closed weighting volume','REMESH')
-        remesh.mode = 'VOXEL'; remesh.voxel_size = .01
-        bpy.ops.object.modifier_apply(modifier=remesh.name)
-        rig.select_set(True); bpy.context.view_layer.objects.active=rig
-        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-        if any(not v.groups for v in proxy.data.vertices):
-            raise RuntimeError('Heat solver failed on closed weighting proxy')
-        bpy.ops.object.select_all(action='DESELECT')
-        obj.select_set(True); bpy.context.view_layer.objects.active=obj
-        transfer=obj.modifiers.new('Interpolated anatomical weights','DATA_TRANSFER')
-        transfer.object=proxy; transfer.use_vert_data=True
-        transfer.data_types_verts={'VGROUP_WEIGHTS'}
-        transfer.vert_mapping='POLYINTERP_NEAREST'
-        bpy.ops.object.datalayout_transfer(modifier=transfer.name)
-        bpy.ops.object.modifier_apply(modifier=transfer.name)
-        obj.parent=rig
-        modifier=obj.modifiers.new('Skin','ARMATURE'); modifier.object=rig
-        bpy.data.objects.remove(proxy,do_unlink=True)
-    else:
-        obj.parent = rig
-        modifier = obj.modifiers.new('Skin', 'ARMATURE'); modifier.object = rig
-        obj.vertex_groups.new(name='Head').add(list(range(len(obj.data.vertices))),1,'REPLACE')
-    missing = [v.index for v in obj.data.vertices if not v.groups]
-    if missing: raise RuntimeError(f'{obj.name}: {len(missing)} unweighted vertices')
-# Keep the skull and separate eyes on the same rigid Head transform.
-# The blend band follows the sculpt's neck junction, behind the ears.
-body = bpy.data.objects['CocoSculpt']
-head = body.vertex_groups['Head']
+    obj.parent=rig;mod=obj.modifiers.new('Skin','ARMATURE');mod.object=rig
+    if obj!=body:obj.vertex_groups.new(name='Head').add(list(range(len(obj.data.vertices))),1,'REPLACE')
+# The detached eyes and rigid skull must use precisely the same transform.
 for vertex in body.data.vertices:
     y,z=vertex.co.y,vertex.co.z
-    longitudinal=max(0.,min(1.,(-y-.30)/.15))
-    vertical=max(0.,min(1.,(z-.45)/.15))
-    weight=longitudinal*vertical
-    weight=weight*weight*(3-2*weight)
-    if not weight:continue
-    groups=[(g.group,g.weight) for g in vertex.groups]
-    old_head=sum(w for i,w in groups if i==head.index)
-    for index,value in groups:
-        if index!=head.index:body.vertex_groups[index].add([vertex.index],value*(1-weight),'REPLACE')
-    head.add([vertex.index],old_head*(1-weight)+weight,'REPLACE')
-
-# Keep all actions in the editable Blender file.
-for action in bpy.data.actions: action.use_fake_user=True
-# Retarget joint positions as well as rotations in world space. Copying
-# angles alone raises the long trunk above the short paws in seated poses.
-from mathutils import Matrix
-original_actions = list(bpy.data.actions)
-for action in original_actions: action.name='Target|'+action.name
-before_objects = set(bpy.data.objects)
-before_actions = set(bpy.data.actions)
-bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/characters/animated-pitbull-dog/dog.glb'))
-source_objects = set(bpy.data.objects)-before_objects
-source = next(o for o in source_objects if o.type=='ARMATURE')
-source_actions = {a.name:a for a in set(bpy.data.actions)-before_actions}
-for obj in meshes: obj.hide_viewport=True
-for obj in source_objects:
-    if obj.type=='MESH': obj.hide_viewport=True
+    w=max(0,min(1,(-y-.30)/.15))*max(0,min(1,(z-.45)/.15));w=w*w*(3-2*w)
+    if w:
+        head=body.vertex_groups['Head'];old=0
+        for g in list(vertex.groups):
+            if g.group==head.index:old=g.weight
+            else:body.vertex_groups[g.group].add([vertex.index],g.weight*(1-w),'REPLACE')
+        head.add([vertex.index],old*(1-w)+w,'REPLACE')
+    if y>=tail[0][1] and abs(vertex.co.x)<.06 and z>.32:
+        # Anatomical tail region: weights follow centreline arclength order.
+        for g in list(vertex.groups):body.vertex_groups[g.group].remove([vertex.index])
+        i=next((i for i in range(6) if y<tail[i+1][1]),6)
+        if i==6:body.vertex_groups['Tail07'].add([vertex.index],1,'REPLACE')
+        else:
+            t=max(0,min(1,(y-tail[i][1])/(tail[i+1][1]-tail[i][1])))
+            body.vertex_groups[f'Tail{i+1:02d}'].add([vertex.index],1-t,'REPLACE');body.vertex_groups[f'Tail{i+2:02d}'].add([vertex.index],t,'REPLACE')
+if any(not v.groups for v in body.data.vertices):raise RuntimeError('Unweighted sculpt vertices')
+before=set(bpy.data.objects);bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/characters/animated-pitbull-dog/dog.glb'))
+source_objects=set(bpy.data.objects)-before;source=next(o for o in source_objects if o.type=='ARMATURE')
+for o in source_objects:
+    if o.type=='MESH':o.hide_viewport=True
 for track in list(source.animation_data.nla_tracks):source.animation_data.nla_tracks.remove(track)
-scene=bpy.context.scene
-for action in original_actions:
-    source.animation_data.action=source_actions[action.name.removeprefix('Target|')]
-    source.animation_data.action_slot=source.animation_data.action.slots[0]
-    rig.animation_data.action=action;rig.animation_data.action_slot=action.slots[0]
-    start,end=action.frame_range
+scene=bpy.context.scene;scene.render.fps=24
+source.animation_data.action=bpy.data.actions['idle 50'];source.animation_data.action_slot=source.animation_data.action.slots[0];scene.frame_set(0)
+base={n:(source.matrix_world@source.pose.bones[n].matrix).copy() for n in heads}
+rest={n:b.matrix_local.copy() for n,b in arm.bones.items()}
+# IK solves the real short limb lengths. Donor feet supply contact timing/stride.
+controls={};ratios={};sole={}
+for side in ['Left','Right']:
+    for upper,lower,foot in [('Arm','ForeArm','Hand'),('UpLeg','Leg','Foot')]:
+        end=side+foot;first=side+upper;middle=side+lower
+        target=bpy.data.objects.new(end+' IK',None);bpy.context.collection.objects.link(target)
+        ik=rig.pose.bones[middle].constraints.new('IK');ik.target=target;ik.chain_count=2;ik.use_stretch=False
+        # Blender's default bend plane follows the modelled rest knee/elbow.
+        orient=rig.pose.bones[end].constraints.new('COPY_ROTATION');orient.target=target;orient.owner_space='WORLD';orient.target_space='WORLD'
+        controls[end]=(target,ik,orient,middle)
+        target_length=(Vector(heads[first])-Vector(heads[middle])).length+(Vector(heads[middle])-Vector(heads[end])).length
+        source_length=(base[first].translation-base[middle].translation).length+(base[middle].translation-base[end].translation).length
+        ratios[end]=target_length/source_length
+        # Vertices whose strongest influence is this paw define its actual sole.
+        group_names={end,side+('HandMiddle1' if foot=='Hand' else 'ToeBase')}
+        vertices=[v.co.copy() for v in body.data.vertices if v.groups and body.vertex_groups[max(v.groups,key=lambda g:g.weight).group].name in group_names]
+        if not vertices:raise RuntimeError('Missing sole geometry '+end)
+        sole[end]=[rest[end].inverted()@p for p in vertices]
+root_ratio=sum(ratios.values())/len(ratios)
+new_actions=[]
+for clip in CLIPS:
+    action=bpy.data.actions[clip];source.animation_data.action=action;source.animation_data.action_slot=action.slots[0]
+    start,end=action.frame_range;frames=sorted(set([float(start),float(end)]+[float(f) for f in range(math.ceil(start),math.floor(end)+1)]))
     samples=[]
-    for frame in range(math.floor(start),math.ceil(end)+1):
-        scene.frame_set(frame)
+    for frame in frames:
+        scene.frame_set(int(frame),subframe=frame%1);bpy.context.view_layer.update()
+        samples.append((frame,{n:(source.matrix_world@source.pose.bones[n].matrix).copy() for n in heads}))
+    contact={n:min(p[n].translation.z for _,p in samples) for n in controls}
+    result=bpy.data.actions.new('New|'+clip);rig.animation_data_create();rig.animation_data.action=result
+    for obj in meshes:obj.hide_viewport=True
+    poses=[]
+    for frame,posed in samples:
+        matrices={};root_motion=Vector((0,0,(posed['Hips'].translation.z-base['Hips'].translation.z)*root_ratio))
+        for n,bone in arm.bones.items():
+            world_delta=posed[n].to_quaternion()@base[n].to_quaternion().inverted()
+            rotation=world_delta@rest[n].to_quaternion()
+            parent=bone.parent
+            local_rest=parent.matrix_local.inverted()@bone.matrix_local if parent else bone.matrix_local
+            parent_rotation=matrices[parent.name].to_quaternion() if parent else Matrix.Identity(4).to_quaternion()
+            pb=rig.pose.bones[n];pb.rotation_mode='QUATERNION';pb.rotation_quaternion=local_rest.to_quaternion().inverted()@parent_rotation.inverted()@rotation
+            pb.location=root_motion if parent is None else Vector()
+            pb.scale=(1,1,1)
+            matrices[n]=(matrices[parent.name] if parent else Matrix.Identity(4))@local_rest@pb.matrix_basis
+        for n,(target,ik,orient,middle) in controls.items():
+            delta=posed[n].translation-base[n].translation
+            position=Vector(heads[n])+Vector((delta.x,delta.y,0))*ratios[n]
+            rotation=matrices[n].to_quaternion()
+            clearance=-min((rotation@p).z for p in sole[n])
+            position.z=clearance+(posed[n].translation.z-contact[n])*ratios[n]
+            target.location=position;target.rotation_mode='QUATERNION';target.rotation_quaternion=rotation
         bpy.context.view_layer.update()
-        desired={}
-        for bone in rig.data.bones:
-            pose=source.matrix_world@source.pose.bones[bone.name].matrix
-            desired[bone.name]=rig.matrix_world.inverted()@Matrix.LocRotScale(fit(pose.translation),pose.to_quaternion(),Vector((1,1,1)))
-        values=[]
-        for bone in rig.data.bones:
-            arguments={}
-            if bone.parent:
-                arguments={'parent_matrix':desired[bone.parent.name],'parent_matrix_local':bone.parent.matrix_local}
-            basis=bone.convert_local_to_pose(desired[bone.name],bone.matrix_local,invert=True,**arguments)
-            location,rotation,scale=basis.decompose()
-            values.append((bone.name,location,rotation,scale))
-        samples.append((frame,values))
-    for frame,values in samples:
-        for name,location,rotation,scale in values:
-            bone=rig.pose.bones[name];bone.rotation_mode='QUATERNION'
-            bone.location=location;bone.rotation_quaternion=rotation;bone.scale=scale
-            bone.keyframe_insert('location',frame=frame)
-            bone.keyframe_insert('rotation_quaternion',frame=frame)
-            bone.keyframe_insert('scale',frame=frame)
-    print('POSTURE',action.name,flush=True)
-for obj in source_objects:bpy.data.objects.remove(obj,do_unlink=True)
-for action in source_actions.values():bpy.data.actions.remove(action)
-for action in original_actions:action.name=action.name.removeprefix('Target|')
+        evaluated=rig.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        poses.append((frame,{n:pb.matrix.copy() for n,pb in evaluated.pose.bones.items()}))
+    # Bake evaluated IK to local rotations, with fixed rest offsets and scales.
+    for _,ik,orient,_ in controls.values():ik.influence=0;orient.influence=0
+    for frame,world in poses:
+        for n,bone in arm.bones.items():
+            kwargs={} if bone.parent is None else dict(parent_matrix=world[bone.parent.name],parent_matrix_local=bone.parent.matrix_local)
+            basis=bone.convert_local_to_pose(world[n],bone.matrix_local,invert=True,**kwargs)
+            loc,quat,scale=basis.decompose();pb=rig.pose.bones[n];pb.location=loc;pb.rotation_quaternion=quat;pb.scale=(1,1,1)
+            if bone.parent is None:pb.keyframe_insert('location',frame=frame-start)
+            pb.keyframe_insert('rotation_quaternion',frame=frame-start)
+    for _,ik,orient,_ in controls.values():ik.influence=1;orient.influence=1
+    result.use_fake_user=True;new_actions.append((result,clip));print('BAKED',clip,len(poses),flush=True)
+for pb in rig.pose.bones:
+    for constraint in list(pb.constraints):pb.constraints.remove(constraint)
+for objects in controls.values():bpy.data.objects.remove(objects[0],do_unlink=True)
+for obj in list(bpy.data.objects):
+    if obj not in meshes and obj!=rig:bpy.data.objects.remove(obj,do_unlink=True)
+for action in list(bpy.data.actions):
+    if action not in [a for a,_ in new_actions]:bpy.data.actions.remove(action)
+for action,name in new_actions:
+    action.name=name
+    for layer in action.layers:
+        for strip in layer.strips:
+            for bag in strip.channelbags:
+                for curve in bag.fcurves:
+                    for key in curve.keyframe_points:key.interpolation='LINEAR'
+rig.animation_data.action=new_actions[0][0];rig.animation_data.action_slot=rig.animation_data.action.slots[0];scene.frame_set(0)
 for obj in meshes:obj.hide_viewport=False
-# Remove redundant constant keys at float32 precision; preserve endpoints.
-for action in bpy.data.actions:
- for layer in action.layers:
-  for strip in layer.strips:
-   for bag in strip.channelbags:
-    for curve in bag.fcurves:
-     keys=curve.keyframe_points
-     for key in keys:key.interpolation='LINEAR'
-     if len(keys)>2 and all(math.isclose(k.co.y,keys[0].co.y,rel_tol=1e-6,abs_tol=1e-6) for k in keys):
-      first,last=tuple(keys[0].co),tuple(keys[-1].co)
-      keys.clear();keys.add(2)
-      keys[0].co=first;keys[1].co=last
-      for key in keys:key.interpolation='LINEAR'
-      curve.update()
-rig.animation_data.action = bpy.data.actions['idle 50']
-rig.animation_data.action_slot = rig.animation_data.action.slots[0]
-bpy.context.scene.frame_set(0)
 for image in bpy.data.images:
-    if image.has_data: image.pack()
-bpy.ops.wm.save_as_mainfile(filepath=str(EDITABLE/'dachshund.blend'), compress=True)
+    if image.has_data:image.pack()
+OUT.mkdir(parents=True,exist_ok=True);EDIT.mkdir(parents=True,exist_ok=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(EDIT/'dachshund.blend'),compress=True)
 for obj in meshes:obj.hide_viewport=True
-bpy.ops.export_scene.gltf(filepath=str(OUT/'dog.glb'),export_format='GLB',use_selection=False,export_animations=True,export_skins=True,export_animation_mode='ACTIONS',export_force_sampling=False)
-print('RIG_EXPORTED',OUT,flush=True)
-os._exit(0)
+bpy.ops.export_scene.gltf(filepath=str(OUT/'dog.glb'),export_format='GLB',export_animations=True,export_skins=True,export_animation_mode='ACTIONS',export_force_sampling=False)
+print('EXPORTED THREE CLIPS',flush=True);os._exit(0)

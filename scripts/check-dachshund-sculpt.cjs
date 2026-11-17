@@ -27,18 +27,26 @@ const launch = require('./browser-test-options.cjs');
    const light=new T.DirectionalLight(0xffffff,3);light.position.set(2,3,2);scene.add(light);
    const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(800,600);document.body.replaceChildren(renderer.domElement);
    const mixer=new T.AnimationMixer(gltf.scene); const box=new T.Box3();const point=new T.Vector3();
+   const restOffsets=new Map();
+   gltf.scene.traverse(object=>{if(object.isBone)restOffsets.set(object.name,object.position.clone());});
    const bounds=[];
-   const representative=new Set(['idle 50','walk_fwd 29','run_fwd 13','idle_sit_pose 2','idle_lay_pose 2','jump 22']);
+   const representative=new Set(['idle 50','walk_fwd 29','run_fwd 13']);
    for(const clip of gltf.animations){
     mixer.stopAllAction();const action=mixer.clipAction(clip).reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();
-    for(const fraction of [0,.5,1]){
-     mixer.setTime(clip.duration*fraction);scene.updateMatrixWorld(true);
+    for(let sample=0;sample<=Math.ceil(clip.duration*24);sample++){
+     mixer.setTime(Math.min(sample/24,clip.duration));scene.updateMatrixWorld(true);
      gltf.scene.traverse(object=>{
       if(!object.isSkinnedMesh)return;
       object.skeleton.update();
+      for(const bone of object.skeleton.bones){
+       if(bone.name!=='Hips' && restOffsets.has(bone.name) && bone.position.distanceTo(restOffsets.get(bone.name))>1e-5)throw Error('Changing joint offset '+clip.name+' '+bone.name);
+       if(bone.scale.distanceTo(new T.Vector3(1,1,1))>1e-5)throw Error('Stretching bone '+bone.name);
+      }
+      const tail=Array.from({length:7},(_,i)=>gltf.scene.getObjectByName('Tail'+String(i+1).padStart(2,'0')).getWorldPosition(new T.Vector3()));
+      for(let i=1;i<tail.length-1;i++)if(tail[i].clone().sub(tail[i-1]).dot(tail[i+1].clone().sub(tail[i]))<=0)throw Error('Reversing tail '+clip.name);
       if(object.skeleton.boneMatrices.some(value=>!Number.isFinite(value)))throw Error('Invalid skeleton '+clip.name);
      });
-     if(representative.has(clip.name)){
+     if(representative.has(clip.name) && (sample===0 || sample===Math.floor(clip.duration*12) || sample===Math.ceil(clip.duration*24))){
       box.setFromObject(gltf.scene,true);
       if([...box.min,...box.max].some(v=>!Number.isFinite(v)))throw Error('Invalid bounds '+clip.name);
      }
@@ -51,14 +59,10 @@ const launch = require('./browser-test-options.cjs');
    window.review={T,gltf,mixer,scene,renderer,camera,center:center.clone(),span};
    return bounds;
   });
-  assert.equal(result.length,119);
+  assert.deepEqual(result.map(c=>c.name).sort(),['idle 50','run_fwd 13','walk_fwd 29']);
   const choices=require('../src/features/inventory/dogAnimationOptions.json')['dachshund-sculpt'];
   assert.deepEqual(result.map(c=>c.name).sort(),choices.map(c=>c.value).sort());assert.deepEqual(errors,[]);
-  for(const [name,offset] of [['front',[0,.15,1]],['three-quarter',[.7,.35,1]],['back',[-.7,.35,-1]]]){
-   await page.evaluate(offset=>{const r=window.review;r.camera.position.copy(r.center).add(new r.T.Vector3(...offset).multiplyScalar(r.span));r.camera.lookAt(r.center);r.renderer.render(r.scene,r.camera);},offset);
-   await page.screenshot({path:`public/characters/dachshund-sculpt/${name}.png`});
-  }
   require('node:fs').writeFileSync('/tmp/dachshund-review/browser-clips.json',JSON.stringify(result,null,2));
-  console.log('PASS: 119 clips sampled; finite skinned bounds; WebGL rendering; no browser errors.');
+  console.log('PASS: 3 clips sampled at 24 fps; fixed joint offsets and scales; continuous tail; WebGL rendering; no browser errors.');
  } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

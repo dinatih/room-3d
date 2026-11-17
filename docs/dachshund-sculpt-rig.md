@@ -1,57 +1,51 @@
-# Teckel sculpté : variante de comparaison
+# Teckel sculpté : reprise pour validation des trois mouvements de base
 
-La fiche « Teckel sculpté — comparaison Pitbull » est indépendante d’Ulotte et
-n’ajoute pas de chien au jardin. Elle expose le catalogue du Pitbull dans la
-preview existante, avec les commandes de lecture et le panneau du squelette.
+La variante d’inventaire expose uniquement `idle 50`, `walk_fwd 29` et
+`run_fwd 13`. Les 116 autres transferts sont retirés : ils ne sont pas validés.
+Ulotte dans le jardin reste indépendante de cette variante.
 
-## Reconstruction
+## Méthode
+
+Le rig est reconstruit à partir du sculpt original et de repères anatomiques
+mesurés dans ce maillage. Les têtes **et les extrémités** des os correspondent
+aux articulations, avec une chaîne continue suivant la courbe de la queue.
+Les longueurs des membres et du tronc restent fixes. Les actions ne contiennent
+aucune translation des articulations hors bassin, ni animation des échelles.
+
+Le pitbull fournit les écarts de rotation par rapport à son repos, le rythme,
+la trajectoire des pieds et leurs phases de contact. Les quatre chaînes IK
+respectent les longueurs propres au teckel ; les orientations des pieds sont
+contrôlées indépendamment de la résolution du coude ou du genou. La hauteur des
+cibles utilise la géométrie des soles et la levée mesurée sur le donneur.
+
+Les poids proviennent d’un volume fermé intermédiaire puis sont interpolés sur
+le sculpt allégé. La queue utilise une progression ordonnée entre ses sept os.
+Les yeux et le crâne suivent le même os, avec une transition au raccord du cou.
+La bouche fermée ne permet pas de reproduire mâchoire et langue.
+
+## Reconstruction et contrôles
 
 ```bash
-blender -b -t 2 --python scripts/rig-dachshund-sculpt.py
-blender -b -t 2 --python scripts/preview-dachshund-sculpt.py
+blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/rig-dachshund-sculpt.py
+blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/preview-dachshund-sculpt.py
+python scripts/compose-dachshund-review.py
 node scripts/extract-dog-animation-options.cjs
-```
-
-Source : `~/3D Resources/animals/dachshund-sculpt.zip`, entrée
-`source/CocoSculpt.glb`. Le donneur est le Pitbull déjà présent dans le projet.
-Le script conserve les matériaux et les couleurs de sommets, crée une version
-allégée visant 60 000 sommets et laisse l’archive originale intacte.
-
-Les pivots du donneur sont ajustés suivant des repères de bassin, poitrine,
-crâne et museau dans les coordonnées du sculpt. Les poids sont calculés par
-le solveur thermique Blender sur un volume fermé intermédiaire, puis interpolés
-sur la surface visible. Le crâne et les yeux séparés suivent le même os de tête ;
-une bande de transition au raccord du cou évite le détachement des yeux.
-
-Les positions et orientations des articulations animées sont transférées
-image par image en espace monde, puis converties en transformations locales
-dans le squelette adapté. Le transfert des positions permet aux pattes courtes
-de suivre les appuis du donneur malgré les différences de longueur du tronc.
-La planche d’inventaire reste une référence de placement, pas une mesure issue
-d’un examen radiologique du modèle.
-
-## Livrables
-
-- `artifacts/dachshund-sculpt/dachshund.blend` : scène éditable et actions.
-- `public/characters/dachshund-sculpt/dog.glb` : export pour la preview.
-- Trois vues PNG dans le même dossier public.
-
-## Vérification
-
-Avec Vite sur le port 5191 :
-
-```bash
 node scripts/check-dachshund-sculpt.cjs --hardware-gpu
 npx tsc --noEmit
 npm run build
 ```
 
-Le test utilise un rendu WebGL isolé, bloque les requêtes externes, vérifie les
-poids normalisés et les matrices du squelette des 119 clips au début, au milieu
-et à la fin. Les bornes de peau sont vérifiées pour repos, marche, course,
-assis, couché et saut.
-Les bornes finies et l’absence d’erreur ne prouvent pas la qualité anatomique :
-les six rendus Blender servent à examiner les poses et les plis de peau.
-Les expressions faciales fines du Pitbull ne sont pas reproduites : seuls les
-os utiles au corps, aux membres, à la tête, aux oreilles et à la queue déforment
-le sculpt. La bouche fermée ne fournit pas une mâchoire intérieure animable.
+Le test WebGL utilise un chargement isolé, bloque les requêtes externes et
+échantillonne les trois clips à 24 images/s. Il vérifie les poids, les offsets
+articulaires constants, les échelles unitaires, les matrices finies et l’absence
+de retournement des segments de queue. Ces contrôles ne remplacent pas la
+validation visuelle des mouvements.
+
+Les GIFs (cadence du clip), planches de huit phases et images de détail sont dans
+`artifacts/dachshund-sculpt/review/`. Le Blender éditable est
+`artifacts/dachshund-sculpt/dachshund.blend`. Le modèle de preview est
+`public/characters/dachshund-sculpt/dog.glb`.
+
+État : trois mouvements reconstruits et proposés à validation visuelle de
+l’utilisateur. Aucun accord sur leur qualité ne doit être déduit des seuls
+tests techniques.

@@ -155,7 +155,7 @@ export const INVENTORY: InventoryItem[] = [
     glbPath: 'characters/dachshund-sculpt/dog.glb',
     referenceSheet: 'references/xray/ulotte-xray.png',
     photos: ['characters/dachshund-sculpt/three-quarter.png', 'characters/dachshund-sculpt/front.png', 'characters/dachshund-sculpt/back.png'],
-    notes: 'Variante de comparaison indépendante d’Ulotte. Squelette adapté du Pitbull et catalogue de 119 animations transférées. Sculpt original conservé.',
+    notes: 'Variante de comparaison indépendante d’Ulotte. Nouveau squelette anatomique, queue continue et pattes en IK. Trois animations du Pitbull en cours de validation : repos, marche et course. Sculpt original conservé.',
   },
   {
     id: 'ulotte',
