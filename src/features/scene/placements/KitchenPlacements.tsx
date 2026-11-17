@@ -137,7 +137,7 @@ export function KitchenFurnishings() {
 
       {/* Fixation sur la sous-face de la planche basse (153 cm), à la jonction évier/plaques.
           La platine de 5 cm reste entièrement à gauche du caisson de hotte (X local 40). */}
-      <group position={[KITCHEN_WEST_WALL + 40 - 5 / 2, HOOD_CABINET_BOTTOM_TOP - 1.8, ROOM_D + 32]}
+      <group position={[KITCHEN_WEST_WALL + 40 - 5 / 2, HOOD_CABINET_BOTTOM_TOP - 1.8, KITCHEN_SOUTH_WALL - 10]}
         userData={{ sceneItemRoot: true, itemName: 'Crochet rotatif blanc à 7 griffes' }}>
         <SevenProngHook />
       </group>
