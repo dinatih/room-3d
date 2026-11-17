@@ -334,7 +334,6 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
         for finger in ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']:
             for segment in [1, 2]:
                 children[f'{side}Hand{finger}{segment}'] = f'{side}Hand{finger}{segment + 1}'
-    original_rest = {name: rotation.copy() for name, rotation in source_rest.items()}
     for name, child in children.items():
         if name not in mapping or child not in mapping:
             continue
@@ -378,11 +377,23 @@ def motion(path, rig, armature_name=None, loaded_arm=None):
                 name = by_index[i]
                 world_quat = alignment @ sampled[name].to_quaternion()
                 if re.fullmatch(r'(Left|Right)Hand(Thumb|Index|Middle|Ring|Pinky)[123]', name):
-                    # Change the motion's basis as well as its rest direction.
-                    # Editing only source_rest injects a rotation even at bind pose.
-                    basis = source_rest[name] @ original_rest[name].inverted()
-                    delta = world_quat @ original_rest[name].inverted()
-                    desired[i] = basis @ delta @ basis.inverted() @ target_worlds[i].to_quaternion()
+                    # Transfer each joint's LOCAL deformation. World-space deltas
+                    # include its parent's bend; calibrating those independently
+                    # makes a child's rotation compensate in the opposite direction.
+                    source_bone = arm.data.bones[mapping[name]]
+                    pose_bone = evaluated.pose.bones[mapping[name]]
+                    rest_local = source_bone.matrix_local.copy()
+                    pose_local = pose_bone.matrix.copy()
+                    if source_bone.parent:
+                        rest_local = source_bone.parent.matrix_local.inverted() @ rest_local
+                        pose_local = pose_bone.parent.matrix.inverted() @ pose_local
+                    delta = rest_local.to_quaternion().inverted() @ pose_local.to_quaternion()
+                    target_rest = target_worlds[i].to_quaternion()
+                    joint_frame = source_rest[name].inverted() @ target_rest
+                    target_delta = joint_frame.inverted() @ delta @ joint_frame
+                    target_parent_rest = target_worlds[parents[i]].to_quaternion()
+                    local = target_parent_rest.inverted() @ target_rest @ target_delta
+                    desired[i] = parent_quat @ local
                 else:
                     desired[i] = world_quat @ source_rest[name].inverted() @ target_worlds[i].to_quaternion()
                 local = (parent_quat.inverted() @ desired[i]).normalized()
