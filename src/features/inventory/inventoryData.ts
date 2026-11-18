@@ -145,24 +145,25 @@ export const INVENTORY: InventoryItem[] = [
   ...householdShowcaseItems,
   {
     id: 'ushiro',
+    referenceSheet: 'references/xray/ushiro-xray.png',
     name: 'Chien Ushiro (Shiba Inu)',
     brand: 'Animal',
     category: 'animals',
     qty: 1,
-    dims: { w: 38.04, d: 40, h: 40 },
+    dims: { w: 21.23, d: 45.37, h: 40 },
     glbPath: 'characters/ushiro/ushiro.glb',
     photos: ['characters/ushiro/three-quarter.png', 'characters/ushiro/front.png', 'characters/ushiro/back.png'],
-    notes: `Shiba Inu détaillé. Cinq animations natives et 119 transferts expérimentaux du Pitbull ; retargeting à affiner.`
+    notes: `Shiba Inu : squelette et poids reconstruits, pattes en IK, queue suivant sa courbe. Catalogue du Pitbull ; anciennes animations natives supprimées.`
   },
   {
     id: 'dachshund-sculpt',
-    name: 'Teckel sculpté — comparaison Pitbull',
+    name: 'Teckel noir — comparaison Pitbull',
     brand: 'Animal', category: 'animals', qty: 1,
     dims: { w: 16.55, d: 67.54, h: 30 },
     glbPath: 'characters/dachshund-sculpt/dog.glb',
     referenceSheet: 'references/xray/ulotte-xray.png',
     photos: ['characters/dachshund-sculpt/three-quarter.png', 'characters/dachshund-sculpt/front.png', 'characters/dachshund-sculpt/back.png'],
-    notes: 'Variante de comparaison indépendante d’Ulotte. Nouveau squelette anatomique, queue continue et pattes en IK. Trois animations du Pitbull en cours de validation : repos, marche et course. Sculpt original conservé.',
+    notes: 'Variante de comparaison indépendante d’Ulotte. Nouveau squelette anatomique, queue continue et pattes en IK. Pelage noir et catalogue complet des animations du Pitbull. Sculpt original conservé.',
   },
   {
     id: 'ulotte',

@@ -301,7 +301,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     }
   });
 
-  useAnimalCamera('shiba', modelRef, scene, isPreview, 'head_jnt40', 'jaw_jnt41');
+  useAnimalCamera('shiba', modelRef, scene, isPreview, 'Head', 'Muzzle');
 
   return (
     <group name="shiba-inu" ref={modelRef as any} position={isPreview ? undefined : [180, 0, -120]} rotation={isPreview ? undefined : [0, -Math.PI / 4, 0]}

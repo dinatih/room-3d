@@ -1094,20 +1094,7 @@ export function InventoryPreview({
     if (!item?.id) return undefined;
     if (item.id === 'animated-pitbull-dog') return pitbullAnimationChoices;
     if (item.id === 'dachshund-sculpt') return prioritizePitbullAnimations(dogAnimationOptions['dachshund-sculpt']);
-    if (['ushiro', 'shiba-inu'].includes(item.id)) {
-      const nativeClips = [
-        { value: 'standing_skeletal.3', label: 'standing_skeletal.3 — Debout (native)' },
-        { value: 'sitting_skeletal.3', label: 'sitting_skeletal.3 — Assis (native)' },
-        { value: 'shake_skeletal.3', label: 'shake_skeletal.3 — Se secouer (native)' },
-        { value: 'rollover_skeletal.3', label: 'rollover_skeletal.3 — Se rouler (native)' },
-        { value: 'play_dead_skeletal.3', label: 'play_dead_skeletal.3 — Faire le mort (native)' },
-      ];
-      return [
-        ...nativeClips,
-        ...prioritizePitbullAnimations(dogAnimationOptions.ushiro)
-          .filter(option => !nativeClips.some(clip => clip.value === option.value)),
-      ];
-    }
+    if (['ushiro', 'shiba-inu'].includes(item.id)) return prioritizePitbullAnimations(dogAnimationOptions.ushiro);
     if (item.id in dogAnimationOptions) return dogAnimationOptions[item.id as keyof typeof dogAnimationOptions];
     if (item.id === 'black-hornet-drone' || item.id === 'ring-drone-cam') return [
       { value: 'Drone_Hover', label: 'Vol stationnaire' },
