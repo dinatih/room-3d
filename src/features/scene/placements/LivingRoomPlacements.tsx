@@ -337,8 +337,8 @@ export function DeskDecor() {
       </PositionTransition>
       <PositionTransition x={p2.x} z={p2.z} ry={p2.ry}>
         <group position={[0, d2H, -8]} rotation={[0, Math.PI, 0]} userData={{ skipMerge: true }}>
-          {/* 12 cm vers le fond du plateau, dans le repère retourné des accessoires. */}
-          <group position={[0, 0, -12]}>
+          {/* 2 cm vers le fond du plateau (reculé de 10 cm pour que l écran ne traverse plus la fenêtre), dans le repère retourné des accessoires. */}
+          <group position={[0, 0, -2]}>
             <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Support ordinateur GRIFFIN' }}>
               <LaptopStand />
             </group>
