@@ -38,6 +38,7 @@ import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '../items/SdbLaundryHook';
 import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
 import { ToiletPaperRoll, PaperTowelRoll, TOILET_PAPER_DIAMETER, PAPER_TOWEL_DIAMETER } from '../items/PaperRolls';
+import { AxeCherryFizzRollOn, AxeUltimeCherryFizz, SignalCocoToothpaste, ElmexBlancheurDouce } from '../items/AmazonBathroomProducts';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL, DiagWall } from '../wallData';
 
@@ -248,6 +249,14 @@ export function BathroomFurnishings() {
       </group>
 
       {/* Tablette du placard, à droite des rouleaux d'essuie-tout. */}
+      <group position={[CLOSET_RIGHT_EDGE_X + 76, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 11]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'AXE Cherry Fizz bille 50 ml' }}>
+        <AxeCherryFizzRollOn />
+      </group>
+      {[96, 105].map((offset, i) => (
+        <group key={`axe-ultime-${i}`} position={[CLOSET_RIGHT_EDGE_X + offset, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 5]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: `AXE Ultime Cherry Fizz 225 ml ${i + 1}` }}>
+          <AxeUltimeCherryFizz />
+        </group>
+      ))}
       <group position={[CLOSET_RIGHT_EDGE_X + 86, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 12]} userData={{ sceneItemRoot: true, itemName: 'AXE Provocation 400 ml' }}>
         <AxeProvocation />
       </group>
@@ -352,9 +361,23 @@ export function BathroomFurnishings() {
         <OralBToothbrush />
       </group>
 
+      {/* Deux tubes capuchon posé sur le fond intérieur, devant les appareils. */}
+      <group position={[BATH_EAST_WALL - 99, 120.85, BATH_NORTH_WALL + 14.1]} userData={{ sceneItemRoot: true, itemName: 'Signal Coco TISKEN lavabo' }}>
+        <SignalCocoToothpaste />
+      </group>
+      <group position={[BATH_EAST_WALL - 89, 120.85, BATH_NORTH_WALL + 14.1]} userData={{ sceneItemRoot: true, itemName: 'Elmex TISKEN lavabo' }}>
+        <ElmexBlancheurDouce />
+      </group>
+
       {/* Second TISKEN sur mur douche Est (à 1cm du mur douche Sud, 66cm du plafond) */}
       <group position={[BATH_WEST_WALL + SHOWER_W - 2.1, WALL_H - 66, SHOWER_SOUTH_WALL - 15.3]} rotation={[Math.PI / 2, 0, Math.PI / 2]} userData={{ sceneItemRoot: true, itemName: 'Panier Tisken Douche' }}>
         <Tisken40381253 />
+      </group>
+      <group position={[BATH_WEST_WALL + SHOWER_W - 2.1 - 12, WALL_H - 66 - 8.15, SHOWER_SOUTH_WALL - 15.3 + 5]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Signal Coco TISKEN douche' }}>
+        <SignalCocoToothpaste />
+      </group>
+      <group position={[BATH_WEST_WALL + SHOWER_W - 2.1 - 12, WALL_H - 66 - 8.15, SHOWER_SOUTH_WALL - 15.3 - 6]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Elmex TISKEN douche' }}>
+        <ElmexBlancheurDouce />
       </group>
 
       {/* Deuxième Oral-B dans le panier Tisken douche */}
