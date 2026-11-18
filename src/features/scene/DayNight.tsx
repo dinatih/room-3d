@@ -1,7 +1,8 @@
 import { useSceneStore } from './store/useSceneStore';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { Mesh, DirectionalLight, Vector3 } from 'three';
+import { Mesh, DirectionalLight, Vector3, SRGBColorSpace } from 'three';
+import { useTexture } from '@react-three/drei';
 import { Points, ShaderMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { celestialState } from './astronomy';
@@ -26,7 +27,9 @@ export function DayNight() {
   const moonMaterial = useRef<ShaderMaterial>(null!);
   const stars = useRef<Points>(null!);
   const moonLight = useRef<DirectionalLight>(null!);
-  const moonUniforms = useMemo(() => ({ sunDirection: { value: new Vector3() }, opacity: { value: 0 } }), []);
+  // Photo de pleine lune : Gregory H. Revera, CC BY-SA 3.0 (Wikimedia Commons, « FullMoon2010 »).
+  const moonMap = useTexture('/textures/moon_full.jpg', texture => { texture.colorSpace = SRGBColorSpace; });
+  const moonUniforms = useMemo(() => ({ sunDirection: { value: new Vector3() }, opacity: { value: 0 }, moonMap: { value: moonMap } }), [moonMap]);
   const starField = useMemo(() => {
     const count = 750;
     const positions = new Float32Array(count * 3);
@@ -71,6 +74,7 @@ export function DayNight() {
     scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * (0.12 + 0.88 * light);
     scene.userData.lastNightEnvironment = scene.environmentIntensity;
     moon.current.position.copy(sky.moon.direction).multiplyScalar(SKY_RADIUS * 0.8);
+    moon.current.lookAt(...SKY_CENTER); // la même face est toujours tournée vers l'observateur
     moon.current.visible = sky.moon.elevation > 0;
     moonMaterial.current.uniforms.sunDirection.value.copy(sky.sun.direction);
     moonMaterial.current.uniforms.opacity.value = 0.3 + 0.7 * (1 - light);
@@ -102,7 +106,9 @@ export function DayNight() {
       <shaderMaterial ref={moonMaterial} uniforms={moonUniforms} transparent toneMapped={false}
         vertexShader={`
           varying vec3 surfaceNormal;
+          varying vec3 localNormal;
           void main() {
+            localNormal = normal;
             surfaceNormal = normalize(mat3(modelMatrix) * normal);
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
@@ -110,10 +116,15 @@ export function DayNight() {
         fragmentShader={`
           uniform vec3 sunDirection;
           uniform float opacity;
+          uniform sampler2D moonMap;
           varying vec3 surfaceNormal;
+          varying vec3 localNormal;
           void main() {
+            // Photo orthographique de la face visible : disque centré en (0.5, 0.494), rayon 0.414 en largeur et 0.436 en hauteur.
+            vec2 uv = vec2(0.5 + localNormal.x * 0.414, 0.494 + localNormal.y * 0.436);
+            vec3 albedo = texture2D(moonMap, uv).rgb * 1.6;
             float illumination = 0.015 + max(0.0, dot(normalize(surfaceNormal), sunDirection));
-            gl_FragColor = vec4(vec3(0.73, 0.8, 1.0) * illumination, opacity);
+            gl_FragColor = vec4(vec3(0.85, 0.9, 1.0) * albedo * illumination, opacity);
             #include <colorspace_fragment>
           }
         `} />

@@ -740,7 +740,7 @@ export function LivingRoomDecor() {
       {/* Barre haute, côté mur : sommet extérieur du fil à 3 mm du contact.
           Le bord gauche du tissu reste à environ 2 cm du mur Ouest.
           Les pinces 1, 6 et 16 décalent les vêtements de la barre basse. */}
-      <group position={[MACK_X - 2, MACK_UPPER_RAIL_TOP + 0.3, MACK_Z + 0.8]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Séchoir inox 16 pinces — trois tee-shirts noirs' }}>
+      <group position={[MACK_X - 2, MACK_UPPER_RAIL_TOP + 0.3, MACK_Z + 0.8]} rotation-y={Math.PI / 2 + 1.05} userData={{ sceneItemRoot: true, itemName: 'Séchoir inox 16 pinces — trois tee-shirts noirs' }}>
         <ClipHanger16Loaded />
       </group>
 
