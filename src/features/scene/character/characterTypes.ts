@@ -5,7 +5,12 @@ import type { DuoAnimationDef } from '../animations/duoAnimations';
 
 export interface PreviewPlayback { time: number; duration: number; ready: boolean; playing: boolean; }
 
+export type PreviewOutfit = Partial<Pick<import('../sidepanel/types').LayerState,
+  'laraTop' | 'laraBottom' | 'laraHoodieZip' | 'laraShoes' | 'laraSocks' | 'laraSneakers' |
+  'laraNeckBandana' | 'laraWristBandana' | 'laraGlasses' | 'laraPistols' | 'accessories' | 'characterWireframe'>>;
+
 export interface CharacterGroupProps {
+  previewOutfit?: PreviewOutfit;
   previewPlayback?: PreviewPlayback;
   isPreview?: boolean;
   previewCharacterId?: string;

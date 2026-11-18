@@ -111,6 +111,7 @@ export function Character({
   isActive,
   isPreview = false,
   previewPlayback,
+  previewOutfit,
   characterIndex = 0,
   gridPosition,
   characterAnim = 'idle',
@@ -142,20 +143,20 @@ export function Character({
   const activeExtraIds = useSceneStore(state => state.activeExtraIds);
   const activeMainIds = useSceneStore(state => state.activeMainIds);
   const showWallhack = useSceneStore(state => state.layers.wallhack);
-  const showAccessories = useSceneStore(state => state.layers.accessories ?? true);
-  const laraPistols = useSceneStore(state => state.layers.laraPistols ?? true);
-  const laraTop = useSceneStore(state => state.layers.laraTop);
-  const laraBottom = useSceneStore(state => state.layers.laraBottom);
-  const laraHoodieZip = useSceneStore(state => state.layers.laraHoodieZip);
-  const laraShoes = useSceneStore(state => state.layers.laraShoes ?? true);
-  const laraSocks = useSceneStore(state => state.layers.laraSocks ?? false);
-  const laraSneakers = useSceneStore(state => state.layers.laraSneakers ?? false);
-  const laraNeckBandana = useSceneStore(state => state.layers.laraNeckBandana ?? false);
-  const laraWristBandana = useSceneStore(state => state.layers.laraWristBandana ?? false);
-  const laraGlasses = useSceneStore(state => state.layers.laraGlasses ?? true);
+  const showAccessories = useSceneStore(state => (isPreview ? previewOutfit?.accessories : undefined) ?? state.layers.accessories ?? true);
+  const laraPistols = useSceneStore(state => (isPreview ? previewOutfit?.laraPistols : undefined) ?? state.layers.laraPistols ?? true);
+  const laraTop = useSceneStore(state => (isPreview ? previewOutfit?.laraTop : undefined) ?? state.layers.laraTop);
+  const laraBottom = useSceneStore(state => (isPreview ? previewOutfit?.laraBottom : undefined) ?? state.layers.laraBottom);
+  const laraHoodieZip = useSceneStore(state => (isPreview ? previewOutfit?.laraHoodieZip : undefined) ?? state.layers.laraHoodieZip);
+  const laraShoes = useSceneStore(state => (isPreview ? previewOutfit?.laraShoes : undefined) ?? state.layers.laraShoes ?? true);
+  const laraSocks = useSceneStore(state => (isPreview ? previewOutfit?.laraSocks : undefined) ?? state.layers.laraSocks ?? false);
+  const laraSneakers = useSceneStore(state => (isPreview ? previewOutfit?.laraSneakers : undefined) ?? state.layers.laraSneakers ?? false);
+  const laraNeckBandana = useSceneStore(state => (isPreview ? previewOutfit?.laraNeckBandana : undefined) ?? state.layers.laraNeckBandana ?? false);
+  const laraWristBandana = useSceneStore(state => (isPreview ? previewOutfit?.laraWristBandana : undefined) ?? state.layers.laraWristBandana ?? false);
+  const laraGlasses = useSceneStore(state => (isPreview ? previewOutfit?.laraGlasses : undefined) ?? state.layers.laraGlasses ?? true);
   const laraRealisticTextures = useSceneStore(state => state.layers.laraRealisticTextures ?? false);
   const characterShadows = useSceneStore(state => state.layers.characterShadows ?? true);
-  const characterWireframe = useSceneStore(state => state.layers.characterWireframe ?? false);
+  const characterWireframe = useSceneStore(state => (isPreview ? previewOutfit?.characterWireframe : undefined) ?? state.layers.characterWireframe ?? false);
   const animOriginLerp = useSceneStore(state => state.layers.animOriginLerp ?? false);
   const animCrossfade = useSceneStore(state => state.layers.animCrossfade ?? false);
   const cameraMode = useSceneStore(state => state.cameraMode);
@@ -634,7 +635,7 @@ export function Character({
     if (!scene) return;
 
     // 1. Visibilité et coloration de la chevelure d'origine
-    const isNativeLara = id === 'native' || variant === 'native';
+    const isNativeLara = (id === 'native' || variant === 'native') && !isPreview;
     const showNativeHair = isNativeLara || haircut === 'original';
     const targetColor = !isNativeLara && hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
 
@@ -1420,7 +1421,7 @@ export function Character({
         <CharacterBaseballCap attachTo={headBone} />
       )}
 
-      {headRefBone && id !== 'native' && variant !== 'native' && haircut !== 'original' && (
+      {headRefBone && (isPreview || (id !== 'native' && variant !== 'native')) && haircut !== 'original' && (
         <Wig
           id={haircut.replace('hair_', '')}
           color={hairColor}

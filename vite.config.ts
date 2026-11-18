@@ -52,6 +52,7 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         inventory: path.resolve(import.meta.dirname, 'index.html'),
+        laraOutfitComparison: path.resolve(import.meta.dirname, 'lara-outfit-comparison.html'),
         dogComparison: path.resolve(import.meta.dirname, 'dog-comparison.html'),
       },
     },

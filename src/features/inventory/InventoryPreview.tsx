@@ -1472,6 +1472,9 @@ export function InventoryPreview({
     {item && !hideViewControlBar && (
       <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} toolbarPrefix={toolbarPrefix} afterToolbarActions={afterToolbarActions} beforeAmbianceActions={showing3D && (
         <>
+        {isHumanCharacter && CHARACTERS.some(c => c.id === item?.id && c.isLara !== false) && (
+          <a className="btn btn-sm btn-outline-primary" href="/lara-outfit-comparison.html">Comparer les tenues de Lara</a>
+        )}
         {item && ['animated-pitbull-dog', 'ushiro', 'shiba-inu', 'dachshund-sculpt'].includes(item.id) && (
           <a className="btn btn-sm btn-outline-primary" href={`/dog-comparison.html${showSkeleton ? '?skeleton=1' : ''}`} title="Comparer Pitbull, Ushiro et Ulotte HD">Comparer les chiens</a>
         )}
