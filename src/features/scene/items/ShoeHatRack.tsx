@@ -46,7 +46,7 @@ function Tube({ p1, p2 }: { p1: [number,number,number]; p2: [number,number,numbe
 export function ShoeHatRackCaps() {
   return (
     <>
-      {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
+      {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).filter(barY => !(x === HOOK_XS[0] && barY === Y_MID)).map(barY => (
         <group key={`${x}-${barY}`} position={[x, barY + 1.5, TR + 8.5]} rotation={[Math.PI / 2, 0, 0]}>
           <TruckerCap />
         </group>
@@ -96,7 +96,7 @@ export function ShoeHatRack({ onSize, noCaps }: SceneModelProps & { noCaps?: boo
         <Tube p1={[TR, Y_TOP, TR]} p2={[W-TR, Y_TOP, TR]} />
 
         {/* ── Crochets doubles (4 positions × 2 barres) ── */}
-        {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).map(barY => (
+        {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).filter(barY => !(x === HOOK_XS[0] && barY === Y_MID)).map(barY => (
           <group key={`${x}-${barY}`}>
             {/* Poteau vertical */}
             <Tube p1={[x, barY,        TR]} p2={[x, barY+7,        TR]}     />
