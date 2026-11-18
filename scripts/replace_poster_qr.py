@@ -1,6 +1,6 @@
 """Remplace le QR code de l'affiche « Hug Life VI » par un QR code valide.
 
-Usage : python3 scripts/replace_poster_qr.py affiche.jpg qr.png sortie.jpg
+Usage : python3 scripts/replace_poster_qr.py affiche.jpg qr.png sortie.jpg [TLx TLy TRx TRy BLx BLy]
 Le QR est recalé en affine sur l'autocollant (coins mesurés sur l'affiche 1493x2000).
 """
 import sys
@@ -18,9 +18,8 @@ ys, xs = np.where(dark)
 sx0, sx1, sy0, sy1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
 
 # Coins des modules sur l'affiche : haut-gauche, haut-droite, bas-gauche (mesurés).
-TL = np.array([87.5, 1715.0])
-TR = np.array([285.0, 1692.5])
-BL = np.array([110.0, 1904.0])
+corners = [float(x) for x in sys.argv[4:10]] or [87.5, 1715.0, 285.0, 1692.5, 110.0, 1904.0]
+TL, TR, BL = (np.array(corners[i:i + 2]) for i in (0, 2, 4))
 u = (TR - TL) / (sx1 - sx0)  # déplacement affiche par pixel source en x
 v = (BL - TL) / (sy1 - sy0)  # idem en y
 
