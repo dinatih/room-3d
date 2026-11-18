@@ -21,7 +21,8 @@ export const BATHROOM_STORAGE_ITEMS = {
   },
   'drona-bathroom-east': {
     label: 'Dröna SDB Est',
-    position: [BATH_EAST_WALL - 23, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + 1 + DRONA_HEIGHT / 2] as [number, number, number],
+    // Recul de 1 cm pour dégager le lait Mixa sur le bord avant du meuble.
+    position: [BATH_EAST_WALL - 23, CABINET_HEIGHT + DRONA_HEIGHT / 2 + 0.2, BATH_NORTH_WALL + DRONA_HEIGHT / 2] as [number, number, number],
     rotationY: Math.PI, cabinetId: 'bathroom-cabinet-east', kind: 'box',
   },
 };

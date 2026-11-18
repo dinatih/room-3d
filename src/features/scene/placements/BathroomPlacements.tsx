@@ -33,7 +33,7 @@ import { BATHROOM_STORAGE_ITEMS } from '../items/bathroomStorage';
 import { TemuRollingBin, TEMU_ROLLING_BIN_DEPTH } from '../items/TemuRollingBin';
 import { CecotecReadywarm } from '../items/CecotecReadywarm';
 import { CifInfiniteClean, W5Bleach, Plogsvaeng, LaundryDetergent, FabricSoftener, LAUNDRY_DETERGENT_SIZE, FABRIC_SOFTENER_SIZE } from '../items/CleaningProducts';
-import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
+import { MennenIntracable, AxeDarkTemptation, AxeCherryFizz, AxeProvocation, MixaBebe } from '../items/ToiletryProducts';
 import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '../items/SdbLaundryHook';
 import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
@@ -227,8 +227,11 @@ export function BathroomFurnishings() {
           <group position={[0.26, -DF / 2 + 15, id === 'drona-bathroom-west' ? 9.765 : -9.765]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
             <Stackstod60620144 />
             {id === 'drona-bathroom-east' && <>
-              <group position={[-8, 1, 0]} userData={{ sceneItemRoot: true, itemName: 'Déodorant en spray (Axe)' }}><AxeDeodorant /></group>
-              <group position={[8, 1, 0]} userData={{ sceneItemRoot: true, itemName: 'Crème en distributeur' }}><CreamPump /></group>
+              {/* Fonds mesurés dans le GLB : 0,21 cm sur les côtés,
+                  2,17 cm dans le bac central ; dégagement de la poignée. */}
+              <group position={[-10, 0.21, 4]} userData={{ sceneItemRoot: true, itemName: 'AXE Dark Temptation 200 ml' }}><AxeDarkTemptation /></group>
+              <group position={[0, 2.17, 5]} userData={{ sceneItemRoot: true, itemName: 'Mennen Intraçable 72h 60 ml' }}><MennenIntracable /></group>
+              <group position={[10, 0.21, 4]} userData={{ sceneItemRoot: true, itemName: 'AXE Cherry Fizz 150 ml' }}><AxeCherryFizz /></group>
             </>}
           </group>
           {id === 'drona-bathroom-west' && <group position={[0, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean SDB Ouest' }}><CifInfiniteClean /></group>}
@@ -238,6 +241,16 @@ export function BathroomFurnishings() {
           </>}
         </group>
       ))}
+
+      {/* Bord avant du METOD Est, flacon posé devant le DRÖNA. */}
+      <group position={[BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position[0], 60, BATH_NORTH_WALL + 35.8]} userData={{ sceneItemRoot: true, itemName: 'Mixa Bébé 750 ml' }}>
+        <MixaBebe />
+      </group>
+
+      {/* Tablette du placard, à droite des rouleaux d'essuie-tout. */}
+      <group position={[CLOSET_RIGHT_EDGE_X + 86, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 12]} userData={{ sceneItemRoot: true, itemName: 'AXE Provocation 400 ml' }}>
+        <AxeProvocation />
+      </group>
 
       {/* Couvercle du réservoir mesuré dans le GLB : 83,82 cm, WC posé à Y=1.
           Rouleau à gauche du bouton, sans recouvrir la commande de chasse. */}

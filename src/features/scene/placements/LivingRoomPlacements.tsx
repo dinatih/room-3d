@@ -50,6 +50,7 @@ import { createStaticGlbItem } from '../items/createStaticGlbItem';
 import { Dirigera10503406 } from '../items/Dirigera10503406';
 import { MatterHub } from '../items/MatterHub';
 import { CreamPump, AxeDeodorant } from '../items/CosmeticProducts';
+import { DiorFahrenheit, GuerlainHabitRouge } from '../items/ToiletryProducts';
 import { VacuumCleanerPart } from '../items/VacuumCleanerPart';
 import { DroneCell, DF } from '../items/Drona';
 import { DimpaCover } from '../items/DimpaCover';
@@ -659,6 +660,12 @@ export function LivingRoomDecor() {
       {/* Têtes de mannequin 1 (Kallax NW) et 3 (Meuble T) */}
       <group position={KALLAX_NW_POSITION} rotation={[0, KALLAX_NW_ROTATION, 0]}>
         <KallaxNWMannequins />
+        {/* Planche latérale gauche du meuble en T, à côté de la tête.
+            La planche droite accueille déjà le pistolet de massage. */}
+        <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
+          <group position={[-20, 36.7, -2]} userData={{ sceneItemRoot: true, itemName: 'Dior Fahrenheit 100 ml' }}><DiorFahrenheit /></group>
+          <group position={[-30, 36.7, -2]} userData={{ sceneItemRoot: true, itemName: 'Guerlain Habit Rouge 50 ml' }}><GuerlainHabitRouge /></group>
+        </group>
       </group>
 
       {/* Tête de mannequin 2 sur Kallax NE (légèrement reculée pour dégager TJENA) */}

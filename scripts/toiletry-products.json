@@ -1,0 +1,211 @@
+[
+  {
+    "id": "mennen-intracable",
+    "name": "Mennen Intraçable 72h — stick large 60 ml",
+    "brand": "Mennen",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 6,
+      "d": 3.5,
+      "h": 11.5
+    },
+    "price": "6,85",
+    "location": "STACKSTOD du DRÖNA SDB Est",
+    "url": "https://lasante.net/espace-para/parapharmacie-hygiene/deodorants/mennen-deodorant-intracable-72h-stick-large-60-ml.html?gclid=Cj0KCQiAk_DXBhCoARIsAHE-omMmG1Ioc2Q0YCf3gXB_M-ztNq08NZXwVMUXLPy2mRZ3E4nH2X-cajAaAsynEALw_wcB",
+    "notes": "Stick large bleu, protection 72 h. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/mennen-intracable/mennen-intracable.glb",
+    "images": [
+      "https://images.lasante.net/66982-214433-large.webp",
+      "https://images.lasante.net/66982-214431-large.webp",
+      "https://images.lasante.net/66982-214432-large.webp",
+      "https://images.lasante.net/66982-214434-large.webp"
+    ],
+    "photos": [
+      "items/mennen-intracable/product-1.jpg",
+      "items/mennen-intracable/product-2.jpg",
+      "items/mennen-intracable/product-3.jpg",
+      "items/mennen-intracable/product-4.jpg"
+    ]
+  },
+  {
+    "id": "dior-fahrenheit",
+    "name": "Dior Fahrenheit — eau de toilette 100 ml",
+    "brand": "Dior",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 6,
+      "d": 3.5,
+      "h": 15
+    },
+    "price": "128,00",
+    "location": "Meuble en T, à côté de la tête de mannequin",
+    "url": "https://www.nocibe.fr/fr/p/1069008304?variant=547414&trac=DO_FR.01.01_Shopping.P_Shopping.Google.23614133690.196670355271.547414.online.PM&gad_source=1&gad_campaignid=23614133690&gbraid=0AAAAADvEy7VbNSLIou-njGraW6aZlUT1H&gclid=Cj0KCQiAk_DXBhCoARIsAHE-omPz2wDx9Nx13lvvVeZKP6aE91fHrCYvwM-BrSjuXkVDq27Rf1IjeMwaAglMEALw_wcB",
+    "notes": "Mandarine, violette, bois et cuir. Prix utilisateur conservé ; offre Nocibé observée à 89,60 € avec code, prix de référence 128 €. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/dior-fahrenheit/dior-fahrenheit.glb",
+    "images": [
+      "https://media.nocibe.fr/medias/cjYKiV547414-0-ncb-FR.png?context=bWFzdGVyfGltYWdlc3wzMDU5MDF8aW1hZ2UvcG5nfGFHVmlMMmcwWXk4MU1EUTBPRFU0TWpZek9UWTBOaTlqYWxsTGFWWTFORGMwTVRSZk1GOXVZMkl0UmxJdWNHNW58ZDNjNDI2NTE0NzRjYjNlZTNlYTg0NGNmOGRkNjEyMDZhZmI2OTVlNjkwZGM3NmQwOTIwODkzZmZmN2NkYjY3MA&grid=true&transparent=true&imPolicy=grayScaledtransparent&imdensity=1&imwidth=484"
+    ],
+    "photos": [
+      "items/dior-fahrenheit/product-1.jpg"
+    ]
+  },
+  {
+    "id": "guerlain-habit-rouge",
+    "name": "Guerlain Habit Rouge — eau de toilette 50 ml",
+    "brand": "Guerlain",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 5.2,
+      "d": 3,
+      "h": 10.5
+    },
+    "price": "88,00",
+    "location": "Meuble en T, à côté du Dior",
+    "url": "https://www.guerlain.com/fr/fr-fr/p/habit-rouge-de-guerlain-paris-eau-de-toilette-P030482.html?v=G030481",
+    "notes": "Accord ambré hespéridé, notes vanillées et cuirées. Référence 50 ml G030481 (le lien initial G030482 désigne le 100 ml). Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/guerlain-habit-rouge/guerlain-habit-rouge.glb",
+    "images": [
+      "https://www.guerlain.com/dw/image/v2/BDCZ_PRD/on/demandware.static/-/Sites-GSA_master_catalog/default/dwba9a3e7a/01-ProductsViewer/P030482/P030482_G030481_E01_hi-res.png?sw=655&sh=655",
+      "https://www.guerlain.com/dw/image/v2/BDCZ_PRD/on/demandware.static/-/Sites-GSA_master_catalog/default/dwf1aaf03f/01-ProductsViewer/P030482/P030482_G030481_E02_hi-res.png?sw=655&sh=655"
+    ],
+    "photos": [
+      "items/guerlain-habit-rouge/product-1.jpg",
+      "items/guerlain-habit-rouge/product-2.jpg"
+    ]
+  },
+  {
+    "id": "axe-dark-temptation",
+    "name": "AXE Dark Temptation — spray 200 ml",
+    "brand": "AXE",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 5,
+      "d": 5,
+      "h": 20.5
+    },
+    "price": "21,00",
+    "location": "STACKSTOD du DRÖNA SDB Est",
+    "url": "https://www.amazon.fr/dp/B0F1TLCST2?th=1",
+    "notes": "Chocolat et tonka, protection anti-odeurs 48 h. Prix utilisateur 21 € pour le lot de 6 × 200 ml ; prix observé 20,15 € le lot, 3,36 € par spray. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/axe-dark-temptation/axe-dark-temptation.glb",
+    "images": [
+      "https://m.media-amazon.com/images/I/81rifAtouxL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/71RKjv61rlL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81G5C7xq15L._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/918+0DgApcL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81BUE7HxGPL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/715sutVu8tL._AC_SL1500_.jpg"
+    ],
+    "photos": [
+      "items/axe-dark-temptation/product-1.jpg",
+      "items/axe-dark-temptation/product-2.jpg",
+      "items/axe-dark-temptation/product-3.jpg",
+      "items/axe-dark-temptation/product-4.jpg",
+      "items/axe-dark-temptation/product-5.jpg",
+      "items/axe-dark-temptation/product-6.jpg"
+    ]
+  },
+  {
+    "id": "axe-cherry-fizz",
+    "name": "AXE Cherry Fizz — spray 150 ml",
+    "brand": "AXE",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 4.5,
+      "d": 4.5,
+      "h": 18
+    },
+    "price": "17,99",
+    "location": "STACKSTOD du DRÖNA SDB Est",
+    "url": "https://www.amazon.fr/AXE-D%C3%A9odorant-Collection-Anti-transpirant-eucalyptus/dp/B0DY1Z7VYS",
+    "notes": "Pomme, eucalyptus, ambre et cerise ; protection anti-odeurs 72 h. Prix du lot de 6 × 150 ml, soit environ 3 € par spray. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/axe-cherry-fizz/axe-cherry-fizz.glb",
+    "images": [
+      "https://m.media-amazon.com/images/I/71JmpprKCcL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81H607xb6+L._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81ShqqSaslL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81Dx+T4LApL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81ByXr7HFML._AC_SL1500_.jpg"
+    ],
+    "photos": [
+      "items/axe-cherry-fizz/product-1.jpg",
+      "items/axe-cherry-fizz/product-2.jpg",
+      "items/axe-cherry-fizz/product-3.jpg",
+      "items/axe-cherry-fizz/product-4.jpg",
+      "items/axe-cherry-fizz/product-5.jpg"
+    ]
+  },
+  {
+    "id": "axe-provocation",
+    "name": "AXE Provocation — gel douche 5-en-1 400 ml",
+    "brand": "AXE",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 8,
+      "d": 4.4,
+      "h": 19.8
+    },
+    "price": "3,38",
+    "location": "Étagère du placard SDB",
+    "url": "https://www.amazon.fr/dp/B0F1TVYMQ1?th=1",
+    "notes": "Noix de coco et poivre noir. Flacon noir à ailes violettes. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/axe-provocation/axe-provocation.glb",
+    "images": [
+      "https://m.media-amazon.com/images/I/71g26aPqJWL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/713MDpOLQ-L._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81jY7kAbJUL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/91VdG7spf8L._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81Va6olgVKL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/81dozceO9vL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/71YGd3DgcnL._AC_SL1500_.jpg"
+    ],
+    "photos": [
+      "items/axe-provocation/product-1.jpg",
+      "items/axe-provocation/product-2.jpg",
+      "items/axe-provocation/product-3.jpg",
+      "items/axe-provocation/product-4.jpg",
+      "items/axe-provocation/product-5.jpg",
+      "items/axe-provocation/product-6.jpg",
+      "items/axe-provocation/product-7.jpg"
+    ]
+  },
+  {
+    "id": "mixa-bebe",
+    "name": "Mixa Bébé — lait de toilette très doux 750 ml",
+    "brand": "Mixa",
+    "category": "bathroom",
+    "qty": 1,
+    "dims": {
+      "w": 9,
+      "d": 5,
+      "h": 25
+    },
+    "price": "6,50",
+    "location": "Bord du meuble SDB Est, devant le DRÖNA",
+    "url": "https://www.amazon.fr/Mixa-B%C3%A9b%C3%A9-Quotidienne-D%C3%A9licates-Hypoallerg%C3%A9nique/dp/B0FCSL71BG",
+    "notes": "Lait de toilette sans rinçage, huile d’amande douce et vitamine E ; flacon blanc à pompe bleue. Reconstitution Blender depuis les photos produit ; dimensions estimées.",
+    "glbPath": "items/mixa-bebe/mixa-bebe.glb",
+    "images": [
+      "https://m.media-amazon.com/images/I/41JpL1c1ovL._AC_SL1007_.jpg",
+      "https://m.media-amazon.com/images/I/610NmL1HnDL._AC_SL1007_.jpg",
+      "https://m.media-amazon.com/images/I/51xrf4bWaFL._AC_SL1007_.jpg",
+      "https://m.media-amazon.com/images/I/61sQpaJUU0L._AC_SL1007_.jpg",
+      "https://m.media-amazon.com/images/I/61bcKFoQHrL._AC_SL1007_.jpg",
+      "https://m.media-amazon.com/images/I/51dVusYUjOL._AC_SL1134_.jpg"
+    ],
+    "photos": [
+      "items/mixa-bebe/product-1.jpg",
+      "items/mixa-bebe/product-2.jpg",
+      "items/mixa-bebe/product-3.jpg",
+      "items/mixa-bebe/product-4.jpg",
+      "items/mixa-bebe/product-5.jpg",
+      "items/mixa-bebe/product-6.jpg"
+    ]
+  }
+]
