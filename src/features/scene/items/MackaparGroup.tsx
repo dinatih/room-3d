@@ -11,7 +11,8 @@ import type { SceneModelProps } from '@shared/types';
 const TOP_RAIL_Y    = 172; // 174 - 2 cm
 const BOTTOM_RAIL_Y = 106; // 107 - 1 cm
 const HANGER_Z      = [-25, -15, -5, 5, 15, 25];
-const HANGER_ROTS   = [0.03, -0.04, 0.02, -0.03, 0.05, -0.02];
+// Cintres de biais : leur largeur (~41 cm) dépasse la profondeur du meuble (32 cm) et traverserait le Kallax voisin.
+const HANGER_ROTS   = [0.75, 0.8, 0.7, 0.78, 0.72, 0.76];
 
 const MACKAPAR_HANGER_TRANSFORMS = [
   ...HANGER_Z.map((z, i) => ({
@@ -20,7 +21,7 @@ const MACKAPAR_HANGER_TRANSFORMS = [
   })),
   ...HANGER_Z.map((z, i) => ({
     position: [0, BOTTOM_RAIL_Y, z] as [number, number, number],
-    rotation: [0, -HANGER_ROTS[i], 0] as [number, number, number],
+    rotation: [0, HANGER_ROTS[i], 0] as [number, number, number],
   })),
 ];
 
@@ -34,7 +35,7 @@ export function MackaparHangers() {
       />
 
       {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
-      <group position={[0, BOTTOM_RAIL_Y - 8, HANGER_Z[0]]} rotation={[0, -HANGER_ROTS[0], 0]}>
+      <group position={[0, BOTTOM_RAIL_Y - 8, HANGER_Z[0]]} rotation={[0, HANGER_ROTS[0], 0]}>
         <TShirtHanging />
       </group>
     </>
