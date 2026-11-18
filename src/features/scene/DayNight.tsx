@@ -122,9 +122,9 @@ export function DayNight() {
           void main() {
             // Photo orthographique de la face visible : disque centré en (0.5, 0.494), rayon 0.414 en largeur et 0.436 en hauteur.
             vec2 uv = vec2(0.5 + localNormal.x * 0.414, 0.494 + localNormal.y * 0.436);
-            vec3 albedo = texture2D(moonMap, uv).rgb * 1.6;
+            vec3 albedo = texture2D(moonMap, uv).rgb * 3.5;
             float illumination = 0.015 + max(0.0, dot(normalize(surfaceNormal), sunDirection));
-            gl_FragColor = vec4(vec3(0.85, 0.9, 1.0) * albedo * illumination, opacity);
+            gl_FragColor = vec4(min(vec3(0.85, 0.9, 1.0) * albedo * min(illumination, 1.0), vec3(1.0)), opacity);
             #include <colorspace_fragment>
           }
         `} />
