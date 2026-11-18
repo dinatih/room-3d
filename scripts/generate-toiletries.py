@@ -130,7 +130,7 @@ for item in ITEMS:
         lathe('Silver collar',[(.077,.010),(.083,.010)],1,chrome)
         lathe('Red cylindrical cap',[(.083,.012),(.104,.012),(.105,.011)],1,red)
         # Red square and exact lettering extracted from the 50 ml packshot.
-        photo_label(folder,'product-1.jpg',(267,308,360,432),.019,d+.0002,.024,.050)
+        photo_label(folder,'product-1.jpg',(276,342,379,445),.021,d+.0002,.024,.045)
         for x in (-w/2+.002,w/2-.002):
             box('Polished glass vertical bevel',(.002,d,.068),(x,0,.037),.0007,glass)
     elif key in ('axe-dark-temptation','axe-cherry-fizz'):
@@ -156,7 +156,6 @@ for item in ITEMS:
         lathe('Blue pump collar',[(.184,.015),(.204,.015)],1,blue)
         lathe('Pump stem',[(.20,.006),(.233,.006)],1,blue)
         box('Blue pump head',(.04,.021,.009),(.008,0,.237),.004,blue)
-        box('Dispensing spout',(.029,.013,.008),(.03,0,.244),.003,blue)
         photo_label(folder,'product-1.jpg',(51,266,272,719),w*.72,d+.0002,.03,.162)
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.export_scene.gltf(filepath=str(ROOT/'public'/item['glbPath']),export_format='GLB',use_selection=True)
