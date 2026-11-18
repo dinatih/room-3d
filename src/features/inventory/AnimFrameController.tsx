@@ -1,3 +1,4 @@
+import { AnimationSelect } from './AnimationSelect';
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
 import {
@@ -183,7 +184,7 @@ export function AnimFrameController({
   }, [duoAnimDef, animName, def, clipName]);
 
   const hasMeta = Boolean(def || isTPose || duoAnimDef);
-  const activeAnimValue = animKey || def?.id || 'idle';
+  const activeAnimValue = animKey || animalAnimOptions?.[0]?.value || def?.id || 'idle';
 
   // State local d'invalidation pour refléter immédiatement les modifications d'offset
   const [, setOverrideTick] = useState(0);
@@ -941,15 +942,7 @@ export function AnimFrameController({
           {showAnimationSelectors && <>
           {/* Groupe Solo Anim (ou select pour quadrupèdes/oiseaux) */}
           {animalAnimOptions && animalAnimOptions.length > 0 ? (
-            <select
-              className="form-select form-select-sm py-0 ps-2 bg-transparent text-dark w-auto small"
-              value={activeAnimValue}
-              onChange={e => handleSelectAnim(e.target.value)}
-            >
-              {animalAnimOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <AnimationSelect options={animalAnimOptions} value={activeAnimValue} onChange={handleSelectAnim} />
           ) : (
             <div className="btn-group btn-group-sm" role="group">
               <button

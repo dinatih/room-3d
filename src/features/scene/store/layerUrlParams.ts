@@ -101,6 +101,7 @@ export interface LayerUrlMapping {
 }
 
 export const MONITORED_LAYERS: LayerUrlMapping[] = [
+  { layerKey: 'skeleton', canonicalParam: 'skeleton', urlParams: ['skeleton'] },
   ...(['bnfMarker', 'montparnasseLights', 'bnfLights', 'arcLights', 'bridgeLights', 'bankLights', 'boisLights', 'seineBoats', 'seineDebugPath'] as const).map(key => ({
     layerKey: key, canonicalParam: key, urlParams: [key.toLowerCase()],
   })),
@@ -430,6 +431,20 @@ export function updateUrlLayer(key: keyof LayerState, value: boolean) {
     }
     for (const k of allKeysToDelete) {
       url.searchParams.delete(k);
+    }
+
+    // Some shared links keep their parameters in the hash. Remove the old
+    // flag there too, otherwise disabling a default-false layer comes back on
+    // after reload despite the store having been updated.
+    const hashQuery = url.hash.indexOf('?');
+    if (hashQuery >= 0) {
+      const hashParams = new URLSearchParams(url.hash.slice(hashQuery + 1));
+      const keys = [...hashParams.keys()].filter(k => lowerTargets.has(k.toLowerCase()));
+      for (const k of keys) { hashParams.delete(k); allKeysToDelete.push(k); }
+      if (keys.length) {
+        const remaining = hashParams.toString();
+        url.hash = url.hash.slice(0, hashQuery) + (remaining ? `?${remaining}` : '');
+      }
     }
 
     // Le preset debug définit les valeurs par défaut, les paramètres explicites les remplacent.

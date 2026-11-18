@@ -20,7 +20,8 @@
     ],
     "walkClip": "walk_fwd 29",
     "runClip": "run_fwd 13",
-    "forwardRotationY": 0
+    "forwardRotationY": 0,
+    "referenceSheet": "references/xray/pitbull-xray.png"
   },
   {
     "id": "labrador-dog-from-cotw-game",

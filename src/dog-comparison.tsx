@@ -1,0 +1,10 @@
+import './devLog';
+import './dracoSetup';
+import { createRoot } from 'react-dom/client';
+import { DogComparison } from './features/dog-comparison/DogComparison';
+import { useAnimPreviewStore } from './features/inventory/useAnimPreviewStore';
+import '../scss/app.scss';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+useAnimPreviewStore.getState().reset();
+if (new URLSearchParams(location.search).has('frame')) useAnimPreviewStore.getState().pause();
+createRoot(document.getElementById('root')!).render(<DogComparison />);

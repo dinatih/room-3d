@@ -7,6 +7,7 @@ const camera = load('src/features/scene/camera/cameraUrlParams.ts', {
 const previousWindow = global.window;
 afterEach(() => { if (previousWindow === undefined) delete global.window; else global.window = previousWindow; });
 const { parseUrlLayerOverrides, updateUrlLayer } = load('src/features/scene/store/layerUrlParams.ts', {
+  '../character/laraOutfits': require('../../src/features/scene/character/laraOutfits.ts'),
   './debugPresets': { getDebugPreset: () => undefined },
   '../camera/cameraUrlParams': camera,
 });
@@ -46,4 +47,28 @@ it('désactive le repère BNF depuis l’URL et conserve son état après rechar
   assert.equal(window.location.searchParams.get('bnfMarker'), '0');
   assert.equal(parseUrlLayerOverrides().bnfMarker, false);
   assert.equal(window.location.searchParams.get('target'), 'studio');
+});
+it('partage le squelette entre scène et inventaire via son paramètre URL', () => {
+  for (const [query, expected] of [['?skeleton=1', true], ['?skeleton=0', false], ['?skeleton', true], ['#/?skeleton=1', true]]) {
+    browser(`https://room.test/${query}`);
+    assert.equal(parseUrlLayerOverrides().skeleton, expected);
+  }
+  browser('https://room.test/?inventory=animals&item=ushiro&perfGraph=1');
+  updateUrlLayer('skeleton', true);
+  assert.equal(window.location.searchParams.get('skeleton'), '1');
+  assert.equal(parseUrlLayerOverrides().skeleton, true);
+  assert.equal(window.location.searchParams.get('item'), 'ushiro');
+  updateUrlLayer('skeleton', false);
+  assert.equal(window.location.searchParams.has('skeleton'), false);
+  assert.equal(window.location.searchParams.get('inventory'), 'animals');
+});
+
+it('retire aussi le squelette des anciens liens à paramètres dans le hash', () => {
+  browser('https://room.test/#/?inventory=animals&skeleton=1');
+  updateUrlLayer('skeleton', false);
+  assert.equal(window.location.hash, '#/?inventory=animals');
+  assert.equal(parseUrlLayerOverrides().skeleton, undefined);
+  updateUrlLayer('skeleton', true);
+  assert.equal(window.location.searchParams.get('skeleton'), '1');
+  assert.equal(window.location.hash, '#/?inventory=animals');
 });

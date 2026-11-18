@@ -959,6 +959,7 @@ export function InventoryPreview({
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
   const wireframe = !!layers.wireframe;
+  const showSkeleton = !!layers.skeleton;
   const setWireframe = useCallback((updater: boolean | ((prev: boolean) => boolean)) => {
     const next = typeof updater === 'function' ? updater(!!useSceneStore.getState().layers.wireframe) : updater;
     if (next !== !!useSceneStore.getState().layers.wireframe) {
@@ -1016,12 +1017,12 @@ export function InventoryPreview({
   }, [item?.id, preserveStateOnItemChange]);
 
   const toggleSkeleton = () => {
-    const next = !actionStates.showBones;
+    const next = !showSkeleton;
     if (!next) {
       setSelectedBoneName(null);
       setShowBoneTree(false);
     }
-    setActionStates(s => ({ ...s, showBones: next }));
+    toggleLayer('skeleton');
   };
 
   // Map ViewControlBar camera-view events to preview ortho views
@@ -1075,6 +1076,7 @@ export function InventoryPreview({
     : undefined;
   const baseActionStates = {
     ...actionStates,
+    showBones: showSkeleton,
     smartAction,
     simulateMotion,
     ...(externalHairColor ? { previewHairColor: externalHairColor } : {}),
@@ -1144,10 +1146,13 @@ export function InventoryPreview({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const targetEl = e.target as HTMLElement | null;
-      if (targetEl && (targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA' || targetEl.isContentEditable)) {
+      if (e.ctrlKey || e.altKey || e.metaKey || (targetEl && (/^(INPUT|TEXTAREA|SELECT)$/.test(targetEl.tagName) || targetEl.isContentEditable))) {
         return;
       }
       if (e.key === 'k' || e.key === 'K') {
+        // Own K while a preview is open: Studio also has a global K handler.
+        e.preventDefault(); e.stopImmediatePropagation();
+        if (e.repeat) return;
         toggleSkeleton();
         return;
       }
@@ -1160,9 +1165,9 @@ export function InventoryPreview({
         return;
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [actionStates.showBones, isWigItem]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [showSkeleton, isWigItem]);
 
   return (
     <div className="inventory-preview-container" style={{ width }}>
@@ -1198,7 +1203,7 @@ export function InventoryPreview({
               )
             )}
           {/* Menu Arbre des os & Influence heatmap */}
-          {showing3D && actionStates.showBones && (showBoneTree || selectedBoneName) && (
+          {showing3D && showSkeleton && (showBoneTree || selectedBoneName) && (
             <div
               className="d-flex flex-column gap-2"
               onClick={e => e.stopPropagation()}
@@ -1294,7 +1299,7 @@ export function InventoryPreview({
                 <Suspense fallback={null}><RegistryScene item={item as InventoryItem} actionState={previewActionStates} showDims={showDims} wireframe={wireframe} onTargetChange={handleTargetChange} onBoundsChange={handleBoundsChange} onStats={onGlbStats} /></Suspense>
               </OptimizedGlassContext.Provider>
               <GlobalSkeletonHelpers
-                show={actionStates.showBones}
+                show={showSkeleton}
                 selectedBoneName={selectedBoneName}
                 onSelectBoneName={setSelectedBoneName}
                 onSkeletonGroupsChange={setSkeletonGroups}
@@ -1319,7 +1324,7 @@ export function InventoryPreview({
             )}
             {showing3D && 'category' in item && ['characters', 'animals', 'robots', 'wigs'].includes(item.category) && (
               <>
-                {actionStates.showBones && (
+                {showSkeleton && (
                   <button
                     type="button"
                     onClick={() => setShowBoneTree(v => !v)}
@@ -1467,13 +1472,16 @@ export function InventoryPreview({
     {item && !hideViewControlBar && (
       <ViewControlBar inline inventoryLayout activeCameraPos={showing3D && previewView !== 'free' ? previewView : null} showOrbitControls={showing3D} toolbarPrefix={toolbarPrefix} afterToolbarActions={afterToolbarActions} beforeAmbianceActions={showing3D && (
         <>
+        {item && ['animated-pitbull-dog', 'ushiro', 'shiba-inu', 'dachshund-sculpt'].includes(item.id) && (
+          <a className="btn btn-sm btn-outline-primary" href={`/dog-comparison.html${showSkeleton ? '?skeleton=1' : ''}`} title="Comparer Pitbull, Ushiro et Ulotte HD">Comparer les chiens</a>
+        )}
         <button
           type="button"
-          className={`${TOOLBAR_BUTTON_CLASS} ${actionStates.showBones ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`${TOOLBAR_BUTTON_CLASS} ${showSkeleton ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={toggleSkeleton}
-          title={actionStates.showBones ? 'Masquer le squelette (K)' : 'Afficher le squelette (K)'}
+          title={showSkeleton ? 'Masquer le squelette (K)' : 'Afficher le squelette (K)'}
           aria-label="Squelette"
-          aria-pressed={!!actionStates.showBones}
+          aria-pressed={!!showSkeleton}
         >
           <span aria-hidden="true">🦴</span>
         </button>

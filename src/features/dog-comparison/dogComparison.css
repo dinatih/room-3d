@@ -1,0 +1,7 @@
+.dog-comparison-page { min-height: 100vh; background: #f0f2f5; }
+.dog-comparison-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.dog-comparison-grid.stacked { grid-template-columns: minmax(0, 1fr); }
+.dog-comparison-viewport { height: clamp(20rem, 48vh, 36rem); }
+.dog-comparison-bone-tree { max-height: 24rem; overflow: auto; background: #172130; }
+.dog-comparison-controls { position: sticky; top: .5rem; z-index: 10; }
+@media (max-width: 900px) { .dog-comparison-grid { grid-template-columns: minmax(0, 1fr); } }
