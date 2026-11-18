@@ -11,6 +11,9 @@ les hauteurs au repos ; sa désactivation montre les dimensions de la scène.
 « Recadrer » rétablit la vue choisie et le zoom commun. K bascule le squelette ;
 Espace bascule lecture et pause. Le bouton Os ouvre la
 hiérarchie du modèle ; sélectionner un os affiche les poids de sa peau.
+Les trois planches anatomiques apparaissent par défaut au-dessus de leur carte
+3D, dans les deux dispositions. Un clic ouvre la planche en grand ; la case
+« Références anatomiques » permet de les masquer.
 
 `skeleton=1` est désormais le paramètre global du calque squelette, utilisé par
 la scène, l’inventaire et la comparaison. Le changement d’item ne réinitialise
@@ -44,6 +47,13 @@ bassin. Le nombre total d’os n’est pas une mesure de qualité ; une partie d
 supplémentaires du donneur concerne ses doigts, sa face et ses contrôles.
 Les côtes figurant sur une illustration anatomique ne sont pas les contrôles
 latéraux d’un rig d’animation. Les autres défauts restent à analyser séparément.
+
+La lecture des captures de marche montre également un défaut important de la
+patte avant d’Ushiro : la zone épaule–coude s’étire et s’aplatit au repli, avec
+une transition très cassée vers l’avant-bras. Le diagnostic abdominal ci-dessus
+ne valide donc pas les pattes. Il faudra contrôler séparément les pivots, le
+plan de flexion et les poids autour de l’épaule, du coude et du poignet avant de
+valider ce rig.
 
 Cette livraison ajoute les outils et le diagnostic ; elle ne reconstruit pas
 encore une nouvelle version des poids d’Ushiro. Les captures du cycle de marche

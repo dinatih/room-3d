@@ -17,7 +17,15 @@ const output = 'artifacts/dog-comparison';
   await page.setViewport({ width: 1600, height: 1000 });
   await page.goto(base + '/dog-comparison.html?skeleton=1&clip=walk_fwd%2029&frame=20');
   await page.waitForFunction(() => document.querySelectorAll('[data-model] canvas').length === 3 && !document.body.textContent.includes('Lecture du modèle…'), { timeout: 60000 });
-  await page.screenshot({ path: `${output}/comparison-initial.png` });
+  await page.waitForFunction(() => {
+   const images = [...document.querySelectorAll('.dog-comparison-grid figure img')];
+   return images.length === 3 && images.every(image => image.complete && image.naturalWidth > 0);
+  });
+  assert(await page.$$eval('.dog-comparison-grid > div', columns => columns.every(column => {
+   const reference = column.querySelector('figure'), model = column.querySelector('section');
+   return reference.getBoundingClientRect().bottom <= model.getBoundingClientRect().top;
+  })));
+  await page.screenshot({ path: `${output}/comparison-initial.png`, fullPage: true });
   async function state() {
    return page.evaluate(async () => {
     const transformed = await (await fetch('/src/features/dog-comparison/DogComparison.tsx')).text();
@@ -54,7 +62,7 @@ const output = 'artifacts/dog-comparison';
    await new Promise(resolve => setTimeout(resolve, 150));
    models = await state();
    assert(Math.max(...models.map(m => m.phase)) - Math.min(...models.map(m => m.phase)) < 1e-5);
-   await page.screenshot({ path: `${output}/walk-frame-${String(frame).padStart(2,'0')}.png` });
+   await page.screenshot({ path: `${output}/walk-frame-${String(frame).padStart(2,'0')}.png`, fullPage: true });
   }
   // A drag in one viewport changes all three camera orientations together.
   const canvas = await page.$('[data-model="ushiro"] canvas'), box = await canvas.boundingBox();

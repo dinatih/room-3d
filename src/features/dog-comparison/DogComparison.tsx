@@ -131,7 +131,12 @@ function DogPanel({ model, clip, equalHeight, pose, onCamera, extent, onMetadata
 }) {
   const skeleton = useSceneStore(s => !!s.layers.skeleton);
   const [groups, setGroups] = useState<SkeletonGroup[]>([]), [selected, setSelected] = useState<string | null>(null), [tree, setTree] = useState(false);
-  return <section className="card overflow-hidden" aria-label={model.label}>
+  return <div className="d-flex flex-column gap-2">
+    {references && <figure className="card overflow-hidden mb-0" aria-label={`Référence anatomique — ${model.label}`}>
+      <a href={model.reference} target="_blank" rel="noreferrer" title={`Agrandir la référence anatomique — ${model.label}`}><img className="w-100" src={model.reference} alt={`Anatomie théorique — ${model.label}`} /></a>
+      <figcaption className="card-body p-2 small text-body-secondary">{model.label} · anatomie théorique</figcaption>
+    </figure>}
+    <section className="card overflow-hidden" aria-label={model.label}>
     <div className="card-header d-flex justify-content-between align-items-center gap-2">
       <strong className="small">{model.label}</strong>
       <button className="btn btn-sm btn-outline-secondary text-dark" onClick={() => { if (!tree && !skeleton) useSceneStore.getState().toggleLayer('skeleton'); setTree(value => !value); }} aria-expanded={tree}>Os {metadata ? `(${metadata.bones})` : '…'}</button>
@@ -150,8 +155,8 @@ function DogPanel({ model, clip, equalHeight, pose, onCamera, extent, onMetadata
     </div>
     <div className="card-body p-2 small text-body-secondary">{metadata ? `${metadata.bones} os · ${metadata.vertices.toLocaleString('fr-FR')} sommets · ${metadata.duration.toFixed(2)} s` : 'Lecture du modèle…'}</div>
     {tree && <div className="dog-comparison-bone-tree"><SkeletonHierarchyPanel skeletons={groups} selectedBoneName={selected} onSelectBoneName={setSelected} onClose={() => setTree(false)} /></div>}
-    {references && <div className="border-top p-2"><a href={model.reference} target="_blank" rel="noreferrer"><img className="w-100" src={model.reference} alt={`Anatomie théorique — ${model.label}`} /></a><p className="small text-body-secondary mb-0 mt-1">Illustration anatomique schématique, à distinguer des os du rig réel.</p></div>}
-  </section>;
+    </section>
+  </div>;
 }
 
 export function DogComparison() {
@@ -159,7 +164,7 @@ export function DogComparison() {
   const [clip, setClip] = useState(initial.get('clip') || 'walk_fwd 29');
   const [layout, setLayout] = useState(initial.get('layout') === 'rows' ? 'rows' : 'columns');
   const [view, setView] = useState<View>((initial.get('view') as View) || 'side');
-  const [equalHeight, setEqualHeight] = useState(true), [references, setReferences] = useState(false);
+  const [equalHeight, setEqualHeight] = useState(true), [references, setReferences] = useState(true);
   const [metadata, setMetadata] = useState<Record<string, Metadata>>({});
   const [pose, setPose] = useState<CameraPose>({ direction: DIRECTIONS[view] || DIRECTIONS.side, target: [0, NORMALIZED_HEIGHT / 2, 0], up: view === 'top' ? [0, 0, -1] : [0, 1, 0], zoom: 1 });
   const initialFrameUsed = useRef(false);
