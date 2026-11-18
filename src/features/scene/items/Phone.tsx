@@ -50,8 +50,8 @@ export function Phone({ onSize }: SceneModelProps) {
             const position = geometry.attributes.position;
             const uv = new Float32Array(position.count * 2);
             for (let i = 0; i < position.count; i++) {
-              uv[i * 2] = 1 - (position.getX(i) - min.x) / (max.x - min.x);
-              uv[i * 2 + 1] = 1 - (position.getY(i) - min.y) / (max.y - min.y);
+              uv[i * 2] = (position.getX(i) - min.x) / (max.x - min.x);
+              uv[i * 2 + 1] = (position.getY(i) - min.y) / (max.y - min.y);
             }
             geometry.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
           }
