@@ -171,7 +171,7 @@ def build_textures():
     ao[q3] *= ao_inner_v * ao_inner_c
     albedo[q3] *= (0.80 + 0.20 * ao_inner_v * ao_inner_c)[..., None]
 
-    # --- Q4 upper (Bot-Right top): Inner bottom board & pull loop ---
+    # --- Q4 upper (Bot-Right top): Inner bottom board ---
     q4_in = (slice(half, q_bot_mid), slice(half, S))
     albedo[q4_in][..., 0] = 0.52 + 0.005 * n_micro[q4_in] + 0.006 * inner_weave[q4_in]
     albedo[q4_in][..., 1] = 0.012
@@ -554,34 +554,6 @@ def build_drona_mesh(mat):
                     bm.faces.new((v00, v10, v11, v01))
                 else:
                     bm.faces.new((v00, v01, v11, v10))
-
-    # Inner bottom board fabric pull-loop (closed thin folded ribbon)
-    loop_w = 0.015
-    loop_h = 0.012
-    loop_t = 0.0012
-    loop_y0 = -ihd + 0.014
-    loop_y1 = loop_y0 + 0.008
-    ym = (loop_y0 + loop_y1) * 0.5
-    lp_outer = [
-        (-loop_w / 2, loop_y0, FLOOR_Z),
-        ( loop_w / 2, loop_y0, FLOOR_Z),
-        ( loop_w / 2, ym - loop_t * 0.5, FLOOR_Z + loop_h),
-        (-loop_w / 2, ym - loop_t * 0.5, FLOOR_Z + loop_h),
-        (-loop_w / 2, ym + loop_t * 0.5, FLOOR_Z + loop_h),
-        ( loop_w / 2, ym + loop_t * 0.5, FLOOR_Z + loop_h),
-        ( loop_w / 2, loop_y1, FLOOR_Z),
-        (-loop_w / 2, loop_y1, FLOOR_Z),
-    ]
-    lv = []
-    for co in lp_outer:
-        v = bm.verts.new(co)
-        lv.append(v)
-        ring_verts.append((v, "in_bot"))
-    bm.faces.new((lv[0], lv[1], lv[2], lv[3]))
-    bm.faces.new((lv[3], lv[2], lv[5], lv[4]))
-    bm.faces.new((lv[4], lv[5], lv[6], lv[7]))
-    bm.faces.new((lv[0], lv[3], lv[4], lv[7]))
-    bm.faces.new((lv[1], lv[6], lv[5], lv[2]))
 
     bm.verts.index_update()
     for v, region in ring_verts:
