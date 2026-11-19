@@ -232,6 +232,16 @@ export function DogComparison() {
         <label className="form-check-label small d-flex gap-1 align-items-center"><input type="checkbox" className="form-check-input m-0" checked={references} onChange={e => setReferences(e.target.checked)} /> Références anatomiques</label>
         <label className="form-check-label small d-flex gap-1 align-items-center"><input type="checkbox" className="form-check-input m-0" checked={referencePose} onChange={e => { setReferencePose(e.target.checked); urlParam('referencePose', e.target.checked ? '1' : null); }} /> Pose de référence</label>
       </div>
+      <label className="small d-flex flex-column gap-1">
+        Animation courante — nom et identifiant (cliquer pour tout sélectionner, puis Ctrl+C)
+        <input
+          className="form-control form-control-sm font-monospace"
+          readOnly
+          value={referencePose ? 'Pose de référence | ID : bind-pose' : `${pitbullAnimationChoices.find(option => option.value === clip)!.label} | ID : ${clip}`}
+          onClick={event => event.currentTarget.select()}
+          onFocus={event => event.currentTarget.select()}
+        />
+      </label>
       <fieldset disabled={referencePose}><Playback /></fieldset>
       <span className="small text-body-secondary">{referencePose ? 'Pose de liaison du maillage, sans animation.' : 'Lecture et phase communes · interpolation fluide.'} Caméras liées · cliquer un os affiche ses influences sur la peau. {equalHeight ? 'Hauteurs dans l’attente normalisées pour comparer les proportions.' : 'Dimensions de présentation des modèles en centimètres.'}</span>
     </div></div>

@@ -364,8 +364,8 @@ export function DeskDecor() {
               <Phone />
             </group>
           </group>
-          {/* Sur le même plateau mobile que le téléphone, juste à sa gauche. */}
-          <group position={[12, 0, 4]} userData={{ sceneItemRoot: true, itemName: 'Écouteurs cœur sans lumière' }}>
+          {/* À côté du support (largeur 25,6 cm), derrière le téléphone. */}
+          <group position={[22, 0, -14]} userData={{ sceneItemRoot: true, itemName: 'Écouteurs cœur sans lumière' }}>
             <HeartEarbudsUnlit />
           </group>
           <group userData={{ sceneItemRoot: true, skipMerge: true, itemName: 'Mug KEJSERLIG' }}>
