@@ -1,3 +1,5 @@
+import { useShallow } from 'zustand/react/shallow';
+import { AnimationTimeline, AnimationFrameReadout } from './AnimationPlaybackReadout';
 import { AnimationSelect } from './AnimationSelect';
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
@@ -80,9 +82,10 @@ export function AnimFrameController({
   showAnimationSelectors = true,
   alignmentActions,
 }: AnimFrameControllerProps) {
+  const [showTrimPanel, setShowTrimPanel] = useState(false);
+  const currentTime = useAnimPreviewStore(state => showTrimPanel ? state.currentTime : 0);
   const {
     isPlaying,
-    currentTime,
     duration,
     fps,
     speed,
@@ -97,13 +100,13 @@ export function AnimFrameController({
     togglePlay,
     toggleLockHipsXZ,
     setSpeed,
-    setScrubbing,
     seekToFrame,
     stepFrame,
-  } = useAnimPreviewStore();
+  } = useAnimPreviewStore(useShallow(state => {
+    const { currentTime: _, ...controls } = state;
+    return controls;
+  }));
 
-  const [inputFrame, setInputFrame] = useState<string>('');
-  const [isEditingFrame, setIsEditingFrame] = useState<boolean>(false);
   const [showMeta, setShowMeta] = useState<boolean>(false);
   const [showAnimSelector, setShowAnimSelector] = useState<boolean>(false);
   const [showDuoSelector, setShowDuoSelector] = useState<boolean>(false);
@@ -112,7 +115,6 @@ export function AnimFrameController({
   const [duoSelectorPosition, setDuoSelectorPosition] = useState({ left: 0, bottom: 0, maxHeight: '70vh' });
   const [partnerSelectorPosition, setPartnerSelectorPosition] = useState({ left: 0, bottom: 0 });
   const controllerRef = useRef<HTMLDivElement>(null);
-  const sliderRef = useRef<HTMLInputElement>(null);
   const selectorRef = useRef<HTMLDivElement>(null);
   const badgeRef = useRef<HTMLButtonElement>(null);
   const duoBadgeRef = useRef<HTMLButtonElement>(null);
@@ -184,7 +186,6 @@ export function AnimFrameController({
   const [, setOverrideTick] = useState(0);
   const [copiedSoloTs, setCopiedSoloTs] = useState(false);
   const [copiedDuoTs, setCopiedDuoTs] = useState(false);
-  const [showTrimPanel, setShowTrimPanel] = useState<boolean>(false);
   const [copiedTrimTs, setCopiedTrimTs] = useState<boolean>(false);
 
   useEffect(() => {
@@ -497,16 +498,6 @@ export function AnimFrameController({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [keyboardEnabled, isHumanCharacter, onSelectDuoAnim, togglePlay, stepFrame, seekToFrame, cycleFilteredAnim, cycleFilteredDuoAnim, handleRandomAnim, handleRandomDuoAnim]);
 
-  const handleFrameCommit = () => {
-    setIsEditingFrame(false);
-    const parsed = parseInt(inputFrame, 10);
-    if (!isNaN(parsed)) {
-      seekToFrame(parsed);
-    } else {
-      setInputFrame(currentFrame.toString());
-    }
-  };
-
   // Fermer les sélecteurs d'animation lors d'un clic extérieur
   useEffect(() => {
     if (!showAnimSelector && !showDuoSelector && !showPartnerSelector) return;
@@ -783,30 +774,7 @@ export function AnimFrameController({
         </div>
       )}
 
-      {/* ── Ligne 1 : Timeline Slider ── */}
-      <div className="d-flex align-items-center gap-2 w-100 mb-1">
-        <span className="text-muted font-monospace small">0</span>
-        <input
-          ref={sliderRef}
-          type="range"
-          className="form-range form-range-sm flex-grow-1"
-          min={0}
-          max={totalFrames}
-          step={1}
-          value={currentFrame}
-          disabled={isTPose || totalFrames === 0}
-          onPointerDown={() => setScrubbing(true)}
-          onPointerUp={() => setScrubbing(false)}
-          onChange={e => seekToFrame(parseInt(e.target.value, 10))}
-          style={{ cursor: isTPose ? 'not-allowed' : 'pointer' }}
-          title={
-            isTPose
-              ? 'T-Pose (Pose statique sans frame)'
-              : `Frame ${currentFrame} / ${totalFrames} (${currentTime.toFixed(2)}s)`
-          }
-        />
-        <span className="text-muted font-monospace small">{totalFrames}</span>
-      </div>
+      <AnimationTimeline duration={duration} fps={fps} isTPose={isTPose} />
 
       {/* ── Ligne 2 : Transport, Compteurs, Sélecteur & Actions ── */}
       <div className="anim-frame-controller__controls align-items-center justify-content-between flex-wrap gap-1">
@@ -891,47 +859,7 @@ export function AnimFrameController({
             <span className="small">{lockHipsXZ ? 'Hips-Lock (Fixe)' : 'Traj libre'}</span>
           </button>
 
-          {/* Compteur précis de Frame & Temps */}
-          <div className="d-flex align-items-center gap-1">
-            {isTPose ? (
-              <span className="badge bg-success-subtle text-success border border-success-subtle">
-                <i className="bi bi-person-standing" aria-hidden="true" /> T-Pose (Rest)
-              </span>
-            ) : (
-              <>
-                <div className="input-group input-group-sm font-monospace w-auto" title="Cliquer pour entrer une frame précise">
-                  <span className="input-group-text py-0 px-1 bg-transparent text-muted border-end-0 small">
-                    Frame:
-                  </span>
-                  <input
-                    type="number"
-                    aria-label="Frame courante"
-                    min={0}
-                    max={totalFrames}
-                    value={isEditingFrame ? inputFrame : currentFrame.toString()}
-                    onFocus={() => {
-                      setInputFrame(currentFrame.toString());
-                      setIsEditingFrame(true);
-                    }}
-                    onChange={e => setInputFrame(e.target.value)}
-                    onBlur={handleFrameCommit}
-                    onKeyDown={e => e.key === 'Enter' && handleFrameCommit()}
-                    className="form-control py-0 bg-transparent text-dark border-start-0 border-end-0 text-center fw-bold px-1"
-                    style={{ width: `calc(${Math.max(String(totalFrames).length, (isEditingFrame ? inputFrame : String(currentFrame)).length)}ch + 3rem)`, flex: '0 0 auto' }}
-                  />
-                  <span className="input-group-text py-0 px-1 bg-transparent text-muted border-start-0 small">
-                    /{totalFrames}
-                  </span>
-                </div>
-                <span
-                  className="badge bg-transparent text-dark border shadow-sm font-monospace py-1 px-1.5 text-center"
-                  style={{ minWidth: '7.5rem', fontVariantNumeric: 'tabular-nums' }}
-                >
-                  {currentTime.toFixed(2)}s/{duration.toFixed(2)}s
-                </span>
-              </>
-            )}
-          </div>
+          <AnimationFrameReadout duration={duration} fps={fps} isTPose={isTPose} />
         </div>
 
         {/* Droite : Sélecteurs d'animation (Solo & Duo), Vitesse & Meta */}

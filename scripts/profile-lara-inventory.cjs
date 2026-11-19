@@ -1,12 +1,13 @@
 // Exploratory comparison, not a historical regression verdict.
-// node scripts/profile-lara-inventory.cjs --hardware-gpu [--studio] [--smoke]
+// node scripts/profile-lara-inventory.cjs --hardware-gpu [--studio] [--full-scene] [--system-chrome] [--smoke]
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const launchBrowser = require('./browser-test-options.cjs');
 const project = path.resolve(__dirname, '..');
-const studio = process.argv.includes('--studio');
+const fullScene = process.argv.includes('--full-scene');
+const studio = fullScene || process.argv.includes('--studio');
 const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
 
 (async () => {
@@ -17,7 +18,7 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
   try {
     await server.listen();
     const origin = `http://127.0.0.1:${server.httpServer.address().port}`;
-    browser = await launchBrowser({ args: ['--no-sandbox'], defaultViewport: { width: 1496, height: 900 } });
+    browser = await launchBrowser({ ...(process.argv.includes('--system-chrome') ? { executablePath: '/opt/google/chrome/chrome' } : {}), args: ['--no-sandbox'], defaultViewport: { width: 1496, height: 900 } });
     page = await browser.newPage();
     const errors = [];
     page.on('pageerror', error => errors.push(error.stack));
@@ -27,7 +28,7 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
       if (['localhost', '127.0.0.1'].includes(url.hostname) || ['data:', 'blob:'].includes(url.protocol)) request.continue();
       else request.abort();
     });
-    const route = studio
+    const route = fullScene ? '/?skipIntro=1&inventory=1&item=native&bnfMarker=0' : studio
       ? '/?skipIntro=1&characterCount=1&inventory=1&item=native&bnfMarker=0&furniture=0&decor=0&furnishings=0&animals=0&shadows=0'
       : '/tests/fixtures/lara-inventory/index.html';
     await page.goto(origin + route, { waitUntil: 'domcontentloaded' });
@@ -44,15 +45,26 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
         && !document.getElementById('loading');
     }, { timeout: 60000 });
     await new Promise(resolve => setTimeout(resolve, 3000));
+    await page.evaluate(async () => {
+      const { _roots } = await import('/node_modules/.vite/deps/@react-three_fiber.js');
+      window.perfRoots = () => [..._roots.values()].map(root => root.store.getState());
+    });
     const initial = await page.evaluate(() => ({ layers: window.store.getState().layers, shadows: window.preview.gl.shadowMap.enabled }));
     const client = await page.createCDPSession();
     await client.send('Profiler.enable');
     await client.send('Profiler.start');
     const results = [];
-    const modes = process.argv.includes('--smoke') ? ['baseline'] : ['baseline', 'paused', 'noShadows', 'noPhysics', 'noAccessories', 'baselineRepeat'];
+    const modes = process.argv.includes('--smoke') ? ['baseline'] : ['baseline', 'paused', 'noShadows', 'noPhysics', 'noAccessories', 'noBackdrop', 'baselineRepeat'];
     for (const mode of modes) {
       await page.evaluate(({ mode, initial }) => {
         const { anim, store, preview } = window;
+        document.getElementById('perf-no-backdrop')?.remove();
+        if (mode === 'noBackdrop') {
+          const style = document.createElement('style');
+          style.id = 'perf-no-backdrop';
+          style.textContent = '* { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }';
+          document.head.append(style);
+        }
         store.getState().setLayers({
           hairPhysics: mode === 'noPhysics' ? false : initial.layers.hairPhysics,
           breastPhysics: mode === 'noPhysics' ? false : initial.layers.breastPhysics,
@@ -65,6 +77,8 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const measurement = await page.evaluate(async () => {
         const intervals = [];
+        const roots = window.perfRoots();
+        const framesBefore = roots.map(root => root.gl.info.render.frame);
         let previous;
         await new Promise(resolve => {
           function frame(time) {
@@ -80,6 +94,9 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
         const sorted = [...intervals].sort((a, b) => a - b);
         return {
           fps: 1000 * intervals.length / intervals.reduce((sum, value) => sum + value, 0),
+          maxFrameMs: sorted.at(-1),
+          p99FrameMs: sorted[Math.ceil(sorted.length * 0.99) - 1],
+          canvases: roots.map((root, index) => ({ frameloop: root.frameloop, frames: root.gl.info.render.frame - framesBefore[index], preview: root.gl === window.preview.gl, memory: { ...root.gl.info.memory } })),
           p95FrameMs: sorted[Math.ceil(sorted.length * 0.95) - 1],
           render: { ...gl.info.render }, memory: { ...gl.info.memory },
           dpr: gl.getPixelRatio(), width: gl.domElement.width, height: gl.domElement.height,
@@ -104,9 +121,20 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
     await page.evaluate(() => window.anim.getState().play());
     await page.waitForFunction(() => window.anim.getState().currentTime > 1.1);
     console.log('Frame input seek and playback: OK');
+    await page.click('button[aria-label^="Outil de découpe"]');
+    await page.evaluate(() => {
+      window.anim.getState().pause();
+      window.anim.getState().seekToFrame(60);
+    });
+    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button =>
+      button.title === 'Supprime tout ce qui précède la frame courante (60f)'));
+    await page.click('button[aria-label^="Outil de découpe"]');
+    await page.evaluate(() => window.anim.getState().seekToFrame(90));
+    await page.waitForFunction(() => document.querySelector('input[aria-label="Frame courante"]')?.value === '90');
+    console.log('Trim editor and readout clocks: OK');
     const { profile } = await client.send('Profiler.stop');
     fs.writeFileSync(path.join(output, 'cpu.cpuprofile'), JSON.stringify(profile));
-    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ studio, results, errors }, null, 2));
+    fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ studio, fullScene, browserVersion: await browser.version(), results, errors }, null, 2));
     if (errors.length) throw new Error(`Browser errors: ${errors.join('\n')}`);
     console.log(`Results: ${output}`);
   } catch (error) {
