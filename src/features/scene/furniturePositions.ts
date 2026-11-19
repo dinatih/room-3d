@@ -50,8 +50,16 @@ export const DESK2_POSITIONS: readonly FurnitureTransform[] = [
   { x: DIMPA_DESK_X, z: 155 + DESK_WIDTH, ry: -Math.PI / 2 },
 ];
 
+export const BED_FRAME_WIDTH = 83;
+export const BED_FRAME_LENGTH = 205;
+
+// Lits Ouest : remontés vers le Nord jusqu'au contact du Kallax NW.
+const WEST_BED_Z = KALLAX_NW_SOUTH_Z + BED_FRAME_LENGTH / 2;
+const WEST_BED_SOUTH_Z = KALLAX_NW_SOUTH_Z + BED_FRAME_LENGTH;
+const SMORKULL_WIDTH = 65;
+
 export const SMORKULL_POSITIONS: readonly FurnitureTransform[] = [
-  { x: 96,  z: 314, ry: Math.PI / 2  }, // entre le lit Ouest et le Mackapar
+  { x: 96,  z: WEST_BED_SOUTH_Z + SMORKULL_WIDTH / 2, ry: Math.PI / 2  }, // collée au sud du lit Ouest
   { x: 150, z: 100, ry: Math.PI      },
   { x: 150, z: 300, ry: Math.PI      },
   { x: 240, z: 38,  ry: -Math.PI / 2 }, // devant KallaxNE
@@ -74,12 +82,6 @@ export interface DoubleBedConfig {
   west: { x: number; z: number };
   east: { x: number; z: number };
 }
-
-export const BED_FRAME_WIDTH = 83;
-export const BED_FRAME_LENGTH = 205;
-
-// Lits Ouest : remontés vers le Nord jusqu'au contact du Kallax NW.
-const WEST_BED_Z = KALLAX_NW_SOUTH_Z + BED_FRAME_LENGTH / 2;
 
 export const SINGLE_BED_POSITIONS = {
   west: { x: 77, z: WEST_BED_Z, ry: Math.PI / 2 },
