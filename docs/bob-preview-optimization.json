@@ -1,0 +1,84 @@
+[
+  {
+    "source": "/home/dinatih/Projects/room-3d/public/items/bob-red/BobRed.glb",
+    "target": "/home/dinatih/Projects/room-3d/public/items/bob-red/BobRed-preview-1024.glb",
+    "bytesBefore": 8490148,
+    "bytesAfter": 2489416,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          1024,
+          1024
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  },
+  {
+    "source": "/home/dinatih/Projects/room-3d/public/items/bob-droit-red/BobDroitRed.glb",
+    "target": "/home/dinatih/Projects/room-3d/public/items/bob-droit-red/BobDroitRed-preview-2048.glb",
+    "bytesBefore": 31901732,
+    "bytesAfter": 8838480,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          4096,
+          4096
+        ],
+        "after": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          4096,
+          4096
+        ],
+        "after": [
+          2048,
+          2048
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          4096,
+          4096
+        ],
+        "after": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  }
+]

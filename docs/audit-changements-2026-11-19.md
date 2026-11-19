@@ -79,3 +79,55 @@ La casquette camionneur est réellement utilisée sept fois sur le porte-chapeau
 - Le contrôle `tests/assets/test_scene_models.py` passe et vérifie que les données de géométrie, animations, matériaux et samplers sont préservées. Seuls les payloads d’images et les offsets des buffers changent. Le test des chemins de modèles passe également.
 
 Rendus comparatifs Blender générés en face, trois-quarts et dos. L’inspection du trois-quarts confirme la forme conservée, avec une perte attendue de détail fin du textile dans la variante 512 px. Aucun gain de FPS n’a été mesuré. La suite complète de 611 tests a précédé cette optimisation ; le contrôle de préservation des modèles, le test des chemins, TypeScript et le build ont été relancés après celle-ci.
+
+
+## Optimisations restantes appliquées : lessive, séchoir, bobs et galeries
+
+### Géométrie des variantes de scène
+
+| Objet | Triangles source | Triangles en scène | Réduction | Fichier source → variante |
+| --- | ---: | ---: | ---: | ---: |
+| Lessive | 119 782 | 25 925 | 78,4 % | 2,95 → 0,89 Mo |
+| Séchoir avec trois tee-shirts | 199 208 | 151 376 | 24,0 % | 6,38 → 4,85 Mo |
+
+La simplification porte sur le corps du flacon et le coton. Les étiquettes, le bouchon, les pinces et les fils métalliques sont conservés. L’algorithme choisit le plus petit candidat respectant un budget d’écart de 0,5 mm aux points mesurés et aux bords de la boîte englobante. Le contrôle après export réimporte les deux modèles, mesure les distances dans les deux sens par matériau et ajoute les centres des triangles aux sommets. Écart maximal mesuré : **0,0812 mm pour le flacon**, **0,2992 mm pour le coton**. Il s’agit d’une mesure échantillonnée, pas d’une borne mathématique sur toute la surface.
+
+Les composants `CleaningProducts` et `ClipHanger16` utilisent les variantes de scène. La lessive détaillée reste l’asset de sa preview d’inventaire. Le modèle chargé original du séchoir reste sur disque ; l’inventaire conserve aussi son aperçu du cintre seul.
+
+Variantes créées :
+
+- `/home/dinatih/Projects/room-3d/public/items/laundry-detergent/LaundryDetergent-scene.glb`
+- `/home/dinatih/Projects/room-3d/public/items/clip-hanger-16/ClipHanger16Loaded-scene.glb`
+
+Les originaux correspondants sont conservés dans les mêmes dossiers, sans le suffixe `-scene`.
+
+### Aperçus de bobs
+
+| Aperçu | Textures | Taille du fichier | Mémoire RGBA estimée avant mipmaps |
+| --- | --- | ---: | ---: |
+| Bob souple | trois images de 2 048² → 1 024² | 8,49 → 2,49 Mo | 48 → 12 Mio |
+| Bob droit | trois images de 4 096² → 2 048² | 31,90 → 8,84 Mo | 192 → 48 Mio |
+
+Les aperçus d’inventaire utilisent ces versions réduites. Les indices, positions, normales, UV, matériaux et paramètres de textures sont identiques aux originaux ; les payloads d’images et les offsets des buffers changent. Les originaux restent sur disque pour l’inspection détaillée. Les rendus comparatifs conservent la silhouette et les coutures visibles à la taille examinée, avec une réduction attendue du détail fin lors d’un zoom important. Aucun gain de FPS n’a été mesuré.
+
+Aperçus créés :
+
+- `/home/dinatih/Projects/room-3d/public/items/bob-red/BobRed-preview-1024.glb`
+- `/home/dinatih/Projects/room-3d/public/items/bob-droit-red/BobDroitRed-preview-2048.glb`
+
+### Galeries et vérifications
+
+Les deux galeries UTÅKER ne référencent plus la photo absente ; chacune conserve ses trois photos existantes. Le contrôle des références littérales dans les fichiers source modifiés trouve désormais **1 608 assets distincts et aucun fichier manquant**.
+
+Validations : TypeScript, compilation, test de conservation binaire des aperçus de bobs, tests des variantes de textures de scène, contrôle géométrique Blender après export, tests ciblés des objets statiques et test navigateur isolé du séchoir avec ses dégagements au mur. Rendus Blender comparatifs produits en face, trois-quarts et dos ; trois-quarts inspectés pour les quatre objets. Les contrôles n’incluent pas un profilage GPU du studio complet.
+
+Reproduction :
+
+```bash
+python scripts/build-bob-preview-models.py
+blender -b -t 4 --python-exit-code 1 --python scripts/build-lightweight-household-models.py
+blender -b -t 4 --python-exit-code 1 --python scripts/check-household-model-variants.py
+python -m unittest discover -s tests/assets -p test_bob_previews.py
+```
+
+Les mesures détaillées sont dans `docs/bob-preview-optimization.json` et `docs/household-geometry-optimization.json`.

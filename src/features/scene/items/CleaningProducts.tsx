@@ -5,7 +5,7 @@ export const TransparentSprayCleaner = createStaticGlbItem('/items/transparent-s
 export const CifInfiniteClean = createStaticGlbItem('/items/cif-infinite-clean/CifInfiniteClean.glb');
 export const W5Bleach = createStaticGlbItem('/items/w5-bleach/W5Bleach.glb');
 export const Plogsvaeng = createStaticGlbItem('/items/cleaning-accessories/plogsvaeng.glb');
-export const LaundryDetergent = createStaticGlbItem('/items/laundry-detergent/LaundryDetergent.glb');
+export const LaundryDetergent = createStaticGlbItem('/items/laundry-detergent/LaundryDetergent-scene.glb');
 export const FabricSoftener = createStaticGlbItem('/items/fabric-softener/FabricSoftener.glb');
 
 // Measured centimetre footprints of the imported, centred models.

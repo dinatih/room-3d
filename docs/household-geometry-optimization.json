@@ -1,0 +1,64 @@
+[
+  {
+    "source": "/home/dinatih/Projects/room-3d/public/items/laundry-detergent/LaundryDetergent.glb",
+    "target": "/home/dinatih/Projects/room-3d/public/items/laundry-detergent/LaundryDetergent-scene.glb",
+    "bytesBefore": 2948352,
+    "bytesAfter": 888560,
+    "surfaces": [
+      {
+        "object": "Cylinder product",
+        "before": 638,
+        "after": 638,
+        "preserved": true
+      },
+      {
+        "object": "Plane.001 product",
+        "before": 7680,
+        "after": 7680,
+        "preserved": true
+      },
+      {
+        "object": "Product label Lessive",
+        "before": 2100,
+        "after": 2100,
+        "preserved": true
+      },
+      {
+        "object": "Product label Lessive.001",
+        "before": 2100,
+        "after": 2100,
+        "preserved": true
+      },
+      {
+        "object": "Plane.001 product.001",
+        "before": 107264,
+        "after": 13407,
+        "ratio": 0.125,
+        "surfaceErrorMm": 0.07510465366067365,
+        "boundsErrorMm": 0.016398727893829346
+      }
+    ]
+  },
+  {
+    "source": "/home/dinatih/Projects/room-3d/public/items/clip-hanger-16/ClipHanger16Loaded.glb",
+    "target": "/home/dinatih/Projects/room-3d/public/items/clip-hanger-16/ClipHanger16Loaded-scene.glb",
+    "bytesBefore": 6383892,
+    "bytesAfter": 4853364,
+    "surfaces": [
+      {
+        "object": "Curved frame wire",
+        "before": 191328,
+        "after": 143496,
+        "ratio": 0.75,
+        "surfaceErrorMm": 0.2991802175529301,
+        "boundsErrorMm": 0.03343820571899414
+      },
+      {
+        "object": "Curved frame wire.001",
+        "before": 7880,
+        "after": 7880,
+        "preserved": true
+      }
+    ]
+  }
+]
