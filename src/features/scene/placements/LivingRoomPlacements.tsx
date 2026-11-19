@@ -1,3 +1,4 @@
+import { SockDryer20Loaded } from '../items/LaundryHousehold';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getDiyChairParking } from '../ai/diyChairClearance';
 import { getObjectActionIds } from '../objectActions';
@@ -112,6 +113,12 @@ const LAMP_ROT_Y = Math.atan2(ROOM_W / 2 - MEUBLE_T_X, ROOM_D / 2 - MEUBLE_T_Z);
 const MACK_X = 32; // contre le mur Ouest en tenant compte de la profondeur du meuble et de l'alignement
 // Measured on the upper cylindrical rail in the MACKAPÄR GLB (centre ≈188 cm).
 const MACK_UPPER_RAIL_TOP = 189.08;
+const MACK_LOWER_RAIL_TOP = 122.08;
+// Loaded GLB is centred on its bounds. Offset of the hook from that centre,
+// measured by generate-laundry-household.py (see laundry-household-manifest.json).
+const SOCK_DRYER_HOOK_X = -0.0406;
+const SOCK_DRYER_HOOK_Z = 4.6;
+const SOCK_DRYER_WIRE_DIAMETER = 0.34;
 const MACK_HALF_DEPTH = 16.035; // structure du meuble seule, sans les Drona du haut qui débordent
 const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH; // plaqué contre Kallax Cuisine
 const DRONA_HALF_WIDTH = 16.64; // largeur du GLB Drona (33,28 cm), orientée le long de Z une fois pivotée de 90°
@@ -742,6 +749,12 @@ export function LivingRoomDecor() {
           Les pinces 1, 6 et 16 décalent les vêtements de la barre basse. */}
       <group position={[MACK_X - 2, MACK_UPPER_RAIL_TOP + 0.3, MACK_Z + 0.8]} rotation-y={Math.PI / 2 + 1.05} userData={{ sceneItemRoot: true, itemName: 'Séchoir inox 16 pinces — trois tee-shirts noirs' }}>
         <ClipHanger16Loaded />
+      </group>
+
+      {/* Barre basse mesurée sur le modèle : séchoir le long de la tringle,
+          vêtements perpendiculaires, deux rangées de dix pinces. */}
+      <group position={[MACK_X + 8 - SOCK_DRYER_HOOK_X, MACK_LOWER_RAIL_TOP + SOCK_DRYER_WIRE_DIAMETER, MACK_Z - SOCK_DRYER_HOOK_Z]} userData={{ sceneItemRoot: true, itemName: 'Séchoir 20 pinces — 10 paires de chaussettes et 10 caleçons rouges' }}>
+        <SockDryer20Loaded />
       </group>
 
       {/* Cintres Penderie Mulig */}

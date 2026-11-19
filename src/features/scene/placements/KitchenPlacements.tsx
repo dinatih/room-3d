@@ -1,3 +1,4 @@
+import { MagicSponge } from '../items/LaundryHousehold';
 import { useEffect, useState } from 'react';
 import { PositionTransition } from '../utils/PositionTransition';
 import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairClearance';
@@ -9,7 +10,7 @@ import { CuisineGroup, CuisineDrona, CuisineLillhavet } from '../items/CuisineGr
 import { KallaxCuisine, KallaxCuisineDrona } from '../items/KallaxCuisine';
 import { KALLAX_CUISINE_POSITION, KALLAX_CUISINE_ROTATION } from '../items/kallaxCuisineDrona';
 import { TrashBin } from '../items/TrashBin';
-import { W5Bleach, CifInfiniteClean } from '../items/CleaningProducts';
+import { W5Bleach, CifInfiniteClean, Plogsvaeng } from '../items/CleaningProducts';
 import { PaperTowelRoll } from '../items/PaperRolls';
 import { SevenProngHook } from '../items/SevenProngHook';
 import { Tackan } from '../items/Tackan';
@@ -137,6 +138,12 @@ export function KitchenFurnishings() {
       {/* Spray sur le fond du meuble sous évier : pieds de 10 cm + panneau supérieur à 1,92 cm. */}
       <group position={[KITCHEN_WEST_WALL + 20, 10 + 1.92, ROOM_D + 15]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant sous évier cuisine' }}>
         <W5Bleach />
+      </group>
+
+      {/* Fond du meuble sous évier : second rangement perforé, à côté du spray. */}
+      <group position={[KITCHEN_WEST_WALL + 20, 10 + 1.92, ROOM_D + 39]} userData={{ sceneItemRoot: true, itemName: 'PLOGSVÄNG sous évier cuisine' }}>
+        <Plogsvaeng />
+        <group position={[0, 0.4, 0]} userData={{ sceneItemRoot: true, itemName: 'Éponge magique cuisine' }}><MagicSponge /></group>
       </group>
 
       {/* Fixation sur la sous-face de la planche basse (153 cm), à la jonction évier/plaques.

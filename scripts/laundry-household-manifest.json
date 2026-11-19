@@ -1,0 +1,54 @@
+{
+  "RedSocksPair.glb": {
+    "dimensionsCm": {
+      "w": 15.163,
+      "d": 12.013,
+      "h": 21.695
+    },
+    "triangles": 4704
+  },
+  "RedBoxers.glb": {
+    "dimensionsCm": {
+      "w": 39.0,
+      "d": 6.023,
+      "h": 33.473
+    },
+    "triangles": 8370
+  },
+  "loadedHookOffsetCm": [
+    -0.0406,
+    4.6
+  ],
+  "SockDryer20Loaded.glb": {
+    "dimensionsCm": {
+      "w": 37.681,
+      "d": 36.224,
+      "h": 52.543
+    },
+    "triangles": 148924
+  },
+  "MagicSponge.glb": {
+    "dimensionsCm": {
+      "w": 10.0,
+      "d": 6.0,
+      "h": 2.0
+    },
+    "triangles": 108
+  },
+  "PolyesterToothpicks.glb": {
+    "dimensionsCm": {
+      "w": 12.306,
+      "d": 7.0,
+      "h": 7.425
+    },
+    "triangles": 4164
+  },
+  "RowentaDR8250.glb": {
+    "dimensionsCm": {
+      "w": 11.1,
+      "d": 24.15,
+      "h": 28.3
+    },
+    "triangles": 4213
+  }
+}

@@ -1,3 +1,4 @@
+import { MagicSponge, RowentaDR8250 } from '../items/LaundryHousehold';
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { PointLight } from 'three';
@@ -227,6 +228,7 @@ export function BathroomFurnishings() {
           <DroneCell />
           <group position={[0.26, -DF / 2 + 15, id === 'drona-bathroom-west' ? 9.765 : -9.765]} userData={{ sceneItemRoot: true, itemName: `STACKSTOD ${item.label}` }}>
             <Stackstod60620144 />
+            {id === 'drona-bathroom-west' && <group position={[-10, 0.21, 4]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Éponge magique STACKSTOD SDB Ouest' }}><MagicSponge /></group>}
             {id === 'drona-bathroom-east' && <>
               {/* Fonds mesurés dans le GLB : 0,21 cm sur les côtés,
                   2,17 cm dans le bac central ; dégagement de la poignée. */}
@@ -242,6 +244,12 @@ export function BathroomFurnishings() {
           </>}
         </group>
       ))}
+
+      {/* Éponge sur le fond du caisson bas METOD Ouest (panneau de 1,8 cm). */}
+      <group position={[BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position[0], 1.8, BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position[2]]} userData={{ sceneItemRoot: true, itemName: 'Éponge magique meuble bas SDB Ouest' }}><MagicSponge /></group>
+
+      {/* Zone libre de la tablette, devant les rouleaux WC et à gauche des essuie-tout. */}
+      <group position={[CLOSET_RIGHT_EDGE_X + 36, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 12.1]} userData={{ sceneItemRoot: true, itemName: 'Défroisseur Rowenta DR8250' }}><RowentaDR8250 /></group>
 
       {/* Bord avant du METOD Est, flacon posé devant le DRÖNA. */}
       <group position={[BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position[0], 60, BATH_NORTH_WALL + 35.8]} userData={{ sceneItemRoot: true, itemName: 'Mixa Bébé 750 ml' }}>
