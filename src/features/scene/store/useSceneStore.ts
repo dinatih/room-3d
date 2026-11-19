@@ -404,7 +404,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeExtraIds: initialActiveExtraIds,
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
-  hdriResolution: '2k',
+  hdriResolution: '4k',
   screenVideosEnabled: true,
   screenVideoQuality: 'hd',
   setScreenVideosEnabled: (enabled) => {

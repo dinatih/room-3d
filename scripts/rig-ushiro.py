@@ -28,7 +28,7 @@ REFERENCES = BASE + [
     'walk_fwd_sniff 46', 'idle_shake_1. 137', 'idle_shake_2. 81',
     'idle_to_idle_lay 111', 'idle_lay_pose 2', 'idle_lay_to_idle 71',
     'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221',
-    'pee 43', 'poop 75', 'idle_bark_04_warning 47', 'track_bark_harvest 75', 'canter_fwd 53',
+    'pee 43', 'poop 75', 'idle_bark_04_warning 47',
 ]
 BASE_SAMPLE_FPS = args.sample_fps
 if BASE_SAMPLE_FPS<=0:raise ValueError('Sample frequency must be positive')
@@ -189,16 +189,21 @@ for side,initial in [('Left','L'),('Right','R')]:
         limb_ratios.append(native_length/donor_length)
 pelvis_offset=dp['Hips']-donor_hip_center
 fitted_hips=native_hip_center+Vector((pelvis_offset.x*pelvis_width_ratio,pelvis_offset.y*pelvis_length_ratio,pelvis_offset.z*sum(limb_ratios)/len(limb_ratios)))
+# Build a smooth, anatomically horizontal vertebral path from fitted_hips to the
+# thoracic center (matching the true anatomical spine inside the torso rather than
+# jumping +33° from fitted_hips up to pelvis_jnt and the dorsal withers at chest_jnt).
+spine_names=['Hips','Spine','Spine1','Spine2','Spine3','Spine4']
+thoracic_spine4=Vector((points['chest_jnt'].x, points['chest_jnt'].y, fitted_hips.z + 0.015))
+native_neck_base=Vector((points['neck_base_jnt'].x, points['neck_base_jnt'].y, points['neck_base_jnt'].z - 0.025))
 target = {'Reference': Vector(), 'Hips': fitted_hips,
-          'Spine': points['pelvis_jnt'].lerp(points['spine_1_jnt'], .5), 'Spine1': points['spine_1_jnt'].copy(),
-          'Spine2': points['spine_1_jnt'].lerp(points['spine_2_jnt'], .5), 'Spine3': points['spine_2_jnt'].copy(),
-          'Spine4': points['chest_jnt'].copy(), 'Neck01': points['neck_base_jnt'].copy(),
+          'Spine': fitted_hips.lerp(thoracic_spine4, 0.15), 'Spine1': fitted_hips.lerp(thoracic_spine4, 0.36),
+          'Spine2': fitted_hips.lerp(thoracic_spine4, 0.57), 'Spine3': fitted_hips.lerp(thoracic_spine4, 0.78),
+          'Spine4': thoracic_spine4.copy(), 'Neck01': native_neck_base,
           'Neck02': points['neck_mid_jnt'].copy(), 'Neck03': points['neck_mid_jnt'].lerp(points['head_jnt'], .5),
           'Head': points['head_jnt'].copy(), 'Jaw': points['jaw_jnt'].copy()}
-# Match each donor vertebral station to the native spine's arc length.
-# Uneven, hand-picked stations concentrate the same flexion into short spans.
-spine_names=['Hips','Spine','Spine1','Spine2','Spine3','Spine4']
-spine_path=[fitted_hips]+[points[n] for n in ['pelvis_jnt','spine_1_jnt','spine_2_jnt','chest_jnt']]
+# Match each donor vertebral station to the smooth spine arc length so flexion
+# distributes evenly along the torso without an artificial +33° Hips->Spine kink.
+spine_path=[fitted_hips, thoracic_spine4]
 path_lengths=[(b-a).length for a,b in zip(spine_path,spine_path[1:])]
 donor_lengths=[(dp[b]-dp[a]).length for a,b in zip(spine_names,spine_names[1:])]
 for index,name in enumerate(spine_names):
@@ -225,6 +230,21 @@ for side, initial in [('Left', 'L'), ('Right', 'R')]:
         # segment ratio or scale the upper-arm mesh to match the donor.
         for name,old_name in zip(chain,old_chain):
             name=side+name;target[name]=points[old_name].copy();mapping[old_name]=name;anchors[name]=old_name
+        # Shibaa.blend places L/R_elbow_jnt 6 cm below the anatomical chest-elbow
+        # junction (halfway down the radius/ulna), making the humerus 35% too long
+        # and driving elbows through the floor in every lying/sleeping clip.
+        # Move Arm to the true anatomical elbow (measured on mesh cross-sections
+        # at 60.5% of wrist->shoulder height, right at the lower chest margin).
+        if chain[0] == 'Shoulder':
+            sh_pt = points[f'{initial}_shoulder_jnt']
+            el_pt = points[f'{initial}_elbow_jnt']
+            wr_pt = points[f'{initial}_wrist_jnt']
+            true_elbow = Vector((
+                wr_pt.x + (sh_pt.x - wr_pt.x) * 0.45,
+                el_pt.y + 0.006,
+                wr_pt.z + (sh_pt.z - wr_pt.z) * 0.605,
+            ))
+            target[side + 'Arm'] = true_elbow
         # Keep every native anatomical pivot; retarget the movement with IK.
         limbs.append(dict(side=side, chain=[side + n for n in chain], original=old_chain))
     for part, suffix in [('pinkie','Pinky1'), ('ring','Ring1'), ('mid','Middle1'), ('index','Index2')]:
@@ -325,6 +345,20 @@ for obj in meshes:
                 for lateral,share in [('breathe l',left),('breathe r',1-left)]:
                     combined[lateral]=combined.get(lateral,0)+weight/total*share
             else: combined[name] = combined.get(name, 0) + weight / total
+        # Re-split only the authored humerus+forearm mass across the true elbow plane
+        # so vertices between the old low elbow (z=0.25) and true elbow (z=0.312) bend
+        # with the forearm (Arm) instead of staying rigid with the humerus (Shoulder01).
+        for side in ('Left', 'Right'):
+            sh, el = side + 'Shoulder01', side + 'Arm'
+            pair_w = combined.get(sh, 0.0) + combined.get(el, 0.0)
+            if pair_w > 1e-6:
+                ez = target[el].z
+                t = min(1.0, max(0.0, (point.z - (ez - 0.035)) / 0.070))
+                t = t * t * (3.0 - 2.0 * t)
+                combined[sh] = pair_w * t
+                combined[el] = pair_w * (1.0 - t)
+                if combined[sh] < 1e-6: del combined[sh]
+                if combined[el] < 1e-6: del combined[el]
         if not any(name.startswith('tail_') for name,_ in weights):
             maximum_non_tail_bind_displacement=max(maximum_non_tail_bind_displacement,(result-point).length)
         vertex.co = result
@@ -468,17 +502,12 @@ for name in spine_stretch_bones | neck_stretch_bones:
     parent=arm.bones[name].parent.name
     donor_seg_rest_len[name]=(dp[name]-dp[parent]).length
 
-# Precompute native rest bend-plane poles for every limb (in parent body bone local frame)
-# so near-straight poses never suffer from undefined or noisy bend-plane flips.
+# Anatomical rest-world sagittal bend poles (pure +Y backward for elbows, -Y forward for knees).
+# Transformed at each frame by body_rot = fk[body_parent].q @ rest[body_parent].q.inv.
 for limb in limbs:
-    un,ln,en=[limb[n] for n in ['upper','lower','end']]
-    parent_body='Spine4' if limb['chain'][0].endswith('Shoulder') else 'Hips'
-    limb['body_parent']=parent_body
-    u0=rest[ln].translation-rest[un].translation
-    r0=rest[en].translation-rest[un].translation
-    a0=r0.normalized()
-    p0=u0-a0*u0.dot(a0)
-    limb['rest_pole_local']=rest[parent_body].to_quaternion().inverted()@p0.normalized()
+    front=limb['chain'][0].endswith('Shoulder')
+    limb['body_parent']='Spine4' if front else 'Hips'
+    limb['rest_pole_world']=Vector((0., 1. if front else -1., 0.))
 
 def forward(bases):
     world = {}
@@ -596,22 +625,28 @@ def retarget_body_chain(fk, source_world):
     return result
 
 def limb_pole(limb, fk, axis, source_upper):
-    """Compute a smooth, flip-free anatomical bend pole perpendicular to axis."""
+    """Compute a C1-smooth, globally singularity-free anatomical bend pole.
+
+    Blends smoothly toward the anatomical sagittal pole anat_perp whenever the
+    donor limb nears full extension (src_sin -> 0) OR attempts to hyperextend
+    backwards (dot(cand, anat_perp) <= 0), eliminating all 180-degree flips.
+    """
     body_rot=fk[limb['body_parent']].to_quaternion()@rest[limb['body_parent']].to_quaternion().inverted()
-    anat_pole=body_rot@limb['rest_pole_local']
+    anat_pole=body_rot@limb['rest_pole_world']
     anat_perp=anat_pole-axis*anat_pole.dot(axis)
     if anat_perp.length>1e-6: anat_perp.normalize()
     src_perp=source_upper-axis*source_upper.dot(axis)
     src_sin=src_perp.length/max(1e-9,source_upper.length)
-    if src_sin>0.12:
-        cand=src_perp.normalized()
-        # Prevent non-anatomical inversion where donor noise flips >115 deg from sagittal pole
-        if anat_perp.length>1e-6 and cand.dot(anat_perp)<-0.42:
-            cand=(cand-anat_perp*(cand.dot(anat_perp)+0.42)).normalized()
-        return cand
     if src_sin>1e-4 and anat_perp.length>1e-6:
-        t=src_sin/0.12
-        blended=src_perp.normalized()*t+anat_perp*(1-t)
+        cand=src_perp.normalized()
+        d=cand.dot(anat_perp)
+        # C1 smoothstep weights: front elbows stay strictly backward (d in [-0.15, 0.45]);
+        # rear knees allow natural lateral hip abduction in pee/shake (d in [-0.30, 0.25]).
+        t_sin=min(1.,max(0.,(src_sin-0.05)/0.25)); t_sin=t_sin*t_sin*(3.-2.*t_sin)
+        d0,d1=(-0.15,0.45) if limb['chain'][0].endswith('Shoulder') else (-0.30,0.25)
+        t_dir=min(1.,max(0.,(d-d0)/(d1-d0))); t_dir=t_dir*t_dir*(3.-2.*t_dir)
+        w=t_sin*t_dir
+        blended=cand*w+anat_perp*(1.-w)
         if blended.length>1e-6: return blended.normalized()
     if anat_perp.length>1e-6: return anat_perp
     if src_perp.length>1e-9: return src_perp.normalized()
@@ -638,8 +673,6 @@ def retarget_endpoints(fk, source_world, lying_blend=0.0):
         if reach.length<1e-9: raise RuntimeError('Undefined donor limb reach: '+en)
         a,b=limb['lengths']
         scaled_reach=reach*limb['ratio']
-        if limb['chain'][0].endswith('Shoulder') and lying_blend>0.:
-            scaled_reach+=body_fwd*(0.11*lying_blend)
         # Keep slight margin from exact singularity so elbow/knee plane stays well-defined
         min_d=abs(a-b)+1e-4;max_d=a+b-1e-4
         distance=min(max_d,max(min_d,scaled_reach.length))

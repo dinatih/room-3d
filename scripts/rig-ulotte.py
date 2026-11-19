@@ -35,10 +35,11 @@ PRIORITY_CLIPS = BASE_CLIPS + [
     'pee 43',
     'poop 75',
     'idle_bark_04_warning 47',
-    'track_bark_harvest 75',
-    'canter_fwd 53',
 ]
-HIGH_RATE = set(BASE_CLIPS + ['walk_fwd_sniff 46', 'idle_shake_1. 137', 'idle_shake_2. 81'])
+HIGH_RATE = set(BASE_CLIPS + [
+    'walk_fwd_sniff 46', 'idle_shake_1. 137', 'idle_shake_2. 81',
+    'idle_to_idle_lay 111', 'idle_lay_to_idle 71',
+])
 
 all_catalog = [e['value'] for e in json.loads((ROOT / 'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog']]
 if args.base_only:
@@ -106,36 +107,36 @@ for material in body.data.materials:
 #   Shoulder = top of scapula | Shoulder01 = shoulder joint | Arm = elbow | ForeArm = wrist | Hand = paw base
 #   Pelvis   = hip joint      | UpLeg      = knee (stifle)  | Leg = hock  | Foot    = paw base
 heads = {
-    'Hips':   (0.0,  0.60, 0.45),
-    'Spine':  (0.0,  0.44, 0.46),
-    'Spine1': (0.0,  0.28, 0.46),
-    'Spine2': (0.0,  0.12, 0.465),
-    'Spine3': (0.0, -0.04, 0.475),
-    'Spine4': (0.0, -0.20, 0.485),
-    'Neck01': (0.0, -0.31, 0.54),
-    'Neck02': (0.0, -0.39, 0.61),
-    'Neck03': (0.0, -0.47, 0.675),
-    'Head':   (0.0, -0.55, 0.73),
+    'Hips':   (0.0,  0.615, 0.495),
+    'Spine':  (0.0,  0.455, 0.505),
+    'Spine1': (0.0,  0.295, 0.505),
+    'Spine2': (0.0,  0.135, 0.505),
+    'Spine3': (0.0, -0.025, 0.505),
+    'Spine4': (0.0, -0.185, 0.500),
+    'Neck01': (0.0, -0.305, 0.510),
+    'Neck02': (0.0, -0.400, 0.560),
+    'Neck03': (0.0, -0.485, 0.635),
+    'Head':   (0.0, -0.575, 0.715),
 }
 spine_names = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Spine3', 'Spine4']
 parents = {child: parent for parent, child in zip(list(heads), list(heads)[1:])}
-ends = {'Head': (0.0, -0.78, 0.68)}
+ends = {'Head': (0.0, -0.800, 0.665)}
 
 for side, sign in [('Left', 1.0), ('Right', -1.0)]:
     front_chain = [
-        ('Shoulder',    (0.075, -0.170, 0.470)),
-        ('Shoulder01',  (0.115, -0.200, 0.330)),
-        ('Arm',         (0.110, -0.085, 0.175)),
-        ('ForeArm',     (0.102, -0.118, 0.085)),
-        ('Hand',        (0.105, -0.145, 0.035)),
-        ('HandMiddle1', (0.105, -0.195, 0.025)),
+        ('Shoulder',    (0.075, -0.155, 0.515)),
+        ('Shoulder01',  (0.115, -0.205, 0.310)),
+        ('Arm',         (0.110, -0.095, 0.190)),
+        ('ForeArm',     (0.102, -0.125, 0.082)),
+        ('Hand',        (0.105, -0.160, 0.032)),
+        ('HandMiddle1', (0.105, -0.205, 0.024)),
     ]
     rear_chain = [
-        ('Pelvis',  (0.100, 0.600, 0.400)),
-        ('UpLeg',   (0.120, 0.580, 0.255)),
-        ('Leg',     (0.134, 0.735, 0.160)),
-        ('Foot',    (0.134, 0.685, 0.040)),
-        ('ToeBase', (0.134, 0.635, 0.025)),
+        ('Pelvis',  (0.100, 0.615, 0.440)),
+        ('UpLeg',   (0.118, 0.595, 0.275)),
+        ('Leg',     (0.132, 0.728, 0.165)),
+        ('Foot',    (0.134, 0.680, 0.040)),
+        ('ToeBase', (0.134, 0.630, 0.025)),
     ]
     for chain, root_parent in [(front_chain, 'Spine4'), (rear_chain, 'Hips')]:
         parent = root_parent
@@ -273,23 +274,24 @@ for vertex in body.data.vertices:
     ws = {vg_name_by_idx[g.group]: g.weight for g in vertex.groups if g.weight > 0.0}
 
     # 1. Pure torso/abdomen/sternum isolation from limb weights
-    # Front leg lives around y in [-0.24, -0.02]; rear leg around y in [0.52, 0.80]
-    # Remove front-limb weights behind y = -0.02 (ramps out over [-0.06, +0.02])
-    front_fade = 1.0 - smoothstep(-0.06, 0.02, y)
-    # Remove rear-limb weights in front of y = 0.50 (ramps out over [0.46, 0.55])
-    rear_fade = smoothstep(0.46, 0.55, y)
+    # Keep distal limb weights (Arm/ForeArm/Leg) strictly off the torso, while allowing
+    # proximal shoulder/hip sockets (Shoulder/Shoulder01/Pelvis) a gentle organic fade.
+    front_prox_fade = 1.0 - smoothstep(-0.05, 0.06, y)
+    front_dist_fade = 1.0 - smoothstep(-0.06, 0.00, y)
+    rear_prox_fade = smoothstep(0.42, 0.54, y)
+    rear_dist_fade = smoothstep(0.47, 0.56, y)
     # Remove distal limb weights along the dorsal back (z > 0.44) and ventral midline (|x| < 0.075, z > 0.16)
     midline_mask = (1.0 - smoothstep(0.055, 0.095, abs(x))) * smoothstep(0.15, 0.21, z)
-    dorsal_mask = smoothstep(0.40, 0.49, z)
+    dorsal_mask = smoothstep(0.42, 0.51, z)
     distal_keep = 1.0 - max(midline_mask, dorsal_mask)
 
     removed = 0.0
     for name in list(ws):
         keep = 1.0
         if name in front_limb_set:
-            keep = min(keep, front_fade)
+            keep = min(keep, front_dist_fade if name in limb_distal else front_prox_fade)
         if name in rear_limb_set:
-            keep = min(keep, rear_fade)
+            keep = min(keep, rear_dist_fade if name in limb_distal else rear_prox_fade)
         if name in limb_distal:
             keep = min(keep, distal_keep)
         if keep < 1.0:
@@ -337,8 +339,8 @@ for vertex in body.data.vertices:
 edges_all = np.array([tuple(e.vertices) for e in body.data.edges], dtype=int)
 for region_set, iters in [
     (set(spine_names), 4),
-    ({'Spine4', 'Neck01', 'LeftShoulder', 'LeftShoulder01', 'RightShoulder', 'RightShoulder01'}, 3),
-    ({'Hips', 'LeftPelvis', 'RightPelvis'}, 3),
+    ({'Spine3', 'Spine4', 'Neck01', 'LeftShoulder', 'LeftShoulder01', 'RightShoulder', 'RightShoulder01'}, 6),
+    ({'Hips', 'Spine', 'LeftPelvis', 'RightPelvis'}, 6),
 ]:
     r_names = [g.name for g in body.vertex_groups if g.name in region_set]
     if not r_names:
@@ -476,6 +478,8 @@ donor_trunk_verts = np.array([i for i, n in enumerate(source_cache[2]) if n in d
 ulotte_trunk_verts = np.array([i for i, n in enumerate(target_cache[2]) if n in set(spine_names)], dtype=int)
 donor_front_verts = np.array([i for i, n in enumerate(source_cache[2]) if n in {'Spine3', 'Spine4'}], dtype=int)
 donor_rear_verts = np.array([i for i, n in enumerate(source_cache[2]) if n in {'Hips', 'Spine', 'Spine1'}], dtype=int)
+donor_head_drivers = {'Head'} | {b.name for b in donor.data.bones['Head'].children_recursive}
+donor_head_verts = np.array([i for i, n in enumerate(source_cache[2]) if n in donor_head_drivers], dtype=int)
 ulotte_front_verts = np.array([i for i, n in enumerate(target_cache[2]) if n in {'Spine3', 'Spine4'}], dtype=int)
 ulotte_rear_verts = np.array([i for i, n in enumerate(target_cache[2]) if n in {'Hips', 'Spine', 'Spine1'}], dtype=int)
 
@@ -520,12 +524,8 @@ for side in ['Left', 'Right']:
         dz_span = abs(base_world[un].translation.z - base_world[en].translation.z)
         z_ratio = z_span / dz_span
         parent_body = 'Spine4' if front else 'Hips'
-        # Native rest bend pole in parent_body local space
-        u0 = rest[ln].translation - rest[un].translation
-        r0 = rest[en].translation - rest[un].translation
-        a0 = r0.normalized()
-        p0 = (u0 - a0 * u0.dot(a0)).normalized()
-        rest_pole_local = rest[parent_body].to_quaternion().inverted() @ p0
+        # Pure anatomical rest-world sagittal bend pole (+Y backward for elbows, -Y forward for knees).
+        rest_pole_world = Vector((0.0, 1.0 if front else -1.0, 0.0))
 
         # Sole vertices (distal from wrist/hock so paw pads & toes define contact)
         distal_donor = {en} | {bn.name for bn in donor.data.bones[en].children_recursive}
@@ -541,7 +541,7 @@ for side in ['Left', 'Right']:
         limbs.append(dict(
             side=side, front=front, upper=un, lower=ln, end=en, paw=paw,
             lengths=(a, b), ratio=ratio, z_ratio=z_ratio,
-            body_parent=parent_body, rest_pole_local=rest_pole_local,
+            body_parent=parent_body, rest_pole_world=rest_pole_world,
             source_sole=src_sole, target_sole=tgt_sole, fast_sole=fast_sole, target_paw=tgt_paw,
             contact_height=float(base_skin[src_sole, 2].min()),
         ))
@@ -571,23 +571,24 @@ def fk_from_rotations(rotations, hip_pos):
     return world
 
 def limb_pole(limb, world, axis, source_upper):
-    """Singularity-free anatomical bend pole: smooth blend of donor plane and body-local rest plane."""
+    """C1-smooth, globally singularity-free anatomical bend pole.
+
+    Smoothly converges to the anatomical sagittal pole anat_perp whenever the
+    limb approaches full extension (src_sin -> 0) or donor hyperextension
+    (dot(cand, anat_perp) <= 0), eliminating all backward bends and 180° flips.
+    """
     body_rot = world[limb['body_parent']].to_quaternion() @ rest[limb['body_parent']].to_quaternion().inverted()
-    anat_pole = body_rot @ limb['rest_pole_local']
+    anat_pole = body_rot @ limb['rest_pole_world']
     anat_perp = anat_pole - axis * anat_pole.dot(axis)
     if anat_perp.length > 1e-6:
         anat_perp.normalize()
     src_perp = source_upper - axis * source_upper.dot(axis)
     src_sin = src_perp.length / max(1e-9, source_upper.length)
-    if src_sin > 0.15:
-        cand = src_perp.normalized()
-        # Prevent non-anatomical >110° flips relative to the dachshund's sagittal bend plane
-        if anat_perp.length > 1e-6 and cand.dot(anat_perp) < -0.35:
-            cand = (cand - anat_perp * (cand.dot(anat_perp) + 0.35)).normalized()
-        return cand
     if src_sin > 1e-4 and anat_perp.length > 1e-6:
-        t = src_sin / 0.15
-        blended = src_perp.normalized() * t + anat_perp * (1.0 - t)
+        cand = src_perp.normalized()
+        d = cand.dot(anat_perp)
+        w = smoothstep(0.05, 0.30, src_sin) * smoothstep(-0.15, 0.45, d)
+        blended = cand * w + anat_perp * (1.0 - w)
         if blended.length > 1e-6:
             return blended.normalized()
     if anat_perp.length > 1e-6:
@@ -596,38 +597,79 @@ def limb_pole(limb, world, axis, source_upper):
         return src_perp.normalized()
     raise RuntimeError('Undefined limb bend plane: ' + limb['lower'])
 
+distal_foot_bones = {
+    side + part
+    for side in ('Left', 'Right')
+    for part in ('ForeArm', 'Hand', 'HandMiddle1', 'Leg', 'Foot', 'ToeBase')
+}
+
 def build_initial_pose(source_world, is_gait_cycle, source_skin=None):
-    """Construct Ulotte's proportion-adapted FK + analytic limb reach pose from donor world matrices."""
-    # 1. Compute adapted spine pitch from independent front-chest and rear-pelvis clearances
-    #    so Ulotte's deep brisket and shallower pelvis both touch the floor cleanly when lying/sleeping
-    #    (eliminating chest handstands / floating hindquarters) while preserving exact rest posture.
+    """Construct Ulotte's proportion-adapted FK + analytic limb reach pose from donor world matrices.
+
+    Returns (fk, front_lying_blend, rear_lying_blend).
+    """
+    # 1. Compute damped relative vertebral rotations FIRST so we know the EXACT curved
+    #    spine chord vector (Hips -> Spine4) before solving spine_pitch_corr. Otherwise,
+    #    cumulative vertebral bends along Ulotte's 0.80 m back overshoot Spine4.z by 5-8 cm.
+    spine_children = set(spine_names[1:])
+    damped_spine_rel = {}
+    for n in spine_names[1:]:
+        p = arm.bones[n].parent.name
+        wd = source_world[n].to_quaternion() @ base_world[n].to_quaternion().inverted()
+        d_parent_wd = source_world[p].to_quaternion() @ base_world[p].to_quaternion().inverted()
+        rel_world = d_parent_wd.inverted() @ wd
+        if rel_world.w < 0.0:
+            rel_world.negate()
+        eul = rel_world.to_euler('XYZ')
+        damped_eul = eul.copy()
+        damped_eul.x *= spine_bend_scale
+        damped_eul.y *= spine_bend_scale
+        damped_eul.z *= 0.65
+        damped_rel = damped_eul.to_quaternion()
+        damped_spine_rel[n] = (rest[p].to_quaternion().inverted() @ (damped_rel @ rest[p].to_quaternion())) @ rest_local[n].to_quaternion()
+
+    # Evaluate the exact curved spine chord in Hips rest-aligned space
+    cur_pos = Vector((0.0, 0.0, 0.0))
+    cur_q = rest['Hips'].to_quaternion()
+    for n in spine_names[1:]:
+        cur_pos = cur_pos + (cur_q @ rest_offsets[n])
+        cur_q = cur_q @ damped_spine_rel[n]
+    curved_spine = cur_pos
+    curved_len = curved_spine.length
+
+    # 2. Target front (brisket) and rear (pelvis/belly) ground heights independently
     donor_spine = source_world['Spine4'].translation - source_world['Hips'].translation
+    front_lying = 0.0
+    rear_lying = 0.0
+    head_rest_blend = 0.0
     if source_skin is not None and not is_gait_cycle:
         d_front_c = max(0.0, float(source_skin[donor_front_verts, 2].min()))
         d_rear_c = max(0.0, float(source_skin[donor_rear_verts, 2].min()))
+        d_head_c = max(0.0, float(source_skin[donor_head_verts, 2].min()))
+        front_lying = 1.0 - smoothstep(0.02, 0.14, d_front_c)
+        rear_lying = 1.0 - smoothstep(0.02, 0.14, d_rear_c)
+        head_rest_blend = (1.0 - smoothstep(0.01, 0.10, d_head_c)) * front_lying
         u_spine4_z = ulotte_chest_depth + d_front_c * front_clear_ratio
         u_hips_z = ulotte_pelvis_depth + d_rear_c * rear_clear_ratio
         desired_rise = u_spine4_z - u_hips_z
     else:
         desired_rise = ulotte_spine_vec.z + (donor_spine.z - donor_base_spine_vec.z) * clearance_ratio
         u_hips_z = None
-    desired_rise = max(-0.85 * torso_len, min(0.85 * torso_len, desired_rise))
+
+    desired_rise = max(-0.85 * curved_len, min(0.85 * curved_len, desired_rise))
     horiz_xy = Vector((donor_spine.x, donor_spine.y, 0.0))
     if horiz_xy.length < 1e-6:
         horiz_xy = Vector((0.0, -1.0, 0.0))
     else:
         horiz_xy.normalize()
-    desired_spine = horiz_xy * math.sqrt(max(0.0, torso_len * torso_len - desired_rise * desired_rise)) + Vector((0.0, 0.0, desired_rise))
+    desired_spine = horiz_xy * math.sqrt(max(0.0, curved_len * curved_len - desired_rise * desired_rise)) + Vector((0.0, 0.0, desired_rise))
     hip_delta_q = source_world['Hips'].to_quaternion() @ base_world['Hips'].to_quaternion().inverted()
-    pitched_spine = hip_delta_q @ ulotte_spine_vec
+    pitched_spine = hip_delta_q @ curved_spine
     spine_pitch_corr = pitched_spine.rotation_difference(desired_spine)
 
-    # 2. Compute global bone orientations via exact 1-to-1 donor world deltas,
-    #    damping vertical spine pitch/arch by spine_bend_scale (~0.36) while keeping
-    #    sideways yaw curling natural (~0.65), and transforming limbs/neck into their
-    #    parent body bone's actual frame so paws never cross sideways under the chest.
+    # 3. Compute global bone orientations cleanly
     rotations = {}
-    spine_children = set(spine_names[1:])
+    lying_max = max(front_lying, rear_lying)
     for bone in arm.bones:
         n = bone.name
         if n == 'Muzzle':
@@ -635,23 +677,31 @@ def build_initial_pose(source_world, is_gait_cycle, source_skin=None):
             continue
         wd = source_world[n].to_quaternion() @ base_world[n].to_quaternion().inverted()
         if n == 'Hips':
-            rotations[n] = spine_pitch_corr @ wd @ rest[n].to_quaternion()
+            q_hips = spine_pitch_corr @ wd @ rest[n].to_quaternion()
+            # Wide-pelvis dachshunds resting on a flat floor cannot roll 58° sideways
+            # without jamming one thigh underground and lifting the belly +12 cm up.
+            # Gently damp roll around the spine chord when lying, preserving full yaw & pitch.
+            if lying_max > 0.0:
+                s_dir = desired_spine.normalized()
+                cur_up = (q_hips @ rest[n].to_quaternion().inverted()) @ Vector((0.0, 0.0, 1.0))
+                up_perp = cur_up - s_dir * cur_up.dot(s_dir)
+                ref_up = Vector((0.0, 0.0, 1.0)) - s_dir * s_dir.z
+                if up_perp.length > 1e-5 and ref_up.length > 1e-5:
+                    unroll_q = up_perp.normalized().rotation_difference(ref_up.normalized())
+                    q_hips = Quaternion().slerp(unroll_q, 0.65 * lying_max) @ q_hips
+            rotations[n] = q_hips
         elif n in spine_children:
-            parent_q = rotations[bone.parent.name]
+            rotations[n] = rotations[bone.parent.name] @ damped_spine_rel[n]
+        elif n in ('LeftShoulder', 'RightShoulder'):
+            # Keep scapular glide subtle (~25% of Pitbull's large scapula swing) so the
+            # barrel-chested dachshund ribcage never develops a 55° horizontal shear crease.
+            parent_q = rotations['Spine4']
             local_rest_q = rest_local[n].to_quaternion()
-            d_parent_wd = source_world[bone.parent.name].to_quaternion() @ base_world[bone.parent.name].to_quaternion().inverted()
-            rel_world = d_parent_wd.inverted() @ wd
-            if rel_world.w < 0.0:
-                rel_world.negate()
-            # Separate yaw (around world Z) from pitch/roll (arch) so Ulotte curls cozily
-            # sideways on the bed without arching her long back like a rainbow.
-            eul = rel_world.to_euler('XYZ')
-            damped_eul = eul.copy()
-            damped_eul.x *= spine_bend_scale
-            damped_eul.y *= spine_bend_scale
-            damped_eul.z *= 0.65
-            damped_rel = damped_eul.to_quaternion()
-            rotations[n] = parent_q @ (rest[bone.parent.name].to_quaternion().inverted() @ (damped_rel @ rest[bone.parent.name].to_quaternion())) @ local_rest_q
+            donor_rel = source_world['Spine4'].to_quaternion().inverted() @ source_world[n].to_quaternion()
+            base_rel = base_world['Spine4'].to_quaternion().inverted() @ base_world[n].to_quaternion()
+            rel_delta = base_rel.inverted() @ donor_rel
+            damped = Quaternion().slerp(rel_delta, 0.25)
+            rotations[n] = parent_q @ local_rest_q @ damped
         elif n.startswith('Tail'):
             idx = int(n[-2:])
             parent_q = rotations[bone.parent.name]
@@ -659,37 +709,57 @@ def build_initial_pose(source_world, is_gait_cycle, source_skin=None):
             if idx == 1:
                 rotations[n] = spine_pitch_corr @ wd @ rest[n].to_quaternion()
             else:
-                donor_rel = (source_world[bone.parent.name].to_quaternion().inverted() @ source_world[n].to_quaternion())
-                base_rel = (base_world[bone.parent.name].to_quaternion().inverted() @ base_world[n].to_quaternion())
+                donor_rel = source_world[bone.parent.name].to_quaternion().inverted() @ source_world[n].to_quaternion()
+                base_rel = base_world[bone.parent.name].to_quaternion().inverted() @ base_world[n].to_quaternion()
                 rel_delta = base_rel.inverted() @ donor_rel
                 damped = Quaternion().slerp(rel_delta, 0.45)
                 rotations[n] = parent_q @ local_rest_q @ damped
         elif n.startswith(('LeftEar', 'RightEar')):
             parent_q = rotations[bone.parent.name]
             local_rest_q = rest_local[n].to_quaternion()
-            donor_rel = (source_world[bone.parent.name].to_quaternion().inverted() @ source_world[n].to_quaternion())
-            base_rel = (base_world[bone.parent.name].to_quaternion().inverted() @ base_world[n].to_quaternion())
+            donor_rel = source_world[bone.parent.name].to_quaternion().inverted() @ source_world[n].to_quaternion()
+            base_rel = base_world[bone.parent.name].to_quaternion().inverted() @ base_world[n].to_quaternion()
             rel_delta = base_rel.inverted() @ donor_rel
             damped = Quaternion().slerp(rel_delta, 0.35)
             rotations[n] = parent_q @ local_rest_q @ damped
         elif n in ('Neck01', 'Neck02', 'Neck03', 'Head'):
-            # Apply ONLY the horizontal yaw difference between Ulotte's Spine4 and donor's Spine4
-            # so sniffing/sleeping head pitch stays true to the donor without tilting upward.
+            # Apply ONLY horizontal yaw difference between Ulotte's Spine4 and donor's Spine4.
             u_ref_wd = rotations['Spine4'] @ rest['Spine4'].to_quaternion().inverted()
             d_ref_wd = source_world['Spine4'].to_quaternion() @ base_world['Spine4'].to_quaternion().inverted()
             fc = u_ref_wd @ d_ref_wd.inverted()
             yaw_only = Quaternion((0.0, 0.0, 1.0), fc.to_euler('XYZ').z)
+            q_neck = yaw_only @ wd @ rest[n].to_quaternion()
+            # When lying AND Pitbull rests its head on the floor (sleep), smoothly pitch
+            # Ulotte's taller rest neck down so her chin rests gently on the floor too.
+            if head_rest_blend > 0.0:
+                body_right = u_ref_wd @ Vector((1.0, 0.0, 0.0))
+                body_right.z = 0.0
+                if body_right.length > 1e-6:
+                    body_right.normalize()
+                    # Pitch forward-down around body right (+X -> -Y goes toward -Z for positive angle)
+                    pitch_ang = (0.42 if n != 'Head' else 0.25) * head_rest_blend
+                    q_neck = Quaternion(body_right, pitch_ang) @ q_neck
+            rotations[n] = q_neck
+        elif n in distal_foot_bones:
+            # Distal paws/metatarsals (ForeArm..HandMiddle1, Leg..ToeBase) align with the GROUND
+            # plane in world space — apply ONLY horizontal yaw correction, NEVER vertical pitch/roll
+            # frame_corr (which previously tilted lying metatarsals straight down into the floor!).
+            is_rear = any(n.startswith(s + p) for s in ('Left', 'Right') for p in ('Leg', 'Foot', 'ToeBase'))
+            ref = 'Hips' if is_rear else 'Spine4'
+            u_ref_wd = rotations[ref] @ rest[ref].to_quaternion().inverted()
+            d_ref_wd = source_world[ref].to_quaternion() @ base_world[ref].to_quaternion().inverted()
+            fc = u_ref_wd @ d_ref_wd.inverted()
+            yaw_only = Quaternion((0.0, 0.0, 1.0), fc.to_euler('XYZ').z)
             rotations[n] = yaw_only @ wd @ rest[n].to_quaternion()
         else:
-            # Align forelimb rotations with Ulotte's Spine4 frame and hindlimb rotations with Hips.
-            is_rear = any(n.startswith(s + p) for s in ('Left', 'Right') for p in ('Pelvis', 'UpLeg', 'Leg', 'Foot', 'ToeBase'))
+            is_rear = any(n.startswith(s + p) for s in ('Left', 'Right') for p in ('Pelvis', 'UpLeg'))
             ref = 'Hips' if is_rear else 'Spine4'
             u_ref_wd = rotations[ref] @ rest[ref].to_quaternion().inverted()
             d_ref_wd = source_world[ref].to_quaternion() @ base_world[ref].to_quaternion().inverted()
             frame_corr = u_ref_wd @ d_ref_wd.inverted()
             rotations[n] = frame_corr @ wd @ rest[n].to_quaternion()
 
-    # 3. Root Hips position scaled by dachshund proportions
+    # 4. Root Hips position scaled by dachshund proportions
     hip_delta = source_world['Hips'].translation - base_world['Hips'].translation
     if is_gait_cycle:
         hip_pos = rest['Hips'].translation + Vector((0.0, 0.0, hip_delta.z * clearance_ratio))
@@ -702,43 +772,51 @@ def build_initial_pose(source_world, is_gait_cycle, source_skin=None):
         ))
     fk = fk_from_rotations(rotations, hip_pos)
 
-    # 4. Analytic 2-bone limb reach transformed into each parent body bone's actual frame
-    #    (Spine4 for forelimbs, Hips for hindlimbs) so legs stay aligned with chest/pelvis.
+    # 5. Analytic 2-bone limb reach
+    yaw_corrs = {}
     frame_corrs = {}
     for ref in ('Spine4', 'Hips'):
         u_ref_wd = fk[ref].to_quaternion() @ rest[ref].to_quaternion().inverted()
         d_ref_wd = source_world[ref].to_quaternion() @ base_world[ref].to_quaternion().inverted()
-        frame_corrs[ref] = u_ref_wd @ d_ref_wd.inverted()
+        fc = u_ref_wd @ d_ref_wd.inverted()
+        frame_corrs[ref] = fc
+        yaw_corrs[ref] = Quaternion((0.0, 0.0, 1.0), fc.to_euler('XYZ').z)
 
-    # Smoothly extend front paw targets slightly forward when chest is lowered near the floor
-    # (lying / sleeping poses), using a C1 smoothstep on donor chest clearance so transitions
-    # between standing and lying have zero single-frame discontinuities.
-    lying_blend = 0.0
-    if source_skin is not None and not is_gait_cycle:
-        d_front_c = max(0.0, float(source_skin[donor_front_verts, 2].min()))
-        lying_blend = 1.0 - smoothstep(0.02, 0.12, d_front_c)
     body_fwd = (fk['Spine4'].to_quaternion() @ rest['Spine4'].to_quaternion().inverted()) @ Vector((0.0, -1.0, 0.0))
     body_fwd.z = 0.0
     if body_fwd.length > 1e-6:
         body_fwd.normalize()
     else:
         body_fwd = Vector((0.0, -1.0, 0.0))
+    body_right = Vector((0.0, 0.0, 1.0)).cross(body_fwd)
+    if body_right.length > 1e-6:
+        body_right.normalize()
+    else:
+        body_right = Vector((1.0, 0.0, 0.0))
 
     for limb in limbs:
         un, ln, en = limb['upper'], limb['lower'], limb['end']
         start = fk[un].translation
         a, b = limb['lengths']
-        fc = frame_corrs[limb['body_parent']]
+        # Use yaw-only transform when lying so donor ground-level limb reach isn't tilted
+        # downward into the floor by body pitch differences; use full body frame when standing.
+        lie_l = front_lying if limb['front'] else rear_lying
+        fc = frame_corrs[limb['body_parent']].slerp(yaw_corrs[limb['body_parent']], lie_l)
         donor_reach = fc @ (source_world[en].translation - source_world[un].translation)
         if donor_reach.length < 1e-9:
             raise RuntimeError('Zero donor limb reach: ' + en)
+        # Preserve full upward lift angle for elevated limbs (e.g. pee 43) instead of
+        # compressing positive Z by standing z_ratio.
+        up_t = smoothstep(0.0, 0.08, donor_reach.z)
+        z_scale = limb['z_ratio'] * (1.0 - up_t) + limb['ratio'] * up_t
         scaled_reach = Vector((
             donor_reach.x * limb['ratio'],
             donor_reach.y * limb['ratio'],
-            donor_reach.z * limb['z_ratio'],
+            donor_reach.z * z_scale,
         ))
-        if limb['front'] and lying_blend > 0.0:
-            scaled_reach += body_fwd * (0.075 * lying_blend)
+        side_sign = 1.0 if limb['side'] == 'Left' else -1.0
+        if limb['front'] and front_lying > 0.0:
+            scaled_reach += body_fwd * (0.105 * front_lying) + body_right * (0.025 * side_sign * front_lying)
         min_d = abs(a - b) + 1e-4
         max_d = a + b - 1e-4
         dist = min(max_d, max(min_d, scaled_reach.length))
@@ -752,7 +830,7 @@ def build_initial_pose(source_world, is_gait_cycle, source_skin=None):
         old_l = fk[en].translation - fk[ln].translation
         rotations[un] = old_u.rotation_difference(joint - start) @ fk[un].to_quaternion()
         rotations[ln] = old_l.rotation_difference(end_pos - joint) @ fk[ln].to_quaternion()
-    return fk_from_rotations(rotations, hip_pos)
+    return fk_from_rotations(rotations, hip_pos), front_lying, rear_lying
 
 def clear_head_contact(world, skin, tol, cache=None, h_surf=None):
     """Lift muzzle/head locally via Neck01..Neck03 IK without lifting the pelvis or feet."""
@@ -826,9 +904,11 @@ def clear_head_contact(world, skin, tol, cache=None, h_surf=None):
         best = (world, skin, actual)
     return world, skin, actual
 
-def ground_limbs(fk, goals, allow_reversed_height=True):
-    """Fixed-length analytic IK with shared pelvis height + local cervical clearance
-    + sagittal front-paw slide for lying elbows (never flipping elbow/knee planes).
+def ground_limbs(fk, goals, allow_reversed_height=True, front_lying=0.0, rear_lying=0.0):
+    """Fixed-length analytic IK with shared pelvis height + local cervical clearance.
+
+    When lying down (front_lying / rear_lying > 0), anchors Hips near the target ground-resting
+    height so folded limbs rest beside/in front of the body rather than lifting the belly back up.
     """
     fk_skin = eval_skin(fast_cache, fk)
     ends = {
@@ -837,6 +917,18 @@ def ground_limbs(fk, goals, allow_reversed_height=True):
     }
     rotations = {n: m.to_quaternion() for n, m in fk.items()}
     base_hip = fk['Hips'].translation.copy()
+    body_fwd = (fk['Spine4'].to_quaternion() @ rest['Spine4'].to_quaternion().inverted()) @ Vector((0.0, -1.0, 0.0))
+    body_fwd.z = 0.0
+    if body_fwd.length > 1e-6:
+        body_fwd.normalize()
+    else:
+        body_fwd = Vector((0.0, -1.0, 0.0))
+    lying_max = max(front_lying, rear_lying)
+    # Keep torso anchored to its proportional clearance height: gentle anchor when
+    # standing/sniffing (preventing elbows collapsing to the floor in walk_fwd_sniff)
+    # and strong anchor when lying/squatting so folded limbs rest beside the torso.
+    anchor_w = (4.5 if allow_reversed_height else 0.0) + 16.0 * lying_max
+    front_slides = {'Left': 0.0, 'Right': 0.0}
     minimum_shift = -math.inf
     prev_error = math.inf
     best_feasible = None
@@ -885,7 +977,7 @@ def ground_limbs(fk, goals, allow_reversed_height=True):
             coeffs = [
                 sum(k * k for k, d, c in terms),
                 -3.0 * sum(k * k * d for k, d, c in terms),
-                sum(k * k * (2.0 * d * d + c) for k, d, c in terms),
+                sum(k * k * (2.0 * d * d + c) for k, d, c in terms) + 0.5 * anchor_w * anchor_w,
                 -sum(k * k * d * c for k, d, c in terms),
             ]
             cands = [v for iv in intervals for v in iv]
@@ -893,7 +985,7 @@ def ground_limbs(fk, goals, allow_reversed_height=True):
                 float(r.real) for r in np.roots(coeffs)
                 if abs(r.imag) < 1e-9 and any(lo <= r.real <= hi for lo, hi in intervals)
             )
-            shift = min(cands, key=lambda z: sum((k * (z * z - 2.0 * d * z + c)) ** 2 for k, d, c in terms))
+            shift = min(cands, key=lambda z: sum((k * (z * z - 2.0 * d * z + c)) ** 2 for k, d, c in terms) + (anchor_w * z) ** 2)
 
         hip_pos = base_hip + Vector((0.0, 0.0, shift))
         for n, m in fk.items():
@@ -962,8 +1054,13 @@ def ground_limbs(fk, goals, allow_reversed_height=True):
             idx = int(np.argmin(skin[:, 2]))
             driver = fast_cache[2][idx]
             paw_limb = next((l for l in limbs if driver in {l['end'], l['paw'], l['side'] + ('HandMiddle1' if l['front'] else 'ToeBase')}), None)
+            elbow_limb = next((l for l in limbs if l['front'] and driver in {l['upper'], l['lower']}), None)
             if paw_limb:
                 ends[paw_limb['end']].z -= minimum
+            elif elbow_limb and front_lying > 0.2 and front_slides[elbow_limb['side']] < 0.07:
+                step = min(0.07 - front_slides[elbow_limb['side']], max(0.015, -minimum * 1.5))
+                front_slides[elbow_limb['side']] += step
+                ends[elbow_limb['end']] = ends[elbow_limb['end']] + body_fwd * step
             else:
                 minimum_shift = max(minimum_shift, shift - minimum)
                 for name, res in errors.items():
@@ -1065,7 +1162,7 @@ for clip_name in CLIPS:
     if clip_name in GAIT_CLIPS and len(samples) > 1:
         rows = []
         for (f_rel, sw), src_skin in zip(samples, src_skins):
-            fk = build_initial_pose(sw, is_gait_cycle=is_gait, source_skin=src_skin)
+            fk, _, _ = build_initial_pose(sw, is_gait_cycle=is_gait, source_skin=src_skin)
             fk_skin = eval_skin(fast_cache, fk)
             rows.append(dict(
                 frame=f_rel,
@@ -1082,12 +1179,24 @@ for clip_name in CLIPS:
     prev_quats = {}
     for s_idx, (f_rel, sw) in enumerate(samples):
         src_skin = src_skins[s_idx]
-        fk = build_initial_pose(sw, is_gait_cycle=is_gait, source_skin=src_skin)
+        fk, front_lying, rear_lying = build_initial_pose(sw, is_gait_cycle=is_gait, source_skin=src_skin)
         if clearances is not None:
             goals = clearances[s_idx]
         else:
-            goals = {l['end']: max(0.0, float(src_skin[l['source_sole'], 2].min()) - l['contact_height']) * l['z_ratio'] for l in limbs}
-        solved = ground_limbs(fk, goals, allow_reversed_height=(clip_name not in BASE_CLIPS))
+            fk_skin_init = eval_skin(fast_cache, fk)
+            goals = {}
+            for l in limbs:
+                src_clear = max(0.0, float(src_skin[l['source_sole'], 2].min()) - l['contact_height'])
+                scaled_g = src_clear * l['z_ratio']
+                high_t = smoothstep(0.10, 0.22, src_clear)
+                fk_g = max(0.0, float(fk_skin_init[l['fast_sole'], 2].min()))
+                goals[l['end']] = scaled_g * (1.0 - high_t) + fk_g * high_t
+        solved = ground_limbs(
+            fk, goals,
+            allow_reversed_height=(clip_name not in BASE_CLIPS),
+            front_lying=front_lying,
+            rear_lying=rear_lying,
+        )
 
         for bone in arm.bones:
             n = bone.name
