@@ -84,19 +84,29 @@ function SyncedCamera({ pose, onChange, extent }: { pose: CameraPose; onChange: 
   }} />;
 }
 
-function DogModel({ model, clipName, height, onMetadata }: { model: Model; clipName: string; height: number; onMetadata: (metadata: Metadata) => void }) {
+function DogModel({ model, clipName, height, referencePose, onMetadata }: { model: Model; clipName: string; height: number; referencePose: boolean; onMetadata: (metadata: Metadata) => void }) {
   const { scene, animations } = useGLTFClone(model.path, true);
+  const clips = useMemo(() => animations.map(source => {
+    const clip = source.clone();
+    // Smooth the donor's STEP samplers before the mixer creates interpolants.
+    for (const track of clip.tracks) track.setInterpolation(THREE.InterpolateLinear);
+    return clip;
+  }), [animations]);
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const action = useRef<THREE.AnimationAction | null>(null), dimensions = useRef<[number, number, number]>([0, 0, 0]);
   const wireframe = useSceneStore(s => !!s.layers.wireframe);
   useLayoutEffect(() => {
     mixer.stopAllAction(); scene.scale.set(1, 1, 1); scene.position.set(0, 0, 0); scene.updateMatrixWorld(true);
+    const idle = clips.find(clip => clip.name === 'idle 50');
+    if (!idle) throw new Error(`Pose d’attente absente : ${model.label}`);
+    mixer.clipAction(idle).reset().play(); mixer.setTime(0); scene.updateMatrixWorld(true);
     const box = glbLocalBBox(scene, true), size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+    mixer.stopAllAction();
     if (size.y <= 0) throw new Error(`Dimensions invalides : ${model.label}`);
     const scale = height / size.y;
     scene.scale.setScalar(scale); scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
     dimensions.current = size.multiplyScalar(scale).toArray();
-  }, [scene, mixer, height, model.label]);
+  }, [scene, mixer, clips, height, model.label]);
   useEffect(() => {
     scene.traverse(object => {
       if (!(object as THREE.Mesh).isMesh) return;
@@ -105,14 +115,22 @@ function DogModel({ model, clipName, height, onMetadata }: { model: Model; clipN
     });
   }, [scene, wireframe]);
   useEffect(() => {
-    const clip = animations.find(candidate => candidate.name === clipName);
+    const clip = clips.find(candidate => candidate.name === clipName);
     if (!clip) throw new Error(`Animation absente : ${model.label} / ${clipName}`);
-    mixer.stopAllAction(); action.current = mixer.clipAction(clip).reset().setLoop(THREE.LoopOnce, 1); action.current.clampWhenFinished = true; action.current.play(); mixer.update(0);
+    mixer.stopAllAction();
+    if (referencePose) {
+      scene.traverse(object => { if ((object as THREE.SkinnedMesh).isSkinnedMesh) (object as THREE.SkinnedMesh).skeleton.pose(); });
+      action.current = null;
+      scene.userData.comparisonPhase = 0; scene.userData.comparisonClip = 'bind-pose';
+      scene.updateMatrixWorld(true);
+    } else {
+      action.current = mixer.clipAction(clip).reset().setLoop(THREE.LoopOnce, 1); action.current.clampWhenFinished = true; action.current.play(); mixer.update(0);
+    }
     let bones = 0, vertices = 0;
     scene.traverse(object => { if ((object as THREE.Bone).isBone) bones++; if ((object as THREE.Mesh).isMesh) vertices += (object as THREE.Mesh).geometry.getAttribute('position').count; });
     onMetadata({ id: model.id, size: dimensions.current, bones, vertices, duration: clip.duration, clip: clip.name });
     return () => { mixer.stopAllAction(); action.current = null; };
-  }, [scene, mixer, animations, model, clipName, height, onMetadata]);
+  }, [scene, mixer, clips, model, clipName, height, referencePose, onMetadata]);
   useEffect(() => () => { mixer.stopAllAction(); mixer.uncacheRoot(scene); }, [mixer, scene]);
   useFrame(() => {
     if (!action.current) return;
@@ -126,16 +144,12 @@ function DogModel({ model, clipName, height, onMetadata }: { model: Model; clipN
   return <primitive object={scene} />;
 }
 
-function DogPanel({ model, clip, equalHeight, pose, onCamera, extent, onMetadata, metadata, references }: {
-  model: Model; clip: string; equalHeight: boolean; pose: CameraPose; onCamera: (pose: CameraPose) => void; extent: [number, number, number]; onMetadata: (m: Metadata) => void; metadata?: Metadata; references: boolean;
+function DogPanel({ model, clip, equalHeight, referencePose, pose, onCamera, extent, onMetadata, metadata, references }: {
+  model: Model; clip: string; equalHeight: boolean; referencePose: boolean; pose: CameraPose; onCamera: (pose: CameraPose) => void; extent: [number, number, number]; onMetadata: (m: Metadata) => void; metadata?: Metadata; references: boolean;
 }) {
   const skeleton = useSceneStore(s => !!s.layers.skeleton);
   const [groups, setGroups] = useState<SkeletonGroup[]>([]), [selected, setSelected] = useState<string | null>(null), [tree, setTree] = useState(false);
   return <div className="d-flex flex-column gap-2">
-    {references && <figure className="card overflow-hidden mb-0" aria-label={`Référence anatomique — ${model.label}`}>
-      <a href={model.reference} target="_blank" rel="noreferrer" title={`Agrandir la référence anatomique — ${model.label}`}><img className="w-100" src={model.reference} alt={`Anatomie théorique — ${model.label}`} /></a>
-      <figcaption className="card-body p-2 small text-body-secondary">{model.label} · anatomie théorique</figcaption>
-    </figure>}
     <section className="card overflow-hidden" aria-label={model.label}>
     <div className="card-header d-flex justify-content-between align-items-center gap-2">
       <strong className="small">{model.label}</strong>
@@ -148,7 +162,7 @@ function DogPanel({ model, clip, equalHeight, pose, onCamera, extent, onMetadata
         <SyncedCamera pose={pose} onChange={onCamera} extent={extent} />
         <Grid infiniteGrid cellSize={10} sectionSize={50} fadeDistance={1000} cellColor="#acb3bf" sectionColor="#7c8798" position={[0, -.05, 0]} />
         <Suspense fallback={null}>
-          <DogModel model={model} clipName={clip} height={equalHeight ? NORMALIZED_HEIGHT : model.height} onMetadata={onMetadata} />
+          <DogModel model={model} clipName={clip} height={equalHeight ? NORMALIZED_HEIGHT : model.height} referencePose={referencePose} onMetadata={onMetadata} />
         </Suspense>
         <GlobalSkeletonHelpers show={skeleton} selectedBoneName={selected} onSelectBoneName={setSelected} onSkeletonGroupsChange={setGroups} />
       </Canvas>
@@ -156,6 +170,10 @@ function DogPanel({ model, clip, equalHeight, pose, onCamera, extent, onMetadata
     <div className="card-body p-2 small text-body-secondary">{metadata ? `${metadata.bones} os · ${metadata.vertices.toLocaleString('fr-FR')} sommets · ${metadata.duration.toFixed(2)} s` : 'Lecture du modèle…'}</div>
     {tree && <div className="dog-comparison-bone-tree"><SkeletonHierarchyPanel skeletons={groups} selectedBoneName={selected} onSelectBoneName={setSelected} onClose={() => setTree(false)} /></div>}
     </section>
+    {references && <figure className="card overflow-hidden mb-0" aria-label={`Référence anatomique — ${model.label}`}>
+      <a href={model.reference} target="_blank" rel="noreferrer" title={`Agrandir la référence anatomique — ${model.label}`}><img className="w-100" src={model.reference} alt={`Anatomie théorique — ${model.label}`} /></a>
+      <figcaption className="card-body p-2 small text-body-secondary">{model.label} · anatomie théorique</figcaption>
+    </figure>}
   </div>;
 }
 
@@ -165,6 +183,8 @@ export function DogComparison() {
   const [layout, setLayout] = useState(initial.get('layout') === 'rows' ? 'rows' : 'columns');
   const [view, setView] = useState<View>((initial.get('view') as View) || 'side');
   const [equalHeight, setEqualHeight] = useState(true), [references, setReferences] = useState(true);
+  const [referencePose, setReferencePose] = useState(initial.get('referencePose') === '1');
+  useEffect(() => { if (referencePose) useAnimPreviewStore.getState().pause(); }, [referencePose]);
   const [metadata, setMetadata] = useState<Record<string, Metadata>>({});
   const [pose, setPose] = useState<CameraPose>({ direction: DIRECTIONS[view] || DIRECTIONS.side, target: [0, NORMALIZED_HEIGHT / 2, 0], up: view === 'top' ? [0, 0, -1] : [0, 1, 0], zoom: 1 });
   const initialFrameUsed = useRef(false);
@@ -189,10 +209,10 @@ export function DogComparison() {
     const key = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest('input, select, textarea, button')) return;
       if (event.key.toLowerCase() === 'k') useSceneStore.getState().toggleLayer('skeleton');
-      if (event.code === 'Space') { event.preventDefault(); const s = useAnimPreviewStore.getState(); s.togglePlay(); urlParam('frame', useAnimPreviewStore.getState().isPlaying ? null : String(Math.round(s.currentTime * s.fps))); }
+      if (event.code === 'Space') { event.preventDefault(); if (referencePose) return; const s = useAnimPreviewStore.getState(); s.togglePlay(); urlParam('frame', useAnimPreviewStore.getState().isPlaying ? null : String(Math.round(s.currentTime * s.fps))); }
     };
     document.addEventListener('keydown', key);return () => document.removeEventListener('keydown', key);
-  }, []);
+  }, [referencePose]);
   if (!Object.prototype.hasOwnProperty.call(DIRECTIONS, view) || (initial.has('frame') && (!Number.isInteger(Number(initial.get('frame'))) || Number(initial.get('frame')) < 0)) || !pitbullAnimationChoices.some(option => option.value === clip)) return <div className="alert alert-danger m-3">Paramètres de comparaison invalides (animation : {clip}). <a href="/dog-comparison.html">Réinitialiser la comparaison</a></div>;
   return <main className="container-fluid p-3 dog-comparison-page">
     <ComparisonClock />
@@ -210,12 +230,13 @@ export function DogComparison() {
         <button className={`btn btn-sm ${wireframe ? 'btn-primary' : 'btn-outline-secondary text-dark'}`} aria-pressed={wireframe} onClick={() => useSceneStore.getState().toggleLayer('wireframe')}>Filaire</button>
         <label className="form-check-label small d-flex gap-1 align-items-center"><input type="checkbox" className="form-check-input m-0" checked={equalHeight} onChange={e => { setEqualHeight(e.target.checked); setPose(p => ({ ...p, target: [0, e.target.checked ? NORMALIZED_HEIGHT / 2 : Math.max(...MODELS.map(m => m.height)) / 2, 0] })); }} /> Même hauteur</label>
         <label className="form-check-label small d-flex gap-1 align-items-center"><input type="checkbox" className="form-check-input m-0" checked={references} onChange={e => setReferences(e.target.checked)} /> Références anatomiques</label>
+        <label className="form-check-label small d-flex gap-1 align-items-center"><input type="checkbox" className="form-check-input m-0" checked={referencePose} onChange={e => { setReferencePose(e.target.checked); urlParam('referencePose', e.target.checked ? '1' : null); }} /> Pose de référence</label>
       </div>
-      <Playback />
-      <span className="small text-body-secondary">Lecture et phase communes · caméras liées · cliquer un os affiche ses influences sur la peau. {equalHeight ? 'Hauteurs au repos normalisées pour comparer les proportions.' : 'Dimensions réelles des modèles en centimètres.'}</span>
+      <fieldset disabled={referencePose}><Playback /></fieldset>
+      <span className="small text-body-secondary">{referencePose ? 'Pose de liaison du maillage, sans animation.' : 'Lecture et phase communes · interpolation fluide.'} Caméras liées · cliquer un os affiche ses influences sur la peau. {equalHeight ? 'Hauteurs dans l’attente normalisées pour comparer les proportions.' : 'Dimensions de présentation des modèles en centimètres.'}</span>
     </div></div>
     <div className={`dog-comparison-grid ${layout === 'rows' ? 'stacked' : ''}`}>
-      {MODELS.map(model => <DogPanel key={model.id} model={model} clip={clip} equalHeight={equalHeight} pose={pose} onCamera={setPose} extent={extent} onMetadata={reportMetadata} metadata={metadata[model.id]} references={references} />)}
+      {MODELS.map(model => <DogPanel key={model.id} model={model} clip={clip} equalHeight={equalHeight} referencePose={referencePose} pose={pose} onCamera={setPose} extent={extent} onMetadata={reportMetadata} metadata={metadata[model.id]} references={references} />)}
     </div>
   </main>;
 }

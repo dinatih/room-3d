@@ -3,7 +3,7 @@ blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/rig-dogs.py -- --
 Coordinates below are anatomical landmarks measured on the original sculpt.
 """
 from pathlib import Path
-import bpy, bmesh, math, os, tempfile, zipfile, json, argparse, sys
+import bpy, bmesh, math, os, tempfile, zipfile, json, argparse, sys, runpy
 import numpy as np
 from mathutils import Vector, Matrix, Quaternion
 ROOT=Path(__file__).resolve().parents[1]
@@ -12,103 +12,46 @@ parser.add_argument('--dog',choices=['dachshund-sculpt','ushiro'],required=True)
 parser.add_argument('--base-only',action='store_true')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
 DOG=args.dog
+if DOG=='ushiro':
+    script=ROOT/'scripts/rig-ushiro.py'
+    sys.argv=[str(script),'--']+(['--base-only'] if args.base_only else [])
+    runpy.run_path(str(script),run_name='__main__')
+    raise RuntimeError('Ushiro build returned without exporting')
 OUT=ROOT/'public/characters'/DOG
 EDIT=ROOT/'artifacts'/DOG
 BASE_CLIPS=['idle 50','walk_fwd 29','run_fwd 13']
 CLIPS=BASE_CLIPS if args.base_only else [entry['value'] for entry in json.loads((ROOT/'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog']]
 bpy.ops.wm.read_factory_settings(use_empty=True)
-if DOG=='dachshund-sculpt':
-    with tempfile.TemporaryDirectory() as directory:
-        with zipfile.ZipFile(Path.home()/'3D Resources/animals/dachshund-sculpt.zip') as archive:
-            path=Path(directory)/'source.glb';path.write_bytes(archive.read('source/CocoSculpt.glb'))
-        bpy.ops.import_scene.gltf(filepath=str(path))
-    meshes=list(bpy.context.scene.objects)
-    body=bpy.data.objects['CocoSculpt']
-    floor=min((body.matrix_world@v.co).z for v in body.data.vertices)
-    for obj in meshes:
-        bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
-        bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
-        for v in obj.data.vertices:v.co.z-=floor
-    bpy.context.view_layer.objects.active=body
-    modifier=body.modifiers.new('60k presentation mesh','DECIMATE');modifier.ratio=60000/len(body.data.vertices)
-    bpy.ops.object.modifier_apply(modifier=modifier.name)
-    # Recolour the coat's vertex colours, preserving the separate eyes.
-    for attribute in body.data.color_attributes:
-        for entry in attribute.data:
-            r,g,b,a=entry.color
-            luminance=.2126*r+.7152*g+.0722*b
-            entry.color=(luminance*.055,luminance*.055,luminance*.055,a)
-    # Use a lit coat material: the source's baked/unlit brown colours would
-    # otherwise become a flat black silhouette instead of a shaded black dog.
-    for material in body.data.materials:
-        material.use_nodes=True;material.node_tree.nodes.clear()
-        shader=material.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
-        shader.inputs['Roughness'].default_value=.6;shader.inputs['Metallic'].default_value=0
-        colour=material.node_tree.nodes.new('ShaderNodeVertexColor');colour.layer_name=body.data.color_attributes[0].name
-        output=material.node_tree.nodes.new('ShaderNodeOutputMaterial')
-        material.node_tree.links.new(colour.outputs['Color'],shader.inputs['Base Color'])
-        material.node_tree.links.new(shader.outputs['BSDF'],output.inputs['Surface'])
-
-else:
-    work=Path(tempfile.mkdtemp(prefix='ushiro-new-rig-'))
-    with zipfile.ZipFile(Path.home()/'3D Resources/animals/shiba-inu-texture-updated.zip') as archive:archive.extractall(work)
-    bpy.ops.wm.open_mainfile(filepath=str(work/'source/Shibaa.blend'))
-    old_rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
-    for track in list(old_rig.animation_data.nla_tracks):old_rig.animation_data.nla_tracks.remove(track)
-    a=bpy.data.actions['standing_skeletal.3'];old_rig.animation_data.action=a;old_rig.animation_data.action_slot=a.slots[0];bpy.context.scene.frame_set(0);bpy.context.view_layer.update()
-    names={b.name.rsplit('.',1)[0]:b.name for b in old_rig.pose.bones}
-    guide={n:(old_rig.matrix_world@old_rig.pose.bones[k].matrix.translation).copy() for n,k in names.items()}
-    guide_ends={n:(old_rig.matrix_world@old_rig.pose.bones[k].tail).copy() for n,k in names.items()}
-    meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
-    body=max(meshes,key=lambda o:len(o.data.vertices))
-    # Replace legacy Windows-path datablocks with the supplied texture files.
-    # Pack fresh images so the editable artifact has no external dependency.
-    for image in list(bpy.data.images):
-        path=work/'textures'/image.filepath.replace(chr(92),'/').rsplit('/',1)[-1]
-        if not path.is_file():continue
-        replacement=bpy.data.images.load(str(path),check_existing=False)
-        replacement.colorspace_settings.name=image.colorspace_settings.name
-        replacement.pack()
-        for material in bpy.data.materials:
-            if material.use_nodes:
-                for node in material.node_tree.nodes:
-                    if node.type=='TEX_IMAGE' and node.image==image:node.image=replacement
-        bpy.data.images.remove(image)
-    # Original eye Add Shader is not a glTF material. Preserve its existing atlas.
-    for material in bpy.data.materials:
-        if not material.use_nodes:continue
-        if not any(n.type=='BSDF_PRINCIPLED' for n in material.node_tree.nodes):
-            atlas=next(n.image for n in material.node_tree.nodes if n.type=='TEX_IMAGE' and n.image)
-            material.node_tree.nodes.clear();shader=material.node_tree.nodes.new('ShaderNodeBsdfPrincipled');shader.inputs['Roughness'].default_value=.3
-            texture=material.node_tree.nodes.new('ShaderNodeTexImage');texture.image=atlas;output=material.node_tree.nodes.new('ShaderNodeOutputMaterial')
-            material.node_tree.links.new(texture.outputs['Color'],shader.inputs['Base Color']);material.node_tree.links.new(shader.outputs['BSDF'],output.inputs['Surface'])
-    for material in bpy.data.materials:
-        if not material.use_nodes:continue
-        normal=next((n for n in material.node_tree.nodes if n.type=='NORMAL_MAP'),None)
-        texture=next((n for n in material.node_tree.nodes if n.type=='TEX_IMAGE' and n.image and 'normal' in n.image.name.lower()),None)
-        shader=next((n for n in material.node_tree.nodes if n.type=='BSDF_PRINCIPLED'),None)
-        if normal and texture and shader:
-            texture.image.colorspace_settings.name='Non-Color';normal.inputs['Strength'].default_value=1
-            for link in list(material.node_tree.links):
-                if link.to_node==normal:material.node_tree.links.remove(link)
-            material.node_tree.links.new(texture.outputs['Color'],normal.inputs['Color'])
-            material.node_tree.links.new(normal.outputs['Normal'],shader.inputs['Normal'])
-    # Freeze visible standing geometry, then discard ALL old modifiers, groups,
-    # constraints, actions and the armature. No old skin weights survive.
-    depsgraph=bpy.context.evaluated_depsgraph_get()
-    for obj in meshes:
-        data=bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph),preserve_all_data_layers=True,depsgraph=depsgraph)
-        world=obj.matrix_world.copy();obj.parent=None;obj.matrix_world=world
-        obj.modifiers.clear();obj.data=data;obj.vertex_groups.clear()
-        bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
-        bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
-    floor=min(v.co.z for v in body.data.vertices)
-    for obj in meshes:
-        for vertex in obj.data.vertices:vertex.co.z-=floor
-    for point in list(guide.values())+list(guide_ends.values()):point.z-=floor
-    for obj in list(bpy.data.objects):
-        if obj not in meshes:bpy.data.objects.remove(obj,do_unlink=True)
-    for action in list(bpy.data.actions):bpy.data.actions.remove(action)
+with tempfile.TemporaryDirectory() as directory:
+    with zipfile.ZipFile(Path.home()/'3D Resources/animals/dachshund-sculpt.zip') as archive:
+        path=Path(directory)/'source.glb';path.write_bytes(archive.read('source/CocoSculpt.glb'))
+    bpy.ops.import_scene.gltf(filepath=str(path))
+meshes=list(bpy.context.scene.objects)
+body=bpy.data.objects['CocoSculpt']
+floor=min((body.matrix_world@v.co).z for v in body.data.vertices)
+for obj in meshes:
+    bpy.ops.object.select_all(action='DESELECT');obj.select_set(True);bpy.context.view_layer.objects.active=obj
+    bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
+    for v in obj.data.vertices:v.co.z-=floor
+bpy.context.view_layer.objects.active=body
+modifier=body.modifiers.new('60k presentation mesh','DECIMATE');modifier.ratio=60000/len(body.data.vertices)
+bpy.ops.object.modifier_apply(modifier=modifier.name)
+# Recolour the coat's vertex colours, preserving the separate eyes.
+for attribute in body.data.color_attributes:
+    for entry in attribute.data:
+        r,g,b,a=entry.color
+        luminance=.2126*r+.7152*g+.0722*b
+        entry.color=(luminance*.055,luminance*.055,luminance*.055,a)
+# Use a lit coat material: the source's baked/unlit brown colours would
+# otherwise become a flat black silhouette instead of a shaded black dog.
+for material in body.data.materials:
+    material.use_nodes=True;material.node_tree.nodes.clear()
+    shader=material.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
+    shader.inputs['Roughness'].default_value=.6;shader.inputs['Metallic'].default_value=0
+    colour=material.node_tree.nodes.new('ShaderNodeVertexColor');colour.layer_name=body.data.color_attributes[0].name
+    output=material.node_tree.nodes.new('ShaderNodeOutputMaterial')
+    material.node_tree.links.new(colour.outputs['Color'],shader.inputs['Base Color'])
+    material.node_tree.links.new(shader.outputs['BSDF'],output.inputs['Surface'])
 # Each head and tail is an actual joint, rather than a scaled donor bone vector.
 heads={'Hips':(0,.60,.46),'Spine':(0,.43,.46),'Spine1':(0,.26,.46),'Spine2':(0,.09,.47),'Spine3':(0,-.08,.48),'Spine4':(0,-.22,.48),'Neck01':(0,-.33,.54),'Neck02':(0,-.40,.61),'Neck03':(0,-.47,.68),'Head':(0,-.55,.73)}
 parents={name:previous for previous,name in zip(heads,list(heads)[1:])}
@@ -127,24 +70,6 @@ for side,sign in [('Left',1),('Right',-1)]:
 tail=[(0,.78,.422),(0,.85,.388),(0,.92,.379),(0,.99,.382),(0,1.06,.394),(0,1.13,.415),(0,1.20,.444),(0,1.23,.462)]
 for i in range(7):
     name=f'Tail{i+1:02d}';heads[name]=tail[i];ends[name]=tail[i+1];parents[name]='Hips' if i==0 else f'Tail{i:02d}'
-if DOG=='ushiro':
-    def midpoint(a,b):return (guide[a]+guide[b])/2
-    heads={'Hips':guide['pelvis_jnt'],'Spine':midpoint('pelvis_jnt','spine_1_jnt'),'Spine1':guide['spine_1_jnt'],'Spine2':midpoint('spine_1_jnt','spine_2_jnt'),'Spine3':guide['spine_2_jnt'],'Spine4':guide['chest_jnt'],'Neck01':guide['neck_base_jnt'],'Neck02':guide['neck_mid_jnt'],'Neck03':midpoint('neck_mid_jnt','head_jnt'),'Head':guide['head_jnt']}
-    parents={name:previous for previous,name in zip(heads,list(heads)[1:])}
-    ends={'Head':guide_ends['head_jnt']}
-    for side,initial in [('Left','L'),('Right','R')]:
-        for chain,parent in [([('Shoulder','clavicle'),('Arm','shoulder'),('ForeArm','elbow'),('Hand','wrist'),('HandMiddle1','hand')],'Spine4'),([('Pelvis',None),('UpLeg','hip'),('Leg','knee'),('Foot','ankle'),('ToeBase','foot')],'Hips')]:
-            for name,old_name in chain:
-                key=side+name;heads[key]=(guide['pelvis_jnt']+guide[initial+'_hip_jnt'])/2 if old_name is None else guide[f'{initial}_{old_name}_jnt']
-                parents[key]=parent;parent=key
-            ends[parent]=guide_ends[f'{initial}_{chain[-1][1]}_jnt']
-        ear_base=guide[initial+'_ear_base_jnt'];ear_tip=guide[initial+'_ear_tip_jnt']
-        for suffix,point in [('Ear',ear_base),('Ear2',(ear_base+ear_tip)/2),('Ear3',ear_tip)]:
-            name=side+suffix;heads[name]=point;parents[name]='Head' if suffix=='Ear' else side+('Ear' if suffix=='Ear2' else 'Ear2')
-        ends[side+'Ear3']=guide_ends[initial+'_ear_tip_jnt']
-    tail=[guide[f'tail_{i}_jnt'] for i in range(1,8)]+[guide_ends['tail_7_jnt']]
-    for i in range(7):
-        name=f'Tail{i+1:02d}';heads[name]=tail[i];ends[name]=tail[i+1];parents[name]='Hips' if i==0 else f'Tail{i:02d}'
 # A non-deforming nose marker supports the scene's animal camera.
 heads['Muzzle']=Vector(ends['Head']);parents['Muzzle']='Head';ends['Muzzle']=Vector(ends['Head'])+Vector((0,-.02,0))
 children={parent:child for child,parent in parents.items() if not child.startswith(('Left','Right','Tail'))}
@@ -163,27 +88,8 @@ bpy.ops.object.mode_set(mode='OBJECT');rig.show_in_front=True
 # Closed weighting proxy keeps the heat solver independent of sculpt internals.
 proxy=body.copy();proxy.data=body.data.copy();bpy.context.collection.objects.link(proxy)
 bpy.ops.object.select_all(action='DESELECT');proxy.select_set(True);bpy.context.view_layer.objects.active=proxy
-if DOG=='ushiro':
-    bm=bmesh.new();bm.from_mesh(proxy.data)
-    bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=1e-6)
-    bmesh.ops.holes_fill(bm,edges=[e for e in bm.edges if e.is_boundary],sides=0)
-    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(proxy.data);bm.free()
 mod=proxy.modifiers.new('Closed weighting volume','REMESH');mod.mode='VOXEL';mod.voxel_size=.008
 bpy.ops.object.modifier_apply(modifier=mod.name)
-if DOG=='ushiro':
-    # Voxelisation can create detached closed specks. Solve on the connected
-    # body volume containing the surface nearest the pelvis; visible geometry
-    # is never removed and still receives interpolated skin weights.
-    bm=bmesh.new();bm.from_mesh(proxy.data)
-    pelvis=Vector(heads['Hips']);seed=min(bm.verts,key=lambda v:(v.co-pelvis).length_squared)
-    connected={seed};stack=[seed]
-    while stack:
-        vertex=stack.pop()
-        for edge in vertex.link_edges:
-            neighbor=edge.other_vert(vertex)
-            if neighbor not in connected:connected.add(neighbor);stack.append(neighbor)
-    bmesh.ops.delete(bm,geom=[v for v in bm.verts if v not in connected],context='VERTS')
-    bm.to_mesh(proxy.data);bm.free()
 rig.select_set(True);bpy.context.view_layer.objects.active=rig;bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 if any(not v.groups for v in proxy.data.vertices):
     bpy.ops.wm.save_as_mainfile(filepath='/tmp/dog-heat-failure.blend');raise RuntimeError('Heat weighting failed')
@@ -197,7 +103,7 @@ for obj in meshes:
 # The detached eyes and rigid skull must use precisely the same transform.
 for vertex in body.data.vertices:
     y,z=vertex.co.y,vertex.co.z
-    neck_y,neck_z=((- .30,.45) if DOG=='dachshund-sculpt' else (float(heads['Neck01'].y),float(heads['Neck01'].z)-.10))
+    neck_y,neck_z=(-.30,.45)
     w=max(0,min(1,(-y+neck_y)/.15))*max(0,min(1,(z-neck_z)/.15));w=w*w*(3-2*w)
     if w:
         head=body.vertex_groups['Head'];old=0
@@ -205,7 +111,7 @@ for vertex in body.data.vertices:
             if g.group==head.index:old=g.weight
             else:body.vertex_groups[g.group].add([vertex.index],g.weight*(1-w),'REPLACE')
         head.add([vertex.index],old*(1-w)+w,'REPLACE')
-    if DOG=='dachshund-sculpt' and y>=tail[0][1] and abs(vertex.co.x)<.06 and z>.32:
+    if y>=tail[0][1] and abs(vertex.co.x)<.06 and z>.32:
         # Anatomical tail region: weights follow centreline arclength order.
         for g in list(vertex.groups):body.vertex_groups[g.group].remove([vertex.index])
         i=next((i for i in range(6) if y<tail[i+1][1]),6)
@@ -390,7 +296,7 @@ for obj in meshes:obj.hide_viewport=False
 for image in bpy.data.images:
     if image.has_data and not image.packed_file:image.pack()
 OUT.mkdir(parents=True,exist_ok=True);EDIT.mkdir(parents=True,exist_ok=True)
-bpy.ops.wm.save_as_mainfile(filepath=str(EDIT/('dachshund.blend' if DOG=='dachshund-sculpt' else 'ushiro.blend')),compress=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(EDIT/'dachshund.blend'),compress=True)
 for obj in meshes:obj.hide_viewport=True
-bpy.ops.export_scene.gltf(filepath=str(OUT/('dog.glb' if DOG=='dachshund-sculpt' else 'ushiro.glb')),export_format='GLB',export_animations=True,export_skins=True,export_animation_mode='ACTIONS',export_force_sampling=False)
+bpy.ops.export_scene.gltf(filepath=str(OUT/'dog.glb'),export_format='GLB',export_animations=True,export_skins=True,export_animation_mode='ACTIONS',export_force_sampling=False)
 print('EXPORTED',DOG,len(CLIPS),'CLIPS',flush=True);os._exit(0)

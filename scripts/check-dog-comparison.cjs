@@ -23,7 +23,7 @@ const output = 'artifacts/dog-comparison';
   });
   assert(await page.$$eval('.dog-comparison-grid > div', columns => columns.every(column => {
    const reference = column.querySelector('figure'), model = column.querySelector('section');
-   return reference.getBoundingClientRect().bottom <= model.getBoundingClientRect().top;
+   return model.getBoundingClientRect().bottom <= reference.getBoundingClientRect().top;
   })));
   await page.screenshot({ path: `${output}/comparison-initial.png`, fullPage: true });
   async function state() {
@@ -64,6 +64,16 @@ const output = 'artifacts/dog-comparison';
    assert(Math.max(...models.map(m => m.phase)) - Math.min(...models.map(m => m.phase)) < 1e-5);
    await page.screenshot({ path: `${output}/walk-frame-${String(frame).padStart(2,'0')}.png`, fullPage: true });
   }
+  await page.$$eval('label', labels => labels.find(label => label.textContent.includes('Pose de référence')).querySelector('input').click());
+  await page.waitForFunction(() => document.querySelector('fieldset').disabled);
+  await new Promise(resolve => setTimeout(resolve, 150));
+  models = await state();
+  assert(models.every(model => model.clip === 'bind-pose' && model.phase === 0));
+  assert.equal(new URL(page.url()).searchParams.get('referencePose'), '1');
+  await page.screenshot({ path: `${output}/reference-pose.png`, fullPage: true });
+  await page.$$eval('label', labels => labels.find(label => label.textContent.includes('Pose de référence')).querySelector('input').click());
+  await new Promise(resolve => setTimeout(resolve, 150));
+  assert((await state()).every(model => model.clip === 'walk_fwd 29'));
   // A drag in one viewport changes all three camera orientations together.
   const canvas = await page.$('[data-model="ushiro"] canvas'), box = await canvas.boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 + 70, box.y + box.height / 2 + 30, { steps: 8 }); await page.mouse.up();
@@ -77,6 +87,6 @@ const output = 'artifacts/dog-comparison';
   await page.waitForSelector('button[aria-label="Squelette"][aria-pressed="true"]');
   assert.equal(new URL(page.url()).searchParams.get('skeleton'), '1');
   assert.deepEqual(errors, []);
-  console.log('PASS: common phase, 119-clip navigation/count, linked cameras, stacked layout, persistent skeleton and exact-frame screenshots.');
+  console.log('PASS: common phase, 119-clip navigation/count, linked cameras, stacked layout, persistent skeleton, reference pose and exact-frame screenshots.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -47,7 +47,11 @@ const catalog = require('../src/features/inventory/dogAnimationOptions.json');
        mesh.skeleton.update();
        if(mesh.skeleton.boneMatrices.some(x=>!Number.isFinite(x)))throw Error('Invalid skeleton: '+id+' '+clip.name);
        for(const bone of mesh.skeleton.bones){
-        if(bone.name!=='Hips'&&offsets.has(bone.name)&&bone.position.distanceTo(offsets.get(bone.name))>1e-5)throw Error('Changing joint length: '+id+' '+clip.name+' '+bone.name);
+        // Ushiro preserves the donor's spinal translations and scapular glide.
+        // Check fixed anatomical segments, rather than freezing every spine,
+        // face and root control as in the former reduced rig.
+        const fixedUshiroSegment = /^(Left|Right)(Shoulder01|Arm|ForeArm|Hand.*|UpLeg|Leg|Foot.*|ToeBase)$/.test(bone.name);
+        if((id!=='ushiro'?bone.name!=='Hips':fixedUshiroSegment)&&offsets.has(bone.name)&&bone.position.distanceTo(offsets.get(bone.name))>1e-5)throw Error('Changing joint length: '+id+' '+clip.name+' '+bone.name);
         if(bone.scale.distanceTo(new T.Vector3(1,1,1))>1e-5)throw Error('Stretching: '+id+' '+clip.name);
        }
       }
