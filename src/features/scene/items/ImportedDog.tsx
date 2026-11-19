@@ -9,6 +9,7 @@ import { useGLTFClone } from '../useGLTFClone';
 import { createDogBehavior, resumeDogBehavior, updateDogBehavior, releaseDogRoute, transitionDogAction, type DogContext } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
+import { PITBULL_LIFE_CLIPS, NATIVE_DOG_LIFE_CLIPS, DOG_PAUSES, type DogLifeClips } from './dogLifeClips';
 import type { SceneModelProps } from '@shared/types';
 
 /** Original skeleton and clips; one animation at a time, independent per dog. */
@@ -21,14 +22,18 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
   const active = useRef<AnimationAction | null>(null);
   const navigationEnabled = useNavigationEnabled();
   const autonomous = !!agentId && !!runClip && navigationEnabled;
-  const context = (): DogContext => ({ id: agentId!, root: root.current!, walkSpeed: 50, canWalk: !!walkClip, pauses: ['idle'], play(action) {
-    const name = action === 'walk' ? walkClip : action === 'run' ? runClip : clip;
+  const lifeClips: DogLifeClips = { idle: clip, ...(walkClip ? { walk: walkClip } : {}), ...(runClip ? { run: runClip } : {}), ...(clip === PITBULL_LIFE_CLIPS.idle ? PITBULL_LIFE_CLIPS : NATIVE_DOG_LIFE_CLIPS[clip]) };
+  const context = (): DogContext => ({ id: agentId!, root: root.current!, walkSpeed: 50, canWalk: !!walkClip, pauses: DOG_PAUSES.filter(action => !!lifeClips[action]), canSniff: !!lifeClips.sniff, lieTransitions: !!lifeClips.layDown && !!lifeClips.getUp, play(action, once = false) {
+    const name = lifeClips[action];
     const animation = animations.find(candidate => candidate.name === name);
     if (!animation) throw new Error(`Missing animation ${name}: ${path}`);
-    active.current = transitionDogAction(mixer, animation, active.current);
+    active.current = transitionDogAction(mixer, animation, active.current, once);
     return animation.duration;
   }});
   useLayoutEffect(() => {
+    for (const name of Object.values(lifeClips)) {
+      if (!animations.some(animation => animation.name === name)) throw new Error(`Missing dog life animation ${name}: ${path}`);
+    }
     const animation = animations.find(animation => animation.name === clip);
     if (!animation) throw new Error(`Missing dog animation ${clip}: ${path}`);
     mixer.stopAllAction();

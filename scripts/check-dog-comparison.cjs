@@ -53,8 +53,8 @@ const output = 'artifacts/dog-comparison';
   await page.waitForFunction(() => document.querySelector('select[aria-label="Animation"]').value === 'run_fwd 13');
   await page.click('button[aria-label="Animation précédente"]');
   assert.equal(await page.$eval('select[aria-label="Animation"]', e => e.value), 'walk_fwd 29');
-  const promoted = await page.$$eval('select[aria-label="Animation"] option', options => options.slice(0, 11).map(option => option.value));
-  assert.deepEqual(promoted, ['idle 50', 'walk_fwd 29', 'run_fwd 13', 'idle_shake_1. 137', 'idle_shake_2. 81', 'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221', 'poop 75', 'track_bark_harvest 75', 'canter_fwd 53', 'idle_bark_04_warning 47']);
+  const promoted = await page.$$eval('select[aria-label="Animation"] option', options => options.slice(0, 16).map(option => option.value));
+  assert.deepEqual(promoted, ['idle 50', 'walk_fwd 29', 'run_fwd 13', 'idle_shake_1. 137', 'idle_shake_2. 81', 'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221', 'pee 43', 'walk_fwd_sniff 46', 'idle_to_idle_lay 111', 'idle_lay_pose 2', 'idle_lay_to_idle 71', 'poop 75', 'track_bark_harvest 75', 'canter_fwd 53', 'idle_bark_04_warning 47']);
   // Paused, exact common phases; screenshots show the actual three models.
   for (const frame of [0, 8, 16, 20, 24, 32]) {
    await page.$eval('input[aria-label="Image commune"]', (input, frame) => {

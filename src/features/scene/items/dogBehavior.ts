@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { PITBULL_LIFE_CLIPS, DOG_PAUSES, DOG_ONE_SHOTS, type DogAction } from './dogLifeClips';
+export type { DogAction } from './dogLifeClips';
 import { SpatialZoneManager } from '../ai/SpatialZone';
 import { randomReachableTarget, getNavigationGraph, followRoute, resetRoute, createRouteState } from '../ai/navigation/service';
 import { getWalkableGroundY } from '../ai/navigation/groundElevation';
@@ -13,14 +15,11 @@ export const DOG_ACTIVITY = {
   walkChance: 0.8, localTripChance: 0.8,
   runSpeed: 120, turnSpeed: Math.PI,
   fadeSeconds: 0.25, minRestCycles: 2, maxRestCycles: 4,
-  restWeight: 4, jumpWeight: 1,
+  restWeight: 4, oneOffWeight: 1, sniffChance: 0.5,
   minMealInterval: 120, maxMealInterval: 240, mealRetrySeconds: 30, mealCycles: 3,
 } as const;
 export const DOG_WALK_SPEED = { shiba: 50 } as const;
-export const DOG_CLIPS = {
-  shiba: { idle: 'idle 50', rest: 'idle_sit_pose 2', walk: 'walk_fwd 29', run: 'run_fwd 13', jump: 'jump 22' },
-};
-export type DogAction = 'idle' | 'rest' | 'walk' | 'run' | 'jump' | 'eat';
+export const DOG_CLIPS = { shiba: PITBULL_LIFE_CLIPS };
 export const mealInterval = () => THREE.MathUtils.lerp(DOG_ACTIVITY.minMealInterval, DOG_ACTIVITY.maxMealInterval, Math.random());
 export function createDogBehavior() {
   return {
@@ -29,7 +28,7 @@ export function createDogBehavior() {
     rotation: new THREE.Quaternion(), euler: new THREE.Euler(0, 0, 0, 'YXZ'), route: createRouteState(),
     autonomous: true, mode: 'rest' as 'rest' | 'move' | 'meal-approach' | 'meal-align' | 'eat',
     action: 'idle' as DogAction, lastPause: 'idle' as DogAction,
-    remaining: 0, mealRemaining: mealInterval(), gait: 'walk' as 'walk' | 'run',
+    remaining: 0, mealRemaining: mealInterval(), gait: 'walk' as 'walk' | 'run' | 'sniff',
     driver: null as SubjectDriver | null, controlAction: null as 'jump' | 'rest' | null, controlRemaining: 0,
   };
 }
@@ -38,6 +37,8 @@ export interface DogContext {
   id: string;
   walkSpeed?: number;
   canWalk?: boolean;
+  canSniff?: boolean;
+  lieTransitions?: boolean;
   pauses?: DogAction[];
   root: THREE.Group;
   play: (action: DogAction, once?: boolean) => number;
@@ -82,21 +83,20 @@ export function updateDogControl(state: DogBehavior, context: DogContext, delta:
 }
 export function startDogPause(state: DogBehavior, context: DogContext) {
   releaseDogRoute(state, context.id);
-  const choices: { action: DogAction; weight: number }[] = [
-    { action: 'idle', weight: DOG_ACTIVITY.restWeight },
-    { action: 'rest', weight: DOG_ACTIVITY.restWeight },
-    { action: 'jump', weight: DOG_ACTIVITY.jumpWeight },
-  ];
+  const choices = DOG_PAUSES.map(action => ({ action, weight: action === 'idle' || action === 'rest' ? DOG_ACTIVITY.restWeight : DOG_ACTIVITY.oneOffWeight }));
   const available = choices.filter(choice => (!context.pauses || context.pauses.includes(choice.action)) && (context.pauses?.length === 1 || choice.action !== state.lastPause));
+  if (!available.length) throw new Error(`No available pause for ${context.id}`);
   let draw = Math.random() * available.reduce((sum, choice) => sum + choice.weight, 0);
   const choice = available.find(choice => (draw -= choice.weight) < 0)!;
   state.action = state.lastPause = choice.action;
   state.mode = 'rest';
-  const duration = context.play(choice.action, choice.action === 'jump' || (context.id === 'shiba' && choice.action === 'rest'));
-  const cycles = choice.action === 'jump' ? 1 : THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles);
+  if (choice.action === 'lie' && context.lieTransitions) state.action = 'layDown';
+  const once = DOG_ONE_SHOTS.includes(state.action) || state.action === 'rest' || (state.action === 'lie' && !context.lieTransitions);
+  const duration = context.play(state.action, once);
+  const cycles = DOG_ONE_SHOTS.includes(state.action) ? 1 : THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles);
   state.remaining = duration * cycles;
 }
-export function startDogTrip(state: DogBehavior, context: DogContext, target: { x: number; z: number }, gait: 'walk' | 'run', meal = false) {
+export function startDogTrip(state: DogBehavior, context: DogContext, target: { x: number; z: number }, gait: 'walk' | 'run' | 'sniff', meal = false) {
   releaseDogRoute(state, context.id);
   state.target.set(target.x, state.position.y, target.z);
   reserveAgentDestination(context.id, target);
@@ -132,7 +132,13 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
     root.position.copy(root.parent!.worldToLocal(state.local.copy(state.position)));
     state.remaining -= delta;
     if (state.remaining > 0) return;
-    if (state.action === 'jump') { startDogPause(state, context); return; }
+    if (state.action === 'layDown') {
+      state.action = 'lie'; state.remaining = context.play('lie') * THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles); return;
+    }
+    if (state.action === 'lie' && context.lieTransitions) {
+      state.action = 'getUp'; state.remaining = context.play('getUp', true); return;
+    }
+    if (DOG_ONE_SHOTS.includes(state.action)) { startDogPause(state, context); return; }
     const station = dogFeedingStation.position;
     if (context.eatingMuzzle && station && state.mealRemaining <= 0) {
       // Arrivée orientée vers +Z : le museau doit tomber au centre de la gamelle.
@@ -145,7 +151,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
       return;
     }
     const target = pickDestination(state, id);
-    if (target) startDogTrip(state, context, target, context.canWalk !== false && Math.random() < DOG_ACTIVITY.walkChance ? 'walk' : 'run');
+    if (target) startDogTrip(state, context, target, context.canWalk !== false && Math.random() < DOG_ACTIVITY.walkChance ? context.canSniff && Math.random() < DOG_ACTIVITY.sniffChance ? 'sniff' : 'walk' : 'run');
     return;
   }
   if (state.mode === 'eat') {
@@ -168,7 +174,7 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
   const meal = state.mode === 'meal-approach';
   if (meal && (!dogFeedingStation.position || !isAgentDestinationFree(id, state.target))) { postponeMeal(state, context); return; }
   const before = { x: state.position.x, z: state.position.z };
-  const speed = state.gait === 'walk' ? (context.walkSpeed ?? DOG_WALK_SPEED[id as keyof typeof DOG_WALK_SPEED]) : DOG_ACTIVITY.runSpeed;
+  const speed = state.gait !== 'run' ? (context.walkSpeed ?? DOG_WALK_SPEED[id as keyof typeof DOG_WALK_SPEED]) : DOG_ACTIVITY.runSpeed;
   const next = followRoute(state.route, id, before, state.target, speed * delta, (direction, remaining) => {
     const steer = computeSteeringVector(id, before.x, before.z, direction.x, direction.z, remaining);
     return { x: steer.steerX, z: steer.steerZ };

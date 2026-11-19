@@ -61,9 +61,9 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
   useHelper(showSkeleton ? modelRef as any : null, THREE.SkeletonHelper);
 
   function context() {
-    return { id: 'shiba' as const, root: modelRef.current!, play: (action: DogAction, once = false) => {
+    return { id: 'shiba' as const, canSniff: true, lieTransitions: true, root: modelRef.current!, play: (action: DogAction, once = false) => {
       if (action === 'eat') throw new Error('Ushiro has no eating clip');
-      const clip = findDogClip(animations, DOG_CLIPS.shiba[action]);
+      const clip = findDogClip(animations, DOG_CLIPS.shiba[action as keyof typeof DOG_CLIPS.shiba]);
       activeAction.current = transitionDogAction(mixerRef.current!, clip, activeAction.current, once);
       return clip.duration;
     } };

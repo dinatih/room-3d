@@ -7,10 +7,11 @@ ROOT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser()
 parser.add_argument('--model',required=True)
 parser.add_argument('--label',required=True)
+parser.add_argument('--output',type=Path)
 parser.add_argument('--rest-only',action='store_true')
 parser.add_argument('--clip',action='append')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
-out=ROOT/'artifacts/ushiro/priority-review'/args.label;out.mkdir(parents=True,exist_ok=True)
+out=args.output if args.output else ROOT/'artifacts/ushiro/priority-review'/args.label;out.mkdir(parents=True,exist_ok=True)
 path=Path(args.model)
 if path.suffix=='.blend':bpy.ops.wm.open_mainfile(filepath=str(path))
 else:
