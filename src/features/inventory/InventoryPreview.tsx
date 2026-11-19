@@ -1,3 +1,5 @@
+import { PreviewCameraControls } from './PreviewCameraControls';
+import { usePreviewViewStore } from './usePreviewViewStore';
 import { pitbullAnimationChoices, prioritizePitbullAnimations } from './pitbullAnimationChoices';
 import dogAnimationOptions from './dogAnimationOptions.json';
 import '../scene/utils/zeroEnergyLights';
@@ -9,8 +11,7 @@ import type { SmartActionPreviewRequest } from './InventorySmartActions';
 import type { SceneItemProps } from '@shared/types';
 import { useState, useRef, useLayoutEffect, useCallback, useEffect, Suspense, useMemo, type ReactNode } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { Html, Line, Grid, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { OrbitControls } from '@features/scene/camera/OrbitControls';
+import { Html, Line, Grid } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
@@ -35,8 +36,6 @@ import { CharacterSection } from '@features/scene/sidepanel/sections/CharacterSe
 import { DevToolsGroups } from '@features/scene/DevToolsOverlay';
 import { DevToolsCollector } from '@features/scene/DevToolsCollector';
 import { ViewControlBar } from '@features/scene/ViewControlBar';
-import { resolveCameraView } from '@features/scene/camera/cameraViews';
-import { getOrbitMouseButtons, getOrbitTouches } from '@features/scene/camera/orbitMouseButtons';
 import { TOOLBAR_BUTTON_CLASS } from '@features/scene/toolbarStyles';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 
@@ -78,21 +77,6 @@ function ensureGlbFileSize(path: string, onLoaded?: () => void): number | undefi
     });
   }
   return undefined;
-}
-type PreviewCameraView = 'free' | string;
-
-function getPreviewViewConfig(key: string, elevation = 45): { direction: THREE.Vector3; up: [number, number, number] } {
-  try {
-    const view = resolveCameraView(key, 'persp', undefined, elevation);
-    const direction = new THREE.Vector3(
-      view.pos[0] - view.target[0],
-      view.pos[1] - view.target[1],
-      view.pos[2] - view.target[2]
-    ).normalize();
-    return { direction, up: [0, 1, 0] };
-  } catch {
-    return { direction: new THREE.Vector3(1, 1, 1).normalize(), up: [0, 1, 0] };
-  }
 }
 
 function GlbScene({ glbPath, onSize, onStats }: { glbPath: string; onSize?: () => void; onStats?: (s: GlbDebugStats) => void }) {
@@ -235,171 +219,6 @@ function PreviewEnvironment({ showGrid, neutralLighting }: { showGrid: boolean; 
   });
 
   return neutralLighting ? null : <SkySphere envOnly={showGrid} showSpaceBackdrop={false} />;
-}
-
-function FitCamera({ target = [0, 0, 0], boundsRadius }: { target?: [number, number, number]; boundsRadius?: number }) {
-  const { camera } = useThree();
-  useLayoutEffect(() => {
-    camera.layers.enableAll();
-    if ((camera as any).isPerspectiveCamera && boundsRadius && boundsRadius > 0) {
-      const perspCam = camera as THREE.PerspectiveCamera;
-      const fovRad = (perspCam.fov * Math.PI) / 180;
-      const dist = (boundsRadius / Math.sin(fovRad / 2)) * 0.98;
-      const dir = new THREE.Vector3(0.75, 0.45, 0.95).normalize();
-      camera.position.set(target[0] + dir.x * dist, target[1] + dir.y * dist, target[2] + dir.z * dist);
-      camera.near = Math.max(0.5, dist / 100);
-      camera.far = Math.max(10000, dist * 20);
-      camera.updateProjectionMatrix();
-    }
-    camera.lookAt(new THREE.Vector3(...target));
-  }, [camera, target, boundsRadius]);
-  return null;
-}
-
-function OrthoCameraControls({
-  mode,
-  target = [0, 0, 0],
-  boundsRadius = 50,
-}: {
-  mode: PreviewCameraView;
-  target?: [number, number, number];
-  boundsRadius?: number;
-}) {
-  const { size, camera } = useThree();
-  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
-  const cameraElevation = useSceneStore(state => state.cameraElevation ?? 45);
-  const aspect = size.width / Math.max(1, size.height);
-  const ctrlRef = useRef<any>(null);
-  const camRef = useRef<THREE.OrthographicCamera>(null);
-
-  const viewH = useMemo(() => {
-    return Math.max(25, (boundsRadius || 50) * 2.0);
-  }, [boundsRadius]);
-
-  const viewW = viewH * aspect;
-
-  const camTarget: [number, number, number] = useMemo(() => {
-    if (mode === 'free') return target;
-    if (mode === 'top' || mode === 'bottom') {
-      return [0, 0, 0];
-    }
-    return [0, target[1] || 85, 0];
-  }, [mode, target]);
-
-  const { direction, up } = useMemo(() => {
-    if (mode === 'free') return { direction: new THREE.Vector3(0.75, 0.45, 0.95).normalize(), up: [0, 1, 0] as [number, number, number] };
-    return getPreviewViewConfig(mode, cameraElevation);
-  }, [mode, cameraElevation]);
-
-  const camPos: [number, number, number] = useMemo(() => {
-    if (mode === 'free') {
-      const distance = Math.max(25, boundsRadius * 2.5);
-      const dir = new THREE.Vector3(0.75, 0.45, 0.95).normalize();
-      return [target[0] + distance * dir.x, target[1] + distance * dir.y, target[2] + distance * dir.z];
-    }
-    return [
-      camTarget[0] + direction.x * 1000,
-      camTarget[1] + direction.y * 1000,
-      camTarget[2] + direction.z * 1000,
-    ];
-  }, [mode, camTarget, boundsRadius, target, direction]);
-
-  useLayoutEffect(() => {
-    camera.layers.enableAll();
-    if (camRef.current) {
-      camRef.current.layers.enableAll();
-      camRef.current.left = -viewW / 2;
-      camRef.current.right = viewW / 2;
-      camRef.current.top = viewH / 2;
-      camRef.current.bottom = -viewH / 2;
-      camRef.current.up.set(...up);
-      camRef.current.position.set(camPos[0], camPos[1], camPos[2]);
-      camRef.current.lookAt(camTarget[0], camTarget[1], camTarget[2]);
-      camRef.current.updateProjectionMatrix();
-    }
-  }, [camera, mode, camPos, camTarget, viewW, viewH, up]);
-
-  useEffect(() => {
-    if (ctrlRef.current) {
-      ctrlRef.current.target.set(camTarget[0], camTarget[1], camTarget[2]);
-      ctrlRef.current.update();
-    }
-  }, [camTarget]);
-
-  return (
-    <>
-      <OrthographicCamera
-        ref={camRef}
-        makeDefault
-        manual
-        position={camPos}
-        left={-viewW / 2}
-        right={viewW / 2}
-        top={viewH / 2}
-        bottom={-viewH / 2}
-        near={1}
-        far={10000}
-      />
-      <OrbitControls
-        ref={ctrlRef}
-        makeDefault
-        mouseButtons={getOrbitMouseButtons(orbitMouseMode)}
-        touches={getOrbitTouches(orbitMouseMode)}
-        target={camTarget}
-        enablePan={true}
-        enableZoom={true}
-        screenSpacePanning={true}
-        minZoom={0.2}
-        maxZoom={50}
-      />
-    </>
-  );
-}
-
-function PerspectivePresetControls({
-  mode,
-  target = [0, 0, 0],
-  boundsRadius = 50,
-}: {
-  mode: PreviewCameraView;
-  target?: [number, number, number];
-  boundsRadius?: number;
-}) {
-  const cameraRef = useRef<THREE.PerspectiveCamera>(null);
-  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
-  const cameraElevation = useSceneStore(state => state.cameraElevation ?? 45);
-  const ctrlRef = useRef<any>(null);
-  const camTarget = useMemo<[number, number, number]>(() => (
-    mode === 'top' || mode === 'bottom' ? [0, 0, 0] : [0, target[1] || 85, 0]
-  ), [mode, target]);
-  const distance = Math.max(25, (boundsRadius || 50) * 2.5);
-  const { direction, up } = useMemo(() => getPreviewViewConfig(mode, cameraElevation), [mode, cameraElevation]);
-  const position = useMemo<[number, number, number]>(() => [
-    camTarget[0] + direction.x * distance,
-    camTarget[1] + direction.y * distance,
-    camTarget[2] + direction.z * distance,
-  ], [camTarget, direction, distance]);
-
-  useLayoutEffect(() => {
-    const camera = cameraRef.current;
-    if (!camera) return;
-    camera.layers.enableAll();
-    camera.up.set(...up);
-    camera.position.set(...position);
-    camera.lookAt(...camTarget);
-    camera.updateProjectionMatrix();
-    if (ctrlRef.current) {
-      ctrlRef.current.target.set(...camTarget);
-      ctrlRef.current.update();
-    }
-  }, [camTarget, position, up]);
-
-  return (
-    <>
-      <PerspectiveCamera ref={cameraRef} makeDefault fov={45} near={0.5} far={10000} position={position} />
-      <OrbitControls ref={ctrlRef} makeDefault mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} target={camTarget} enablePan enableZoom screenSpacePanning minDistance={2} maxDistance={2500} />
-    </>
-  );
 }
 
 const _previewTmpSph = new THREE.Spherical();
@@ -929,7 +748,7 @@ export function InventoryPreview({
   const actionKeys = item && (!('category' in item && item.category === 'characters') || ['unitree-g1', 'unitree-go2', 'unitree-as2w', 'raph-rover', 'jumper-robot', 'microduck'].includes(item.id))
     ? getPreviewActionIds(item.id)
     : [];
-  const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate);
+  const [actionStates, setActionStates] = useState<Record<string, any>>({}), [viewMode, setViewMode] = useState<'3d' | 'photos'>('3d'), [showDims, setShowDims] = useState(false), [autoRotate, setAutoRotate] = useState(defaultAutoRotate && !usePreviewViewStore.getState().pose);
   const [target, setTarget] = useState<[number, number, number]>([0, 0, 0]);
   const [boundsRadius, setBoundsRadius] = useState<number>(50);
   const initialFraming = useRef<{ target?: [number, number, number]; radius?: number }>({});
@@ -943,10 +762,13 @@ export function InventoryPreview({
     initialFraming.current.radius = next;
     setBoundsRadius(next);
   }, [preserveStateOnItemChange]);
-  const [showGrid, setShowGrid] = useState(defaultShowGrid);
+  const savedGrid = usePreviewViewStore(state => state.showGrid);
+  const showGrid = savedGrid ?? defaultShowGrid;
+  const setShowGrid = (update: (value: boolean) => boolean) => usePreviewViewStore.setState({ showGrid: update(showGrid) });
   const [optimizedGlass, setOptimizedGlass] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
-  const [previewView, setPreviewView] = useState<PreviewCameraView>('free');
+  const previewView = usePreviewViewStore(state => state.view);
+  const setPreviewView = (view: string) => usePreviewViewStore.setState({ view, pose: null });
   const handleResetPreviewView = useCallback(() => {
     setPreviewView('free');
     setAutoRotate(false);
@@ -954,7 +776,6 @@ export function InventoryPreview({
     document.dispatchEvent(new CustomEvent('camera-view', { detail: { key: 'free', projection: 'persp' } }));
   }, []);
   const cameraProjection = useSceneStore(state => state.cameraProjection);
-  const orbitMouseMode = useSceneStore(state => state.orbitMouseMode);
   const extraCharacters = useSceneStore(state => state.layers.extraCharacters ?? false);
   const layers = useSceneStore(state => state.layers);
   const toggleLayer = useSceneStore(state => state.toggleLayer);
@@ -1004,7 +825,6 @@ export function InventoryPreview({
     } : {});
     lastSoloAnimRef.current = 'idle';
     setViewMode('3d');
-    setAutoRotate(defaultAutoRotate);
     setTarget([0, 0, 0]);
     setBoundsRadius(50);
     setPhotoIdx(0);
@@ -1012,7 +832,6 @@ export function InventoryPreview({
     setSelectedBoneName(null);
     setSkeletonGroups([]);
     setShowBoneTree(false);
-    setPreviewView('free');
     useAnimPreviewStore.getState().reset();
   }, [item?.id, preserveStateOnItemChange]);
 
@@ -1262,7 +1081,7 @@ export function InventoryPreview({
           </div>
           {showing3D ? (
             <>
-            <Canvas className="inventory-preview-renderer" key={preserveStateOnItemChange ? undefined : item.id} shadows={{ type: THREE.PCFShadowMap }} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
+            <Canvas className="inventory-preview-renderer" shadows={{ type: THREE.PCFShadowMap }} frameloop="always" events={() => ({ enabled: false } as any)} camera={{ fov: 45, near: 0.5, far: 10000, position: [70, 50, 90] }} gl={{ antialias: true, alpha: false, toneMapping: THREE.AgXToneMapping }} onCreated={({ scene, camera, gl }) => { camera.layers.enableAll(); scene.background = new THREE.Color('#d2d2d2'); gl.toneMapping = THREE.AgXToneMapping; }}>
               <PreviewEnvironment showGrid={showGrid || walkDebug} neutralLighting={neutralLighting || Boolean(smartAction)} />
               <ambientLight intensity={0.7} />
               <directionalLight position={[boundsRadius * 2, boundsRadius * 3, boundsRadius * 2]} intensity={1.0} castShadow
@@ -1274,24 +1093,10 @@ export function InventoryPreview({
                 <planeGeometry args={[boundsRadius * 8, boundsRadius * 8]} />
                 <shadowMaterial transparent opacity={0.35} depthWrite={false} />
               </mesh>
-              {cameraProjection === 'ortho' ? (
-                <>
-                  <OrthoCameraControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-              {(previewView === 'north' || previewView === 'south' || previewView === 'east' || previewView === 'west' || previewView === 'top') &&
+              <PreviewCameraControls mode={previewView} target={target} boundsRadius={boundsRadius}
+                autoRotate={autoRotate && !smartAction} onInteraction={() => setAutoRotate(false)} />
+              {cameraProjection === 'ortho' && ['north', 'south', 'east', 'west', 'top'].includes(previewView) &&
                 <GroundDatumLines mode={previewView} />}
-                </>
-              ) : (
-                <>
-                  {previewView === 'free' ? (
-                    <>
-                      <FitCamera target={target} boundsRadius={boundsRadius} />
-                      <OrbitControls makeDefault mouseButtons={getOrbitMouseButtons(orbitMouseMode)} touches={getOrbitTouches(orbitMouseMode)} autoRotate={autoRotate && !smartAction} autoRotateSpeed={1.2} enablePan enableZoom target={target} onStart={() => setAutoRotate(false)} />
-                    </>
-                  ) : (
-                    <PerspectivePresetControls mode={previewView} target={target} boundsRadius={boundsRadius} />
-                  )}
-                </>
-              )}
               <PreviewCameraKeyboardController onResetView={handleResetPreviewView} onUserInteraction={() => setAutoRotate(false)} />
               {walkDebug ? <WalkDebugGround /> : showGrid && <Grid infiniteGrid fadeDistance={Math.max(800, boundsRadius * 20)} cellColor="#777777" sectionColor="#444444" cellSize={10} sectionSize={50} position={[5, -0.01, 5]} />}
               <OptimizedGlassContext.Provider value={optimizedGlass}>

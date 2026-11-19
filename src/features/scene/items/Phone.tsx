@@ -32,7 +32,7 @@ export function Phone({ onSize }: SceneModelProps) {
     texture.needsUpdate = true;
     return texture;
   }, [sourceWallpaper]);
-  const displayMat = useMemo(() => new THREE.MeshBasicMaterial({ map: wallpaper, toneMapped: false }), [wallpaper]);
+  const displayMat = useMemo(() => new THREE.MeshBasicMaterial({ name: 'Display', map: wallpaper, toneMapped: false }), [wallpaper]);
 
   const screenGeometries = useMemo(() => new Set<THREE.BufferGeometry>(), [scene]);
   useEffect(() => () => {
@@ -54,9 +54,9 @@ export function Phone({ onSize }: SceneModelProps) {
         const m = mat as THREE.Material;
         if (m.name === 'Main')    return redPhoneMat;
         if (m.name === 'Display') {
-          // Le plan d'écran du GLB n'a pas d'UV : projection planaire sur sa boîte englobante.
+          // Les UV natifs sont inversés sur les deux axes. Reprojeter même s'ils existent.
           let geometry = mesh.geometry;
-          if (!geometry.attributes.uv) {
+          if (!screenGeometries.has(geometry)) {
             geometry = mesh.geometry = geometry.clone();
             screenGeometries.add(geometry);
             geometry.computeBoundingBox();
@@ -77,7 +77,6 @@ export function Phone({ onSize }: SceneModelProps) {
       
       mesh.material = Array.isArray(mesh.material) ? newMaterials : newMaterials[0];
     });
-    scene.scale.set(1, 1, 1);
     scene.rotation.set(0, 0, 0);
     const raw = glbLocalBBox(scene).getSize(new THREE.Vector3());
     // Si debout (Y long), coucher à plat d'abord
