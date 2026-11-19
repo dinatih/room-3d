@@ -18,6 +18,7 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
     let frame;
     const daylight = hour => astronomy.daylight(hour, fixedDate);
     const { DayNight } = load('src/features/scene/DayNight.tsx', {
+      '@react-three/drei': { useTexture: () => new THREE.Texture() },
       three: THREE, 'react/jsx-runtime': require('react/jsx-runtime'),
       react: { useLayoutEffect() {}, useMemo: fn => fn(), useRef: value => ({ current: refs.shift() ?? value }) },
       '@react-three/fiber': { useThree: select => select({ scene }), useFrame: fn => { frame = fn; } },

@@ -32,6 +32,7 @@ for (const [name, key, clipName, scale] of [
     '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene, animations }) },
     '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
     '../objectActions': { getObjectActionIds: () => [key] },
+    './useDoorOpen': { useDoorOpen: (id, preview, state) => !!state[id] },
   };
   dependencies['./createAnimatedGlbItem'] = load('src/features/scene/items/createAnimatedGlbItem.tsx', dependencies);
   const component = load(`src/features/scene/items/${name}.tsx`, dependencies)[name];

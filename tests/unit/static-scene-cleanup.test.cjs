@@ -336,6 +336,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
   const animations = [new THREE.AnimationClip('lid_open', 1, [new THREE.NumberKeyframeTrack('lid.rotation[y]', [0, 1], [0, 1])])];
   let cursor = 0, frame;
   const { createAnimatedGlbItem } = load('src/features/scene/items/createAnimatedGlbItem.tsx', {
+      './useDoorOpen': { useDoorOpen: (id, preview, state) => !!state[id] },
     three: THREE, 'react/jsx-runtime': jsx,
     react: { useRef: value => refs[cursor++] ??= { current: value }, useLayoutEffect: fn => effects.push(fn) },
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },

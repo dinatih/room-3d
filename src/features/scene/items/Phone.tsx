@@ -2,11 +2,12 @@
  * Phone.tsx — Xiaomi 17 Pro Max (items/xiaomi-phone/xiaomi-phone.glb).
  * Coordonnées locales : X/Z centrés, Y=0 = surface du bureau.
  */
-import { useLayoutEffect, useMemo } from 'react';
-import { useGLTF, useTexture } from '@react-three/drei';
+import { useEffect, useLayoutEffect, useMemo } from 'react';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { useSceneGlass } from '../utils/useSceneGlass';
 
 const TARGET_D = 16.2; // longueur du téléphone (cm)
@@ -21,16 +22,27 @@ const glassMat    = new THREE.MeshPhysicalMaterial({
 });
 
 export function Phone({ onSize }: SceneModelProps) {
-  const { scene: gltfScene } = useGLTF('items/xiaomi-phone/xiaomi-phone.glb');
-  const scene = useMemo(() => gltfScene.clone(true), [gltfScene]);
-  const wallpaper = useTexture('media/photos/hug-life-vi.jpg', texture => {
+  const { scene } = useGLTFClone('items/xiaomi-phone/xiaomi-phone.glb');
+  const sourceWallpaper = useTexture('media/photos/hug-life-vi.jpg');
+  const wallpaper = useMemo(() => {
+    const texture = sourceWallpaper.clone();
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.repeat.set(SCREEN_ASPECT / WALLPAPER_ASPECT, 1);
     texture.offset.set((1 - texture.repeat.x) / 2, 0);
-  });
+    texture.needsUpdate = true;
+    return texture;
+  }, [sourceWallpaper]);
   const displayMat = useMemo(() => new THREE.MeshBasicMaterial({ map: wallpaper, toneMapped: false }), [wallpaper]);
 
+  const screenGeometries = useMemo(() => new Set<THREE.BufferGeometry>(), [scene]);
+  useEffect(() => () => {
+    displayMat.dispose();
+    wallpaper.dispose();
+    screenGeometries.forEach(geometry => geometry.dispose());
+  }, [displayMat, wallpaper, screenGeometries]);
+
   useLayoutEffect(() => {
+    scene.scale.set(1, 1, 1);
     removeGlbLines(scene);
     // Overrides matériaux pour éviter l'écran blanc
     scene.traverse(obj => {
@@ -43,8 +55,10 @@ export function Phone({ onSize }: SceneModelProps) {
         if (m.name === 'Main')    return redPhoneMat;
         if (m.name === 'Display') {
           // Le plan d'écran du GLB n'a pas d'UV : projection planaire sur sa boîte englobante.
-          const geometry = mesh.geometry;
+          let geometry = mesh.geometry;
           if (!geometry.attributes.uv) {
+            geometry = mesh.geometry = geometry.clone();
+            screenGeometries.add(geometry);
             geometry.computeBoundingBox();
             const { min, max } = geometry.boundingBox!;
             const position = geometry.attributes.position;
@@ -81,7 +95,7 @@ export function Phone({ onSize }: SceneModelProps) {
       -(box.min.z + box.max.z) / 2,
     );
     onSize?.(size);
-  }, [scene, displayMat]);
+  }, [scene, displayMat, screenGeometries, onSize]);
 
   useSceneGlass(scene);
 
@@ -92,4 +106,4 @@ export function Phone({ onSize }: SceneModelProps) {
   );
 }
 
-useGLTF.preload('items/xiaomi-phone/xiaomi-phone.glb');
+preloadSceneGLTF('items/xiaomi-phone/xiaomi-phone.glb');

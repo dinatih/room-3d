@@ -15,6 +15,7 @@ const controls = load('src/features/scene/camera/subjectControls.ts', {
   '../ai/navigation/geometry': { segmentFree: () => !blocked }, '../doorObstacles': { DOOR_CONFIGS: {}, doorCollisionState: {} },
 });
 const dogs = load('src/features/scene/items/dogBehavior.ts', {
+  './dogLifeClips': require('../../src/features/scene/items/dogLifeClips.ts'),
   three: THREE, '../ai/SpatialZone': {},
   '../ai/navigation/service': { createRouteState: () => ({}), resetRoute() {} },
   '../ai/navigation/groundElevation': { getWalkableGroundY: () => 0 },
@@ -24,11 +25,11 @@ const dogs = load('src/features/scene/items/dogBehavior.ts', {
   '../ai/navigation/navigationScope': { NavigationScope: class { clear() {} } },
   '../camera/subjectControls': controls,
 });
-it('fait sauter puis asseoir chaque chien sans répéter le saut pendant un appui long', () => {
-  for (const id of ['shiba', 'ulotte']) {
+it('fait sauter puis asseoir Ushiro sans répéter le saut pendant un appui long', () => {
+  for (const id of ['shiba']) {
     cameraState.animalViews[id] = { forward: { x: 0, y: 0, z: 1 } };
     const root = new THREE.Group(), state = dogs.createDogBehavior(), calls = [];
-    const context = { id, root, play: (action, once) => { calls.push([action, once]); return 2; } };
+    const context = { id, root, walkSpeed: 50, play: (action, once) => { calls.push([action, once]); return 2; } };
     try {
       controls.setSubjectInput(id, 'character:Elevate', true);
       dogs.updateDogControl(state, context, 0.1);

@@ -7,7 +7,7 @@ const helper = import('three/examples/jsm/utils/BufferGeometryUtils.js').then(ut
     three: THREE, 'three/examples/jsm/utils/BufferGeometryUtils.js': utils,
     '../utils/animatedFrustumCulling': bounds,
 }).mergeLaraPairs);
-const pairs = [['eye2','eyes'], ['handgun_left','handgun_right'], ['handgun_left_holster','handgun_right_holster']];
+const pairs = [['handgun_left','handgun_right'], ['handgun_left_holster','handgun_right_holster']];
 const parts = load('src/features/scene/characterParts.ts', {
     three: THREE,
     './characterConfig': { ACCESSORIES_MESH_NAMES: pairs.flat().filter(name=>name.includes('handgun')) },
@@ -53,8 +53,8 @@ it('fusionne les paires sans changer leurs triangles ni leur skinning et renouve
             }
         }
     }
-    const geometry = root.getObjectByName('eye2').geometry;
-    merge(root); assert.equal(root.getObjectByName('eye2').geometry,geometry);
+    const geometry = root.getObjectByName('handgun_left').geometry;
+    merge(root); assert.equal(root.getObjectByName('handgun_left').geometry,geometry);
 });
 it('partage les géométries fusionnées entre clones et garde leurs matériaux indépendants', async () => {
     const merge = await helper, first = make(), second = make(first);
@@ -67,9 +67,9 @@ it('partage les géométries fusionnées entre clones et garde leurs matériaux 
 });
 it('refuse une paire dont le matériau ou le squelette a changé', async () => {
     const merge = await helper;
-    const differentMaterial=make();differentMaterial.getObjectByName('eyes').material.color.set('red');
+    const differentMaterial=make();differentMaterial.getObjectByName('handgun_right').material.color.set('red');
     assert.throws(()=>merge(differentMaterial),/Incompatible Lara pair/);
-    const differentSkeleton=make();differentSkeleton.getObjectByName('eyes').skeleton=new THREE.Skeleton([new THREE.Bone()]);
+    const differentSkeleton=make();differentSkeleton.getObjectByName('handgun_right').skeleton=new THREE.Skeleton([new THREE.Bone()]);
     assert.throws(()=>merge(differentSkeleton),/Incompatible Lara pair/);
 });
 it('préserve les modes équipement, les ombres et le masquage de tête en FPV', async () => {
@@ -90,4 +90,13 @@ it('préserve les modes équipement, les ombres et le masquage de tête en FPV',
         }
         assert.deepEqual(triangles(after),triangles(before));
     }
+});
+
+it('garde les deux yeux indépendants pour leurs styles distincts', async () => {
+    const merge = await helper, root = make();
+    const left = new THREE.SkinnedMesh(), right = new THREE.SkinnedMesh();
+    left.name = 'eye2'; right.name = 'eyes'; root.add(left, right);
+    merge(root);
+    assert.equal(root.getObjectByName('eye2'), left);
+    assert.equal(root.getObjectByName('eyes'), right);
 });

@@ -9,15 +9,15 @@ function boxes() {
   const module = load('src/features/scene/items/Drona.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { Suspense: () => null, useLayoutEffect: fn => fn() },
     'three/addons/utils/BufferGeometryUtils.js': { mergeGeometries: geometries => { const result = new THREE.BufferGeometry(); result.setAttribute('position', new THREE.Float32BufferAttribute(geometries.flatMap(g => [...g.toNonIndexed().attributes.position.array]), 3)); return result; } },
-    '@react-three/drei': { useGLTF: path => {
-      assert.equal(path, 'items/dröna/DRÖNA_high.glb');
+    '@react-three/drei': { useGLTF: Object.assign(path => {
+      assert(['items/dröna/DRÖNA_high.glb', 'items/dröna/DronaRed.glb'].includes(path));
       return { nodes: { box: new THREE.Mesh(source) } };
-    } },
+    }, { preload() {} }) },
   });
   return { ...module, source };
 }
 
-it('la géométrie DRONA officielle est centrée et partagée sans modifier sa source', () => {
+it('la géométrie DRONA Blender est centrée et partagée sans modifier sa source', () => {
   const test = boxes(), vertices = [...test.source.attributes.position.array];
   const geo = test.useDronaGeo();
   assert(geo.boundingBox.getCenter(new THREE.Vector3()).length() < 1e-5);
@@ -26,17 +26,17 @@ it('la géométrie DRONA officielle est centrée et partagée sans modifier sa s
   assert.deepEqual([...test.source.attributes.position.array], vertices);
 });
 
-it('les boîtes placées utilisent une géométrie légère distincte de l’inventaire', () => {
+it('la scène et la preview Blender partagent leur géométrie, la variante officielle reste séparée', () => {
   const test = boxes(), sizes = [];
-  const inventory = test.Drona({ onSize: size => sizes.push(size) }).props.children;
-  const mesh = inventory.type(inventory.props);
+  const preview = test.Drona({ onSize: size => sizes.push(size), isPreview: true }).props.children;
+  const mesh = preview.type(preview.props);
   assert(sizes[0].equals(mesh.props.geometry.boundingBox.getSize(new THREE.Vector3())));
-  const cell = test.DroneCell();
-  assert.notEqual(cell.props.geometry, mesh.props.geometry);
-  assert.equal(cell.props.geometry, test.DroneCell().props.geometry);
-  assert.equal(cell.props.userData.skipMerge, true);
-  assert(cell.props.geometry.attributes.position.count / 3 < 200);
-  assert.deepEqual(cell.props.geometry.boundingBox.getSize(new THREE.Vector3()).toArray().map(v => Math.round(v)), [33, 33, 39]);
+  const cell = test.DroneCell().props.children;
+  assert.equal(cell.type(cell.props).props.geometry, mesh.props.geometry);
+  const official = test.Drona({ isPreview: true, actionState: { 'drona-model-variant': 'official-ikea' } }).props.children;
+  assert.notEqual(official.type(official.props).props.geometry, mesh.props.geometry);
+  const scene = test.Drona({ isPreview: false, actionState: { 'drona-model-variant': 'official-ikea' } }).props.children;
+  assert.equal(scene.type(scene.props).props.geometry, mesh.props.geometry);
   assert.equal(mesh.props.dispose, null);
   assert.equal(mesh.props.userData.skipMerge, true);
 });

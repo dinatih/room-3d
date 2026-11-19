@@ -27,6 +27,7 @@ const controls = load('src/features/scene/camera/subjectControls.ts', {
 });
 
 const dogs = load('src/features/scene/items/dogBehavior.ts', {
+  './dogLifeClips': require('../../src/features/scene/items/dogLifeClips.ts'),
   three: THREE,
   '../ai/SpatialZone': { SpatialZoneManager: { getZoneAt: () => null } },
   '../ai/navigation/service': {
@@ -51,6 +52,7 @@ const dogs = load('src/features/scene/items/dogBehavior.ts', {
 });
 
 const { LAYER_DEFAULTS } = load('src/features/scene/store/layerUrlParams.ts', {
+  '../character/laraOutfits': require('../../src/features/scene/character/laraOutfits.ts'),
   './debugPresets': { getDebugPreset: () => null },
   '../camera/cameraUrlParams': { getUrlParams: () => new URLSearchParams() },
 });

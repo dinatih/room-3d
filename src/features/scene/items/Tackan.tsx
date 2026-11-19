@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
@@ -16,6 +16,15 @@ export function Tackan({ onSize, fillLevel = 0, soapColor = '#ef7d16' }: SceneMo
   soapColor?: THREE.ColorRepresentation;
 }) {
   const { scene } = useGLTFClone(GLB, true);
+
+  useEffect(() => () => {
+    const materials = new Set<THREE.Material>();
+    scene.traverse(object => {
+      const mesh = object as THREE.Mesh;
+      if (mesh.isMesh) (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).forEach(material => materials.add(material));
+    });
+    materials.forEach(material => material.dispose());
+  }, [scene]);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);
