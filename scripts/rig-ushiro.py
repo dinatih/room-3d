@@ -24,7 +24,12 @@ OUT.mkdir(parents=True, exist_ok=True)
 REPORTS=OUT/'draft' if args.draft else OUT
 REPORTS.mkdir(parents=True,exist_ok=True)
 BASE = ['idle 50', 'walk_fwd 29', 'run_fwd 13']
-REFERENCES = BASE + ['idle_shake_1. 137', 'idle_shake_2. 81', 'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221', 'poop 75', 'track_bark_harvest 75', 'canter_fwd 53', 'idle_bark_04_warning 47']
+REFERENCES = BASE + [
+    'walk_fwd_sniff 46', 'idle_shake_1. 137', 'idle_shake_2. 81',
+    'idle_to_idle_lay 111', 'idle_lay_pose 2', 'idle_lay_to_idle 71',
+    'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221',
+    'pee 43', 'poop 75', 'idle_bark_04_warning 47', 'track_bark_harvest 75', 'canter_fwd 53',
+]
 BASE_SAMPLE_FPS = args.sample_fps
 if BASE_SAMPLE_FPS<=0:raise ValueError('Sample frequency must be positive')
 CLIPS = BASE if args.base_only else [e['value'] for e in json.loads((ROOT / 'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog']]
@@ -33,7 +38,7 @@ if args.clips: CLIPS=args.clips
 if len(set(CLIPS))!=len(CLIPS):raise ValueError('Duplicate clips')
 known={e['value'] for e in json.loads((ROOT/'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog']}
 if set(CLIPS)-known:raise ValueError('Unknown clips: '+str(set(CLIPS)-known))
-HIGH_RATE=set(BASE+['idle_shake_1. 137','idle_shake_2. 81'])
+HIGH_RATE=set(BASE+['idle_shake_1. 137','idle_shake_2. 81','track_bark_harvest 75','canter_fwd 53'])
 work = Path(tempfile.mkdtemp(prefix='ushiro-anatomy-'))
 with zipfile.ZipFile(Path.home() / '3D Resources/animals/shiba-inu-texture-updated.zip') as archive:
     archive.extractall(work)
@@ -306,6 +311,14 @@ for obj in meshes:
             if old_name in torso_groups:
                 for driver,share in torso_influences(point):
                     combined[driver]=combined.get(driver,0)+weight/total*share
+            elif old_name=='neck_fat_jnt':
+                # Smoothly blend the throat/brisket ruff between thorax (Spine4)
+                # and lower neck (Neck01) so head dips do not crease the brisket.
+                z0=target['LeftShoulder01'].z;z1=target['Neck01'].z
+                t=min(1.,max(0.,(point.z-z0)/max(1e-6,z1-z0)))
+                t=t*t*(3-2*t)
+                for driver,share in [('Spine4',1-t),('Neck01',t)]:
+                    if share>0:combined[driver]=combined.get(driver,0)+weight/total*share
             elif old_name=='breathe_jnt':
                 span=target['breathe l'].x-target['breathe r'].x
                 left=min(1.,max(0.,(point.x-target['breathe r'].x)/span))
@@ -322,34 +335,34 @@ for obj in meshes:
 
 if maximum_non_tail_bind_displacement>1e-6:raise RuntimeError('Body sculpt changed during rig fitting')
 
-# The source skin relied on post-armature CorrectiveSmooth. glTF cannot
-# carry that Blender deformer. Smooth the transferred body-weight transitions
-# over mesh edges, preserving each vertex's existing head/tail/toe mask.
-# Use the source artist's smoothing amount and spatial iteration count.
-body_drivers=set(spine_names+['Neck01','Neck02','Neck03'])
-for side in ['Left','Right']:
-    body_drivers.update(side+n for n in ['Shoulder','Shoulder01','Arm','ForeArm','Pelvis','UpLeg','Leg'])
+# Smooth transferred body weights locally within anatomical regions so
+# transitions across spine, shoulder/thorax, and hip/thigh stay organic without
+# bleeding elbow (Arm) or lower-leg weights across the armpit or belly.
 for obj in meshes:
     if obj.name not in source_smoothing: continue
-    factor,iterations=source_smoothing[obj.name]
-    driver_names=[g.name for g in obj.vertex_groups if g.name in body_drivers]
-    group_indices={g.index:driver_names.index(g.name) for g in obj.vertex_groups if g.name in driver_names}
-    weights=np.zeros((len(obj.data.vertices),len(driver_names)),dtype=np.float64)
-    for vertex in obj.data.vertices:
-        for g in vertex.groups:
-            if g.group in group_indices:weights[vertex.index,group_indices[g.group]]=g.weight
-    mass=weights.sum(axis=1)
-    edges=np.array([tuple(e.vertices) for e in obj.data.edges],dtype=int)
-    edges=edges[(mass[edges[:,0]]>0)&(mass[edges[:,1]]>0)]
-    left,right=np.concatenate([edges[:,0],edges[:,1]]),np.concatenate([edges[:,1],edges[:,0]])
-    degree=np.bincount(left,minlength=len(weights));active=degree>0
-    for _ in range(iterations):
-        sums=np.zeros_like(weights);np.add.at(sums,left,weights[right])
-        weights[active]=(1-factor)*weights[active]+factor*sums[active]/degree[active,None]
-        totals=weights.sum(axis=1);weights[active]*=(mass[active]/totals[active])[:,None]
-    for column,name in enumerate(driver_names):
-        group=obj.vertex_groups[name];group.remove(list(range(len(weights))))
-        for index in np.flatnonzero(weights[:,column]):group.add([int(index)],float(weights[index,column]),'REPLACE')
+    edges_all=np.array([tuple(e.vertices) for e in obj.data.edges],dtype=int)
+    for region,iters in [
+        (set(spine_names+['Neck01','Neck02','LeftShoulder','LeftShoulder01','RightShoulder','RightShoulder01']), 4),
+        (set(['Hips','Spine','LeftPelvis','LeftUpLeg','RightPelvis','RightUpLeg']), 4),
+    ]:
+        driver_names=[g.name for g in obj.vertex_groups if g.name in region]
+        if not driver_names: continue
+        group_indices={g.index:driver_names.index(g.name) for g in obj.vertex_groups if g.name in driver_names}
+        weights=np.zeros((len(obj.data.vertices),len(driver_names)),dtype=np.float64)
+        for vertex in obj.data.vertices:
+            for g in vertex.groups:
+                if g.group in group_indices:weights[vertex.index,group_indices[g.group]]=g.weight
+        mass=weights.sum(axis=1)
+        edges=edges_all[(mass[edges_all[:,0]]>0)&(mass[edges_all[:,1]]>0)]
+        left,right=np.concatenate([edges[:,0],edges[:,1]]),np.concatenate([edges[:,1],edges[:,0]])
+        degree=np.bincount(left,minlength=len(weights));active=degree>0
+        for _ in range(iters):
+            sums=np.zeros_like(weights);np.add.at(sums,left,weights[right])
+            weights[active]=0.5*weights[active]+0.5*sums[active]/degree[active,None]
+            totals=weights.sum(axis=1);weights[active]*=(mass[active]/totals[active])[:,None]
+        for column,name in enumerate(driver_names):
+            group=obj.vertex_groups[name];group.remove(list(range(len(weights))))
+            for index in np.flatnonzero(weights[:,column]):group.add([int(index)],float(weights[index,column]),'REPLACE')
 
 floor = min(v.co.z for obj in meshes for v in obj.data.vertices)
 for obj in meshes:
@@ -439,13 +452,33 @@ for limb in limbs:
     limb['source_sole'] = np.array([i for i,n in enumerate(source_cache[0][2]) if n in distal], dtype=int)
     limb['target_sole'] = np.array([i for i,n in enumerate(target_cache[body_index][2]) if n in distal], dtype=int)
     if not len(limb['source_sole']) or not len(limb['target_sole']): raise RuntimeError('Empty paw surface '+end)
+spine_stretch_bones=set(spine_names[1:])
+neck_stretch_bones={'Neck01','Neck02','Neck03','Head'}
 fixed_segments=set()
 for limb in limbs:
-    fixed_segments.update(limb['chain'][2:] if limb['chain'][0].endswith('Shoulder') else limb['chain'][1:])
+    fixed_segments.update(limb['chain'][1:])
     fixed_segments.update(b.name for b in arm.bones[limb['chain'][-1]].children_recursive)
 donor_unit_scale=donor.matrix_world.to_scale().x
 root_translation_scale=Vector(((target['LeftPelvis']-target['RightPelvis']).length/(dp['LeftPelvis']-dp['RightPelvis']).length,
     torso_ratio,sum(limb['ratio'] for limb in limbs)/len(limbs)))
+
+# Precompute donor rest segment lengths along spine/neck for clean proportional transfer
+donor_seg_rest_len={}
+for name in spine_stretch_bones | neck_stretch_bones:
+    parent=arm.bones[name].parent.name
+    donor_seg_rest_len[name]=(dp[name]-dp[parent]).length
+
+# Precompute native rest bend-plane poles for every limb (in parent body bone local frame)
+# so near-straight poses never suffer from undefined or noisy bend-plane flips.
+for limb in limbs:
+    un,ln,en=[limb[n] for n in ['upper','lower','end']]
+    parent_body='Spine4' if limb['chain'][0].endswith('Shoulder') else 'Hips'
+    limb['body_parent']=parent_body
+    u0=rest[ln].translation-rest[un].translation
+    r0=rest[en].translation-rest[un].translation
+    a0=r0.normalized()
+    p0=u0-a0*u0.dot(a0)
+    limb['rest_pole_local']=rest[parent_body].to_quaternion().inverted()@p0.normalized()
 
 def forward(bases):
     world = {}
@@ -506,7 +539,7 @@ def clear_head_contact(world,skin,tolerance):
         previous_error=-minimum;best=(world,skin,actual)
     return world,skin,actual,None
 
-def retarget_bases(source_bases):
+def retarget_bases(source_bases, source_world):
     result={}
     for name in rest:
         if name=='Muzzle': result[name]=Matrix.Identity(4); continue
@@ -518,7 +551,8 @@ def retarget_bases(source_bases):
         result[name]=q.to_matrix().to_4x4()
         # Blender's imported donor armature has a uniform object scale. Convert
         # its local translations into world units before proportion scaling.
-        if name in fixed_segments or preserve:translation=Vector()
+        if name in fixed_segments or preserve or name in spine_stretch_bones or name in neck_stretch_bones:
+            translation=Vector()
         else:
             # Vertical displacement follows limb proportions,
             # not the shorter trunk ratio. Apply anatomical axis scaling in
@@ -531,80 +565,90 @@ def retarget_bases(source_bases):
         result[name].translation=translation
     return result
 
-def retarget_body_positions(fk,source_world):
-    """Retarget spinal/neck positions with a rotated native bind offset.
+def retarget_body_chain(fk, source_world):
+    """Transfer the donor's spline-IK spine & neck curvature while preserving native segment lengths.
 
-    Accumulating the donor's local rotations over different native offsets
-    compounds errors along the torso and neck. Transfer the world positions,
-    retaining the native rest shape as an offset in each driver's frame.
+    Each vertebra segment rotates by the donor segment's world-space swing and scales
+    strictly within anatomical bounds ([0.92, 1.25] spine, 1.00 neck) — capturing
+    spline-IK posture (sleep, sniff, shake) while making 0.14x collapse or 2.7x stretch impossible.
     """
-    rotation=source_world['Hips'].to_quaternion()@donor_rest['Hips'].to_quaternion().inverted()
-    def scaled(vector):return Vector(tuple(vector[i]*root_translation_scale[i] for i in range(3)))
-    core=set(spine_names[1:]+['Neck01','Neck02','Neck03','Head'])
-    result={}
-    hip=fk['Hips'].translation
+    chain = spine_names[1:] + ['Neck01', 'Neck02', 'Neck03', 'Head']
+    chain_set = set(chain)
+    result = {}
     for bone in arm.bones:
-        name=bone.name;matrix=fk[name].copy()
-        if name in core:
-            source_offset=rotation.inverted()@(source_world[name].translation-source_world['Hips'].translation)
-            native_offset=rest[name].translation-rest['Hips'].translation
-            donor_offset=donor_rest[name].translation-donor_rest['Hips'].translation
-            bind_difference=native_offset-scaled(donor_offset)
-            driver_rotation=source_world[name].to_quaternion()@donor_rest[name].to_quaternion().inverted()
-            matrix.translation=hip+rotation@scaled(source_offset)+driver_rotation@bind_difference
+        name = bone.name
+        matrix = fk[name].copy()
+        if name in chain_set:
+            parent = bone.parent.name
+            d_rest = donor_rest[name].translation - donor_rest[parent].translation
+            d_posed = source_world[name].translation - source_world[parent].translation
+            n_rest = rest[name].translation - rest[parent].translation
+            seg_q = d_rest.rotation_difference(d_posed)
+            if name in spine_stretch_bones:
+                ratio = min(1.25, max(0.92, d_posed.length / max(1e-6, d_rest.length)))
+            else:
+                ratio = 1.0
+            matrix.translation = result[parent].translation + (seg_q @ n_rest) * ratio
         elif bone.parent:
-            parent=bone.parent.name
-            matrix.translation=result[parent]@(fk[parent].inverted()@fk[name].translation)
-        result[name]=matrix
+            parent = bone.parent.name
+            matrix.translation = result[parent] @ (fk[parent].inverted() @ fk[name].translation)
+        result[name] = matrix
     return result
 
-def retarget_endpoints(fk, source_world, fit_body_spacing=False):
-    """Transfer limb reach without deforming the sculpt to fit donor bones.
+def limb_pole(limb, fk, axis, source_upper):
+    """Compute a smooth, flip-free anatomical bend pole perpendicular to axis."""
+    body_rot=fk[limb['body_parent']].to_quaternion()@rest[limb['body_parent']].to_quaternion().inverted()
+    anat_pole=body_rot@limb['rest_pole_local']
+    anat_perp=anat_pole-axis*anat_pole.dot(axis)
+    if anat_perp.length>1e-6: anat_perp.normalize()
+    src_perp=source_upper-axis*source_upper.dot(axis)
+    src_sin=src_perp.length/max(1e-9,source_upper.length)
+    if src_sin>0.12:
+        cand=src_perp.normalized()
+        # Prevent non-anatomical inversion where donor noise flips >115 deg from sagittal pole
+        if anat_perp.length>1e-6 and cand.dot(anat_perp)<-0.42:
+            cand=(cand-anat_perp*(cand.dot(anat_perp)+0.42)).normalized()
+        return cand
+    if src_sin>1e-4 and anat_perp.length>1e-6:
+        t=src_sin/0.12
+        blended=src_perp.normalized()*t+anat_perp*(1-t)
+        if blended.length>1e-6: return blended.normalized()
+    if anat_perp.length>1e-6: return anat_perp
+    if src_perp.length>1e-9: return src_perp.normalized()
+    raise RuntimeError('Undefined anatomical limb bend plane: '+limb['lower'])
 
-    The difficult reference poses also preserve the signed fore/hind spacing
-    relative to trunk length. Move the two paw pairs symmetrically, keeping
-    their stance width and the overall paw centroid.
+def retarget_endpoints(fk, source_world, lying_blend=0.0):
+    """Transfer limb reach without deforming the sculpt or stretching spine/limbs.
+
+    When lying_blend > 0 (smooth C1 function of donor chest clearance), gently slides
+    front wrists forward along the dog's heading so Ushiro's longer humerus rests its
+    elbow cleanly on the floor in the sagittal plane without lifting the rump or popping.
     """
     rotations={n:m.to_quaternion() for n,m in fk.items()}
     offsets={b.name:fk[b.parent.name].inverted()@fk[b.name].translation for b in arm.bones if b.parent}
     roots={b.name:fk[b.name].translation.copy() for b in arm.bones if not b.parent}
-    ends={}
+    body_rot=fk['Spine4'].to_quaternion()@rest['Spine4'].to_quaternion().inverted()
+    body_fwd=body_rot@Vector((0.,-1.,0.));body_fwd.z=0.
+    if body_fwd.length>1e-6: body_fwd.normalize()
+    else: body_fwd=Vector((0.,-1.,0.))
     for limb in limbs:
         un,ln,en=[limb[n] for n in ['upper','lower','end']]
+        start=fk[un].translation
         reach=source_world[en].translation-source_world[un].translation
-        a,b=limb['lengths'];distance=min(a+b,max(abs(a-b),reach.length*limb['ratio']))
-        ends[en]=fk[un].translation+reach.normalized()*distance
-    if fit_body_spacing:
-        orientation=source_world['Hips'].to_quaternion()@donor_rest['Hips'].to_quaternion().inverted()
-        forward=(orientation@Vector((1,0,0))).cross(Vector((0,0,1)))
-        if forward.length<1e-9:raise RuntimeError('Undefined horizontal stance direction')
-        forward.normalize()
-        source_front=(source_world['LeftHand'].translation+source_world['RightHand'].translation)/2
-        source_rear=(source_world['LeftFoot'].translation+source_world['RightFoot'].translation)/2
-        predicted={}
-        for limb in limbs:
-            foot=limb['side']+('Hand' if limb['chain'][0].endswith('Shoulder') else 'Foot')
-            predicted[foot]=ends[limb['end']]+fk[foot].translation-fk[limb['end']].translation
-        front=(predicted['LeftHand']+predicted['RightHand'])/2
-        rear=(predicted['LeftFoot']+predicted['RightFoot'])/2
-        correction=((source_front-source_rear).dot(forward)*torso_ratio-(front-rear).dot(forward))/2
-        for limb in limbs:ends[limb['end']]+=forward*correction*(1 if limb['chain'][0].endswith('Shoulder') else -1)
-    for limb in limbs:
-        un,ln,en=[limb[n] for n in ['upper','lower','end']]
-        start=fk[un].translation;reach=ends[en]-start;a,b=limb['lengths']
-        if fit_body_spacing:
-            horizontal2=reach.x*reach.x+reach.y*reach.y
-            if horizontal2>(a+b)**2:raise RuntimeError('Reference paw spacing exceeds physical reach: '+en)
-            low=math.sqrt(max(0.,(a-b)**2-horizontal2));high=math.sqrt(max(0.,(a+b)**2-horizontal2))
-            reach.z=math.copysign(min(high,max(low,abs(reach.z))),reach.z)
-        distance=reach.length
-        if distance==0:raise RuntimeError('Undefined limb reach: '+en)
-        axis=reach.normalized();along=(a*a-b*b+distance*distance)/(2*distance)
+        if reach.length<1e-9: raise RuntimeError('Undefined donor limb reach: '+en)
+        a,b=limb['lengths']
+        scaled_reach=reach*limb['ratio']
+        if limb['chain'][0].endswith('Shoulder') and lying_blend>0.:
+            scaled_reach+=body_fwd*(0.11*lying_blend)
+        # Keep slight margin from exact singularity so elbow/knee plane stays well-defined
+        min_d=abs(a-b)+1e-4;max_d=a+b-1e-4
+        distance=min(max_d,max(min_d,scaled_reach.length))
+        axis=scaled_reach.normalized()
+        along=(a*a-b*b+distance*distance)/(2*distance)
         source_upper=source_world[ln].translation-source_world[un].translation
-        pole=source_upper-axis*source_upper.dot(axis)
-        if pole.length<1e-9:raise RuntimeError('Undefined donor limb bend plane: '+en)
-        joint=start+axis*along+pole.normalized()*math.sqrt(max(0.,a*a-along*along))
-        end=start+reach
+        pole=limb_pole(limb,fk,axis,source_upper)
+        joint=start+axis*along+pole*math.sqrt(max(0.,a*a-along*along))
+        end=start+axis*distance
         old_upper=fk[ln].translation-start;old_lower=fk[en].translation-fk[ln].translation
         rotations[un]=old_upper.rotation_difference(joint-start)@fk[un].to_quaternion()
         rotations[ln]=old_lower.rotation_difference(end-joint)@fk[ln].to_quaternion()
@@ -640,26 +684,35 @@ def swing_clearances(rows):
     return result
 
 def ground_limbs(fk, goals, enforce_body_floor=True, allow_reversed_height=False):
-    """Fixed-length analytic IK with a shared angle-preserving pelvis height."""
+    """Fixed-length analytic IK with scapular elevation and angle-preserving pelvis height.
+
+    Never rotates an elbow or knee out of its anatomical bend plane to clear the ground.
+    When an elbow contacts the floor in lying poses, glides the scapula upward along the
+    thoracic wall first, then elevates the pelvis cleanly if needed.
+    """
     fk_skin=skin_points(target_cache,fk,rest)[body_index]
     ends={limb['end']:fk[limb['end']].translation+Vector((0,0,goals[limb['end']]-float(fk_skin[limb['target_sole'],2].min()))) for limb in limbs}
     rotations={n:m.to_quaternion() for n,m in fk.items()}
-    offsets={b.name:fk[b.parent.name].inverted()@fk[b.name].translation for b in arm.bones if b.parent}
+    base_offsets={b.name:fk[b.parent.name].inverted()@fk[b.name].translation for b in arm.bones if b.parent}
     root_positions={b.name:fk[b.name].translation.copy() for b in arm.bones if not b.parent}
     previous_error=math.inf;minimum_shift=-math.inf;floor_constraint=None
-    joint_floors={};joint_penetrations={};joint_limits={};joint_history={};best_feasible=None
-    tolerance=(max(v.co.z for v in body.data.vertices)-min(v.co.z for v in body.data.vertices))*1e-5
+    scapula_lifts={'Left':0.,'Right':0.};max_scapula_lift=0.018
+    best_feasible=None
+    body_height=max(v.co.z for v in body.data.vertices)-min(v.co.z for v in body.data.vertices)
+    tolerance=body_height*1e-5
     # Half the exported 0.01 cm contact budget, leaving room for interpolation.
-    skin_tolerance=(max(v.co.z for v in body.data.vertices)-min(v.co.z for v in body.data.vertices))*(0.01/40)/2
+    skin_tolerance=body_height*(0.01/40)/2
     while True:
         intervals=[(minimum_shift,math.inf)];terms=[];height_ranges={}
         for limb in limbs:
-            start=fk[limb['upper']].translation;end=ends[limb['end']]
+            front=limb['chain'][0].endswith('Shoulder')
+            lift=Vector((0,0,scapula_lifts[limb['side']])) if front else Vector()
+            start=fk[limb['upper']].translation+lift;end=ends[limb['end']]
             a,b=limb['lengths'];horizontal2=(end.x-start.x)**2+(end.y-start.y)**2
             dz=end.z-start.z
             bound_start=start;lengths=[a,b]
-            if limb['chain'][0].endswith('Shoulder'):
-                bound_start=fk[limb['side']+'Shoulder'].translation
+            if front:
+                bound_start=fk[limb['side']+'Shoulder'].translation+lift
                 lengths.append((start-bound_start).length)
             bound_horizontal2=(end.x-bound_start.x)**2+(end.y-bound_start.y)**2
             inner_length=max(0.,2*max(lengths)-sum(lengths));outer_length=sum(lengths)
@@ -669,8 +722,8 @@ def ground_limbs(fk, goals, enforce_body_floor=True, allow_reversed_height=False
             allowed=[(bound_dz+inner,bound_dz+outer)]
             if allow_reversed_height:allowed=[(bound_dz-outer,bound_dz-inner),(bound_dz+inner,bound_dz+outer)] if inner>0 else [(bound_dz-outer,bound_dz+outer)]
             height_ranges[limb['end']]=allowed
-            intervals=[(max(a,c),min(b,d)) for a,b in intervals for c,d in allowed if max(a,c)<=min(b,d)+tolerance]
-            distance=(fk[limb['end']].translation-start).length
+            intervals=[(max(l,c),min(u,d)) for l,u in intervals for c,d in allowed if max(l,c)<=min(u,d)+tolerance]
+            distance=(fk[limb['end']].translation-fk[limb['upper']].translation).length
             terms.append((1/(2*a*b),dz,dz*dz+horizontal2-distance*distance))
         if not intervals:raise RuntimeError('No common pelvis height: '+str(dict(clip=clip_name,frame=frame,minimumShift=minimum_shift,limbs=height_ranges,floor=floor_constraint)))
         coefficients=[sum(k*k for k,d,c in terms),-3*sum(k*k*d for k,d,c in terms),
@@ -679,47 +732,44 @@ def ground_limbs(fk, goals, enforce_body_floor=True, allow_reversed_height=False
         candidates.extend(float(r.real) for r in np.roots(coefficients) if abs(r.imag)<1e-9 and any(lower<=r.real<=upper for lower,upper in intervals))
         shift=min(candidates,key=lambda z:sum((k*(z*z-2*d*z+c))**2 for k,d,c in terms))
         roots={n:p+Vector((0,0,shift)) for n,p in root_positions.items()}
+        offsets=dict(base_offsets)
+        for side in ['Left','Right']:
+            if scapula_lifts[side]>0:
+                scapula=side+'Shoulder'
+                parent=arm.bones[scapula].parent.name
+                lifted_world=fk[scapula].translation+Vector((0,0,scapula_lifts[side]))
+                offsets[scapula]=fk[parent].inverted()@lifted_world
         for limb in limbs:
             un,ln,en=[limb[n] for n in ['upper','lower','end']]
-            start=fk[un].translation+Vector((0,0,shift));end=ends[en]
+            front=limb['chain'][0].endswith('Shoulder')
+            lift=Vector((0,0,scapula_lifts[limb['side']])) if front else Vector()
+            start=fk[un].translation+lift+Vector((0,0,shift));end=ends[en]
             a,b=limb['lengths']
-            if limb['chain'][0].endswith('Shoulder'):
+            if front:
                 scapula=limb['side']+'Shoulder'
-                shoulder=fk[scapula].translation+Vector((0,0,shift))
+                shoulder=fk[scapula].translation+lift+Vector((0,0,shift))
                 original=start-shoulder;scapula_length=original.length
                 reach=end-shoulder;distance=reach.length;axis=reach.normalized()
                 low=max(abs(a-b),abs(distance-scapula_length));high=min(a+b,distance+scapula_length)
                 if low>high+tolerance:raise RuntimeError('Paw outside scapula/arm reach')
-                preferred=(fk[en].translation-fk[un].translation).length
-                radius=min(high,max(low,preferred))
-                along=(scapula_length**2+distance**2-radius**2)/(2*distance)
-                pole=original-axis*original.dot(axis)
-                if pole.length<1e-9:raise RuntimeError('Undefined scapular bend plane')
-                start=shoulder+axis*along+pole.normalized()*math.sqrt(max(0.,scapula_length**2-along**2))
-                rotations[scapula]=original.rotation_difference(start-shoulder)@fk[scapula].to_quaternion()
-            axis=end-start;distance=axis.length;axis.normalize()
+                cur_dist=(end-start).length
+                if low<=cur_dist<=high:
+                    rotations[scapula]=fk[scapula].to_quaternion()
+                else:
+                    radius=min(high,max(low,cur_dist))
+                    along=(scapula_length**2+distance**2-radius**2)/(2*distance)
+                    pole=original-axis*original.dot(axis)
+                    if pole.length<1e-9:raise RuntimeError('Undefined scapular bend plane')
+                    start=shoulder+axis*along+pole.normalized()*math.sqrt(max(0.,scapula_length**2-along**2))
+                    rotations[scapula]=original.rotation_difference(start-shoulder)@fk[scapula].to_quaternion()
+            axis=end-start;distance=axis.length
+            if distance<1e-9:raise RuntimeError('Degenerate limb reach')
+            axis.normalize()
             along=(a*a-b*b+distance*distance)/(2*distance);bend2=a*a-along*along
             if bend2 < -tolerance:raise RuntimeError('Paw outside anatomical reach')
             old_upper=fk[ln].translation-fk[un].translation;old_lower=fk[en].translation-fk[ln].translation
-            pole=old_upper-axis*old_upper.dot(axis)
-            if pole.length<1e-9:raise RuntimeError('Undefined elbow/knee bend plane')
-            direction=pole.normalized();radius=math.sqrt(max(0.,bend2));center=start+axis*along
-            joint_limits[ln]=False
-            if ln in joint_floors:
-                vertical=Vector((0,0,1))-axis*axis.z;gain=vertical.length
-                if radius*gain>1e-9:
-                    vertical.normalize();wanted=(joint_floors[ln]-center.z)/(radius*gain)
-                    joint_limits[ln]=wanted>1
-                    required=min(1.,max(-1.,wanted))
-                    if direction.dot(vertical)<required:
-                        sideways=direction-vertical*direction.dot(vertical)
-                        if sideways.length<1e-9:
-                            body_rotation=fk['Hips'].to_quaternion()@rest['Hips'].to_quaternion().inverted()
-                            sideways=(body_rotation@Vector((1 if limb['side']=='Left' else -1,0,0)))
-                            sideways-=axis*sideways.dot(axis)+vertical*sideways.dot(vertical)
-                        if sideways.length<1e-9:raise RuntimeError('Undefined contact bend plane: '+ln)
-                        direction=vertical*required+sideways.normalized()*math.sqrt(max(0.,1-required*required))
-                else:joint_limits[ln]=True
+            direction=limb_pole(limb,fk,axis,old_upper)
+            radius=math.sqrt(max(0.,bend2));center=start+axis*along
             joint=center+direction*radius
             rotations[un]=old_upper.rotation_difference(joint-start)@fk[un].to_quaternion()
             rotations[ln]=old_lower.rotation_difference(end-joint)@fk[ln].to_quaternion()
@@ -731,25 +781,23 @@ def ground_limbs(fk, goals, enforce_body_floor=True, allow_reversed_height=False
         if enforce_body_floor and minimum < -skin_tolerance:
             index=int(np.argmin(skin[:,2]));driver=target_cache[body_index][2][index]
             floor_constraint=dict(vertex=index,driver=driver,penetration=-minimum)
-            contact_limb=next((limb for limb in limbs if driver in {limb['upper'],limb['lower']}),None)
-            adjusted_joint=False
+            contact_limb=next((limb for limb in limbs if limb['chain'][0].endswith('Shoulder') and driver in {limb['upper'],limb['lower']}),None)
+            adjusted_local=False
             if contact_limb:
-                joint_name=contact_limb['lower'];penetration=-minimum
-                if not joint_limits[joint_name] and penetration<joint_penetrations.get(joint_name,math.inf)-1e-10:
-                    height=solved[joint_name].translation.z;correction=penetration
-                    if joint_name in joint_history:
-                        old_height,old_minimum=joint_history[joint_name]
-                        if height>old_height+1e-10 and minimum>old_minimum:
-                            correction=penetration*(height-old_height)/(minimum-old_minimum)
-                    joint_history[joint_name]=(height,minimum)
-                    joint_floors[joint_name]=max(joint_floors.get(joint_name,-math.inf),height+correction)
-                    joint_penetrations[joint_name]=penetration;adjusted_joint=True
-            if not adjusted_joint:minimum_shift=max(minimum_shift,shift-minimum)
+                side=contact_limb['side']
+                a,b=contact_limb['lengths']
+                if scapula_lifts[side]<max_scapula_lift-1e-6:
+                    needed=min(max_scapula_lift,scapula_lifts[side]-minimum*1.05)
+                    test_start=fk[side+'Shoulder'].translation+Vector((0,0,shift+needed))
+                    sl=(fk[contact_limb['upper']].translation-fk[side+'Shoulder'].translation).length
+                    if (ends[contact_limb['end']]-test_start).length<a+b+sl-1e-3:
+                        scapula_lifts[side]=needed;adjusted_local=True
+            if not adjusted_local:minimum_shift=max(minimum_shift,shift-minimum)
             previous_error=math.inf
             for name,residual in errors.items():ends[name].z+=residual
             continue
         contact=dict(pelvisShift=shift,pawError=error,headLift=head_lift,headContactLimit=head_limited,
-            jointFloorConstraints=dict(joint_floors),floorConstraint=floor_constraint,
+            scapulaLifts=dict(scapula_lifts),floorConstraint=floor_constraint,
             clearanceBefore={limb['end']:float(fk_skin[limb['target_sole'],2].min()) for limb in limbs},clearanceWanted=goals,
             contactFit='converged')
         # Bone lengths, nonpenetration and minimum swing clearance are hard
@@ -775,6 +823,11 @@ idle_bases={pb.name:pb.matrix_basis.copy() for pb in donor.pose.bones}
 idle_world={pb.name:(donor.matrix_world@pb.matrix).copy() for pb in donor.pose.bones}
 idle_skin=skin_points(source_cache,idle_world,donor_rest)[0]
 for limb in limbs:limb['contact_height']=float(idle_skin[limb['source_sole'],2].min())
+donor_chest_verts=np.array([i for i,n in enumerate(source_cache[0][2]) if n in {'Spine3','Spine4'}],dtype=int)
+def chest_lying_blend(source_skin):
+    c=max(0.,float(source_skin[donor_chest_verts,2].min()))
+    t=min(1.,max(0.,(c-0.02)/0.10))
+    return 1.-t*t*(3.-2.*t)
 new_actions = []
 contact_report = {}
 for clip_name in CLIPS:
@@ -801,7 +854,7 @@ for clip_name in CLIPS:
     if clip_name in BASE:
         rows=[]
         for frame,source_bases,source_world in samples:
-            fk=retarget_endpoints(retarget_body_positions(forward(retarget_bases(source_bases)),source_world),source_world);skin=skin_points(target_cache,fk,rest)[body_index]
+            fk=retarget_endpoints(retarget_body_chain(forward(retarget_bases(source_bases,source_world)),source_world),source_world);skin=skin_points(target_cache,fk,rest)[body_index]
             source_skin=skin_points(source_cache,source_world,donor_rest)[0]
             rows.append(dict(frame=frame,fk={limb['end']:float(skin[limb['target_sole'],2].min()) for limb in limbs},
                 source={limb['end']:float(source_skin[limb['source_sole'],2].min())-limb['contact_height'] for limb in limbs}))
@@ -809,12 +862,13 @@ for clip_name in CLIPS:
     action = bpy.data.actions.new('Rebuilt|'+clip_name); rig.animation_data_create(); rig.animation_data.action = action
     previous_quaternions = {}; contacts=[]
     for sample_index,(frame, source_bases, source_world) in enumerate(samples):
-        bases=retarget_bases(source_bases)
-        world=retarget_endpoints(retarget_body_positions(forward(bases),source_world),source_world,fit_body_spacing=clip_name in REFERENCES and clip_name not in BASE)
+        bases=retarget_bases(source_bases,source_world)
+        source_skin=None if clip_name in BASE else skin_points(source_cache,source_world,donor_rest)[0]
+        lb=0. if clip_name in BASE else chest_lying_blend(source_skin)
+        world=retarget_endpoints(retarget_body_chain(forward(bases),source_world),source_world,lying_blend=lb)
         if clip_name in BASE:
             world,contact=ground_limbs(world,clearances[sample_index]); contacts.append(dict(frame=frame,**contact))
         else:
-            source_skin=skin_points(source_cache,source_world,donor_rest)[0]
             goals={limb['end']:max(0.,float(source_skin[limb['source_sole'],2].min())-limb['contact_height'])*limb['ratio'] for limb in limbs}
             world,contact=ground_limbs(world,goals,allow_reversed_height=True);contacts.append(dict(frame=frame,**contact))
         for bone in arm.bones:

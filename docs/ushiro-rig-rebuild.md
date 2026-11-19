@@ -162,15 +162,24 @@ Références : [CorrectiveSmooth](https://docs.blender.org/manual/en/4.4/modelin
 [animations glTF](https://docs.blender.org/manual/en/5.2/addons/scene_gltf2.html),
 [retargeting et contraintes, Gleicher](https://graphics.cs.wisc.edu/Papers/1998/Gle98/).
 
-## Investigation complémentaire du pli couché
+## Investigation complémentaire et correction des plis d’épaule / colonne (novembre 2026)
 
-`diagnose-ushiro-shoulder.py` mesure la plus petite valeur singulière des
-transformations de skin mélangées à mi-parcours des deux clips couchés.
-`artifacts/ushiro/shoulder-investigation/collapse.json` conserve le sommet et
-ses influences. Cette mesure localise une forte compression au mélange
-bras / bas du cou ; elle ne mesure pas le volume des tissus.
+L’inspection conjointe des poids, des rotations articulaires et des planches de rendu a isolé trois causes racines :
 
-Un brouillon rattachant `neck_fat_jnt` au thorax plutôt qu’au cou a été cuit
-et rendu sur les deux clips. Le pli restait visible : ce changement a été
-rejeté, et le modèle publié reste celui du commit `de4f590c`. La correction
-visuelle de ce pli reste ouverte.
+1. **Basculement latéral/vertical du plan de flexion du coude (`joint_floors`)** : dans les poses couchées (`interact_bed_lay_exist 270`, `interact_bed_sleep_exist 221`, `idle_lay_pose 2`), l’humérus plus long d’Ushiro (`0,196` vs `0,145` sur le Pitbull) rapprochait le coude du sol ; l’ancien solveur tournait alors le plan de flexion du coude de `100°` à `144°` vers l’extérieur/le haut (`pole.z = +0,80`), provoquant un effondrement de peau (`minimumSingularValue = 0,183` / `0,234`) et un pli en V aigu à l’épaule.
+2. **Étirement et compression de la colonne/cou (`retarget_body_positions`)** : la rotation du vecteur `bind_difference` depuis `Hips` faisait varier `Spine4 → Neck01` de `0,141×` (`run_fwd 13`) à `2,714×` (`canter_fwd 53`) et `1,929×` (`interact_bed_sleep_exist 221`).
+3. **Diffusion excessive des poids sur 20 itérations entre toutes les régions** : le lissage global sur les arêtes faisait passer les sommets partageant coude et thorax (>5 %) de `2` (archive source) à `83`, et épaule/cou de `68` à `208`.
+
+### Corrections intégrées dans `scripts/rig-ushiro.py`
+
+- **Transfert hiérarchique de courbure spline-IK (`retarget_body_chain`)** : chaque segment vertébral pivote selon la direction posée du donneur tout en bornant strictement les longueurs (`[0,92× ; 1,25×]` pour `Spine..Spine4`, `1,00×` fixe pour le cou).
+- **Lissage local par région anatomique** : 4 itérations limitées aux régions thorax/épaule (hors `Arm`/`ForeArm`) et bassin/hanche, plus mélange progressif de `neck_fat_jnt` entre `Spine4` et `Neck01`. Les poids abdominaux issus des membres tombent à `0,00 %` (`0` sommet majoritaire).
+- **Suppression du basculement de coude `joint_floors`** : plan de flexion anatomique continu (`limb_pole`), glissement scapulaire borné (`≤ 1,8 cm`) et avancée avant `C¹` continue des poignets dans les poses couchées (`chest_lying_blend`), gardant le coude dans le plan sagittal sans soulever le bassin ni créer de saut angulaire.
+- `track_bark_harvest 75` et `canter_fwd 53` rejoignent les clips haute fréquence (600 Hz) pour garantir `< 0,01 cm` entre clés.
+
+### Mesures après reconstruction complète (119 clips)
+
+- `diagnose-ushiro-shoulder.py` : `minimumSingularValue` passe de `0,183` à `0,440` sur `interact_bed_sleep_exist 221` et de `0,234` à `0,694` sur `interact_bed_lay_exist 270` (sur la pose couchée `idle_lay_pose 2`, `0,733`).
+- `validate-ushiro-anatomy.py` (240 Hz hors-grille) : PASS (`ground ≥ −0,0038 cm`, longueurs de segments fixes, 119 clips).
+- `check-dog-rigs.cjs` et `check-dog-comparison.cjs` (Chromium headless) : PASS sur les 119 clips.
+- Planches avant/après : `artifacts/dog-comparison/ushiro-before-after-profile.jpg` et `artifacts/dog-comparison/ushiro-before-after-3q.jpg`.

@@ -126,3 +126,40 @@ La comparaison réelle a été ouverte dans un navigateur headless, vérifiée s
 les trois repères Y=0 sans erreur navigateur, puis capturée dans
 `grounded-comparison.png`. Le navigateur de test et le serveur temporaire sont
 fermés après vérification.
+
+## Reconstruction anatomique complète d’Ulotte HD (46 os, 119 clips)
+
+L’analyse métrique des squelettes a révélé un **décalage d’une articulation entière** sur les quatre membres de l’ancien rig à 44 os (`rig-dogs.py` / `experiment-ulotte-rig.py`) par rapport au Pitbull donneur :
+
+| Repère anatomique | Pitbull donneur | Ancien rig Ulotte HD (44 os) | Nouveau rig Ulotte HD (46 os) |
+|---|---|---|---|
+| Haut omoplate | `Shoulder` | `Shoulder` | `Shoulder` |
+| Épaule | `Shoulder01` | `Arm` *(recevait le coude)* | `Shoulder01` |
+| Coude | `Arm` | `ForeArm` *(recevait le poignet)* | `Arm` |
+| Poignet | `ForeArm` | `Hand` *(recevait la patte)* | `ForeArm` |
+| Patte avant | `Hand` | `HandMiddle1` | `Hand` |
+| Hanche | `Pelvis` | `UpLeg` *(recevait le genou)* | `Pelvis` |
+| Genou | `UpLeg` | `Leg` *(recevait le jarret)* | `UpLeg` |
+| Jarret | `Leg` | `Foot` *(recevait la patte)* | `Leg` |
+| Patte arrière | `Foot` | `ToeBase` | `Foot` |
+
+Ce décalage faussait aussi le ratio de mise à l’échelle verticale (`~1,18` au lieu de `~0,70`), écrasant la poitrine d’Ulotte au sol pendant les shakes et le sniff, tandis que le calcul de pôle via `rotation_difference` inversait brutalement les genoux vers 2,55 s du shake et que les poids automatiques diffusaient `32,14 %` d’influence des membres dans le ventre (`1 090` sommets majoritaires).
+
+### Nouveau constructeur (`scripts/rig-ulotte.py`, relié depuis `scripts/rig-dogs.py`)
+
+- **Squelette 46 os 1-à-1 avec le Pitbull** (ajout de `LeftShoulder01`/`RightShoulder01`, articulations mesurées par coupes transversales sur `CocoSculpt.glb`, pelage noir préservé, marqueurs `Head`/`Muzzle` conservés).
+- **Isolation anatomique des poids du tronc** : suppression des fuites de membres sur l’abdomen/sternum et lissage local par région. L’influence moyenne des membres sur l’abdomen passe de **`32,14 %` (`1 090` sommets)** à **`0,07 %` (`0` sommet majoritaire)**.
+- **Adaptation morphologique au teckel long** :
+  - calcul indépendant des gardes au sol avant (poitrine profonde) et arrière (bassin), évitant le basculement sur le museau dans `interact_bed_lay_exist 270` et `interact_bed_sleep_exist 221` ;
+  - amortissement proportionnel de la courbure verticale (`pitch`) des vertèbres selon l’allongement du dos (`spine_bend_scale ≈ 0,36`) tout en conservant l’enroulement latéral (`yaw ≈ 0,65`) ;
+  - expression des atteintes et orientations de membres dans le repère réel de `Spine4` / `Hips` ;
+  - solveur IK analytique sans singularité (`limb_pole`) à longueurs fixes, dégagement cervical local prioritaire (sans jamais soulever les pattes pour le museau) et avancée avant `C¹` continue dans les poses couchées.
+
+### Validation complète (119 clips publiés)
+
+- `public/characters/dachshund-sculpt/dog.glb` et `artifacts/dachshund-sculpt/dachshund.blend` reconstruits sur les 119 clips (120 Hz sur les cycles/shakes/sniff prioritaires, 60 Hz sur les autres références).
+- `MinSV` sur `idle_shake_1. 137` : `0,032 → 0,815` (zéro retournement de genou à 2,55 s) ; `poop 75` : `0,053 → 0,554` ; `interact_bed_lay_exist 270` : `0,197 → 0,579` ; `interact_bed_sleep_exist 221` : `0,147 → 0,610` (`MinZ = 0,000 cm`, `MaxLowPaw = 0,000 cm`).
+- `walk_fwd_sniff 46` : `MinZ = −0,018 cm`, pas de flottement global (`MaxLowPaw = +0,187 cm` à 30 cm), saut maximal hors queue à 240 Hz de `4,61°`.
+- `check-dog-rigs.cjs`, `check-dog-comparison.cjs`, `test-dog-life.cjs` : PASS (0 erreur navigateur, 119 clips, durées exactes, appuis Y=0 vérifiés).
+- Planches avant/après : `artifacts/dog-comparison/ulotte-before-after-profile.jpg`, `artifacts/dog-comparison/ulotte-before-after-3q.jpg` et `artifacts/dog-comparison/ulotte-before-after-profile-skel.jpg`.
+- Limites résiduelles documentées : dans les enroulements extrêmes sur le côté (`interact_bed_sleep_exist 221`) et les sauts brusques (`track_bark_harvest 75`), les pattes très courtes du teckel sculpté debout conservent une légère compression de peau à l’attache d’épaule sans blendshape correctif glTF.
