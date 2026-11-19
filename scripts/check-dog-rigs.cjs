@@ -3,6 +3,19 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const launch = require('./browser-test-options.cjs');
 const catalog = require('../src/features/inventory/dogAnimationOptions.json');
+const donorBytes=fs.readFileSync(require('node:path').join(__dirname,'../public/characters/animated-pitbull-dog/dog.glb'));
+const donorJson=JSON.parse(donorBytes.subarray(20,20+donorBytes.readUInt32LE(12)).toString());
+const donorBinaryOffset=28+donorBytes.readUInt32LE(12);
+function timeRange(index){
+ const accessor=donorJson.accessors[index],view=donorJson.bufferViews[accessor.bufferView];
+ if(accessor.type!=='SCALAR'||accessor.componentType!==5126||accessor.sparse)throw Error('Unsupported donor time encoding');
+ const offset=donorBinaryOffset+(view.byteOffset||0)+(accessor.byteOffset||0),stride=view.byteStride||4;
+ return [donorBytes.readFloatLE(offset),donorBytes.readFloatLE(offset+(accessor.count-1)*stride)];
+}
+const donorDurations=Object.fromEntries(donorJson.animations.map(animation=>{
+ const ranges=animation.samplers.map(s=>timeRange(s.input));
+ return [animation.name,Math.max(...ranges.map(r=>r[1]))-Math.min(...ranges.map(r=>r[0]))];
+}));
 (async () => {
  const browser=await launch({args:['--no-sandbox','--enable-unsafe-swiftshader']});
  try {
@@ -16,7 +29,7 @@ const catalog = require('../src/features/inventory/dogAnimationOptions.json');
   });
   await page.setViewport({width:800,height:600});
   await page.goto((process.env.ROOM_TEST_URL||'http://127.0.0.1:5191')+'/AGENTS.md');
-  const results=await page.evaluate(async()=>{
+  const results=await page.evaluate(async(donorDurations)=>{
    const T=await import('/node_modules/.vite/deps/three.js');
    const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');
    const results=[];
@@ -35,10 +48,18 @@ const catalog = require('../src/features/inventory/dogAnimationOptions.json');
     });
     if(!gltf.scene.getObjectByName('Head')||!gltf.scene.getObjectByName('Muzzle'))throw Error('Camera markers missing: '+id);
     if(id==='ushiro'&&gltf.scene.getObjectByName('head_jnt40'))throw Error('Old rig retained');
-    const mixer=new T.AnimationMixer(gltf.scene);const box=new T.Box3();const clips=[];
+    if(id==='ushiro'){
+     const fur=skinned.filter(mesh=>mesh.userData.groundContactSurface===false);
+     if(!fur.length||fur.some(mesh=>(Array.isArray(mesh.material)?mesh.material:[mesh.material]).some(material=>material.alphaTest<=0)))throw Error('Ushiro fur contact/alpha classification missing');
+    }
+    const mixer=new T.AnimationMixer(gltf.scene);const box=new T.Box3();const meshBox=new T.Box3();const clips=[];
+    const contactMeshes=skinned.filter(mesh=>mesh.userData.groundContactSurface!==false);
     const referenceHeight=new T.Box3().setFromObject(gltf.scene,true).getSize(new T.Vector3()).y;
     const groundTolerance=referenceHeight*(.01/(id==='ushiro'?40:30));
     for(const clip of gltf.animations){
+     if(donorDurations[clip.name]===undefined)throw Error('Unknown donor clip '+clip.name);
+     const expected=donorDurations[clip.name]===0&&id==='ushiro'?1/25:donorDurations[clip.name];
+     if(Math.abs(clip.duration-expected)>1e-5)throw Error('Duration mismatch: '+id+' '+clip.name+' '+clip.duration+' / '+expected);
      let minimumGround=Infinity;
      mixer.stopAllAction();const a=mixer.clipAction(clip).reset().setLoop(T.LoopOnce,1);a.clampWhenFinished=true;a.play();
      for(let sample=0;sample<=Math.ceil(clip.duration*24);sample++){
@@ -50,13 +71,13 @@ const catalog = require('../src/features/inventory/dogAnimationOptions.json');
         // Ushiro preserves the donor's spinal translations and scapular glide.
         // Check fixed anatomical segments, rather than freezing every spine,
         // face and root control as in the former reduced rig.
-        const fixedUshiroSegment = /^(Left|Right)(Shoulder01|Arm|ForeArm|Hand.*|UpLeg|Leg|Foot.*|ToeBase)$/.test(bone.name);
+        const fixedUshiroSegment = /^(Left|Right)(Arm|ForeArm|Hand.*|UpLeg|Leg|Foot.*|ToeBase)$/.test(bone.name);
         if((id!=='ushiro'?bone.name!=='Hips':fixedUshiroSegment)&&offsets.has(bone.name)&&bone.position.distanceTo(offsets.get(bone.name))>1e-5)throw Error('Changing joint length: '+id+' '+clip.name+' '+bone.name);
         if(bone.scale.distanceTo(new T.Vector3(1,1,1))>1e-5)throw Error('Stretching: '+id+' '+clip.name);
        }
       }
-      if(['idle_sit_pose 2','idle_lay_pose 2','jump 22','idle_sit_one_off_scratch 176'].includes(clip.name)){
-       box.setFromObject(gltf.scene,true);minimumGround=Math.min(minimumGround,box.min.y);
+      if(['idle_sit_pose 2','idle_lay_pose 2','jump 22','idle_sit_one_off_scratch 176'].includes(clip.name)||id==='ushiro'){
+       box.makeEmpty();for(const mesh of contactMeshes)box.union(meshBox.setFromObject(mesh,true));minimumGround=Math.min(minimumGround,box.min.y);
        if(box.min.y < -groundTolerance)throw Error('Skin below ground: '+id+' '+clip.name+' '+box.min.y+' tolerance '+groundTolerance);
       }
       if(id==='dachshund-sculpt'&&['idle 50','walk_fwd 29','run_fwd 13'].includes(clip.name)){
@@ -78,7 +99,7 @@ const catalog = require('../src/features/inventory/dogAnimationOptions.json');
     gltf.scene.traverse(o=>{if(o.isMesh)o.geometry.dispose();});
    }
    renderer.dispose();return results;
-  });
+  },donorDurations);
   for(const result of results){
    assert.deepEqual(result.clips.map(c=>c.name).sort(),catalog['animated-pitbull-dog'].map(c=>c.value).sort());
    assert.deepEqual(result.clips.map(c=>c.name).sort(),catalog[result.id].map(c=>c.value).sort());

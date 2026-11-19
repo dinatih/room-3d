@@ -53,6 +53,8 @@ const output = 'artifacts/dog-comparison';
   await page.waitForFunction(() => document.querySelector('select[aria-label="Animation"]').value === 'run_fwd 13');
   await page.click('button[aria-label="Animation précédente"]');
   assert.equal(await page.$eval('select[aria-label="Animation"]', e => e.value), 'walk_fwd 29');
+  const promoted = await page.$$eval('select[aria-label="Animation"] option', options => options.slice(0, 11).map(option => option.value));
+  assert.deepEqual(promoted, ['idle 50', 'walk_fwd 29', 'run_fwd 13', 'idle_shake_1. 137', 'idle_shake_2. 81', 'interact_bed_lay_exist 270', 'interact_bed_sleep_exist 221', 'poop 75', 'track_bark_harvest 75', 'canter_fwd 53', 'idle_bark_04_warning 47']);
   // Paused, exact common phases; screenshots show the actual three models.
   for (const frame of [0, 8, 16, 20, 24, 32]) {
    await page.$eval('input[aria-label="Image commune"]', (input, frame) => {
@@ -64,6 +66,25 @@ const output = 'artifacts/dog-comparison';
    assert(Math.max(...models.map(m => m.phase)) - Math.min(...models.map(m => m.phase)) < 1e-5);
    await page.screenshot({ path: `${output}/walk-frame-${String(frame).padStart(2,'0')}.png`, fullPage: true });
   }
+  // Review the reported problem poses with the actual app materials and no
+  // skeleton hiding the shoulder, belly or hip surface.
+  await page.click('button[aria-label="Squelette"]');
+  for (const clip of promoted.slice(3)) {
+   await page.select('select[aria-label="Animation"]', clip);
+   await new Promise(resolve => setTimeout(resolve, 150));
+   const middle = await page.$eval('input[aria-label="Image commune"]', input => Math.floor(Number(input.max) / 2));
+   await page.$eval('input[aria-label="Image commune"]', (input, frame) => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, String(frame)); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true }));
+   }, middle);
+   await new Promise(resolve => setTimeout(resolve, 150));
+   models = await state();
+   assert(models.every(model => model.clip === clip));
+   assert(Math.max(...models.map(m => m.phase)) - Math.min(...models.map(m => m.phase)) < 1e-5);
+   await page.screenshot({ path: `${output}/priority-${clip.replace(/[^a-z0-9]+/gi, '-')}.png` });
+  }
+  await page.click('button[aria-label="Squelette"]');
+  await page.select('select[aria-label="Animation"]', 'walk_fwd 29');
+  await new Promise(resolve => setTimeout(resolve, 150));
   await page.$$eval('label', labels => labels.find(label => label.textContent.includes('Pose de référence')).querySelector('input').click());
   await page.waitForFunction(() => document.querySelector('fieldset').disabled);
   await new Promise(resolve => setTimeout(resolve, 150));

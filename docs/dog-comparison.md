@@ -24,9 +24,15 @@ la scène, l’inventaire et la comparaison. Le changement d’item ne réinitia
 plus ce choix. Le paramètre est retiré lorsque le squelette est désactivé.
 `clip`, `frame`, `layout` et `view` permettent de rouvrir une comparaison précise.
 
+Les références difficiles sont regroupées après les trois allures de base :
+les deux shakes, couché et sommeil sur le lit, position accroupie, aboiement
+avec saut, galop et aboiement d’alerte. Le compteur reste à 119 animations.
+
 ## Observations mesurées
 
-`artifacts/dog-comparison/skinning-report.json` contient les poids réels actuels.
+`artifacts/dog-comparison/skinning-report.json` contient les poids du dernier relevé.
+Les valeurs du tableau ci-dessous documentent la première reconstruction :
+elles ne constituent pas une validation du thorax ni des épaules.
 Le relevé initial est archivé dans `artifacts/ushiro/rebuild/previous-skinning.json`.
 La région échantillonnée est la moitié centrale
 de l’axe bassin-poitrine, entre 25 % et 80 % de la hauteur du dos. Il s’agit d’une
@@ -37,7 +43,7 @@ de sommets diffèrent avec la densité des maillages et ne se comparent pas seul
 |---|---:|---:|---:|---:|
 | Pitbull | 117 | 326 | 0,03 % | 0 |
 | Ushiro avant reconstruction | 44 | 162 | 71,47 % | 137 |
-| Ushiro reconstruit | 118 | 134 | 0,05 % | 0 |
+| Ushiro, première reconstruction (avant correction de surface) | 118 | 134 | 0,05 % | 0 |
 | Ulotte HD | 44 | 3 571 | 32,14 % | 1 090 |
 
 Dans le rig précédent, les principaux poids d’Ushiro allaient à `LeftArm` (29,47 %),
@@ -53,7 +59,10 @@ son coude, `ForeArm` son poignet, `Pelvis` sa hanche et `UpLeg` son genou.
 Le nombre total d’os n’est pas une mesure de qualité ; une partie des os
 supplémentaires du donneur concerne ses doigts, sa face et ses contrôles.
 Les côtes figurant sur une illustration anatomique ne sont pas les contrôles
-latéraux d’un rig d’animation. Les autres défauts restent à analyser séparément.
+latéraux d’un rig d’animation. La correction suivante conserve la sculpture du corps, répartit les poids
+du tronc, rétablit le glissement scapulaire et adapte les contacts des références
+difficiles. Les planches de `artifacts/ushiro/priority-review/` montrent les
+surfaces avant/après, sans squelette masquant les défauts.
 
 La reconstruction et les contrôles de l’attente, de la marche et de la course
 sont détaillés dans `docs/ushiro-rig-rebuild.md`. Les captures du cycle de marche

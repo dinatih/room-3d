@@ -1,157 +1,163 @@
-# Reconstruction anatomique d’Ushiro
+# Ushiro : reconstruction et contrôle de la déformation
 
-Le rig précédent associait les noms du pitbull aux mauvais pivots du shiba et
-avait recalculé des poids de peau qui entraînaient le ventre avec les membres.
-Il avait aussi figé la posture asymétrique d’une animation d’origine dans la
-géométrie de référence. Le nouveau modèle repart de la géométrie neutre et des
-poids peints de l’archive, puis construit une armature neuve compatible avec le
-donneur. L’ancienne armature et ses animations sont supprimées.
+Les captures de l’utilisateur invalidaient la première reconstruction à
+118 os : épaule anguleuse, thorax pincé, hanches trop hautes dans les poses
+couchées et queue déformée hors des trois allures. Les angles des articulations
+et le nombre d’os ne validaient pas la qualité de la surface.
 
-## Repères et proportions
+## Causes corrigées
 
-Le [standard AKC du shiba](https://images.akc.org/pdf/breeds/standards/ShibaInu.pdf)
-décrit notamment une omoplate et un humérus de longueurs voisines, des coudes
-près du corps, des antérieurs parallèles et des cuisses plus longues que les
-jambes. Le [standard FCI](https://dev.fci.be/Nomenclature/Standards/257g05-en.pdf)
-donne un rapport hauteur au garrot/longueur du corps de 10:11 et une angulation
-modérée. Ces repères servent au contrôle de cohérence ; ils ne transforment pas
-une illustration générée en relevé métrique de ce maillage.
+- Le constructeur raccourcissait le haut du bras d’environ 30 % et allongeait
+  l’avant-bras d’environ 43 %, en déformant aussi le maillage au repos. La
+  calibration des appuis déplaçait ensuite la peau aux attaches des membres.
+- Le contrôle natif `pelvis_jnt` est nettement plus antérieur aux hanches que
+  le contrôle `Hips` du donneur. Les assimiler comprimait le repère du tronc.
+  Le nouveau repère est établi depuis les deux articulations de hanche et
+  l’écart mesuré du donneur, adapté aux proportions natives.
+- La masse de `COG_jnt` allait à un seul bloc de bassin ; les stations de la
+  colonne n’avaient pas la même répartition relative que celles du donneur.
+- La translation de `Shoulder01` était supprimée, notamment pendant le shake.
+  La résolution à deux segments ignorait aussi la mobilité de l’omoplate.
+- Imposer le plan de flexion du Pitbull aux segments plus longs du Shiba
+  faisait toucher la peau du coude au sol. Remonter tout le chien pour ce
+  contact redressait les hanches dans les poses couchées.
+- Les coins transparents des cartes de moustaches participaient aux contacts.
+  L’alpha fourni n’était pas connecté au matériau exporté.
+- La courbure distale de la queue droite du donneur était copiée sur une queue
+  déjà enroulée dans 116 animations ; leurs translations suivaient aussi une
+  adaptation différente de celle des trois allures.
 
-Les points et matrices mesurés dans les fichiers sont archivés dans
-`artifacts/ushiro/rebuild/reference-audit.json`. Le nom d’un os ne suffit pas à
-identifier son articulation :
+## Liaison et poids
 
-| Articulation | Pitbull et nouveau rig | Ancien rig Ushiro |
-|---|---|---|
-| Haut de l’omoplate | `Shoulder` | `Shoulder` |
-| Épaule / départ de l’humérus | `Shoulder01` | `Arm` |
-| Coude | `Arm` | `ForeArm` |
-| Poignet / carpe | `ForeArm` | `Hand` |
-| Main / début des doigts | `Hand` | `HandMiddle1` |
-| Hanche | `Pelvis` | `UpLeg` |
-| Genou | `UpLeg` | `Leg` |
-| Jarret | `Leg` | `Foot` |
-| Pied | `Foot` | `ToeBase` |
+Le corps neutre évalué et les articulations des membres proviennent de l’archive
+native. Aucune longueur d’humérus, d’avant-bras, de cuisse ou de jambe n’est
+normalisée sur celle du Pitbull. Seule la queue est remise à sa courbure native
+debout, puis l’ensemble est placé au sol. Le constructeur vérifie que les
+sommets du corps sans influence de queue ne changent qu’à la précision numérique.
+La mesure est dans `rebuild/joint-mapping.json`.
 
-La longueur totale humérus + avant-bras et celle de la chaîne cuisse + jambe
-sont conservées. Leur répartition suit les rapports mesurés du donneur ; la peau
-est adaptée dans la pose de liaison, avant animation. Les axes de repos du
-nouveau rig sont contrôlés contre ceux du donneur. L’importeur Blender du
-pitbull a un facteur d’objet de 0,8363 environ : les translations sont converties
-en unités monde avant l’adaptation aux proportions du modèle.
+| Repère anatomique | Nom compatible avec les animations du Pitbull |
+|---|---|
+| Haut de l’omoplate | `Shoulder` |
+| Épaule | `Shoulder01` |
+| Coude | `Arm` |
+| Poignet | `ForeArm` |
+| Hanche | `Pelvis` |
+| Genou | `UpLeg` |
+| Jarret | `Leg` |
 
-Dans les trois allures de base, les déplacements sont adaptés séparément à la
-largeur du bassin, à la longueur du tronc et à la longueur des membres pour la
-verticale. Le facteur du tronc ne réduit donc plus artificiellement la montée
-et la descente du bassin. Ces déplacements sont relatifs à l’attente calibrée.
+Les axes de liaison sont compatibles avec le donneur. Les stations de la
+colonne suivent ses distances relatives sur le trajet vertébral natif. La masse
+du tronc est répartie entre les stations adjacentes selon les sommets. Les
+transitions des poids du corps sont diffusées sur les arêtes avec les paramètres
+de l’artiste : facteur 0,5, 20 itérations. Les masques de tête, queue et doigts
+sont conservés avant limitation à quatre influences et normalisation glTF.
+Cette diffusion ne reproduit pas intégralement le `CorrectiveSmooth` dynamique
+que le fichier Blender natif appliquait après son armature.
 
-| Proportion mesurée sur le côté gauche | Source shiba | Nouvelle liaison |
-|---|---:|---:|
-| Humérus / omoplate | 1,37 | 0,96 |
-| Humérus / (humérus + avant-bras) | 59,15 % | 41,70 % |
-| Cuisse / (cuisse + jambe) | 49,15 % | 58,09 % |
+Les cartes alpha sont séparées selon les îlots et les texels du matériau,
+exportées avec un masque alpha et `groundContactSurface: false`. Elles restent
+animées et visibles ; leurs coins transparents ne définissent pas l’appui du
+corps. Le matériau utilise le seuil standard glTF MASK de 0,5.
 
-Le modèle conserve le gabarit de présentation de l’application : 40 cm de
-hauteur totale dans l’attente. Cette valeur n’est pas une mesure au garrot.
-Les silhouettes de races différentes ne doivent donc pas être confondues avec
-une identité de leurs dimensions externes.
+## Transfert et contacts
 
-## Mouvement et déformation
+Les positions de la colonne et du cou sont transférées en espace monde avec
+un décalage de liaison natif tourné par chaque articulation. Cela évite
+l’accumulation de rotations locales sur des segments de directions différentes.
+Les déplacements suivent la largeur du bassin, la longueur du tronc et la portée
+des membres, avec conversion de l’échelle d’objet du donneur en unités monde.
 
-- La hiérarchie reprend les 117 os du donneur, dont `Shoulder01` et les trois
-  contrôles `breathe`, plus le repère `Muzzle` utilisé par la caméra : 118 os.
-- Les poids anatomiques de l’archive remplacent la résolution de chaleur sur
-  le corps entier. Les groupes sont remappés vers leurs véritables pivots,
-  limités à quatre influences puis normalisés pour glTF. Les petits poids de
-  respiration d’origine alimentent les contrôles latéraux et ventraux.
-- Seule la courbure de queue de l’ancienne animation debout est conservée.
-  La tête tournée et les appuis asymétriques ne sont pas incorporés au repos.
-- Dans l’attente, la marche et la course, la courbure propre de la queue et la
-  forme des oreilles dressées restent stables. La racine de queue porte le
-  mouvement de balancement ; les articulations distales ne copient pas la
-  flexion de la queue droite et des oreilles souples du pitbull.
-- Le fichier donneur utilise des interpolations `STEP` à 25 Hz. Les courbes
-  sont rendues continues avant le calcul des contacts, avec continuité des
-  signes des quaternions. La comparaison utilise des copies de clips fluides,
-  sans modifier le fichier du pitbull.
-- Une résolution analytique à deux segments utilise les vrais pivots
-  épaule–coude–poignet et hanche–genou–jarret. Le donneur fournit le plan de
-  flexion et les phases d’appui. Pendant le vol, l’arc de la patte provient de
-  la cinématique propre au shiba : une interpolation cubique monotone retire
-  la dérive de hauteur entre décollage et atterrissage. La hauteur absolue de
-  la patte du pitbull n’est pas imposée à une chaîne de proportions différentes.
-  Les os ne sont pas étirés.
-- La hauteur commune du bassin minimise l’erreur des cosinus des quatre
-  angles par rapport au donneur, dans l’intervalle physiquement atteignable.
-  Cela évite de s’arrêter sur une chaîne IK complètement verrouillée.
-- Les trois cycles sont cuits à 600 Hz, fréquence commune aux clés source à
-  25 Hz, à la timeline à 30 Hz et aux lectures à 60/120 Hz. Les 116 autres clips
-  sont transférés avec le nouveau rig et une projection du corps sur le sol.
-  Les poses source d’une seule image occupent une image native de 1/25 s.
+La chaîne avant utilise omoplate, humérus et avant-bras. La chaîne arrière
+utilise cuisse et jambe. Le glissement scapulaire fourni est conservé ; la
+résolution peut orienter l’omoplate sans étirer les segments. Les plans de
+flexion sont ajustés lorsque la peau d’un coude ou d’un genou rencontre le sol,
+au lieu de traiter systématiquement ce contact par une hausse du bassin.
+Le cou peut aussi relever la tête en conservant son orientation et ses
+segments. Ses limites cinématiques ou de déformation sont enregistrées.
 
-La [documentation Blender sur l’IK](https://docs.blender.org/manual/en/5.0/animation/armatures/posing/bone_constraints/inverse_kinematics/introduction.html)
-explicite le rôle de la pose de repos et du contrôle du plan de flexion. L’étude
-[de Souza et al., 2021](https://agriculturejournals.cz/doi/10.17221/178/2019-VETMED.pdf)
-mesure les articulations de pitbulls à la marche et au trot ; elle justifie de
-séparer les repères anatomiques et les phases du cycle. Les angles du présent
-contrôle sont des angles intérieurs 3D de segments du rig, pas une reprise des
-conventions cliniques de cette étude. La course du fichier est un galop ; elle
-n’est pas assimilée au trot mesuré dans la publication.
+Les trois allures utilisent les phases d’appui du donneur et les arcs de
+balancement natifs. Les autres clips utilisent ses hauteurs de pieds adaptées
+aux membres. Tous passent dans le même solveur des longueurs et des contacts.
+Les huit références supplémentaires conservent aussi l’écartement signé des
+deux paires de pieds, adapté à la longueur du corps, sans déplacer leur centre.
 
-## Résultats et limites vérifiées
+Longueurs, absence de pénétration et dégagement minimal des pieds sont des
+contraintes. La hauteur exacte d’un pied du donneur est un objectif d’ajustement.
+Si cet objectif ne progresse plus, une pose respectant les contraintes est
+retenue et marquée `contactFit: constrained`, avec l’erreur mesurée dans
+`contact-report.json` et un diagnostic explicite pendant la construction.
+Ces cas ne sont pas présentés comme des contacts exacts.
 
-`validation.json` mesure les modèles exportés à 120 Hz. L’écart ci-dessous est
-la moyenne des RMSE des deux coudes et des deux genoux face au donneur continu :
+La courbure intrinsèque de la queue et les oreilles dressées restent stables
+dans les 119 clips ; la racine de queue porte le mouvement du donneur.
+`dog-animation-curves.py` assure l’interpolation continue et la continuité des
+signes des quaternions dans la construction et les diagnostics. Les trois
+cycles et les deux shakes sont cuits à 600 Hz ; les six autres références à 120 Hz. Les poses
+source d’une seule image gardent une durée de 1/25 s.
 
-| Cycle | Ancien Ushiro | Nouveau Ushiro |
-|---|---:|---:|
-| Attente | 7,01° | < 0,01° |
-| Marche | 28,39° | 5,93° |
-| Course | 46,05° | 5,31° |
+## Revue et limites
 
-L’écart résiduel correspond à l’adaptation des proportions et des appuis, pas à
-une identité forcée de tous les angles. Les pieds du donneur pénètrent parfois
-le sol ; cette pénétration n’est pas recopiée. Les sommets du nouveau modèle
-respectent le sol à la tolérance de 0,01 cm de présentation pendant les trois
-cycles, y compris entre les clés. Les longueurs des segments restent fixes.
+Les onze premières entrées sont attente, marche, course, les deux shakes,
+couché sur le lit, sommeil sur le lit, position accroupie, aboiement avec saut,
+galop et aboiement d’alerte. Cet ordre est commun à l’inventaire et à la
+comparaison ; le catalogue conserve 119 entrées.
 
-L’influence moyenne des membres dans la région abdominale de diagnostic passe
-de 71,47 % à 0,05 % ; aucun sommet de cette région n’a désormais une majorité
-de poids attribuée aux membres. Les trois animations de base ont été revues de
-profil, de face, de trois quarts et avec des gros plans de la patte avant. Les
-119 clips sont chargés et contrôlés techniquement dans le navigateur ; les
-116 autres clips n’ont pas la même revue visuelle détaillée.
-Le genou arrière droit en course ne reste plus verrouillé à 180° : son maximum
-sur le relevé à 120 Hz est d’environ 158°.
+Les planches de `artifacts/ushiro/priority-review/` comparent Pitbull, Ushiro du
+commit `87a0246d` et l’export corrigé, sans squelette masquant la peau :
+16 phases par shake, 8 par marche/course et 4 pour les autres références,
+de profil et de trois quarts. Les captures navigateur complètent cette revue
+avec les matériaux réels de l’application.
 
-Les planches `*-comparison.jpg`, `*-details.jpg` et `joint-angles.png` permettent
-de vérifier ces résultats. `referencePose=1` dans la comparaison affiche les
-poses de liaison réelles. Les radios illustratives sont sous les cartes.
+Le validateur contrôle les poids, durées, longueurs et appuis sur les exports.
+Les trois cycles et les deux shakes sont aussi mesurés à 240 Hz, incluant
+des instants entre les clés de cuisson. La précision de contact du solveur représente 0,005 cm à la hauteur de
+présentation de 40 cm ; la validation du sol entre clés accepte 0,01 cm. Les
+écarts d’angles sont informatifs et ne constituent plus une preuve de qualité
+de la peau. Les statistiques d’arêtes décrivent la déformation de régions
+sélectionnées par leurs groupes dominants ; elles ne mesurent pas exactement
+la conservation du volume.
+
+La revue visuelle détaillée porte sur les onze références. Le contrôle technique
+du catalogue ne remplace pas une revue image par image des 119 animations,
+notamment des contacts entre membres et des fortes torsions. Les radios sont
+des illustrations théoriques, pas des relevés métriques du maillage.
+
+La marche et les deux shakes réduisent la déformation mesurée des régions
+épaule, hanche et tronc par rapport au commit précédent. Ce constat ne s’étend
+pas uniformément aux poses couchées : l’indicateur d’épaule augmente pour
+`interact_bed_lay_exist`, et celui du tronc reste comparable pour le sommeil.
+Ces poses gardent des plis importants à l’épaule. Le respect du sol et de
+l’écartement des pieds ne suffit donc pas à les déclarer visuellement parfaites.
+Les valeurs et leurs limites sont conservées dans `surface-summary.json`.
 
 ## Reproduction
 
 ```bash
+git show 87a0246d:public/characters/ushiro/ushiro.glb > /tmp/ushiro-before-torso-repair.glb
 git show 300b8d54:public/characters/ushiro/ushiro.glb > /tmp/ushiro-before-rebuild.glb
-blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/inspect-ushiro-reference.py
-blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/rig-ushiro.py
-blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/validate-ushiro-anatomy.py
-blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/review-ushiro-rebuild.py -- --final
-MPLCONFIGDIR=/tmp/room-3d-matplotlib python scripts/compose-ushiro-rebuild.py
-blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/preview-dogs.py -- --dog ushiro
-python scripts/compose-dog-review.py --dog ushiro
-ROOM_TEST_URL=http://127.0.0.1:5193 node scripts/check-dog-comparison.cjs --hardware-gpu
-ROOM_TEST_URL=http://127.0.0.1:5193 node scripts/check-dog-rigs.cjs --hardware-gpu
+ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/rig-ushiro.py
+ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/validate-ushiro-anatomy.py
+ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/review-ushiro-priority.py -- --model /tmp/ushiro-before-torso-repair.glb --label before
+ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/review-ushiro-priority.py -- --model public/characters/animated-pitbull-dog/dog.glb --label donor
+ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/review-ushiro-priority.py -- --model public/characters/ushiro/ushiro.glb --label final
+python scripts/compose-ushiro-priority.py
+ROOM_TEST_URL=http://127.0.0.1:5196 node scripts/check-dog-comparison.cjs --hardware-gpu
+ROOM_TEST_URL=http://127.0.0.1:5196 node scripts/check-dog-rigs.cjs --hardware-gpu
 npx tsc --noEmit
 npm run build
 ```
 
-`scripts/rig-dogs.py -- --dog ushiro` délègue au nouveau constructeur ; l’ancien
-chemin de reconstruction erroné a été supprimé. Le teckel n’est pas reconstruit
-pendant cette intervention.
+`--draft --reference-only --sample-fps 25` construit rapidement les onze
+références dans `/tmp/ushiro-candidate.glb`. Sans `--reference-only`, le brouillon
+couvre le catalogue complet. `--base-only` limite aux trois allures.
+`--clips 'idle_shake_1. 137' 'idle_shake_2. 81'` permet une cuisson partielle ;
+les rapports de brouillon vont dans `rebuild/draft/`.
+`update-ushiro-base-clips.py -- --clips …` remplace ces clips et leurs rapports
+après vérification des pivots, de la topologie, des UV, des poids et des
+surfaces de contact. Un changement
+de liaison ou de poids impose de reconstruire tous les clips.
 
-Pour itérer uniquement sur les trois cycles : construire avec `--draft
---base-only`, valider avec `validate-ushiro-anatomy.py -- --draft`, puis lancer
-`scripts/update-ushiro-base-clips.py` dans Blender. La mise à jour refuse toute
-différence de squelette de liaison, géométrie ou poids avant de conserver les
-116 autres clips. `--sample-fps` permet un brouillon rapide ; la fréquence de
-production par défaut est de 600 Hz et le contrôle du sol reste strict.
+Références : [CorrectiveSmooth](https://docs.blender.org/manual/en/4.4/modeling/modifiers/deform/corrective_smooth.html),
+[animations glTF](https://docs.blender.org/manual/en/5.2/addons/scene_gltf2.html),
+[retargeting et contraintes, Gleicher](https://graphics.cs.wisc.edu/Papers/1998/Gle98/).
