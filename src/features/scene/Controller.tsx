@@ -212,7 +212,7 @@ export function Controller({ visible = false }: { visible?: boolean }) {
           const extras = !isCamera
             ? EXTRA_CAMERA_CONTROLS.map(button => ({ ...button, label: !piloting && !animal
               ? getAnimationDef(CHARACTER_CONTROL_ANIMATIONS[button.key])!.label
-              : animal === 'shiba' || animal === 'ulotte' ? `${button.key === 'Elevate' ? 'Sauter' : 'Assis'} : ${subject.label}`
+              : animal === 'shiba' ? `${button.key === 'Elevate' ? 'Sauter' : 'Assis'} : ${subject.label}`
               : `${piloting || isFlyingSubject(animal) ? button.key === 'Elevate' ? 'Monter' : 'Descendre' : button.key === 'Elevate' ? 'Action haute' : 'Action basse'} : ${piloting ? 'Hornet' : subject.label}` }))
             : [];
           const buttons = [...DIRECTIONS, ...extras];

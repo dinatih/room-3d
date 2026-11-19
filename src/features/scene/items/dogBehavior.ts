@@ -16,11 +16,9 @@ export const DOG_ACTIVITY = {
   restWeight: 4, jumpWeight: 1,
   minMealInterval: 120, maxMealInterval: 240, mealRetrySeconds: 30, mealCycles: 3,
 } as const;
-// Ulotte: rear planted paw travels 9.25 cm backwards over frames 7–19 at 24 fps.
-export const DOG_WALK_SPEED = { shiba: 50, ulotte: 18.5 } as const;
+export const DOG_WALK_SPEED = { shiba: 50 } as const;
 export const DOG_CLIPS = {
   shiba: { idle: 'idle 50', rest: 'idle_sit_pose 2', walk: 'walk_fwd 29', run: 'run_fwd 13', jump: 'jump 22' },
-  ulotte: { idle: 'idle-1', rest: 'idle-2', walk: 'walk', run: 'run', jump: 'jump', eat: 'eating' },
 };
 export type DogAction = 'idle' | 'rest' | 'walk' | 'run' | 'jump' | 'eat';
 export const mealInterval = () => THREE.MathUtils.lerp(DOG_ACTIVITY.minMealInterval, DOG_ACTIVITY.maxMealInterval, Math.random());

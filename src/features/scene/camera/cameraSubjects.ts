@@ -11,7 +11,6 @@ export const CAMERA_SUBJECTS = [
   { id: 'drone', target: 'hornet', label: 'Hornet', icon: 'bi-airplane', category: 'Robots' },
   { id: 'ring-drone-cam', target: 'ring-drone-cam', label: 'Ring Drone', icon: 'bi-airplane', category: 'Robots' },
   { id: 'shiba', target: 'ushiro', label: 'Ushiro', icon: 'bi-heart', category: 'Animaux' },
-  { id: 'ulotte', target: 'ulotte', label: 'Ulotte', icon: 'bi-heart', category: 'Animaux' },
   { id: 'robin', target: 'bird', label: 'Oiseau', icon: 'bi-twitter', category: 'Animaux' },
   { id: 'unitree-g1', target: 'g1', label: 'G1', icon: 'bi-robot', category: 'Robots' },
   { id: 'unitree-as2w', target: 'as2', label: 'As2', icon: 'bi-robot', category: 'Robots' },

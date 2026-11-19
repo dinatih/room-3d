@@ -188,8 +188,8 @@ function drawMinimap(
   });
 
   if (showAnimals) {
-    // Ushiro et Ulotte.
-    for (const dogId of ['shiba', 'ulotte']) {
+    // Ushiro.
+    for (const dogId of ['shiba']) {
       const dogPos = cameraState.positions[dogId];
       if (!dogPos) continue;
       const rDog = Math.max(2.2 * sc, 8 * S);
@@ -202,7 +202,7 @@ function drawMinimap(
       ctx.save();
       ctx.translate(px, pz);
       ctx.rotate(-dogPos.yaw);
-      ctx.fillStyle = dogId === 'ulotte' ? 'rgba(139, 83, 44, 0.9)' : 'rgba(255, 153, 0, 0.85)';
+      ctx.fillStyle = 'rgba(255, 153, 0, 0.85)';
       ctx.strokeStyle = isOffscreen ? 'rgba(234, 88, 12, 0.9)' : 'rgba(255, 255, 255, 0.7)';
       ctx.lineWidth = Math.max(0.8, 1 * sc);
       ctx.beginPath();

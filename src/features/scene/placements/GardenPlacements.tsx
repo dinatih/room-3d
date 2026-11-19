@@ -23,7 +23,6 @@ import { RobinBird } from '../items/RobinBird';
 import { BlackHornetDrone } from '../items/BlackHornetDrone';
 import { DogBowl } from '../items/DogBowl';
 import { ULOTTE_BOWL_POSITION } from '../items/dogBowlData';
-import { Dachshund } from '../items/Dachshund';
 import { ShibaInu } from '../items/ShibaInu';
 import { FemaleAnatomyBones } from '../items/FemaleAnatomyBones';
 import { FemaleAnatomyMuscles } from '../items/FemaleAnatomyMuscles';
@@ -127,10 +126,10 @@ export function GardenAnimals() {
         <ShibaInu />
       </group>
       <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
-        <Dachshund />
+        <ImportedDog path="/characters/dachshund-sculpt/dog.glb" height={30} clip="idle 50" agentId="dachshund-sculpt" walkClip="walk_fwd 29" runClip="run_fwd 13" />
       </group>
       {extraDogs.map((dog, index) => (
-        <group key={dog.id} position={index === 0 ? [180, 0, -40] : [50 + (index % 3) * 90, 0, -50 - Math.floor(index / 3) * 90]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: dog.name }}>
+        <group key={dog.id} position={index === 0 ? [180, 0, -40] : [50 + (index % 3) * 90, 0, -200 - Math.floor(index / 3) * 90]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: dog.name }}>
           <ImportedDog path={'/' + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} heading={dog.forwardRotationY} agentId={dog.id} walkClip={dog.walkClip} runClip={dog.runClip} />
         </group>
       ))}

@@ -109,7 +109,6 @@ import { ElectricRacket }                             from '@features/scene/item
 import { CharacterGroup }                               from '@features/scene/character';
 import { CHARACTERS }                                 from '@features/scene/characterConfig';
 import { DogBowl } from '@features/scene/items/DogBowl';
-import { Dachshund } from '@features/scene/items/Dachshund';
 import { ShibaInu }                                   from '@features/scene/items/ShibaInu';
 import { resolveAnimationId } from '@features/scene/animations/animationResolver';
 import { Goldfish } from '@features/scene/items/Goldfish';
@@ -299,9 +298,6 @@ for (const [id, Model] of [
 }
 SCENE_REGISTRY['shiba-inu'] = SCENE_REGISTRY['ushiro'];
 SCENE_REGISTRY['ulotte-bowl'] = DogBowl;
-SCENE_REGISTRY['ulotte'] = function UlottePreview({ actionState, onSize }: SceneItemProps) {
-  return <Dachshund isPreview previewAnim={actionState?.['ulotte-motion'] ?? actionState?.characterAnim ?? 'idle-1'} onSize={onSize} />;
-};
 
 SCENE_REGISTRY['jikin-goldfish'] = function GoldfishPreview({ actionState, onSize }: SceneItemProps) {
   return <Goldfish isPreview previewAnim={actionState?.characterAnim || 'idle'} onSize={onSize} />;

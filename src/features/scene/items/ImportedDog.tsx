@@ -45,7 +45,8 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
     const scale = height / size.y;
     scene.scale.setScalar(scale);
     scene.position.set(-(bounds.min.x + bounds.max.x) / 2 * scale, -bounds.min.y * scale, -(bounds.min.z + bounds.max.z) / 2 * scale);
-    onSize?.(size.multiplyScalar(scale));
+    size.multiplyScalar(scale);
+    onSize?.(size);
     if (autonomous) {
       setAgentProfile(agentId!, { radius: Math.min(size.x, size.z) / 2, height });
       root.current!.updateWorldMatrix(true, false);

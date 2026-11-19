@@ -161,3 +161,16 @@ de liaison ou de poids impose de reconstruire tous les clips.
 Références : [CorrectiveSmooth](https://docs.blender.org/manual/en/4.4/modeling/modifiers/deform/corrective_smooth.html),
 [animations glTF](https://docs.blender.org/manual/en/5.2/addons/scene_gltf2.html),
 [retargeting et contraintes, Gleicher](https://graphics.cs.wisc.edu/Papers/1998/Gle98/).
+
+## Investigation complémentaire du pli couché
+
+`diagnose-ushiro-shoulder.py` mesure la plus petite valeur singulière des
+transformations de skin mélangées à mi-parcours des deux clips couchés.
+`artifacts/ushiro/shoulder-investigation/collapse.json` conserve le sommet et
+ses influences. Cette mesure localise une forte compression au mélange
+bras / bas du cou ; elle ne mesure pas le volume des tissus.
+
+Un brouillon rattachant `neck_fat_jnt` au thorax plutôt qu’au cou a été cuit
+et rendu sur les deux clips. Le pli restait visible : ce changement a été
+rejeté, et le modèle publié reste celui du commit `de4f590c`. La correction
+visuelle de ce pli reste ouverte.

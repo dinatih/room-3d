@@ -1104,7 +1104,6 @@ export function InventoryPreview({
       { value: 'Drone_Scan', label: 'Observation' },
       { value: 'Drone_Landed', label: 'Au sol' },
     ];
-    if (item.id === 'ulotte') return getActionDef('ulotte-motion')!.options;
     if (['jikin-goldfish', 'tosakin-goldfish', 'comet-goldfish'].includes(item.id)) {
       return [
         { value: 'idle', label: 'Idle' },

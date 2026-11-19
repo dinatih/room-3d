@@ -21,7 +21,7 @@ export function recordSubjectCommand(id: string, now = performance.now()): Subje
 }
 export function setSubjectInput(id: string, key: string, pressed: boolean, now = performance.now()): void {
   const input = recordSubjectCommand(id, now);
-  if (pressed && !input.keys.has(key) && (id === 'shiba' || id === 'ulotte')) {
+  if (pressed && !input.keys.has(key) && (id === 'shiba')) {
     if (key === 'character:Elevate') input.action = 'jump';
     if (key === 'character:Descend') input.action = 'rest';
   }

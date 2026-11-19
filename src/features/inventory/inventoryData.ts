@@ -160,25 +160,13 @@ export const INVENTORY: InventoryItem[] = [
   },
   {
     id: 'dachshund-sculpt',
-    name: 'Teckel noir — comparaison Pitbull',
+    name: 'Chienne Ulotte HD (Teckel noir)',
     brand: 'Animal', category: 'animals', qty: 1,
     dims: { w: 16.55, d: 67.54, h: 30 },
     glbPath: 'characters/dachshund-sculpt/dog.glb',
     referenceSheet: 'references/xray/ulotte-xray.png',
     photos: ['characters/dachshund-sculpt/three-quarter.png', 'characters/dachshund-sculpt/front.png', 'characters/dachshund-sculpt/back.png'],
-    notes: 'Variante de comparaison indépendante d’Ulotte. Nouveau squelette anatomique, queue continue et pattes en IK. Pelage noir et catalogue complet des animations du Pitbull. Sculpt original conservé.',
-  },
-  {
-    id: 'ulotte',
-    referenceSheet: 'references/xray/ulotte-xray.png',
-    name: 'Chienne Ulotte (Teckel)',
-    brand: 'Animal',
-    category: 'animals',
-    qty: 1,
-    dims: { w: 19.2, d: 50.2, h: 30 },
-    glbPath: 'characters/ulotte/ulotte.glb',
-    photos: ['characters/ulotte/ulotte_3d_preview.png'],
-    notes: `Chienne teckel Ulotte. Animations : repos debout, repos assis, s'assoir, se coucher, frétiller, aboyer, se gratter, creuser, marche, course, saut et repas.`
+    notes: 'Ulotte haute définition. Nouveau squelette anatomique, queue continue et pattes en IK. Pelage noir et catalogue complet des animations du Pitbull. Sculpt original conservé.',
   },
   {
     id: 'robin-bird',
