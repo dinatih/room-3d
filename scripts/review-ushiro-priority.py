@@ -10,6 +10,7 @@ parser.add_argument('--label',required=True)
 parser.add_argument('--output',type=Path)
 parser.add_argument('--rest-only',action='store_true')
 parser.add_argument('--clip',action='append')
+parser.add_argument('--phase',type=float,action='append')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
 out=args.output if args.output else ROOT/'artifacts/ushiro/priority-review'/args.label;out.mkdir(parents=True,exist_ok=True)
 path=Path(args.model)
@@ -41,7 +42,8 @@ for index,name in enumerate(clips):
  else:
   a=bpy.data.actions[name];rig.animation_data.action=a;rig.animation_data.action_slot=a.slots[0]
   count=16 if 'shake' in name else (8 if name in ['walk_fwd 29','run_fwd 13'] else 4)
-  phases=[i/count for i in range(count)]
+  phases=args.phase if args.phase else [i/count for i in range(count)]
+  if any(not 0<=phase<=1 for phase in phases):raise ValueError('Phase outside animation')
  points=[]
  for phase in phases:
   if name!='rest':
