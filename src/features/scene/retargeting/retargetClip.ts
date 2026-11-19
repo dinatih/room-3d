@@ -6,7 +6,7 @@ import { retargetH2Clip } from './unitreeH2Retarget';
 import { bakeFootContacts } from './footContacts';
 import { groundWalkClip } from './walkGrounding';
 import { ANIMATION_WALK_SPEEDS } from '../ai/agent/agentWalkAnimations';
-import { INTERX_MANIFEST } from '../animations/interxManifest';
+import { isSeatedInterXClip } from '../animations/interxSeatedDuos';
 
 function subsampleTrackTo30Fps(track: THREE.KeyframeTrack): THREE.KeyframeTrack {
   const times = track.times;
@@ -723,7 +723,7 @@ export function retargetClip(rawClip: THREE.AnimationClip, targetInstance: THREE
   }
 
   const result = new THREE.AnimationClip(`${workingClip.name}_retargeted`, workingClip.duration, tracks);
-  if (INTERX_MANIFEST.duos.some(duo => duo.tags.some(tag => ['seated-front', 'with-seated-action'].includes(tag)) && ['p1', 'p2'].some(person => rawClip.name === `${duo.id}-${person}`))) {
+  if (isSeatedInterXClip(rawClip.name)) {
     const hips = targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, 'Hips')!)!;
     const feet = ['Left', 'Right'].map(side => targetInstance.getObjectByName(resolveTargetBoneName(targetInstance, `${side}${supportBone}`)!)!);
     const saved: Array<{ node: THREE.Object3D; position: THREE.Vector3; quaternion: THREE.Quaternion }> = [];

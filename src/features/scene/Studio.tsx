@@ -8,7 +8,7 @@ import { WeatherSystem } from './WeatherSystem';
 import { useState, useCallback, useEffect, useLayoutEffect, useRef, Suspense, lazy } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 
-import { useProgress, AdaptiveDpr } from '@react-three/drei';
+import { useProgress } from '@react-three/drei';
 import {
   AgXToneMapping, PCFShadowMap, Color,
   PMREMGenerator, Scene, AmbientLight, DirectionalLight,
@@ -118,22 +118,26 @@ function setupEnvironment(scene: Scene, gl: WebGLRenderer) {
   dir.position.set(10, 10, 5);
   envScene.add(dir);
 
-  const floor = new Mesh(
-    new PlaneGeometry(1000, 1000),
-    new MeshStandardMaterial({ color: 0xc4a060 }),
-  );
+  const floorGeo = new PlaneGeometry(1000, 1000);
+  const floorMat = new MeshStandardMaterial({ color: 0xc4a060 });
+  const floor = new Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = -10;
   envScene.add(floor);
 
-  const wall = new Mesh(
-    new PlaneGeometry(1000, 300),
-    new MeshStandardMaterial({ color: 0xccccbb }),
-  );
+  const wallGeo = new PlaneGeometry(1000, 300);
+  const wallMat = new MeshStandardMaterial({ color: 0xccccbb });
+  const wall = new Mesh(wallGeo, wallMat);
   wall.position.set(0, 100, -100);
   envScene.add(wall);
 
-  scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+  const envRT = pmrem.fromScene(envScene, 0.04);
+  scene.environment = envRT.texture;
+  scene.userData._initialEnvRT = envRT;
+  floorGeo.dispose();
+  floorMat.dispose();
+  wallGeo.dispose();
+  wallMat.dispose();
   pmrem.dispose();
 }
 
@@ -345,6 +349,7 @@ function ShadowController({ enabled }: { enabled: boolean }) {
   }, [scene]);
 
   useEffect(() => {
+    if (gl.shadowMap.enabled === enabled) return;
     gl.shadowMap.enabled = enabled;
     scene.traverse(object => {
       const mesh = object as Mesh;
@@ -819,6 +824,9 @@ export function Studio() {
   const activeSceneRef = useRef<Scene | null>(null);
   const activeCameraRef = useRef<PerspectiveCamera | OrthographicCamera | null>(null);
   const activeGlRef = useRef<WebGLRenderer | null>(null);
+  const handleCaptureCamera = useCallback((cam: PerspectiveCamera | OrthographicCamera) => {
+    activeCameraRef.current = cam;
+  }, []);
 
   const revealScene = useCallback(() => {
     const cover = document.getElementById('loading');
@@ -952,7 +960,7 @@ export function Studio() {
           setupEnvironment(scene, gl);
         }}
       >
-        <ActiveCameraCapture onCapture={(cam) => { activeCameraRef.current = cam; }} />
+        <ActiveCameraCapture onCapture={handleCaptureCamera} />
         <SimulationClock />
         <SkySphere />
         <WeatherSystem />
@@ -969,7 +977,6 @@ export function Studio() {
         {/* Contrôleur unifié : synchronise camera.layers avec les toggles UI */}
         <SceneLayerController layers={layers} />
 
-        <AdaptiveDpr pixelated />
         <ShadowWarmup />
         <ShadowController enabled={layers.shadows} />
         <FrameloopController isIdle={isIdle} showInventory={showInventory} isCvModalOpen={isCvModalOpen} isPhotoModeOpen={isPhotoModeOpen} isFisheyeModalOpen={isFisheyeModalOpen} isOrbiting={cameraMovement === 'orbit'} />

@@ -30,6 +30,7 @@ for (const [name, key, clipName, scale] of [
     '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate: () => invalidations++ }) },
     three: THREE,
     '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene, animations }) },
+    '../utils/useSceneGlass': { useSceneGlass() {} },
     '../glbUtils': { glbLocalBBox: () => new THREE.Box3(new THREE.Vector3(), new THREE.Vector3(1, 1, 1)) },
     '../objectActions': { getObjectActionIds: () => [key] },
     './useDoorOpen': { useDoorOpen: (id, preview, state) => !!state[id] },

@@ -2,8 +2,23 @@ const { it } = require('node:test');
 const assert = require('node:assert/strict');
 require('../support/load-ts.cjs');
 const interx = require('../../src/features/scene/animations/interxManifest.ts');
+const { INTERX_SEATED_DUO_IDS, isSeatedInterXClip } = require('../../src/features/scene/animations/interxSeatedDuos.ts');
 const { getAnimationsByTags, resolveSlotAnimation } = require('../../src/features/scene/animations/animationResolver.ts');
 const { getDuoAnimationForClip } = require('../../src/features/scene/animations/duoAnimations.ts');
+
+it('synchronise INTERX_SEATED_DUO_IDS avec les tags seated-front et with-seated-action du manifeste', () => {
+  const expected = new Set(
+    interx.INTERX_MANIFEST.duos
+      .filter(duo => duo.tags.some(tag => ['seated-front', 'with-seated-action'].includes(tag)))
+      .map(duo => duo.id),
+  );
+  assert.deepEqual([...INTERX_SEATED_DUO_IDS].sort(), [...expected].sort());
+  for (const id of expected) {
+    assert.equal(isSeatedInterXClip(`${id}-p1`), true);
+    assert.equal(isSeatedInterXClip(`${id}-p2`), true);
+    assert.equal(isSeatedInterXClip(id), false);
+  }
+});
 
 it('le tirage seated-front sélectionne le participant assis vérifié et lance son duo en rôle A', () => {
   const pool = getAnimationsByTags('seated-front');

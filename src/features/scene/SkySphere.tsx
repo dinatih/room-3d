@@ -66,6 +66,10 @@ export function preloadCurrentSkyTexture(scene?: THREE.Scene): Promise<THREE.Tex
   const envIntensity = hdri.environmentIntensity ?? (hdri.type === 'jpg' ? 3.2 : 1.0);
   return loadSkyTextureByUrl(url, hdri.type).then((tex) => {
     if (scene) {
+      if (scene.userData._initialEnvRT) {
+        scene.userData._initialEnvRT.dispose();
+        delete scene.userData._initialEnvRT;
+      }
       scene.environment = tex;
       scene.environmentIntensity = envIntensity;
     }

@@ -7,6 +7,7 @@ import { isHomeAssistantLinked, isHomeAssistantLight, useHomeAssistant } from '.
 import { isAgentInBathroom, isAgentInCorridor, isAgentInKitchen, SpatialZoneManager } from './ai/SpatialZone';
 
 const SHUTOFF_DELAY_MS = 4000;
+const PRESENCE_CHECK_INTERVAL_MS = 250;
 
 const isAgentInGarden = (pos: { x: number; y?: number; z: number }) => pos.z < 0 && SpatialZoneManager.getZone('garden')!.contains(pos);
 
@@ -37,6 +38,8 @@ function getActivePositions() {
  */
 export function PresenceLightController() {
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const raytracingPresetRef = useRef(getRaytracingPreset());
+  const lastCheckMsRef = useRef(-Infinity);
 
   useEffect(() => {
     const timers = timersRef.current;
@@ -46,7 +49,10 @@ export function PresenceLightController() {
   }, []);
 
   useFrame(() => {
-    const preset = getRaytracingPreset();
+    const now = performance.now();
+    if (now - lastCheckMsRef.current < PRESENCE_CHECK_INTERVAL_MS) return;
+    lastCheckMsRef.current = now;
+    const preset = raytracingPresetRef.current;
     if (preset === 'iso' || preset === 'magazine' || useSceneStore.getState().isPhotoModeOpen) {
       for (const { key } of LIGHT_ZONES) {
         if (timersRef.current[key]) {

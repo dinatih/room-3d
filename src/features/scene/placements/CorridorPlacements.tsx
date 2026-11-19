@@ -138,7 +138,7 @@ function CorridorLamp({ isOn, lightsHD }: { isOn: boolean; lightsHD: boolean }) 
         ref={lightRef}
         position={[0, 20, 0]}
         intensity={isOn ? 20 * 100 ** 2 * brightness : 0}
-        distance={0}
+        distance={450}
         decay={2}
         color={0xff2222}
         castShadow={lightsHD}

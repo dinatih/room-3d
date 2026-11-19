@@ -31,23 +31,31 @@ function LightStrip({ name, segments, storeKey, rainbow = false }: { name: strin
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
   const material = useMemo(() => new MeshBasicMaterial({ toneMapped: false }), []);
   const lights = useRef<(PointLight | null)[]>([]);
+  const lastRainbowStep = useRef(-1);
   const { remote, color, brightness } = useLightAppearance(storeKey, storeKey === 'lampGardenStrip' ? 0xff0000 : 0xffffff);
   useEffect(() => () => material.dispose(), [material]);
   useFrame(({ clock, invalidate }) => {
     if (on) {
       if (remote && color) material.color.copy(color);
-      else if (rainbow) material.color.setHSL((clock.elapsedTime / RAINBOW_PERIOD_SECONDS) % 1, 1, 0.5);
-      else material.color.set('#ff0000');
+      else if (rainbow) {
+        const step = Math.floor(clock.elapsedTime * 15);
+        if (step !== lastRainbowStep.current) {
+          lastRainbowStep.current = step;
+          material.color.setHSL((clock.elapsedTime / RAINBOW_PERIOD_SECONDS) % 1, 1, 0.5);
+          for (const light of lights.current) light?.color.copy(material.color);
+          invalidate();
+        }
+        return;
+      } else material.color.set('#ff0000');
     } else material.color.set('#d0d0d0');
     for (const light of lights.current) light?.color.copy(material.color);
-    if (on && rainbow && !remote) invalidate();
   });
   return <group name={name} userData={{ sceneItemRoot: true, itemName: `Bande lumineuse ${name}`, hoverAction: { label: name === 'Fenêtre' ? 'Lumière Fenêtre' : 'Strip Blanc Jardin', actions: [name === 'Fenêtre' ? 'lamp-window-toggle' : 'lamp-garden-toggle'] } }}>
     {segments.map(({ position, size }, index) => <group key={index} position={position}>
       <mesh material={material}><boxGeometry args={size} /></mesh>
       <pointLight ref={light => { lights.current[index] = light; }} position={[0, 0, rainbow ? 2 : -2]} color={material.color}
         intensity={on ? 120 * brightness : 0}
-        distance={0} decay={1}
+        distance={500} decay={1}
         castShadow={lightsHD} shadow-mapSize={[512, 512]} shadow-camera-near={1} />
     </group>)}
   </group>;

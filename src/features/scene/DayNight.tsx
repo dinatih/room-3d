@@ -97,9 +97,9 @@ export function DayNight() {
         }
       }}
       color="#b9ceff" intensity={0} castShadow
-      shadow-mapSize={[2048, 2048]} shadow-camera-near={1} shadow-camera-far={3 * SKY_RADIUS}
-      shadow-camera-left={-SKY_RADIUS} shadow-camera-right={SKY_RADIUS}
-      shadow-camera-top={SKY_RADIUS} shadow-camera-bottom={-SKY_RADIUS}
+      shadow-mapSize={[2048, 2048]} shadow-camera-near={Math.max(1, 2 * SKY_RADIUS - 1400)} shadow-camera-far={2 * SKY_RADIUS + 1400}
+      shadow-camera-left={-1100} shadow-camera-right={1100}
+      shadow-camera-top={1100} shadow-camera-bottom={-1100}
       shadow-bias={-0.0002} shadow-normalBias={0.04} />
     <mesh ref={moon}>
       <sphereGeometry args={[65, 24, 16]} />

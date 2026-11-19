@@ -309,3 +309,43 @@ node scripts/profile-studio-startup.cjs --hardware-gpu
 # 4. Vérification build production & poids des chunks
 npm run build
 ```
+
+---
+
+## 7. Résultats mesurés avant / après (Lot 1 — 19 novembre 2026)
+
+Campagne identique `npm run test:perf -- --case=studio-9-high-day --hardware-gpu` (3 passages isolés, Radeon 840M / Vulkan headless, 1362 × 810, 9 Laras, alimentation secteur) :
+
+- **Avant** : `test-results/2026-11-19T22-28-16.257Z-perf/report.md` (commit `f69caef6`)
+- **Après** : `test-results/2026-11-19T22-44-57.487Z-perf/report.md`
+
+| Métrique (médiane sur 3 passages) | Avant | Après | Écart |
+| --- | ---: | ---: | ---: |
+| **FPS session** | **7,61 FPS** (7,48–10,59) | **17,06 FPS** (15,68–17,86) | **+124 % (×2,24)** |
+| **Temps GPU médian** | **31,76 ms** (31,35–35,76) | **15,16 ms** (14,93–15,80) | **-52,3 % (-16,6 ms)** |
+| **CPU rendu médian** | **59,10 ms** (36,40–66,10) | **25,10 ms** (23,70–27,60) | **-57,5 % (-34,0 ms)** |
+| **Draw calls / image** | **2 635** (2 602–2 692) | **1 742** (1 698–1 753) | **-893 DC (-33,9 %)** |
+| **Triangles / image** | **11,93 M** (11,24–12,39 M) | **7,74 M** (7,48–8,00 M) | **-4,19 M (-35,1 %)** |
+| **Image p50 / p95** | **118,5 / 187,8 ms** | **54,4 / 88,9 ms** | **-54 % / -53 %** |
+| **Programmes GPU** | **251–253** | **235–240** | **-15 shaders** |
+| **Démarrage médian** | **50,2 s** (43,3–95,3 s) | **45,6 s** (41,6–51,4 s) | **-4,6 s (-9 %)** |
+| **RSS Chrome médian (session)** | **4,30 Go** (0,97–4,95 Go) | **1,97 Go** (1,61–2,08 Go) | **-54 %** |
+| **Bundle `animation.worker`** | **1,1 Mo** | **220 Ko** | **-80 % (-880 Ko)** |
+
+### Changements appliqués dans ce lot
+
+1. **Suppression de la double passe transmission plein écran** : branchement systématique de `useSceneGlass(scene)` dans [createStaticGlbItem.tsx:27](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/createStaticGlbItem.tsx:27), [createAnimatedGlbItem.tsx:22](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/createAnimatedGlbItem.tsx:22) et [VacuumCleanerPart.tsx:14](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/VacuumCleanerPart.tsx:14) (corrige la régression introduite par `rowenta-rh2079wo.glb` et les nouveaux flacons/objets à `KHR_materials_transmission`).
+2. **Resserrage du frustum d’ombres directionnelles** (`±3 600 cm` → `±1 100 cm`, `near/far` serrés) sur [SunLight.tsx:52](zed://file/home/dinatih/Projects/room-3d/src/features/scene/SunLight.tsx:52) et [DayNight.tsx:99](zed://file/home/dinatih/Projects/room-3d/src/features/scene/DayNight.tsx:99) (ombres 3,3× plus fines + culling hors emprise).
+3. **Bornage des 6 `pointLight` à portée infinie** (`distance={0}` → `450–800 cm`) dans `BathroomPlacements`, `CorridorPlacements`, `LivingRoomPlacements` et `GardenLightStrips` (+ cadence arc-en-ciel 15 Hz au lieu de 60 Hz).
+4. **Fusion statique indexée** dans [MergedStaticGroup.tsx:60](zed://file/home/dinatih/Projects/room-3d/src/features/scene/building/MergedStaticGroup.tsx:60) (conserve l’indexation hors sous-groupes multi-matériaux).
+5. **Clonage rapide des GLB rigides** dans [useGLTFClone.ts:74](zed://file/home/dinatih/Projects/room-3d/src/features/scene/useGLTFClone.ts:74) (`source.clone(true)` si aucun `SkinnedMesh`) et **regroupement des 9 000 brins d’herbe** en 16 `Path2D` dans [Floor.tsx:154](zed://file/home/dinatih/Projects/room-3d/src/features/scene/building/Floor.tsx:154).
+6. **Nettoyage CPU par frame & cycles de vie** : cache URL + throttle 4 Hz dans [PresenceLightController.tsx:40](zed://file/home/dinatih/Projects/room-3d/src/features/scene/PresenceLightController.tsx:40), cache `ResizeObserver` + throttle caméra dans [HoverMenu.tsx:56](zed://file/home/dinatih/Projects/room-3d/src/features/scene/HoverMenu.tsx:56), garde de montage `ShadowController` + libération `setupEnvironment` + retrait `<AdaptiveDpr />` inactif dans [Studio.tsx:121](zed://file/home/dinatih/Projects/room-3d/src/features/scene/Studio.tsx:121), proxies hover PNJ `material.visible = false` (-8 DC transparents) et mémoïsation `pendantTorso` dans [Character.tsx:1359](zed://file/home/dinatih/Projects/room-3d/src/features/scene/character/Character.tsx:1359).
+7. **Allègement du worker d’animation** : extraction des 36 IDs assis dans [interxSeatedDuos.ts:1](zed://file/home/dinatih/Projects/room-3d/src/features/scene/animations/interxSeatedDuos.ts:1) (vérifié contre `INTERX_MANIFEST` par `tests/unit/interx-seated-duo.test.cjs`), réduisant `animation.worker` de **1,1 Mo à 220 Ko**.
+
+### Validation
+
+- `npx tsc --noEmit` : **0 erreur**
+- `npm test` : **612/612 tests réussis** (0 échec)
+- `npm run build` : **succès**
+- Inspection visuelle `scene.png` avant/après : rendu fidèle, ombres plus nettes, aucune régression.
+

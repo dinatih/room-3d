@@ -43,6 +43,7 @@ it('les clips d’objets lisent la scène et gardent la preview indépendante', 
       react: { useLayoutEffect: fn => fn(), useRef: current => ({ current }) },
       '@react-three/fiber': { useFrame: fn => { frame = fn; }, useThree: () => ({ invalidate() {} }) },
       '../useGLTFClone': { useGLTFClone: () => ({ scene, animations: [animation] }), preloadSceneGLTF() {} },
+      '../utils/useSceneGlass': { useSceneGlass() {} },
       '../glbUtils': { glbLocalBBox }, '../objectActions': { getObjectActionIds: () => ['brush-lift'] },
       './useDoorOpen': { useDoorOpen: (key, isPreview, state) => isPreview ? !!state[key] : true },
     });

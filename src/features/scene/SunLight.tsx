@@ -5,6 +5,9 @@ import { useFrame } from '@react-three/fiber';
 import { DirectionalLight, Mesh, MeshBasicMaterial, Color, MathUtils, Vector3 } from 'three';
 
 const center = new Vector3(...SKY_CENTER);
+// Emprise réelle de l'appartement, du jardin et des statues voisines autour de SKY_CENTER.
+const SHADOW_EXTENT = 1100;
+const SHADOW_DEPTH_MARGIN = 1400;
 
 // ── Couleur et intensité selon l'élévation ────────────────────────────────────
 
@@ -47,12 +50,12 @@ export function SunLight() {
       intensity={0}
       castShadow
       shadow-mapSize={[2048, 2048]}
-      shadow-camera-near={1}
-      shadow-camera-far={3 * SKY_RADIUS}
-      shadow-camera-left={-SKY_RADIUS}
-      shadow-camera-right={SKY_RADIUS}
-      shadow-camera-top={SKY_RADIUS}
-      shadow-camera-bottom={-SKY_RADIUS}
+      shadow-camera-near={Math.max(1, 2 * SKY_RADIUS - SHADOW_DEPTH_MARGIN)}
+      shadow-camera-far={2 * SKY_RADIUS + SHADOW_DEPTH_MARGIN}
+      shadow-camera-left={-SHADOW_EXTENT}
+      shadow-camera-right={SHADOW_EXTENT}
+      shadow-camera-top={SHADOW_EXTENT}
+      shadow-camera-bottom={-SHADOW_EXTENT}
       shadow-bias={-0.0002}
       shadow-normalBias={0.04}
     />

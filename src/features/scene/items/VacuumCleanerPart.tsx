@@ -2,6 +2,7 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
 import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
+import { useSceneGlass } from '../utils/useSceneGlass';
 import { glbLocalBBox } from '../glbUtils';
 
 const GLB = '/items/rowenta-rh2079wo/rowenta-rh2079wo.glb';
@@ -10,6 +11,7 @@ type VacuumPart = 'VacuumTube' | 'VacuumHandheld';
 /** Detached accessories, centred and grounded in their stored orientation. */
 export function VacuumCleanerPart({ part, onSize }: SceneModelProps & { part: VacuumPart }) {
   const { scene } = useGLTFClone(GLB);
+  useSceneGlass(scene);
 
   useLayoutEffect(() => {
     scene.scale.set(1, 1, 1);

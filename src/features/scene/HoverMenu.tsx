@@ -55,6 +55,12 @@ export function HoverRaycaster() {
     let pointerButtons = 0;
     const lastCameraMatrix = camera.matrixWorld.clone();
     const lastProjectionMatrix = camera.projectionMatrix.clone();
+    let cachedRect = canvas.getBoundingClientRect();
+    let lastCameraHoverMs = 0;
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => { cachedRect = canvas.getBoundingClientRect(); })
+      : null;
+    resizeObserver?.observe(canvas);
 
     function refreshCaches() {
       const now = performance.now();
@@ -167,7 +173,7 @@ export function HoverRaycaster() {
 
       refreshCaches();
 
-      const rect = canvas.getBoundingClientRect();
+      const rect = cachedRect.width > 0 && cachedRect.height > 0 ? cachedRect : (cachedRect = canvas.getBoundingClientRect());
       pointer.x =  ((clientX - rect.left) / rect.width)  * 2 - 1;
       pointer.y = -((clientY - rect.top)  / rect.height) * 2 + 1;
 
@@ -288,9 +294,13 @@ export function HoverRaycaster() {
         hideDot();
         return;
       }
-      if (pointerDirty || !camera.matrixWorld.equals(lastCameraMatrix) ||
-          !camera.projectionMatrix.equals(lastProjectionMatrix)) {
+      const cameraMoved = !camera.matrixWorld.equals(lastCameraMatrix) ||
+          !camera.projectionMatrix.equals(lastProjectionMatrix);
+      if (pointerDirty || cameraMoved) {
+        const now = performance.now();
+        if (!pointerDirty && now - lastCameraHoverMs < 100) return;
         pointerDirty = false;
+        lastCameraHoverMs = now;
         lastCameraMatrix.copy(camera.matrixWorld);
         lastProjectionMatrix.copy(camera.projectionMatrix);
         checkHover();
@@ -429,6 +439,7 @@ export function HoverRaycaster() {
     canvas.addEventListener('touchmove',    onTouchMove,  { passive: true });
     canvas.addEventListener('touchend',     onTouchEnd);
     return () => {
+      resizeObserver?.disconnect();
       canvas.removeEventListener('pointerdown',  onPointerDown);
       canvas.removeEventListener('pointerup',    onPointerUp);
       canvas.removeEventListener('pointermove',  onMove);

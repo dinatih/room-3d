@@ -26,6 +26,19 @@ export function preloadSceneGLTF(path: string): void {
 
 const mountedClones = new Map<string, number>();
 const fullPreviewSources = new Map<THREE.Object3D, number>();
+const skinnedSceneCache = new WeakMap<THREE.Object3D, boolean>();
+
+function isSkinnedScene(root: THREE.Object3D): boolean {
+  const cached = skinnedSceneCache.get(root);
+  if (cached !== undefined) return cached;
+  let hasSkinned = false;
+  root.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh) hasSkinned = true;
+  });
+  skinnedSceneCache.set(root, hasSkinned);
+  return hasSkinned;
+}
+
 export function hasMountedGLTFClones(path: string): boolean {
   return (mountedClones.get(path) ?? 0) > 0;
 }
@@ -61,8 +74,10 @@ export function useGLTFClone(path: string, ownMaterials = false, prepareSource?:
   const scene = useMemo(() => {
     // Optional static preparation returns an immutable template, never an
     // instance mounted in React. Its cache must survive Suspense retries.
-    const cloned = SkeletonUtils.clone(prepareSource ? prepareSource(gltf.scene) : gltf.scene) as THREE.Group;
-    shareSkeletons(cloned);
+    const source = prepareSource ? prepareSource(gltf.scene) : gltf.scene;
+    const skinned = isSkinnedScene(source);
+    const cloned = (skinned ? SkeletonUtils.clone(source) : source.clone(true)) as THREE.Group;
+    if (skinned) shareSkeletons(cloned);
     const baseName = path.split('/').pop()?.replace(/\.glb$/i, '') || 'Model3D';
     if (!cloned.name || cloned.name === 'Scene' || cloned.name === 'Group') {
       cloned.name = baseName;

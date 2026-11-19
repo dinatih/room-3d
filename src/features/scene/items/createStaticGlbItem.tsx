@@ -2,6 +2,7 @@ import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { glbLocalBBox, mergeGlbByMaterial, removeGlbLines } from '../glbUtils';
 import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
+import { useSceneGlass } from '../utils/useSceneGlass';
 import type { SceneModelProps } from '@shared/types';
 
 /** Static GLB items, converted to scene centimetres (source metres by default). */
@@ -24,6 +25,7 @@ export function createStaticGlbItem(path: string, { origin = 'bottom', rotationY
       scene.position.set(-(box.min.x + box.max.x) / 2, origin === 'top' ? -box.max.y : -box.min.y, -(box.min.z + box.max.z) / 2);
       onSize?.(box.getSize(new THREE.Vector3()));
     }, [scene, onSize]);
+    useSceneGlass(scene);
     return <group><primitive object={scene} /></group>;
   };
 }

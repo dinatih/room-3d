@@ -112,7 +112,8 @@ it('mesure et recentre un GLB de façon stable après remontage sous un parent t
   const { createStaticGlbItem } = load('src/features/scene/items/createStaticGlbItem.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: callback => effects.push(callback) },
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },
-    '../useGLTFClone': { preloadSceneGLTF: path => preloads.push(path), useGLTFClone: () => ({ scene }) }, '../glbUtils': utils,
+    '../useGLTFClone': { preloadSceneGLTF: path => preloads.push(path), useGLTFClone: () => ({ scene }) },
+    '../utils/useSceneGlass': { useSceneGlass() {} }, '../glbUtils': utils,
   });
   const Item = createStaticGlbItem('/example.glb');
   for (let i = 0; i < 2; i++) {
@@ -131,7 +132,8 @@ it('conserve le sommet et les accrochages Kallax après plusieurs mesures', asyn
   const { createStaticGlbItem } = load('src/features/scene/items/createStaticGlbItem.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useLayoutEffect: callback => effects.push(callback) },
     '@react-three/drei': { useGLTF: { preload() {} } },
-    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) }, '../glbUtils': await glbUtils(),
+    '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
+    '../utils/useSceneGlass': { useSceneGlass() {} }, '../glbUtils': await glbUtils(),
   });
   const Item = createStaticGlbItem('/kallax.glb', { origin: 'top', rotationY: Math.PI });
   let vertices;
@@ -343,6 +345,7 @@ it('les coffres partagent un couvercle réversible, une pause indépendante en p
     '@react-three/drei': { useGLTF: { preload: path => preloads.push(path) } },
     '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame: fn => { frame = fn; } },
     '../useGLTFClone': { preloadSceneGLTF: path => preloads.push(path), useGLTFClone: (...args) => { assert.equal(args.length, 1); return { scene, animations }; } },
+    '../utils/useSceneGlass': { useSceneGlass() {} },
     '../glbUtils': await glbUtils(), '../objectActions': { getObjectActionIds: () => ['open'] },
   });
   const Item = createAnimatedGlbItem('/chest.glb', 'chest', 'Coffre');

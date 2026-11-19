@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
+import { useSceneGlass } from '../utils/useSceneGlass';
 import { glbLocalBBox } from '../glbUtils';
 import { useDoorOpen } from './useDoorOpen';
 import { getObjectActionIds } from '../objectActions';
@@ -18,6 +19,7 @@ export function createAnimatedGlbItem(path: string, objectId: string, label: str
 
   return function AnimatedGlbItem({ actionState = {}, onSize, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
     const { scene, animations } = useGLTFClone(path);
+    useSceneGlass(scene);
     const isOpen = useDoorOpen(actionId, isPreview, actionState);
     const { invalidate } = useThree();
     const runtime = useRef<{ size: THREE.Vector3; mixer: THREE.AnimationMixer; actions: THREE.AnimationAction[] } | null>(null);

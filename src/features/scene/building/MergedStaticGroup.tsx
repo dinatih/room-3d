@@ -62,8 +62,8 @@ export function MergedStaticGroup({ children, name = 'merged-static', userData, 
             ? new THREE.BufferAttribute(geom.index.array.slice(range.start, range.start + range.count), 1)
             : Array.from({ length: range.count }, (_, i) => range.start + i));
           clone.clearGroups();
+          clone = clone.toNonIndexed();
         }
-        clone = clone.index ? clone.toNonIndexed() : clone;
         clone.applyMatrix4(relMat);
 
         const order = mesh.renderOrder || 0;

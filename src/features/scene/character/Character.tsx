@@ -215,6 +215,10 @@ export function Character({
     if (isLara) mergeLaraPairs(scene);
     return extractCharacterParts(scene);
   }, [scene, isLara]);
+  const pendantTorso = useMemo(
+    () => [...parts.torsoClothed, ...parts.torsoNude].map(part => part.mesh),
+    [parts],
+  );
   useLaraShadowBatching(scene, isLara);
   const pendantRef = useRef<CharacterPendantHandle>(null);
   const parachuteRef = useRef<HeartParachuteHandle>(null);
@@ -1353,7 +1357,7 @@ export function Character({
           }}
         >
           <cylinderGeometry args={[25, 25, targetHeight || 175, 8]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+          <meshBasicMaterial visible={false} />
         </mesh>
       )}
 
@@ -1366,7 +1370,7 @@ export function Character({
         variant={variant}
         neck={parts.bones.neck}
         scene={scene}
-        torso={[...parts.torsoClothed, ...parts.torsoNude].map(part => part.mesh)}
+        torso={pendantTorso}
         visible={showAccessories}
         shadows={characterShadows}
         resetKey={`${isPreview}:${characterGrid}`}
