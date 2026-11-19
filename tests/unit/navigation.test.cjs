@@ -9,7 +9,7 @@ const doors = load('src/features/scene/doorObstacles.ts', {
     './cameraState': { cameraState }, './ai/navigation/obstacles': obstacles, './ai/navigation/geometry': g, './ai/navigation/doorRequests': requests,
     './wallData': { pX: () => 0, pZ: () => 0, BATH_WEST_WALL: 0, SHOWER_SOUTH_WALL: 0, DiagWall: { p: () => ({ x: 1000, z: 1000 }), door: { start: 0, width: 90 }, rotY: 0 } },
 });
-const architecture = { architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
+const architecture = { studioRobotObstacle: require('../../src/features/scene/ai/navigation/architecture.ts').studioRobotObstacle, architectureObstacles: [], walkableSurfaces: [[g.rectangle(0, 0, 600, 600)]] };
 const queries = require('../../src/features/scene/ai/navigation/queries.ts');
 let pathRequests = 0, cancelledGraphs = 0, holdBuilds = false;
 let roomFull = false, checkedRoom;

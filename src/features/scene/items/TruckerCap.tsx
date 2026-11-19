@@ -3,8 +3,7 @@
  * Coordonnées locales : centré par bbox, Y=0 = sol, largeur réelle 18,5 cm.
  */
 import { useLayoutEffect } from 'react';
-import { useGLTF } from '@react-three/drei';
-import { useGLTFClone } from '@features/scene/useGLTFClone';
+import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import * as THREE from 'three';
 import { removeGlbLines, glbLocalBBox } from '@features/scene/glbUtils';
 import type { SceneModelProps } from '@shared/types';
@@ -42,4 +41,4 @@ export function TruckerCap({ onSize }: SceneModelProps) {
   return <primitive object={scene} />;
 }
 
-useGLTF.preload(GLB_TRUCKER_CAP);
+preloadSceneGLTF(GLB_TRUCKER_CAP);

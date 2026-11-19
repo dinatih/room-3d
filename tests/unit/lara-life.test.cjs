@@ -731,19 +731,22 @@ it('initialise les sept vies et les relations réciproques sans inventer de mome
   assert.equal(createLife('cha').relationships.sabira.seconds, 0);
 });
 
-it('garde le téléviseur éteint même quand la vidéo du bureau est active', () => {
+it('affiche la vidéo du bureau sur le téléviseur même si son écran statique est éteint', () => {
+  let deskActive = false, clipActive = false;
+  const screenTexture = {};
   const { TV } = load('src/features/scene/items/TV.tsx', {
     'react/jsx-runtime': require('react/jsx-runtime'), react: { useLayoutEffect: () => {}, useState: () => [0, () => {}] },
-    '@react-three/drei': { useTexture: () => ({}), useGLTF: { preload: () => {} } },
+    '@react-three/drei': { useTexture: () => screenTexture, useGLTF: { preload: () => {} } },
     '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene: {} }) }, three: require('three'),
-    '@features/scene/glbUtils': {}, '@features/scene/utils/deskScreenVideo': { useDeskScreenVideo: () => ({ isVideoActive: true, texture: 'shared-video' }) },
+    '@features/scene/glbUtils': {}, '@features/scene/utils/deskScreenVideo': { useDeskScreenVideo: () => ({ isVideoActive: deskActive, texture: 'shared-video' }), useTvClipVideo: () => ({ isVideoActive: clipActive, texture: 'tv-clip' }) },
     '../objectActions': { getObjectActionIds: () => [] }, '../tvData': { TV_W: 73, TV_H: 43 },
   });
-  for (const on of [false, true]) {
+  for (const desk of [false, true]) for (const clip of [false, true]) for (const on of [false, true]) {
+    deskActive = desk; clipActive = clip;
     const tree = TV({ actionState: { 'tv-toggle': on } });
     const material = tree.props.children[1].props.children[1].props;
-    assert.equal(material.map, on ? 'shared-video' : null);
-    assert.equal(material.emissiveIntensity, on ? 0.8 : 0);
+    assert.equal(material.map, clip ? 'tv-clip' : desk ? 'shared-video' : on ? screenTexture : null);
+    assert.equal(material.emissiveIntensity, clip || desk ? 0.8 : on ? 0.15 : 0);
   }
 });
 

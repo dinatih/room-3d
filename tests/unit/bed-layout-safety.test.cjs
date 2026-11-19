@@ -37,10 +37,11 @@ it('refuse le réaménagement avec un occupant, une réservation entrante ou une
   f.movingFurniture.add('bed-east-position');
   assert.match(f.bedLayoutBlock(true), /déplacement/);
   f.movingFurniture.clear();
-  // Vivida's recorded exit: outside the final mattress, but her body is still too close.
-  f.cameraState.positions.vivida = { x: 56.0718, y: 0, z: 291.46587 };
+  // Outside the final frame, but within the actor radius of its edge.
+  const bed = positions.DOUBLE_BED_POSITIONS[0].west;
+  f.cameraState.positions.vivida = { x: bed.x, y: 0, z: bed.z + positions.BED_FRAME_LENGTH / 2 + 7 };
   assert.match(f.bedLayoutBlock(true), /vivida/);
-  f.cameraState.positions.vivida.z = 340;
+  f.cameraState.positions.vivida.z += positions.BED_FRAME_LENGTH;
   assert.equal(f.bedLayoutBlock(true), undefined);
 });
 

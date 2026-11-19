@@ -312,6 +312,7 @@ it('lit les actions Air Performer directement dans la preview et accepte un plac
 it('les deux cadres UTÅKER conservent leur matelas et leur literie avec ou sans surmatelas', () => {
   const Anneland = () => null, Vestmarka = () => null;
   const { UtakerFrame } = load('src/features/scene/items/UtakerFrame.tsx', {
+    '@features/scene/utils/redFabricMaterial': { redFabricMat: new THREE.MeshStandardMaterial() },
     three: THREE, 'react/jsx-runtime': jsx,
     react: { useRef: () => ({ current: null }), useLayoutEffect() {} },
     '@react-three/drei': { useGLTF: { preload() {} } },

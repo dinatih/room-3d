@@ -53,7 +53,8 @@ it('place les actions dans l’allée opposée au lit et rétablit les points si
   let deskX = ROOM_W - 21;
   const SMART_OBJECTS = Object.fromEntries(['clean-floor-living', 'dance-mirror-south', 'dance-bed-east-north', 'hugs-point', 'interx-affection-point', 'interx-affection-garden-point'].map(id => [id, { id, position: [160, 0, id.includes('garden') ? -200 : 200], slots: [{ slotId: 'action' }] }]));
   const fixtures = { positionState, DOUBLE_BED_POSITIONS, ROOM_W, SMART_OBJECTS, getObjectTransform: () => ({ position: [deskX, 0, 155], rotationY: 0 }) };
-  const { getSmartObject } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures }, source => `import { positionState, DOUBLE_BED_POSITIONS, ROOM_W, SMART_OBJECTS, getObjectTransform } from 'fixtures';\n${source.slice(source.indexOf('export function getSmartObject(objectId:'))}`);
+  const { getSmartObject } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures }, source => `import { positionState, DOUBLE_BED_POSITIONS, ROOM_W, SMART_OBJECTS, getObjectTransform } from 'fixtures';\nconst smartObjectCache = new Map();
+${source.slice(source.indexOf('export function getSmartObject(objectId:'))}`);
   for (const index of [0, 1]) {
     positionState['bed-position'].idx = index;
     deskX = index === 0 ? ROOM_W - 21 : 56;

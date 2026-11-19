@@ -3,9 +3,9 @@ const assert = require('node:assert/strict');
 const { load } = require('../support/load-ts.cjs');
 const { useRobotVisibility, isRobotSubjectVisible, ROBOT_SUBJECTS } = load('src/features/scene/store/useRobotVisibility.ts', { zustand: require('zustand') });
 
-it('affiche les cinq robots demandés et retire les autres sujets jusqu’à leur activation', () => {
+it('affiche les quatre robots activés par défaut et retire les autres sujets jusqu’à leur activation', () => {
   const initial = useRobotVisibility.getState().visible;
-  assert.deepEqual(initial, ['black-hornet-drone', 'ring-drone-cam', 'unitree-g1', 'microduck', 'jumper-robot']);
+  assert.deepEqual(initial, ['black-hornet-drone', 'ring-drone-cam', 'microduck', 'jumper-robot']);
   for (const [id, subject] of Object.entries(ROBOT_SUBJECTS)) {
     assert.equal(isRobotSubjectVisible(subject, initial), initial.includes(id));
     useRobotVisibility.getState().toggle(id);

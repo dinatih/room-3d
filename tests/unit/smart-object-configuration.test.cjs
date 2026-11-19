@@ -52,7 +52,8 @@ it('réserve le sommeil des lits simples et doubles aux clips de sommeil, sans G
   const fixtures = { ...furniture, positionState, HUMAN_BODY_RADIUS: 20, SMART_OBJECTS: beds,
     getObjectTransform: () => { const p = furniture.BED_DOUBLE_CENTER_POSITIONS[positionState['bed-position'].idx]; return { position: [p.x, 0, p.z], rotationY: p.ry }; } };
   const { getSmartObject } = load('src/features/scene/ai/smartObjectRegistry.ts', { fixtures }, source =>
-    `import { positionState, HUMAN_BODY_RADIUS, BED_FRAME_WIDTH, BED_FRAME_LENGTH, DOUBLE_BED_POSITIONS, SMART_OBJECTS, getObjectTransform } from 'fixtures';\n${source.slice(source.indexOf('export function getSmartObject(objectId:'))}`);
+    `import { positionState, HUMAN_BODY_RADIUS, BED_FRAME_WIDTH, BED_FRAME_LENGTH, DOUBLE_BED_POSITIONS, SMART_OBJECTS, getObjectTransform } from 'fixtures';\nconst smartObjectCache = new Map();
+${source.slice(source.indexOf('export function getSmartObject(objectId:'))}`);
   for (const side of [0, 1]) {
     positionState['bed-position'].idx = side;
     const bed = furniture.DOUBLE_BED_POSITIONS[side];

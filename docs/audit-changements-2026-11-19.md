@@ -38,11 +38,11 @@ Ces chiffres décrivent les assets ; ils ne constituent pas une mesure des FPS. 
 - Les nouveaux tests vérifient la préservation des UV/textures source, la libération des ressources du téléphone et du TACKAN, et l’indépendance scène/preview des clips d’objets.
 - 24 tests ciblés passent avant l’ajout du troisième test de ressources ; les trois tests de ressources passent ensuite. Les quatre tests pause/inversion des objets animés et le test du couvercle réversible passent également.
 
-### Suite complète : limites restantes
+### Suite complète : état avant la poursuite de la revue
 
-Première exécution : **577 réussites / 593 tests, 16 échecs**. La seconde exécution a chargé davantage de tests grâce aux mocks réparés : **590 réussites / 604 tests, 14 échecs**. Parmi ces 14, cinq dépendaient du nouveau hook d’état des objets animés ; leurs mocks ont ensuite été corrigés et leurs cinq tests relancés avec succès. Les neuf échecs ci-dessous restent à traiter. La suite complète n’a pas été relancée une troisième fois.
+Première exécution : **577 réussites / 593 tests, 16 échecs**. La seconde exécution a chargé davantage de tests grâce aux mocks réparés : **590 réussites / 604 tests, 14 échecs**. Parmi ces 14, cinq dépendaient du nouveau hook d’état des objets animés ; leurs mocks ont ensuite été corrigés et leurs cinq tests relancés avec succès. Les neuf échecs ci-dessous restaient alors à traiter. Leur résolution et la nouvelle exécution complète sont consignées dans la section suivante.
 
-| Test restant | Diagnostic de revue |
+| Test initialement restant | Diagnostic initial de revue |
 | --- | --- |
 | `bed-layout-safety` : sortie Vivida | Coordonnées de fixture figées alors que les lits ont été déplacés cette semaine. À recalculer avant de conclure à une régression de sécurité. |
 | `lara-life` : téléviseur | Mock `useTvClipVideo` absent. Le module TV n’a pas changé dans la période. |
@@ -55,3 +55,27 @@ Première exécution : **577 réussites / 593 tests, 16 échecs**. La seconde ex
 | `static-scene-cleanup` : literie UTÅKER | Mock `redFabricMaterial` absent. Le module UTÅKER n’a pas changé dans la période. |
 
 Cette revue confirme les corrections ci-dessus, mais ne certifie pas visuellement chaque modèle ni chaque animation du projet. Les vérifications géométriques ont porté sur les contrôles Blender existants mentionnés, pas sur un rendu exhaustif de tous les objets.
+
+
+## Poursuite de la revue : neuf échecs résolus
+
+La nouvelle suite complète passe : **611 tests réussis, zéro échec**. L’augmentation du total vient notamment des sept tests `life-specialties` enfin chargés à la place d’un seul échec de fichier. TypeScript et la compilation passent également.
+
+- Les fixtures de sécurité des lits expriment maintenant la position de Vivida par rapport au bord du lit et au rayon de l’acteur : le scénario continue d’exiger le blocage tant que son corps touche le débattement, puis sa libération.
+- Les tests de sommeil et d’allée incluent le cache du résolveur qu’ils extraient ; les spécialités incluent le sol extérieur et le rayon du corps. Le test UTÅKER fournit le matériau textile attendu.
+- Les quatre robots actifs par défaut sont correctement attendus, avec G1 masqué. L’échec des profils robots dans la suite complète venait du mock d’architecture de `navigation.test.cjs` : son callback de cycle de vie réutilisé ne trouvait pas l’obstacle du studio pour un profil `excludeStudio`. Le mock inclut maintenant cet obstacle réel ; le test continue de vérifier des profils distincts et le blocage des trajets dans le studio.
+- L’écran TV respecte la restauration du mirroring explicitement demandée dans le commit `3937b276`. Le test attend maintenant la vidéo lorsque le bureau diffuse, même si le toggle d’écran statique est éteint. Il vérifie aussi l’arrêt en absence de vidéo, l’écran statique et la priorité du clip TV sur le mirroring.
+- **Miley : l’écart de 8,7376 cm n’était pas une dérive du retargeter.** À la première image, cet écart est exclusivement vertical et correspond à la correction des appuis. Le test attendait un bassin parfaitement immobile pour les marches, alors que le code conserve délibérément le transfert de poids et retire seulement le déplacement horizontal net. Le test vérifie désormais séparément la trajectoire source sans correction d’appui, le retrait du déplacement net, la conservation du balancement horizontal après correction, les semelles au sol et l’identité des résultats main thread/worker. La tolérance de 0,001 cm est conservée. Sur les 29 duos et 114 solos, l’erreur maximale de trajectoire source mesurée est **0,000102 cm**.
+
+### Première optimisation de modèle appliquée
+
+La casquette camionneur est réellement utilisée sept fois sur le porte-chapeaux et sur Lara Vivida. Les bobs lourds relevés plus haut apparaissent seulement comme ressources d’inventaire dans les références examinées : leur poids ne prouve pas un coût permanent en scène. La casquette a donc été traitée en premier.
+
+- Original conservé : `/home/dinatih/Projects/room-3d/public/items/trucker-cap-red/TruckerCapRed.glb`.
+- Variante de scène : `/home/dinatih/Projects/room-3d/public/items/trucker-cap-red/TruckerCapRed-scene-512.glb`.
+- Fichier : **2 151 760 → 822 260 octets**, soit environ **62 % de réduction**.
+- Textures : deux images de 2 048² et une de 1 024² deviennent trois images de 512². Estimation RGBA avant mipmaps : **36 → 3 Mio** ; il ne s’agit pas d’une mesure du GPU ni des FPS.
+- Le mécanisme existant `scene-models.json` sélectionne cette variante dans la scène. La preview conserve l’original. Le préchargement de la casquette passe lui aussi par ce mécanisme afin de ne pas charger immédiatement l’original haute résolution dans la scène.
+- Le contrôle `tests/assets/test_scene_models.py` passe et vérifie que les données de géométrie, animations, matériaux et samplers sont préservées. Seuls les payloads d’images et les offsets des buffers changent. Le test des chemins de modèles passe également.
+
+Rendus comparatifs Blender générés en face, trois-quarts et dos. L’inspection du trois-quarts confirme la forme conservée, avec une perte attendue de détail fin du textile dans la variante 512 px. Aucun gain de FPS n’a été mesuré. La suite complète de 611 tests a précédé cette optimisation ; le contrôle de préservation des modèles, le test des chemins, TypeScript et le build ont été relancés après celle-ci.

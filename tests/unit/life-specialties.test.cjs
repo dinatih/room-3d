@@ -5,7 +5,7 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 const duos = require('../../src/features/scene/animations/duoAnimations.ts');
 const interx = require('../../src/features/scene/animations/interxManifest.ts');
 const ids = ['garden-fresh-air', 'rain-dance', 'est-neighbor-flat', 'combat-point', 'interx-affection-point', 'interx-affection-garden-point', 'building-b-corridor-end', 'building-b-corridor'];
-const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { duos, interx }, source => {
+const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { duos, interx, environment: require('../../src/features/scene/environmentData.ts'), doors: require('../../src/features/scene/doorObstacles.ts') }, source => {
   const start = source.indexOf('const INTERX_MASSAGE_DUO_IDS');
   const end = source.indexOf('/**', start);
   const definitions = ids.map(id => {
@@ -13,7 +13,7 @@ const { objects } = load('src/features/scene/ai/smartObjectRegistry.ts', { duos,
     assert(a >= 0 && b > a);
     return source.slice(a, b + 5);
   }).join('\n');
-  return `import { DUO_ANIMATIONS } from 'duos'; import { INTERX_DUO_ANIMATIONS } from 'interx';
+  return `import { EXTERIOR_GROUND } from 'environment'; import { HUMAN_BODY_RADIUS } from 'doors'; import { DUO_ANIMATIONS } from 'duos'; import { INTERX_DUO_ANIMATIONS } from 'interx';
     ${source.slice(start, end)} export const objects = {${definitions}};`;
 });
 const occupied = new Set();
