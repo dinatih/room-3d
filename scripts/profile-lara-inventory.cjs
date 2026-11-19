@@ -28,7 +28,7 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
       else request.abort();
     });
     const route = studio
-      ? '/?skipIntro=1&inventory=1&item=native&bnfMarker=0&furniture=0&decor=0&furnishings=0&animals=0&shadows=0'
+      ? '/?skipIntro=1&characterCount=1&inventory=1&item=native&bnfMarker=0&furniture=0&decor=0&furnishings=0&animals=0&shadows=0'
       : '/tests/fixtures/lara-inventory/index.html';
     await page.goto(origin + route, { waitUntil: 'domcontentloaded' });
     if (studio) {
