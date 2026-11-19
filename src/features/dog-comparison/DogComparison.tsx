@@ -1,3 +1,4 @@
+import { GroundDatumLines } from '@features/inventory/GroundDatumLines';
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Grid } from '@react-three/drei';
@@ -160,6 +161,7 @@ function DogPanel({ model, clip, equalHeight, referencePose, pose, onCamera, ext
         <color attach="background" args={['#e4e8ed']} />
         <hemisphereLight args={['#ffffff', '#7b8190', 2]} /><directionalLight position={[100, 200, 150]} intensity={2.5} />
         <SyncedCamera pose={pose} onChange={onCamera} extent={extent} />
+        <GroundDatumLines mode={Math.abs(pose.direction[1]) > Math.max(Math.abs(pose.direction[0]), Math.abs(pose.direction[2])) ? 'top' : Math.abs(pose.direction[0]) > Math.abs(pose.direction[2]) ? 'east' : 'north'} span={Math.max(...extent) * 2} />
         <Grid infiniteGrid cellSize={10} sectionSize={50} fadeDistance={1000} cellColor="#acb3bf" sectionColor="#7c8798" position={[0, -.05, 0]} />
         <Suspense fallback={null}>
           <DogModel model={model} clipName={clip} height={equalHeight ? NORMALIZED_HEIGHT : model.height} referencePose={referencePose} onMetadata={onMetadata} />

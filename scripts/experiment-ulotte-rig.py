@@ -11,12 +11,13 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--dog',choices=['dachshund-sculpt'],required=True)
 parser.add_argument('--base-only',action='store_true')
 parser.add_argument('--draft',action='store_true')
+parser.add_argument('--output-dir',type=Path,default=Path('/tmp/ulotte-cycle-candidate'))
 parser.add_argument('--clips',nargs='+')
 parser.add_argument('--sample-fps',type=int,default=math.lcm(25,30,60,120))
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
 DOG=args.dog
 if not args.draft:raise ValueError('Experimental reconstruction requires --draft; merge only validated clips')
-OUT=Path('/tmp/ulotte-cycle-candidate');EDIT=OUT
+OUT=args.output_dir;EDIT=OUT
 BASE_CLIPS=['idle 50','walk_fwd 29','run_fwd 13']
 CLIPS=BASE_CLIPS if args.base_only else [entry['value'] for entry in json.loads((ROOT/'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog']]
 if args.clips:
@@ -196,6 +197,42 @@ def solve_limbs(fk):
             matrix=rotation.to_matrix().to_4x4();matrix.translation=head;assign(name,matrix,parent_matrix);parent_matrix=matrix
         matrix=fk[end].to_quaternion().to_matrix().to_4x4();matrix.translation=finish;assign(end,matrix,parent_matrix)
 
+head_groups={arm.bones['Neck01'].name}|{b.name for b in arm.bones['Neck01'].children_recursive}
+head_surface=np.array([v.index for v in body.data.vertices if body.vertex_groups[max(v.groups,key=lambda g:g.weight).group].name in head_groups])
+if not len(head_surface):raise RuntimeError('Empty head contact surface')
+body_surface=np.setdiff1d(np.arange(len(body.data.vertices)),head_surface)
+if not len(body_surface):raise RuntimeError('Empty trunk contact surface')
+def lift_head_contact():
+    # Correct cervical pitch before solving the body. Feet and pelvis remain
+    # planted; a dipping nose must never lift all four paw targets.
+    while True:
+        data=body.evaluated_get(bpy.context.evaluated_depsgraph_get()).data
+        coords=np.empty(len(data.vertices)*3);data.vertices.foreach_get('co',coords)
+        skin=coords.reshape((-1,3));minimum=float(skin[head_surface,2].min())
+        if minimum>=-GROUND_EPSILON:return
+        neck=rig.pose.bones['Neck01'];pivot=neck.matrix.translation.copy()
+        nose=rig.pose.bones['Muzzle'].matrix.translation.copy();forward=nose-pivot
+        horizontal=Vector((forward.x,forward.y,0));length=horizontal.length
+        if length==0:raise RuntimeError('Undefined muzzle heading')
+        native=Vector(heads['Muzzle'])-Vector(heads['Neck01'])
+        maximum=math.atan2(native.z,math.hypot(native.x,native.y))-math.atan2(forward.z,length)
+        if maximum<=0:
+            # Leave half the existing exported contact budget for the body
+            # projection and interpolation; never accept a larger residual.
+            budget=(max(v.co.z for v in body.data.vertices)-min(v.co.z for v in body.data.vertices))*(.05/30)/2
+            if minimum>=-budget:
+                print('CERVICAL_LIMIT_WITHIN_CONTACT_BUDGET',clip,frame,minimum,flush=True);return
+            raise RuntimeError('Cervical contact limit: '+str(dict(clip=clip,frame=frame,pivot=list(pivot),nose=list(nose),minimum=minimum)))
+        angle=min(maximum,math.atan2(-minimum,length))
+        rotation=Quaternion(horizontal.cross(Vector((0,0,1))).normalized(),angle)
+        matrix=(rotation@neck.matrix.to_quaternion()).to_matrix().to_4x4();matrix.translation=pivot
+        parent=neck.parent
+        neck.matrix_basis=neck.bone.convert_local_to_pose(matrix,neck.bone.matrix_local,invert=True,parent_matrix=parent.matrix,parent_matrix_local=parent.bone.matrix_local)
+        bpy.context.view_layer.update()
+        check=body.evaluated_get(bpy.context.evaluated_depsgraph_get()).data
+        positions=np.empty(len(check.vertices)*3);check.vertices.foreach_get('co',positions)
+        if float(positions.reshape((-1,3))[head_surface,2].min())<=minimum:raise RuntimeError('Cervical contact solve stalled')
+
 new_actions=[]
 for clip in CLIPS:
     action=bpy.data.actions[clip];source.animation_data.action=action;source.animation_data.action_slot=action.slots[0]
@@ -270,6 +307,9 @@ for clip in CLIPS:
             target.location=position;target.rotation_mode='QUATERNION';target.rotation_quaternion=rotation
         bpy.context.view_layer.update();solve_limbs(matrices);bpy.context.view_layer.update()
         if clip not in BASE_CLIPS:
+            head_after_body=rig.pose.bones['Neck01'].matrix.translation.z<=0
+            if not head_after_body:lift_head_contact()
+            contact_surface=body_surface if head_after_body else np.arange(len(body.data.vertices))
             # Solve actual skin/ground contact, including belly and rump. The
             # donor's pelvis height cannot encode a different dog's body depth.
             previous=None;last_move=None
@@ -278,7 +318,7 @@ for clip in CLIPS:
                 skin=body.evaluated_get(depsgraph).data
                 coordinates=np.empty(len(skin.vertices)*3,dtype=np.float32)
                 skin.vertices.foreach_get('co',coordinates)
-                points=coordinates.reshape((-1,3));index=int(np.argmin(points[:,2]));minimum=float(points[index,2])
+                points=coordinates.reshape((-1,3));index=int(contact_surface[np.argmin(points[contact_surface,2])]);minimum=float(points[index,2])
                 if not math.isfinite(minimum):raise FloatingPointError(f'Invalid skin coordinates: {DOG} {clip} {frame}')
                 if minimum>=-GROUND_EPSILON:break
                 if previous is not None and abs(previous-minimum)<1e-8:
@@ -300,6 +340,7 @@ for clip in CLIPS:
                     root_motion.z-=minimum
                     rig.pose.bones['Hips'].location=rest['Hips'].to_3x3().inverted()@root_motion
                 bpy.context.view_layer.update();solve_limbs(matrices);bpy.context.view_layer.update()
+            if head_after_body:lift_head_contact()
         evaluated=rig.evaluated_get(bpy.context.evaluated_depsgraph_get())
         poses.append((frame,{n:pb.matrix.copy() for n,pb in evaluated.pose.bones.items()}))
     # Bake evaluated IK to local rotations, with fixed rest offsets and scales.

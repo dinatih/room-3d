@@ -11,6 +11,7 @@ parser.add_argument('--output',type=Path)
 parser.add_argument('--rest-only',action='store_true')
 parser.add_argument('--clip',action='append')
 parser.add_argument('--phase',type=float,action='append')
+parser.add_argument('--ground',action='store_true')
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:])
 out=args.output if args.output else ROOT/'artifacts/ushiro/priority-review'/args.label;out.mkdir(parents=True,exist_ok=True)
 path=Path(args.model)
@@ -52,6 +53,14 @@ for index,name in enumerate(clips):
   points.extend(o.matrix_world@Vector(c) for o in meshes for c in o.evaluated_get(graph).bound_box)
  focus=Vector([(min(p[i] for p in points)+max(p[i] for p in points))/2 for i in range(3)])
  height=max(p.z for p in points)-min(p.z for p in points)
+ floor_line=None
+ if args.ground:
+  curve=bpy.data.curves.new('Ground datum','CURVE');curve.dimensions='3D';curve.bevel_depth=height/scene.render.resolution_y
+  for direction in [(1,0,0),(0,1,0)]:
+   spline=curve.splines.new('POLY');spline.points.add(1)
+   for point,sign in zip(spline.points,[-1,1]):point.co=(*(sign*height*5*v for v in direction),1)
+  floor_line=bpy.data.objects.new('Ground plane',curve);scene.collection.objects.link(floor_line)
+  material=bpy.data.materials.new('Green ground');material.diffuse_color=(0,.8,.15,1);curve.materials.append(material)
  for view,offset in [('profile',(4,0,.04)),('three-quarter',(3,-3,1.5))]:
   camera.location=focus+Vector(offset)*height;camera.rotation_euler=(focus-camera.location).to_track_quat('-Z','Y').to_euler()
   right=camera.rotation_euler.to_quaternion()@Vector((1,0,0));up=camera.rotation_euler.to_quaternion()@Vector((0,1,0))
@@ -61,5 +70,6 @@ for index,name in enumerate(clips):
     frame=start+(end-start)*phase;scene.frame_set(int(frame),subframe=frame%1)
    bpy.context.view_layer.update();filename=f'{index:02d}-{view}-{phase}.png';scene.render.filepath=str(out/filename);bpy.ops.render.render(write_still=True)
    manifest.append(dict(clip=name,phase=phase,view=view,file=filename))
+ if floor_line:bpy.data.objects.remove(floor_line,do_unlink=True)
  print('REVIEWED',name,flush=True)
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2));print('DONE',flush=True);os._exit(0)

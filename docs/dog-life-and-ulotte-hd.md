@@ -86,3 +86,43 @@ ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scrip
 ALSOFT_DRIVERS=null blender -b -noaudio -t 2 --python-exit-code 1 --python scripts/validate-ulotte-cycles.py -- --candidate public/characters/dachshund-sculpt/dog.glb --clips 'walk_fwd_sniff 46'
 python scripts/verify-ulotte-catalog.py
 ```
+
+## Correction du flottement pendant le sniff
+
+Le contrôle précédent ne mesurait que la pénétration de la peau. Il pouvait
+passer alors que les quatre pieds étaient suspendus. Le nouveau contrôle
+mesure aussi, sur chaque instant, le pied le plus proche du sol.
+
+La correction locale du cou précède la correction du corps lorsque la base
+du cou est au-dessus du sol. Le museau est relevé par rotation cervicale sans
+déplacer le bassin ni les cibles des pieds. Une pose initiale plaçant la base
+du cou sous le sol nécessite d’abord le contact du tronc, tête exclue, puis
+le contact cervical. Une limite non résolue est un échec explicite ; un résidu
+atteignant la limite anatomique n’est accepté que dans la moitié du budget
+existant de contact (0,05 cm à la taille affichée), avec diagnostic explicite.
+Le contrôle final de l’export reste obligatoire.
+
+Sur le sniff publié, l’écart maximal entre le pied le plus proche du sol et
+le sol passe de **3,35 cm** à **0,000261 cm** à la hauteur de présentation.
+La pénétration maximale reste sous 0,0031 cm. La mesure couvre 240 instants
+par seconde et les intervalles entre clés. Les 118 autres clips sont inchangés.
+La planche avant/après affiche maintenant le plan de sol.
+
+Le repère de sol orthographique de l’inventaire est partagé avec la page de
+comparaison : ligne verte Y=0, repères ±2 unités et axes en vue de dessus.
+Le repère reste fixe pendant le cycle, sans suivre le museau ni les pieds.
+
+Le coucher expérimental passe les contacts mais conserve des plis et n’est
+pas intégré. La vérification des contacts ne suffit pas à valider sa surface.
+Les essais de conservation de volume seuls ne corrigent pas ces plis.
+
+Le shake à 120 Hz garde les appuis mais pénètre encore entre les clés :
+`shake-contact.json` conserve ce refus. L’essai à 600 Hz rencontre une limite
+du solveur cervical et est interrompu avant export ; le shake de l’application
+reste inchangé. Le coucher testé est aussi conservé uniquement comme diagnostic
+(`lying-contact.json`), malgré le succès du contrôle de sol.
+
+La comparaison réelle a été ouverte dans un navigateur headless, vérifiée sur
+les trois repères Y=0 sans erreur navigateur, puis capturée dans
+`grounded-comparison.png`. Le navigateur de test et le serveur temporaire sont
+fermés après vérification.
