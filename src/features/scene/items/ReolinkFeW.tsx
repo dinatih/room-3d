@@ -27,7 +27,7 @@ export function ReolinkFeW({ onSize }: Partial<Omit<SceneItemProps, 'item'>>) {
     );
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
-        child.castShadow = true;
+        child.castShadow = false;
         child.receiveShadow = true;
       }
     });

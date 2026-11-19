@@ -205,7 +205,7 @@ function ShowerDoor({ isPreview, condensation, actionState }: { isPreview: boole
   return (
     <group>
       {/* 1. Paroi fixe de 20 cm côté Ouest */}
-      <mesh material={glassMat} position={[fixedCenterX, DOOR_H / 2, 0]} castShadow>
+      <mesh material={glassMat} position={[fixedCenterX, DOOR_H / 2, 0]}>
         <boxGeometry args={[FIXED_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
       </mesh>
       <mesh name="shower-condensation-fixed" material={condensation} position={[fixedCenterX, DOOR_H / 2, -DOOR_T / 2 - 0.01]} raycast={() => {}}>
@@ -234,7 +234,7 @@ function ShowerDoor({ isPreview, condensation, actionState }: { isPreview: boole
           {/* Décalage de +hw pour que le battant s'étende du pivot vers l'Est */}
           <group position={[hw, 0, 0]}>
             {/* Vitre mobile */}
-            <mesh material={glassMat} position={[0, DOOR_H / 2, 0]} castShadow>
+            <mesh material={glassMat} position={[0, DOOR_H / 2, 0]}>
               <boxGeometry args={[DOOR_W - FRAME * 2, DOOR_H - FRAME * 2, DOOR_T]} />
             </mesh>
             <mesh name="shower-condensation-door" material={condensation} position={[0, DOOR_H / 2, -DOOR_T / 2 - 0.01]} raycast={() => {}}>

@@ -55,7 +55,7 @@ export function Goldfish({ species = 'jikin', isPreview = false, previewAnim = '
   useLayoutEffect(() => {
     scene.traverse(child => {
       if (!(child instanceof THREE.Mesh)) return;
-      child.castShadow = true;
+      child.castShadow = isPreview;
       child.receiveShadow = true;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       const updated = materials.map((mat) => {

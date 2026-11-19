@@ -139,7 +139,7 @@ export function BathroomEquipment() {
         <pointLight
           position={[0, 20, 0]}
           intensity={as['lamp-bath-toggle'] ? 20 * 100 ** 2 * brightness : 0}
-          distance={0}
+          distance={450}
           decay={2}
           color={color}
           castShadow={lightsHD}

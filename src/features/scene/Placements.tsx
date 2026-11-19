@@ -16,6 +16,7 @@ import { LivingRoomFurniture, LivingRoomFurnishings, LivingRoomDecor } from './p
 import { GardenFurniture, GardenDecor, GardenAnimals } from './placements/GardenPlacements';
 import { RobotPlacements } from './placements/RobotPlacements';
 import { BuildingPipes } from './items/BuildingPipes';
+import { MergedStaticGroup } from './Building';
 import { useSceneStore } from './store/useSceneStore';
 import { GardenLightStrips } from './placements/GardenLightStrips';
 
@@ -26,9 +27,11 @@ export function Equipment() {
       <BathroomEquipment />
       <KitchenEquipment />
       <CorridorEquipment />
-      <group position={[14, 0, 440]}>
-        <BuildingPipes />
-      </group>
+      <MergedStaticGroup name="merged-building-pipes">
+        <group position={[14, 0, 440]}>
+          <BuildingPipes />
+        </group>
+      </MergedStaticGroup>
     </>
   );
 }

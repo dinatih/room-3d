@@ -20,7 +20,7 @@ function Starfish({ index }: { index: number }) {
     if (animations.length !== 1) throw new Error('Starfish: expected the original arm animation');
     scene.traverse(child => {
       if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
+        child.castShadow = false;
         child.receiveShadow = true;
       }
     });

@@ -297,16 +297,16 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
   const cBtnY    = arrowBtnY - 0.95;
 
   return (
-    <group userData={{ hoverAction: { label: 'Télémètre Laserliner' } }}>
+    <group userData={{ itemName: 'Télémètre Laserliner' }}>
       {/* Corps gris anthracite */}
-      <mesh geometry={bodyGeo} material={bodyMat} castShadow receiveShadow />
+      <mesh geometry={bodyGeo} material={bodyMat} receiveShadow />
 
       {/* Bumpers caoutchouc nervurés — côtés gauche/droit */}
       {(['left', 'right'] as const).map(side => {
         const sx = side === 'left' ? -W / 2 + 0.05 : W / 2 - 0.05;
         return (
           <group key={side} position={[sx, H / 2, 0]}>
-            <mesh castShadow>
+            <mesh>
               <boxGeometry args={[0.45, H * 0.78, D + 0.18]} />
               <primitive object={gripMat} attach="material" />
             </mesh>
@@ -318,7 +318,7 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
       </instancedMesh>
 
       {/* Sommet noir (cap) */}
-      <mesh position={[0, topCapY, 0]} castShadow>
+      <mesh position={[0, topCapY, 0]}>
         <boxGeometry args={[W - 0.1, topCapH, D - 0.05]} />
         <primitive object={topBlkMat} attach="material" />
       </mesh>
@@ -342,7 +342,7 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
       </mesh>
 
       {/* Façade plastique blanche (en saillie) */}
-      <mesh position={[0, panelCY, frontZ - 0.06]} castShadow>
+      <mesh position={[0, panelCY, frontZ - 0.06]}>
         <boxGeometry args={[panelW, panelH, 0.12]} />
         <primitive object={panelMat} attach="material" />
       </mesh>
@@ -364,7 +364,7 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
       </mesh>
 
       {/* Bouton DIST / MIN-MAX (orange, rectangle arrondi) */}
-      <mesh position={[0, distBtnY, frontZ - 0.16]} castShadow>
+      <mesh position={[0, distBtnY, frontZ - 0.16]}>
         <boxGeometry args={[panelW - 0.6, 0.85, 0.18]} />
         <primitive object={distBtnMat} attach="material" />
       </mesh>
@@ -388,7 +388,7 @@ export function LaserDistanceMaster({ onSize }: SceneModelProps) {
 function WhiteIconBtn({ y, z, panelW, iconMat }: { y: number; z: number; panelW: number; iconMat: THREE.Material }) {
   return (
     <group position={[0, y, z]}>
-      <mesh position={[0, 0, -0.15]} castShadow>
+      <mesh position={[0, 0, -0.15]}>
         <boxGeometry args={[panelW - 0.6, 0.7, 0.15]} />
         <primitive object={whiteBtnMat} attach="material" />
       </mesh>

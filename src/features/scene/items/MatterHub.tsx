@@ -6,6 +6,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
+import { MergedStaticGroup } from '../building/MergedStaticGroup';
 
 const W = 9.0;
 const D = 9.0;
@@ -59,7 +60,7 @@ export function MatterHub({ onSize }: SceneModelProps) {
   const xLan   =  1.8;
 
   return (
-    <group userData={{ hoverAction: { label: 'Hub Matter' } }}>
+    <MergedStaticGroup name="merged-matter-hub" userData={{ itemName: 'Hub Matter' }}>
       {/* Corps principal */}
       <mesh geometry={bodyGeo} material={bodyMat} castShadow receiveShadow />
 
@@ -122,6 +123,6 @@ export function MatterHub({ onSize }: SceneModelProps) {
           <primitive object={pinSilver} attach="material" />
         </mesh>
       ))}
-    </group>
+    </MergedStaticGroup>
   );
 }

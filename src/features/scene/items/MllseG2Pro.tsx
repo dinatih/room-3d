@@ -6,6 +6,7 @@
 import { useLayoutEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
+import { MergedStaticGroup } from '../building/MergedStaticGroup';
 
 const W = 8.7;
 const D = 8.7;
@@ -50,7 +51,7 @@ export function MllseG2Pro({ onSize }: SceneModelProps) {
   }, []);
 
   return (
-    <group userData={{ hoverAction: { label: 'Mini PC MLLSE G2 Pro' } }}>
+    <MergedStaticGroup name="merged-mllse-g2-pro" userData={{ itemName: 'Mini PC MLLSE G2 Pro' }}>
       {/* Corps principal bleu nuit */}
       <mesh geometry={bodyGeo} material={navyBlue} castShadow receiveShadow />
 
@@ -103,6 +104,6 @@ export function MllseG2Pro({ onSize }: SceneModelProps) {
           <primitive object={rubberFoot} attach="material" />
         </mesh>
       ))}
-    </group>
+    </MergedStaticGroup>
   );
 }

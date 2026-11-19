@@ -484,7 +484,7 @@ function LampOla_() {
       <pointLight
         position={lampSize ? [0, lampSize.y, 0] : [0, 0, 0]}
         intensity={lampSize && lampOn ? 35 * 100 ** 2 * brightness : 0}
-        distance={0}
+        distance={800}
         decay={2}
         color={color}
       />

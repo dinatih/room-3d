@@ -349,3 +349,48 @@ Campagne identique `npm run test:perf -- --case=studio-9-high-day --hardware-gpu
 - `npm run build` : **succès**
 - Inspection visuelle `scene.png` avant/après : rendu fidèle, ombres plus nettes, aucune régression.
 
+---
+
+## 8. Résultats mesurés — Lot 2 (20 novembre 2026 — VRAM, HDRI 2K, fusions statiques & ombres micro-objets)
+
+Campagne `npm run test:perf -- --case=studio-9-high-day --hardware-gpu` :
+- **Lot 2** : `test-results/2026-11-19T23-18-17.512Z-perf/report.md` (base commit `69c22ba8`, qui inclut aussi les ajouts buanderie entre Lot 1 et Lot 2).
+
+| Métrique (médiane sur 3 passages) | Avant (`f69caef6`) | Après Lot 1 (`e50fe543`) | Après Lot 2 | Écart total (Avant → Lot 2) |
+| --- | ---: | ---: | ---: | ---: |
+| **Draw calls / image** | **2 635** | **1 742** | **1 651** (1 611–1 655) | **-984 DC (-37,3 %)** |
+| **Géométries Three.js** | — | **968** | **903** (903–906) | **-65 géom. (-6,7 % vs Lot 1)** |
+| **RSS Chrome médian (session)** | **4,30 Go** | **1,97 Go** | **1,04 Go** (0,83–1,67 Go) | **-76 % (-47 % vs Lot 1)** |
+| **Image p95 (meilleur passage calme)** | **187,8 ms** | **88,9 ms** | **80,4 ms** (passage 3) | **-57 %** |
+| **FPS session** | **7,61 FPS** | **17,06 FPS** | **13,85 FPS** (9,70–15,32)* | **+82 %** *(bridé par swap hôte)* |
+| **Temps GPU médian** | **31,76 ms** | **15,16 ms** | **17,50 ms** (16,86–38,05)* | **-45 %** *(16,86 ms passage 3)* |
+| **CPU rendu médian** | **59,10 ms** | **25,10 ms** | **28,20 ms** (25,90–39,20)* | **-52 %** *(25,90 ms passage 3)* |
+
+> \* **Note de transparence sur les FPS du Lot 2** : pendant cette campagne, la machine subissait une forte contention mémoire externe (`0,43–0,88 Go` de RAM disponible, `13,5 Go` de swap déjà occupé, `+1,1 à +2,3 Go` de hausse swap par passage), ce qui a provoqué un basculement temporaire `gpu_compositing: disabled_software` / `webgl: enabled_readback` sur certains passages et ajouté du bruit sur les temps GPU/CPU (en particulier au passage 1 : `38,1 ms GPU` / `9,7 FPS`). De plus, le commit `69c22ba8` intervenu entre Lot 1 et Lot 2 a ajouté des objets buanderie (+0,3 M triangles). Sur les métriques déterministes, le Lot 2 confirme le gain : **-91 draw calls supplémentaires**, **-65 géométries**, **~570 Mio de VRAM textures/HDRI économisés**, et un **p95 à 80,4 ms** sur le passage 3.
+
+### Changements appliqués dans le Lot 2
+
+1. **8 nouvelles variantes `-scene-512.glb` enregistrées dans [scene-models.json:1](zed://file/home/dinatih/Projects/room-3d/src/features/scene/scene-models.json:1)** (~506 Mio de VRAM RGBA brute et ~16 Mo de téléchargement économisés, originaux conservés pour les previews) :
+   - `/home/dinatih/Projects/room-3d/public/environment/before_i_die__wall_scan_in_seoul_korea-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/environment/before_i_die__wall_scan_in_seoul_korea-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/environment/before_i_die__wall_scan_in_seoul_korea-scene-512.glb)) (9,47 Mo → 287 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/cecotec-readywarm/cecotec-readywarm-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/cecotec-readywarm/cecotec-readywarm-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/cecotec-readywarm/cecotec-readywarm-scene-512.glb)) (400 Ko → 190 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/philips-amf870/philips-amf870-remote-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/philips-amf870/philips-amf870-remote-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/philips-amf870/philips-amf870-remote-scene-512.glb)) (723 Ko → 206 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/raskog30586783/Raskog30586783-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/raskog30586783/Raskog30586783-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/raskog30586783/Raskog30586783-scene-512.glb))
+   - `/home/dinatih/Projects/room-3d/public/items/reolink-fe-w/reolink-fe-w-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/reolink-fe-w/reolink-fe-w-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/reolink-fe-w/reolink-fe-w-scene-512.glb)) (604 Ko → 280 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/rowenta-rh2079wo/rowenta-rh2079wo-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/rowenta-rh2079wo/rowenta-rh2079wo-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/rowenta-rh2079wo/rowenta-rh2079wo-scene-512.glb)) (1,65 Mo → 711 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/spray-cleaner/SprayCleaner-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/spray-cleaner/SprayCleaner-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/spray-cleaner/SprayCleaner-scene-512.glb)) (5,43 Mo → 583 Ko)
+   - `/home/dinatih/Projects/room-3d/public/items/xiaomi-phone/xiaomi-phone-scene-512.glb` ([file:///home/dinatih/Projects/room-3d/public/items/xiaomi-phone/xiaomi-phone-scene-512.glb](file:///home/dinatih/Projects/room-3d/public/items/xiaomi-phone/xiaomi-phone-scene-512.glb)) (1,21 Mo → 1,01 Mo)
+2. **HDRI 2K par défaut & libération immédiate du cache** : `hdriResolution: '2k'` dans [useSceneStore.ts:138](zed://file/home/dinatih/Projects/room-3d/src/features/scene/store/useSceneStore.ts:138) (-64 Mio VRAM, -18,5 Mo téléchargés ; 4K toujours sélectionnable) et `textureCache.size >= 1` dans [SkySphere.tsx:42](zed://file/home/dinatih/Projects/room-3d/src/features/scene/SkySphere.tsx:42).
+3. **`GardenFrontWallScan` connecté au pipeline scène** : passage à `useGLTFClone` + `preloadSceneGLTF`, libération propre des matériaux fantômes et suppression des ombres inutiles (`opacity: 0.1`) dans [GardenFrontWallScan.tsx:16](zed://file/home/dinatih/Projects/room-3d/src/features/scene/building/GardenFrontWallScan.tsx:16).
+4. **Cache template de fusion statique GLB** dans [createStaticGlbItem.tsx:20](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/createStaticGlbItem.tsx:20) (`WeakMap` `prepareSource` pour fusionner une seule fois par asset au lieu de chaque clone/remount).
+5. **Fusions statiques & nettoyage `castShadow` sur micro-objets/vitres** : `<MergedStaticGroup>` autour de `BuildingPipes` ([Placements.tsx:76](zed://file/home/dinatih/Projects/room-3d/src/features/scene/Placements.tsx:76)), [MatterHub.tsx:25](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/MatterHub.tsx:25) et [MllseG2Pro.tsx:25](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/MllseG2Pro.tsx:25) ; retrait des `castShadow` inutiles sur [ReolinkFeW.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/ReolinkFeW.tsx:1), [TradfriBulb.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/TradfriBulb.tsx:1), [Shower.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/Shower.tsx:1), [LaserDistanceMaster.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/LaserDistanceMaster.tsx:1), [Goldfish.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/Goldfish.tsx:1) et [Starfish.tsx](zed://file/home/dinatih/Projects/room-3d/src/features/scene/items/Starfish.tsx:1).
+6. **Finalisation du bornage des `pointLight` restants** : `distance={450}` dans [BathroomPlacements.tsx:142](zed://file/home/dinatih/Projects/room-3d/src/features/scene/placements/BathroomPlacements.tsx:142) et `distance={800}` dans [LivingRoomPlacements.tsx:487](zed://file/home/dinatih/Projects/room-3d/src/features/scene/placements/LivingRoomPlacements.tsx:487).
+
+### Validation Lot 2
+
+- `npx tsc --noEmit` : **0 erreur**
+- `npm test` : **612/612 tests réussis**
+- `python3 -m unittest tests/assets/test_scene_models.py` : **OK**
+- `npm run build` : **succès**
+- Inspection visuelle `scene.png` (passage 3) : rendu fidèle, aucune régression visuelle.
+
+

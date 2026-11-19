@@ -22,6 +22,9 @@ export function TradfriBulb({ actionState = {}, onSize }: Partial<Omit<SceneItem
     scene.scale.set(1, 1, 1);
     scene.scale.setScalar(100);
     mergeGlbByMaterial(scene);
+    scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) obj.castShadow = false;
+    });
     const box = glbLocalBBox(scene);
     scene.position.set(
       -(box.min.x + box.max.x) / 2,

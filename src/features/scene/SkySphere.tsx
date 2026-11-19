@@ -39,7 +39,7 @@ function loadSkyTextureByUrl(url: string, type: 'hdr' | 'jpg'): Promise<THREE.Te
     loader.load(url, (loadedTexture) => {
       loadedTexture.mapping = THREE.EquirectangularReflectionMapping;
       if (type === 'jpg') loadedTexture.colorSpace = THREE.SRGBColorSpace;
-      if (textureCache.size >= 2) {
+      if (textureCache.size >= 1) {
         const oldestUrl = textureCache.keys().next().value;
         if (oldestUrl && oldestUrl !== url) {
           const oldTex = textureCache.get(oldestUrl);
