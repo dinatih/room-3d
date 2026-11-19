@@ -158,7 +158,12 @@ export function CharacterAnimSelector({
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileHook;
 
-  const { animSearch, selectedCategories, sortByDuration, setAnimSearch, setSelectedCategories, setSortByDuration } = useAnimPreviewStore();
+  const animSearch = useAnimPreviewStore(state => state.animSearch);
+  const selectedCategories = useAnimPreviewStore(state => state.selectedCategories);
+  const sortByDuration = useAnimPreviewStore(state => state.sortByDuration);
+  const setAnimSearch = useAnimPreviewStore(state => state.setAnimSearch);
+  const setSelectedCategories = useAnimPreviewStore(state => state.setSelectedCategories);
+  const setSortByDuration = useAnimPreviewStore(state => state.setSortByDuration);
 
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [copiedAnim, setCopiedAnim] = useState<string | null>(null);
