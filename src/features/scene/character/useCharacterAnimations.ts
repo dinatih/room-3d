@@ -35,9 +35,11 @@ export function cacheDynamicGLTF(path: string): Promise<AnimationSource> {
     loader.setDRACOLoader(dracoLoader);
     loader.register(animationSourcePlugin);
     loader.load(path, gltf => resolve(extractAnimationSource(gltf)), undefined, (err) => {
-      const msg = `[GLB 404] Fichier introuvable : "${path}" — ${(err as any)?.message ?? err}`;
-      console.error(msg);
-      reject(new Error(msg));
+      const status = (err as { response?: Response } | undefined)?.response?.status;
+      const detail = err instanceof Error ? err.message : String(err);
+      const msg = `[GLB${status ? ` HTTP ${status}` : ''}] Échec du chargement de "${path}" — ${detail}`;
+      console.error(msg, err);
+      reject(Object.assign(new Error(msg), { cause: err }));
     });
   });
   const shared = pending.then(source => {
