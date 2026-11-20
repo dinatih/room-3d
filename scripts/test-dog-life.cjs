@@ -3,9 +3,17 @@ function load(file,deps){const exports={};new Function('exports','require',ts.tr
 const clips=load('src/features/scene/items/dogLifeClips.ts',{}),catalog=require('../src/features/inventory/dogAnimationOptions.json');
 for(const id of ['animated-pitbull-dog','ushiro','dachshund-sculpt'])for(const name of Object.values(clips.PITBULL_LIFE_CLIPS))assert(catalog[id].some(c=>c.value===name),id+' missing '+name);
 const choices=load('src/features/inventory/pitbullAnimationChoices.ts',{'./dogAnimationOptions.json':catalog});
-assert.equal(choices.PITBULL_COMPARISON_CLIPS.length,16);
-assert.equal(new Set(choices.pitbullAnimationChoices.map(c=>c.value)).size,119);
+assert.equal(choices.PITBULL_COMPARISON_CLIPS.length,14);
+assert.equal(new Set(choices.pitbullAnimationChoices.map(c=>c.value)).size,catalog['animated-pitbull-dog'].length);
 for(const name of ['pee 43','walk_fwd_sniff 46','idle_to_idle_lay 111','idle_lay_pose 2','idle_lay_to_idle 71'])assert(choices.PITBULL_COMPARISON_CLIPS.some(c=>c.value===name));
+for(const [id,file] of [['animated-pitbull-dog','dog'],['ushiro','ushiro'],['dachshund-sculpt','dog']]){
+ const bytes=fs.readFileSync(`public/characters/${id}/${file}.glb`);
+ const model=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString());
+ assert.equal(model.animations.length,79);
+ assert.deepEqual(model.animations.map(a=>a.name).sort(),catalog[id].map(c=>c.value).sort());
+ for(const name of ['idle_one_off_dig 184','idle_sit_one_off_scratch 176','idle_turn_180_lft'])assert(model.animations.some(a=>a.name===name),name);
+ for(const option of choices.PITBULL_COMPARISON_CLIPS)assert(model.animations.some(a=>a.name===option.value),option.value);
+}
 const dogs=require('../src/features/inventory/extraDogs.json');
 for(const [idle,mapping]of Object.entries(clips.NATIVE_DOG_LIFE_CLIPS)){
  const dog=dogs.find(d=>d.idleClip===idle);assert(dog,idle);

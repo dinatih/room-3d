@@ -14,8 +14,6 @@ export const PITBULL_COMPARISON_CLIPS = [
   { value: 'idle_lay_pose 2', label: 'idle_lay_pose 2 — Couché' },
   { value: 'idle_lay_to_idle 71', label: 'idle_lay_to_idle 71 — Se relever' },
   { value: 'poop 75', label: 'poop 75 — Position accroupie' },
-  { value: 'track_bark_harvest 75', label: 'track_bark_harvest 75 — Aboiement et saut' },
-  { value: 'canter_fwd 53', label: 'canter_fwd 53 — Galop' },
   { value: 'idle_bark_04_warning 47', label: 'idle_bark_04_warning 47 — Aboiement d’alerte' },
 ];
 export function prioritizePitbullAnimations(options: { value: string; label: string }[]) {
