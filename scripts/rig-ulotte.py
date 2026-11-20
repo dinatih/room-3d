@@ -56,7 +56,7 @@ else:
     CLIPS = all_catalog
 
 OUT_GLB = (args.output_dir / 'dog.glb') if args.draft else (ROOT / 'public/characters/dachshund-sculpt/dog.glb')
-OUT_BLEND = (args.output_dir / 'dachshund.blend') if args.draft else (ROOT / 'artifacts/dachshund-sculpt/dachshund.blend')
+OUT_BLEND = (args.output_dir / 'dachshund.blend') if args.draft else (ROOT / 'sources_backup/artifacts/dachshund-sculpt/dachshund.blend')
 OUT_GLB.parent.mkdir(parents=True, exist_ok=True)
 OUT_BLEND.parent.mkdir(parents=True, exist_ok=True)
 

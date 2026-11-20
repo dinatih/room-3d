@@ -19,7 +19,7 @@ selection.add_argument('--clips', nargs='+')
 parser.add_argument('--draft', action='store_true')
 parser.add_argument('--sample-fps', type=int, default=math.lcm(25,30,60,120))
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
-OUT = ROOT / 'artifacts/ushiro/rebuild'
+OUT = ROOT / 'sources_backup/artifacts/ushiro/rebuild'
 OUT.mkdir(parents=True, exist_ok=True)
 REPORTS=OUT/'draft' if args.draft else OUT
 REPORTS.mkdir(parents=True,exist_ok=True)
@@ -940,7 +940,7 @@ rig.animation_data.action_slot = rig.animation_data.action.slots[0]; scene.frame
 for image in bpy.data.images:
     if image.has_data and not image.packed_file: image.pack()
 bpy.data.orphans_purge(do_recursive=True)
-blend_path = OUT / 'candidate.blend' if args.draft else ROOT / 'artifacts/ushiro/ushiro.blend'
+blend_path = OUT / 'candidate.blend' if args.draft else ROOT / 'sources_backup/artifacts/ushiro/ushiro.blend'
 glb_path = Path('/tmp/ushiro-candidate.glb') if args.draft else ROOT / 'public/characters/ushiro/ushiro.glb'
 bpy.ops.wm.save_as_mainfile(filepath=str(blend_path), compress=True)
 bpy.ops.export_scene.gltf(filepath=str(glb_path), export_format='GLB', export_extras=True, export_animations=True, export_skins=True, export_animation_mode='ACTIONS', export_force_sampling=False)
