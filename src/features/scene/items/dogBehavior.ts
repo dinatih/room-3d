@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PITBULL_LIFE_CLIPS, DOG_PAUSES, DOG_ONE_SHOTS, type DogAction } from './dogLifeClips';
+import { PITBULL_LIFE_CLIPS, DOG_PAUSES, DOG_ONE_SHOTS, DOG_LYING_ACTIONS, type DogAction } from './dogLifeClips';
 export type { DogAction } from './dogLifeClips';
 import { SpatialZoneManager } from '../ai/SpatialZone';
 import { randomReachableTarget, getNavigationGraph, followRoute, resetRoute, createRouteState } from '../ai/navigation/service';
@@ -14,7 +14,7 @@ import { SubjectDriver } from '../camera/subjectControls';
 export const DOG_ACTIVITY = {
   walkChance: 0.8, localTripChance: 0.8,
   runSpeed: 120, turnSpeed: Math.PI,
-  fadeSeconds: 0.25, minRestCycles: 2, maxRestCycles: 4,
+  fadeSeconds: 0.25, minRestCycles: 2, maxRestCycles: 4, minStaticPoseSeconds: 3,
   restWeight: 4, oneOffWeight: 1, sniffChance: 0.5,
   minMealInterval: 120, maxMealInterval: 240, mealRetrySeconds: 30, mealCycles: 3,
 } as const;
@@ -90,11 +90,13 @@ export function startDogPause(state: DogBehavior, context: DogContext) {
   const choice = available.find(choice => (draw -= choice.weight) < 0)!;
   state.action = state.lastPause = choice.action;
   state.mode = 'rest';
-  if (choice.action === 'lie' && context.lieTransitions) state.action = 'layDown';
-  const once = DOG_ONE_SHOTS.includes(state.action) || state.action === 'rest' || (state.action === 'lie' && !context.lieTransitions);
+  if (DOG_LYING_ACTIONS.includes(choice.action) && context.lieTransitions) state.action = 'layDown';
+  const once = DOG_ONE_SHOTS.includes(state.action) || state.action === 'rest' || (DOG_LYING_ACTIONS.includes(state.action) && !context.lieTransitions);
   const duration = context.play(state.action, once);
-  const cycles = DOG_ONE_SHOTS.includes(state.action) ? 1 : THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles);
-  state.remaining = duration * cycles;
+  const cycles = DOG_ONE_SHOTS.includes(state.action) || state.action === 'bedLay' || state.action === 'sleep'
+    ? 1
+    : THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles);
+  state.remaining = state.action === 'rest' ? Math.max(duration * cycles, DOG_ACTIVITY.minStaticPoseSeconds) : duration * cycles;
 }
 export function startDogTrip(state: DogBehavior, context: DogContext, target: { x: number; z: number }, gait: 'walk' | 'run' | 'sniff', meal = false) {
   releaseDogRoute(state, context.id);
@@ -133,9 +135,14 @@ function advanceDogBehavior(state: DogBehavior, context: DogContext, delta: numb
     state.remaining -= delta;
     if (state.remaining > 0) return;
     if (state.action === 'layDown') {
-      state.action = 'lie'; state.remaining = context.play('lie') * THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles); return;
+      const lyingAction: DogAction = DOG_LYING_ACTIONS.includes(state.lastPause) ? state.lastPause : 'lie';
+      state.action = lyingAction;
+      const duration = context.play(lyingAction);
+      const cycles = lyingAction === 'lie' ? THREE.MathUtils.randInt(DOG_ACTIVITY.minRestCycles, DOG_ACTIVITY.maxRestCycles) : 1;
+      state.remaining = lyingAction === 'lie' ? Math.max(duration * cycles, DOG_ACTIVITY.minStaticPoseSeconds) : duration * cycles;
+      return;
     }
-    if (state.action === 'lie' && context.lieTransitions) {
+    if (DOG_LYING_ACTIONS.includes(state.action) && context.lieTransitions) {
       state.action = 'getUp'; state.remaining = context.play('getUp', true); return;
     }
     if (DOG_ONE_SHOTS.includes(state.action)) { startDogPause(state, context); return; }
