@@ -1,8 +1,8 @@
+import './dracoSetup';
 import './devLog';
 import { createRoot } from 'react-dom/client';
 import './features/ui/resourceDownloadLogs';
-import './dracoSetup';
-import { Studio } from '@features/scene/Studio';
+import { SceneApp } from './SceneApp';
 import { HomeAssistantSync } from './features/home-assistant/HomeAssistant';
 import { completeHomeAssistantPopupCallback } from './features/home-assistant/connection';
 import '../scss/app.scss';
@@ -26,5 +26,5 @@ const rootEl = document.getElementById('root')!;
 if (completeHomeAssistantPopupCallback()) {
   rootEl.textContent = 'Connexion Home Assistant terminée. Tu peux fermer cette fenêtre.';
 } else {
-  createRoot(rootEl).render(<><HomeAssistantSync /><Studio /></>);
+  createRoot(rootEl).render(<><HomeAssistantSync /><SceneApp /></>);
 }

@@ -1,11 +1,12 @@
 // Exploratory comparison, not a historical regression verdict.
-// node scripts/profile-lara-inventory.cjs --hardware-gpu [--studio] [--full-scene] [--system-chrome] [--smoke]
+// node scripts/profile-lara-inventory.cjs --hardware-gpu [--studio] [--full-scene] [--system-chrome] [--smoke] [--check-entry]
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const launchBrowser = require('./browser-test-options.cjs');
 const project = path.resolve(__dirname, '..');
+const checkEntry = process.argv.includes('--check-entry');
 const fullScene = process.argv.includes('--full-scene');
 const studio = fullScene || process.argv.includes('--studio');
 const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
@@ -21,10 +22,15 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
     browser = await launchBrowser({ ...(process.argv.includes('--system-chrome') ? { executablePath: '/opt/google/chrome/chrome' } : {}), args: ['--no-sandbox'], defaultViewport: { width: 1496, height: 900 } });
     page = await browser.newPage();
     const errors = [];
+    let studioRequests = 0;
     page.on('pageerror', error => errors.push(error.stack));
     await page.setRequestInterception(true);
     page.on('request', request => {
       const url = new URL(request.url());
+      if (checkEntry && url.pathname === '/src/features/scene/Studio.tsx') {
+        studioRequests++;
+        return request.respond({ status: 200, contentType: 'application/javascript', body: 'export function Studio() { return "STUDIO_ENTRY_CHECK"; }' });
+      }
       if (['localhost', '127.0.0.1'].includes(url.hostname) || ['data:', 'blob:'].includes(url.protocol)) request.continue();
       else request.abort();
     });
@@ -42,7 +48,7 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
     await page.waitForFunction(() => {
       const canvas = document.querySelector('.inventory-preview-renderer canvas');
       return canvas && window.preview?.gl?.domElement === canvas && window.anim?.getState().currentTime > 1
-        && !document.getElementById('loading');
+        && (!document.getElementById('loading') || document.getElementById('loading').classList.contains('d-none'));
     }, { timeout: 60000 });
     await new Promise(resolve => setTimeout(resolve, 3000));
     await page.evaluate(async () => {
@@ -132,6 +138,18 @@ const output = fs.mkdtempSync(path.join(os.tmpdir(), 'room-lara-perf-'));
     await page.evaluate(() => window.anim.getState().seekToFrame(90));
     await page.waitForFunction(() => document.querySelector('input[aria-label="Frame courante"]')?.value === '90');
     console.log('Trim editor and readout clocks: OK');
+    if (checkEntry) {
+      const canvases = await page.evaluate(() => window.perfRoots().length);
+      if (studioRequests !== 0 || canvases !== 1) throw new Error('Inventory entry allocated the apartment');
+      await page.click('.inventory-modal button[aria-label="Fermer"]');
+      await page.waitForFunction(() => document.body.textContent.includes('STUDIO_ENTRY_CHECK'));
+      const state = await page.evaluate(() => ({
+        inventory: new URL(location.href).searchParams.has('inventory'),
+        loadingHidden: document.getElementById('loading')?.classList.contains('d-none'),
+      }));
+      if (studioRequests !== 1 || state.inventory || state.loadingHidden) throw new Error('Closing inventory did not initialize Studio correctly');
+      console.log('Inventory-only entry and deferred Studio navigation: OK');
+    }
     const { profile } = await client.send('Profiler.stop');
     fs.writeFileSync(path.join(output, 'cpu.cpuprofile'), JSON.stringify(profile));
     fs.writeFileSync(path.join(output, 'report.json'), JSON.stringify({ studio, fullScene, browserVersion: await browser.version(), results, errors }, null, 2));
