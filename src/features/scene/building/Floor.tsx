@@ -151,48 +151,6 @@ function makeTileTex(): THREE.CanvasTexture {
   return tex;
 }
 
-export function makeGrassTex(): THREE.CanvasTexture {
-  const SIZE = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = SIZE; canvas.height = SIZE;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#1e4a22';
-  ctx.fillRect(0, 0, SIZE, SIZE);
-  const rng = () => Math.random();
-  for (let i = 0; i < 80; i++) {
-    const x = rng() * SIZE, y = rng() * SIZE, r = 5 + rng() * 15;
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, 'rgba(10,30,10,0.35)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-  }
-  // Regrouper les 9 000 brins par nuance pour 16 appels stroke() au lieu de 9 000 (~470 ms -> < 10 ms).
-  const BUCKETS = 16;
-  const paths = Array.from({ length: BUCKETS }, () => new Path2D());
-  for (let i = 0; i < 9000; i++) {
-    const x = rng() * SIZE, y = rng() * SIZE;
-    const len = 5 + rng() * 14;
-    const angle = -Math.PI / 2 + (rng() - 0.5) * 1.0;
-    const bucket = Math.floor(rng() * BUCKETS);
-    const p = paths[bucket];
-    p.moveTo(x, y);
-    p.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
-  }
-  ctx.lineWidth = 1.4;
-  for (let b = 0; b < BUCKETS; b++) {
-    const t = b / (BUCKETS - 1);
-    const g = Math.floor(60 + t * 100);
-    const r = Math.floor(10 + t * 30);
-    ctx.strokeStyle = `rgb(${r},${g},${r})`;
-    ctx.stroke(paths[b]);
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(25, 18);
-  return tex;
-}
-
 export function Parquet() {
   const { geo, mat } = useMemo(() => {
     const parquetDiagZ = DiagWall.A.z + (INT_X_DOOR_S - DiagWall.A.x) * DiagWall.slope;
