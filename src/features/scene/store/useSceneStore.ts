@@ -414,7 +414,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
     set({ mirrorResolution: resolution });
     cameraState.invalidate?.();
   },
-  mirrorAutoResolution: false,
+  mirrorAutoResolution: true,
   setMirrorAutoResolution: (enabled) => {
     set({ mirrorAutoResolution: enabled });
     cameraState.invalidate?.();
