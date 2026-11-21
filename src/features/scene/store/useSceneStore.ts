@@ -117,6 +117,8 @@ interface SceneStore {
   activeMainIds: string[];
   currentHdri: string;
   hdriResolution: HdriResolution;
+  mirrorResolution: number;
+  setMirrorResolution: (resolution: number) => void;
   mirrorAntialias: boolean;
   setMirrorAntialias: (enabled: boolean) => void;
   screenVideosEnabled: boolean;
@@ -407,6 +409,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   activeMainIds: initialActiveMainIds,
   currentHdri: DEFAULT_HDRI_ID,
   hdriResolution: '4k',
+  mirrorResolution: 512,
+  setMirrorResolution: (resolution) => {
+    set({ mirrorResolution: resolution });
+    cameraState.invalidate?.();
+  },
   mirrorAntialias: false,
   setMirrorAntialias: (enabled) => {
     set({ mirrorAntialias: enabled });

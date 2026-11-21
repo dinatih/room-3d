@@ -54,6 +54,7 @@ function MirrorSurface({ geometry, position, rotationY }: {
   rotationY: number;
 }) {
   const [x, y, z] = position;
+  const resolution = useSceneStore(state => state.mirrorResolution);
   const antialias = useSceneStore(state => state.mirrorAntialias);
   const invalidate = useThree(state => state.invalidate);
   const reflector = useMemo(() => {
@@ -107,13 +108,14 @@ function MirrorSurface({ geometry, position, rotationY }: {
   useLayoutEffect(() => {
     const target = reflector.getRenderTarget();
     const samples = antialias ? 4 : 0;
-    if (target.samples !== samples) {
+    if (target.samples !== samples || target.width !== resolution || target.height !== resolution) {
       // Reallocate the GPU buffers when changing multisampling in place.
       target.dispose();
       target.samples = samples;
+      target.setSize(resolution, resolution);
       invalidate();
     }
-  }, [reflector, antialias, invalidate]);
+  }, [reflector, antialias, resolution, invalidate]);
   useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }

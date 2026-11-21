@@ -25,6 +25,8 @@ export function LayersSection({
   lidarOpacity,
   onToggleLidarOpacity,
 }: LayersSectionProps) {
+  const mirrorResolution = useSceneStore(state => state.mirrorResolution);
+  const setMirrorResolution = useSceneStore(state => state.setMirrorResolution);
   const mirrorAntialias = useSceneStore(state => state.mirrorAntialias);
   const setMirrorAntialias = useSceneStore(state => state.setMirrorAntialias);
   const currentHdri = useSceneStore(state => state.currentHdri);
@@ -177,8 +179,22 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-heart-pulse', 'Animaux'), 'animals')}
       {layerBtn(iconLabel('bi-robot', 'Robots'), 'robots')}
       {layerBtn('Surfaces des miroirs',           'mirrorSurfaces')}
-      {layerBtn('Miroirs MD (Moyenne déf)',       'mirrors')}
-      <div className="px-3 py-2 border-bottom">
+      {layerBtn('Reflets des miroirs',              'mirrors')}
+      <div className="px-3 py-2 border-bottom d-flex flex-column gap-2">
+        <div className="d-flex align-items-center gap-2">
+          <label htmlFor="mirror-resolution" className="small text-nowrap">Résolution des miroirs</label>
+          <select
+            id="mirror-resolution"
+            className="form-select form-select-sm bg-transparent text-dark border-secondary"
+            value={mirrorResolution}
+            onKeyDown={(e) => e.stopPropagation()}
+            onChange={(e) => setMirrorResolution(Number(e.target.value))}
+          >
+            {[256, 512, 1024, 2048].map(resolution => (
+              <option key={resolution} value={resolution}>{resolution} × {resolution}</option>
+            ))}
+          </select>
+        </div>
         <div className="form-check form-switch small mb-0">
           <input
             id="mirror-antialias"
