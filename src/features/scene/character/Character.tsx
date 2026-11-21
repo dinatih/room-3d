@@ -21,7 +21,7 @@ import { resolveLaraGarmentGlbPath } from './laraOutfits';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
 import { disposeCharacterResources } from './characterDisposal';
-import { buildHairChain } from '../retargeting/index';
+import { buildHairChain, resolveTargetBoneName } from '../retargeting/index';
 import {
   extractCharacterParts,
   applyClothingAndAccessoriesVisibility,
@@ -229,6 +229,23 @@ export function Character({
     [scene, headBone],
   );
   const hipsBone = parts.bones.hips;
+  const mealPlateRef = useRef<THREE.Mesh>(null);
+  const mealPlatePose = useMemo(() => {
+    if (!isLara) return null;
+    const knees = ['LeftLeg', 'RightLeg'].map(side => {
+      const boneName = resolveTargetBoneName(scene, side);
+      const bone = boneName ? scene.getObjectByName(boneName) : null;
+      if (!bone) throw new Error(`Meal plate requires Lara's ${side} bone`);
+      return bone;
+    });
+    return { knees, left: new THREE.Vector3(), right: new THREE.Vector3(), hips: new THREE.Vector3() };
+  }, [isLara, scene]);
+  // Centimetres: a 24 cm plate with a shallow raised rim.
+  const mealPlateProfile = useMemo(() => [
+    new THREE.Vector2(0, 0), new THREE.Vector2(9, 0),
+    new THREE.Vector2(12, 1), new THREE.Vector2(12, 1.5),
+    new THREE.Vector2(9, 0.5), new THREE.Vector2(0, 0.5),
+  ], []);
   const leftEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_left') as THREE.Bone | null) : null), [scene]);
   const rightEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_right') as THREE.Bone | null) : null), [scene]);
 
@@ -1279,6 +1296,21 @@ export function Character({
     }
 
     collectActions();
+    const mealPlate = mealPlateRef.current;
+    if (mealPlate && mealPlatePose && hipsBone) {
+      mealPlate.visible = activeActionName.current === 'fab-daily-life-eat-with-fork';
+      if (mealPlate.visible) {
+        const { knees, left, right, hips } = mealPlatePose;
+        knees[0].getWorldPosition(left);
+        knees[1].getWorldPosition(right);
+        hipsBone.getWorldPosition(hips);
+        // Rest across the lap, slightly behind the knees and above the thighs.
+        left.add(right).multiplyScalar(0.5).lerp(hips, 0.3);
+        groupRef.current.worldToLocal(left);
+        mealPlate.position.copy(left);
+        mealPlate.position.y += 7;
+      }
+    }
     pendantRef.current?.update(pendantDelta, resetPendant);
     parachuteRef.current?.update(isPaused ? 0 : delta);
     pausedPoseReady.current = isPaused && !isPreview && !isTemporaryLoadingFallback
@@ -1371,6 +1403,11 @@ export function Character({
       <group ref={animOriginRef}>
         <primitive ref={modelRef} object={scene} />
       </group>
+
+      {isLara && <mesh ref={mealPlateRef} name="lara-meal-plate" visible={false} castShadow={characterShadows} receiveShadow={characterShadows}>
+        <latheGeometry args={[mealPlateProfile, 32]} />
+        <meshStandardMaterial color="#d71920" roughness={0.35} />
+      </mesh>}
 
       {isLara && id !== 'romana' && variant !== 'romana' && <CharacterPendant
         ref={pendantRef}
