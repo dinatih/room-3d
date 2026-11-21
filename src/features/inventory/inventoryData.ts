@@ -126,11 +126,11 @@ export const INVENTORY: InventoryItem[] = [
   },
   {
     id: 'ikea-plogsvaeng', name: 'PLOGSVÄNG — rangement perforé blanc', brand: 'IKEA',
-    category: 'bathroom', qty: 2, price: '0,49', dims: { w: 20, d: 15, h: 10 },
+    category: 'bathroom', qty: 3, price: '0,49', dims: { w: 20, d: 15, h: 10 },
     glbPath: 'items/cleaning-accessories/plogsvaeng.glb',
     photos: ['items/cleaning-accessories/plogsvaeng-product.jpg', 'items/cleaning-accessories/plogsvaeng-product-2.jpg', 'items/cleaning-accessories/plogsvaeng-product-3.jpg', 'items/cleaning-accessories/plogsvaeng-product-4.jpg', 'items/cleaning-accessories/plogsvaeng-product-5.jpg', 'items/cleaning-accessories/plogsvaeng-product-6.jpg', 'items/cleaning-accessories/plogsvaeng-three-quarter.png', 'items/cleaning-accessories/plogsvaeng-front.png', 'items/cleaning-accessories/plogsvaeng-back.png'],
     url: 'https://www.ikea.com/fr/fr/p/plogsvaeng-rangement-blanc-20593454/',
-    location: 'GREJIG du placard SDB droit et sous évier cuisine (avec une éponge magique)', notes: 'Référence IKEA 205.934.54. Dimensions fabricant 15 × 20 × 10 cm. Reconstitution Blender d’après les photos : fond fermé, parois perforées et bord supérieur.'
+    location: 'GREJIG du placard SDB droit, sous évier cuisine (avec une éponge magique) et DRÖNA SDB Est', notes: 'Référence IKEA 205.934.54. Dimensions fabricant 15 × 20 × 10 cm. Reconstitution Blender d’après les photos : fond fermé, parois perforées et bord supérieur.'
   },
   {
     id: 'temu-heart-sponge', name: 'Éponges cœur roses et rouges — lot de 10', brand: 'Temu',

@@ -237,6 +237,7 @@ export function BathroomFurnishings() {
               <group position={[10, 0.21, 4]} userData={{ sceneItemRoot: true, itemName: 'AXE Cherry Fizz 150 ml' }}><AxeCherryFizz /></group>
             </>}
           </group>
+          {id === 'drona-bathroom-east' && <group position={[0, -DF / 2 + 15, 11.3]} userData={{ sceneItemRoot: true, itemName: 'PLOGSVÄNG DRÖNA SDB Est' }}><Plogsvaeng /></group>}
           {id === 'drona-bathroom-west' && <group position={[0, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Cif Infinite+Clean SDB Ouest' }}><CifInfiniteClean /></group>}
           {id === 'drona-bathroom-west' && <>
             <group position={[-9, -DF / 2 + 1, -9]} userData={{ sceneItemRoot: true, itemName: 'Papier WC DRÖNA SDB Ouest' }}><ToiletPaperRoll /></group>
