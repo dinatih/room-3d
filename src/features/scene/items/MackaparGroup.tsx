@@ -14,15 +14,19 @@ const HANGER_Z      = [-25, -15, -5, 5, 15, 25];
 // Cintres de biais : leur largeur (~41 cm) dépasse la profondeur du meuble (32 cm) et traverserait le Kallax voisin.
 const HANGER_ROTS   = [0.75, 0.8, 0.7, 0.78, 0.72, 0.76];
 
+// Keep the twelve ordinary hangers: eleven above, one below for the tee.
+// The other lower-rail positions belong to the clip dryer, without coat hangers
+// passing through the socks and underwear.
+const UPPER_HANGER_COUNT = HANGER_Z.length * 2 - 1;
 const MACKAPAR_HANGER_TRANSFORMS = [
-  ...HANGER_Z.map((z, i) => ({
-    position: [0, TOP_RAIL_Y, z] as [number, number, number],
-    rotation: [0, HANGER_ROTS[i], 0] as [number, number, number],
+  ...Array.from({ length: UPPER_HANGER_COUNT }, (_, i) => ({
+    position: [0, TOP_RAIL_Y, HANGER_Z[0] + (HANGER_Z[HANGER_Z.length - 1] - HANGER_Z[0]) * i / (UPPER_HANGER_COUNT - 1)] as [number, number, number],
+    rotation: [0, HANGER_ROTS[i % HANGER_ROTS.length], 0] as [number, number, number],
   })),
-  ...HANGER_Z.map((z, i) => ({
-    position: [0, BOTTOM_RAIL_Y, z] as [number, number, number],
-    rotation: [0, HANGER_ROTS[i], 0] as [number, number, number],
-  })),
+  {
+    position: [0, BOTTOM_RAIL_Y, HANGER_Z[0]] as [number, number, number],
+    rotation: [0, HANGER_ROTS[0], 0] as [number, number, number],
+  },
 ];
 
 export function MackaparHangers() {

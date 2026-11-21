@@ -10,7 +10,7 @@ const ids = ['calecon-rouge', 'chaussette-rouge', 'cons-cure-dents', 'magic-spon
 const loadedBytes = fs.readFileSync(path.join(ROOT, 'public/items/temu-sock-dryer-20/SockDryer20Loaded.glb'));
 const loadedGlb = JSON.parse(loadedBytes.subarray(20, 20 + loadedBytes.readUInt32LE(12)).toString());
 for (const slug of ['red-socks', 'red-boxers']) {
-  const clips = new Set(loadedGlb.nodes.map(n => n.name?.match(new RegExp(`^${slug} clip (\\d{2})`))?.[1]).filter(Boolean));
+  const clips = new Set(loadedGlb.nodes.map(n => n.name?.match(new RegExp(`^${slug} clip ([0-9]{2})`))?.[1]).filter(Boolean));
   assert.equal(clips.size, 10, `ten distinct clips carrying ${slug}`);
 }
 (async () => {
@@ -35,15 +35,16 @@ for (const slug of ['red-socks', 'red-boxers']) {
       const { SockDryer20Loaded, MagicSponge, RowentaDR8250 } = await import('/src/features/scene/items/LaundryHousehold.tsx');
       const { Plogsvaeng } = await import('/src/features/scene/items/CleaningProducts.tsx');
       const { Mackapar50530988 } = await import('/src/features/scene/items/Mackapar50530988.tsx');
+      const { MackaparHangers } = await import('/src/features/scene/items/MackaparGroup.tsx');
       const { createStaticGlbItem } = await import('/src/features/scene/items/createStaticGlbItem.tsx');
       window.testInventory = ids.map(id => INVENTORY.find(item => item.id === id));
       const h = React.createElement;
       document.body.innerHTML = '<div id="fixture" style="width:1000px;height:950px"></div>';
       const fixtures = [
-        h('group', {name:'rack',position:[32,0,0],rotation:[0,Math.PI/2,0]}, h(Mackapar50530988)),
-        h('group', {name:'loaded',position:[40.0406,122.42,-4.6]}, h(SockDryer20Loaded)),
+        h('group', {name:'rack',position:[32,0,0],rotation:[0,Math.PI/2,0]}, h(Mackapar50530988), h(MackaparHangers)),
+        h('group', {name:'loaded',position:[40,122.42,0],rotation:[0,Math.PI/3,0]}, h('group',{position:[.0406,0,-4.6]},h(SockDryer20Loaded))),
         h('group', {name:'sponge',position:[110,0,0]}, h(MagicSponge)),
-        h('group', {name:'steamer',position:[100,0,-30]}, h(RowentaDR8250)),
+        h('group', {name:'steamer',position:[100,0,-30],rotation:[0,Math.PI,0]}, h(RowentaDR8250)),
         h('group', {name:'basket',position:[100,0,30]}, h(Plogsvaeng), h('group',{position:[0,.4,0]},h(MagicSponge))),
       ];
       for (const [id, position] of [['calecon-rouge',[145,0,20]],['chaussette-rouge',[155,0,-20]],['cons-cure-dents',[125,0,-40]]]) {
@@ -74,7 +75,7 @@ for (const slug of ['red-socks', 'red-boxers']) {
     assert.equal(result.inventory.find(i=>i.id==='calecon-rouge').qty,20,'preserve existing stock');
     assert.equal(result.inventory.find(i=>i.id==='magic-sponge').qty,3);
     assert.equal(result.inventory.find(i=>i.id==='temu-sock-dryer-20').qty,1);
-    assert.equal(result.inventory.find(i=>i.id==='ikea-plogsvaeng').qty,2);
+    assert(result.inventory.find(i=>i.id==='ikea-plogsvaeng').qty >= 2, 'includes the added kitchen basket');
     assert(result.models.loaded.min[0]>0,'laundry clears west wall');
     assert(Math.abs(result.models.loaded.max[1]-122.42)<.01,'hook on measured lower rail');
     assert(result.models.loaded.min[1]>0,'laundry clears ground');

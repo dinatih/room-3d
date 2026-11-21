@@ -29,14 +29,14 @@ Les fiches existantes des chaussettes, caleçons et cure-dents sont complétées
 sans doublons. Les 20 caleçons déjà inventoriés restent en stock ; dix sont
 suspendus. Les dix paires de chaussettes sont toutes suspendues, deux chaussettes
 par pince, sur la rangée opposée aux caleçons. Le séchoir 20 pinces quitte les
-achats futurs et devient un objet possédé, sur la barre basse du MACKAPÄR.
+achats futurs et devient un objet possédé, en biais à 60° sur la barre basse du MACKAPÄR, avec le crochet comme pivot. Les cinq cintres ordinaires vides de cette barre sont remontés : onze cintres en haut et un seul en bas pour le tee-shirt, sans cintres traversant le linge pincé.
 Le sommet mesuré de cette barre est à 122,08 cm ; le placement corrige le
 décalage du crochet dans les limites du modèle et l'épaisseur du fil.
 
 Une éponge est dans le STACKSTOD rouge du DRÖNA Ouest, une sur le fond du meuble
 bas SDB Ouest, une dans un second PLOGSVÄNG sous l'évier cuisine. La quantité de
 PLOGSVÄNG passe à deux. Le défroisseur repose sur la tablette du placard SDB,
-devant les rouleaux WC et à gauche des essuie-tout. Aucun emplacement nouveau
+devant les rouleaux WC et à gauche des essuie-tout, tourné de 180° sur son axe vertical. Aucun emplacement nouveau
 n'a été demandé pour les cure-dents ; leur fiche garde le placard cuisine.
 
 Le test utilise un Canvas isolé avec réseau externe bloqué. Il vérifie les

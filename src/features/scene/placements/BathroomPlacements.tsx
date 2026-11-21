@@ -250,7 +250,7 @@ export function BathroomFurnishings() {
       <group position={[BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position[0], 1.8, BATHROOM_STORAGE_ITEMS['bathroom-cabinet-west'].position[2]]} userData={{ sceneItemRoot: true, itemName: 'Éponge magique meuble bas SDB Ouest' }}><MagicSponge /></group>
 
       {/* Zone libre de la tablette, devant les rouleaux WC et à gauche des essuie-tout. */}
-      <group position={[CLOSET_RIGHT_EDGE_X + 36, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 12.1]} userData={{ sceneItemRoot: true, itemName: 'Défroisseur Rowenta DR8250' }}><RowentaDR8250 /></group>
+      <group position={[CLOSET_RIGHT_EDGE_X + 36, SDB_CLOSET_SHELF_TOP, CLOSET_SHELF_FRONT_Z + 12.1]} rotation-y={Math.PI} userData={{ sceneItemRoot: true, itemName: 'Défroisseur Rowenta DR8250' }}><RowentaDR8250 /></group>
 
       {/* Bord avant du METOD Est, flacon posé devant le DRÖNA. */}
       <group position={[BATHROOM_STORAGE_ITEMS['bathroom-cabinet-east'].position[0], 60, BATH_NORTH_WALL + 35.8]} userData={{ sceneItemRoot: true, itemName: 'Mixa Bébé 750 ml' }}>

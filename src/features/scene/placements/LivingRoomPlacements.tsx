@@ -751,10 +751,10 @@ export function LivingRoomDecor() {
         <ClipHanger16Loaded />
       </group>
 
-      {/* Barre basse mesurée sur le modèle : séchoir le long de la tringle,
-          vêtements perpendiculaires, deux rangées de dix pinces. */}
-      <group position={[MACK_X + 8 - SOCK_DRYER_HOOK_X, MACK_LOWER_RAIL_TOP + SOCK_DRYER_WIRE_DIAMETER, MACK_Z - SOCK_DRYER_HOOK_Z]} userData={{ sceneItemRoot: true, itemName: 'Séchoir 20 pinces — 10 paires de chaussettes et 10 caleçons rouges' }}>
-        <SockDryer20Loaded />
+      {/* Barre basse : séchoir en biais, pivoté autour du crochet.
+          Le linge reste directement pincé, sans cintres ordinaires en dessous. */}
+      <group position={[MACK_X + 8, MACK_LOWER_RAIL_TOP + SOCK_DRYER_WIRE_DIAMETER, MACK_Z]} rotation-y={Math.PI / 3} userData={{ sceneItemRoot: true, itemName: 'Séchoir 20 pinces — 10 paires de chaussettes et 10 caleçons rouges' }}>
+        <group position={[-SOCK_DRYER_HOOK_X, 0, -SOCK_DRYER_HOOK_Z]}><SockDryer20Loaded /></group>
       </group>
 
       {/* Cintres Penderie Mulig */}
