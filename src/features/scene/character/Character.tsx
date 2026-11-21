@@ -697,9 +697,11 @@ export function Character({
   }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
+  const pausedPoseReady = useRef(false);
   const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false, distance: 0, lifeSpeed: 1 });
   useCharacterFrame(renderId, { simulate: (_state, delta) => {
-    if (!groupRef.current || !mixerRef.current) return;
+    if (!isPaused) pausedPoseReady.current = false;
+    if (pausedPoseReady.current || !groupRef.current || !mixerRef.current) return;
     const oldX = groupRef.current.position.x, oldZ = groupRef.current.position.z;
     const wasVisible = groupRef.current.visible;
     const hasDynamicTask = agentEnabled && hasPendingDynamicTask();
@@ -814,7 +816,7 @@ export function Character({
     frameControl.current.isUserManuallyMoving = isUserManuallyMoving;
     frameControl.current.hasDynamicTask = hasDynamicTask;
   }, animate: (state, delta) => {
-    if (!groupRef.current || !mixerRef.current) return;
+    if (pausedPoseReady.current || !groupRef.current || !mixerRef.current) return;
     const { agentAnimationPaused, isUserManuallyMoving, hasDynamicTask, lifeSpeed } = frameControl.current;
     const lifeDelta = delta * lifeSpeed;
     if (!groupRef.current.visible) {
@@ -910,7 +912,7 @@ export function Character({
     // A pending clip must not move the origin of the pose still on screen.
     if (animOriginRef.current && !postureTransition && !isTemporaryLoadingFallback) {
       const { offset, rotY } = getAnimationOriginTransform(target);
-      const factor = isPreview || characterGrid || !animOriginLerp ? 1 : Math.min(1, delta * 8);
+      const factor = isPaused || isPreview || characterGrid || !animOriginLerp ? 1 : Math.min(1, delta * 8);
       animOriginRef.current.position.lerp(_tmpAnimOrigin.set(...offset), factor);
       animOriginRef.current.rotation.y = lerpAngle(animOriginRef.current.rotation.y, rotY, factor);
     }
@@ -961,7 +963,7 @@ export function Character({
         }
         const from = (activeActionName.current && activeActionName.current !== 't-pose') ? actions[activeActionName.current] : null;
         const blendDuration = getCrossfadeDuration(activeActionName.current, target);
-        if (from) retireAction(from, isPreview || characterGrid || !animCrossfade ? 0 : blendDuration);
+        if (from) retireAction(from, isPaused || isPreview || characterGrid || !animCrossfade ? 0 : blendDuration);
 
         const isOnceAnim = isPostureTransition(target) || getAnimationDef(target)?.loop === 'once' ||
                            target === 'pistol-kneel-to-stand' ||
@@ -987,7 +989,7 @@ export function Character({
           to.clampWhenFinished = false;
         }
 
-        if (isPreview || characterGrid) {
+        if (isPaused || isPreview || characterGrid) {
           if (from) from.stop();
           to.reset().play();
           to.setEffectiveWeight(1);
@@ -1055,7 +1057,10 @@ export function Character({
 
     let pendantDelta = 0;
     let resetPendant = isTPose;
-    if (isPreview && previewPlayback) {
+    if (isPaused && !isPreview) {
+      // Evaluate the loaded pose once, without advancing animation or secondary physics.
+      mixer.update(0);
+    } else if (isPreview && previewPlayback) {
       const action = actions[activeActionName.current];
       if (action && !isTemporaryLoadingFallback && target === resolveAnimationId(characterAnim)) {
         previewPlayback.ready = true;
@@ -1195,7 +1200,7 @@ export function Character({
           clockElapsedTime: store.currentTime
         }, scene);
       }
-    } else if (!isPaused && !isTPose) {
+    } else if (!isTPose) {
       pendantDelta = delta;
       if (activeActionName.current && actions[activeActionName.current]) {
         const act = actions[activeActionName.current];
@@ -1275,7 +1280,9 @@ export function Character({
 
     collectActions();
     pendantRef.current?.update(pendantDelta, resetPendant);
-    parachuteRef.current?.update(delta);
+    parachuteRef.current?.update(isPaused ? 0 : delta);
+    pausedPoseReady.current = isPaused && !isPreview && !isTemporaryLoadingFallback
+      && (isTPose || Boolean(actions[activeActionName.current]));
 
     // Position XZ réelle de la tête (minimap) — actif ET PNJ. Sans os de tête : non publié → non dessiné
     if (navigationEnabled && !isPreview) {

@@ -171,7 +171,7 @@ function StudioCroppedScene({ zone }: { zone: SpatialZone }) {
         </PreviewCategoryLayerGroup>
         <Floor />
         <PreviewCategoryLayerGroup layer={LAYER_WALKER} visible={layers.character}>
-          <CharacterGroup />
+          <CharacterGroup isPaused />
         </PreviewCategoryLayerGroup>
         <PreviewCategoryLayerGroup layer={LAYER_EQUIPMENT} visible={layers.equipment}><Equipment /></PreviewCategoryLayerGroup>
         <PreviewCategoryLayerGroup layer={LAYER_FURNITURE} visible={layers.furniture}><Furniture /></PreviewCategoryLayerGroup>
