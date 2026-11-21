@@ -12,7 +12,13 @@ Le manifeste `scripts/laundry-household-manifest.json` décrit les dimensions
 mesurées des modèles en centimètres et le décalage du crochet du séchoir chargé.
 Les GLB sont en mètres ; `createStaticGlbItem` les convertit en centimètres.
 Les textures de maille et de mousse sont embarquées dans les GLB. Les copies
-suspendues réutilisent les maillages drapés, sans simulation dans le navigateur.
+suspendues réutilisent les maillages issus de **Blender Cloth**, simulés sur 100 images avec gravité et auto-collision puis figés pour le navigateur. Le caleçon est retenu par une seule petite zone sur un côté de son élastique ; le reste de la taille et les deux jambes tombent librement. Les chaussettes sont également simulées, puis réunies par paire à chaque pince. La déformation pyramidale calculée a été supprimée.
+
+Pour régénérer uniquement le linge suspendu :
+
+```bash
+blender -b --python-exit-code 1 --python scripts/generate-laundry-household.py -- --loaded-only
+```
 Trois vues Blender de chaque modèle sont disponibles dans sa fiche inventaire.
 
 ## Références

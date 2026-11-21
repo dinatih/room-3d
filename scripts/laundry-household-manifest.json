@@ -16,16 +16,16 @@
     "triangles": 8370
   },
   "loadedHookOffsetCm": [
-    -0.0406,
-    4.6
+    -0.4332,
+    3.1088
   ],
   "SockDryer20Loaded.glb": {
     "dimensionsCm": {
-      "w": 37.681,
-      "d": 36.224,
-      "h": 52.543
+      "w": 42.169,
+      "d": 26.329,
+      "h": 66.716
     },
-    "triangles": 148924
+    "triangles": 543064
   },
   "MagicSponge.glb": {
     "dimensionsCm": {

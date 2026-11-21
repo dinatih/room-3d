@@ -4,7 +4,10 @@ Source dimensions are estimates except the sponge's photographed 10 x 6 x 2 cm.
 Metres, Blender Z up; exported glTF Y up. Runtime converts metres to cm.
 """
 from pathlib import Path
-import math, json, os
+import math, json, os, sys
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from red_laundry_cloth import hanging
+LOADED_ONLY = "--loaded-only" in sys.argv
 import bpy, bmesh
 from mathutils import Vector, Matrix
 ROOT=Path(__file__).resolve().parents[1]
@@ -112,28 +115,35 @@ def boxers():
         for left,right in [(-.18,-.025),(.025,.18)]:
             for z in (.006,.012):tube('Double stitched leg hem',[(left+(right-left)*i/24,side*(depth(left+(right-left)*i/24,z)+.001),z) for i in range(25)],.001,thread)
 
-reset();socks();save('red-socks','RedSocksPair.glb')
-reset();boxers();save('red-boxers','RedBoxers.glb')
-# Load standalone garments and pinch each at the top centre. Spread hangs
-# perpendicular to the frame, with ten independent clips per row.
-reset();bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/items/temu-sock-dryer-20/SockDryer20.glb'))
-frame=[o for o in bpy.context.scene.objects if o.type=='MESH']
-for slug,file,row in [('red-socks','RedSocksPair.glb',-1),('red-boxers','RedBoxers.glb',1)]:
-    before=set(bpy.context.scene.objects);bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/items'/slug/file));garments=[o for o in bpy.context.scene.objects if o not in before and o.type=='MESH']
-    # glTF import gives Blender Z up. Bake source transforms before draping.
-    for o in garments:
-        o.data.transform(o.matrix_world);o.matrix_world=Matrix.Identity(4)
-    top=max(v.co.z for o in garments for v in o.data.vertices)
-    for original in garments:
-        for v in original.data.vertices:
-            old=v.co.copy();t=(top-old.z)/top
-            width=.025+.975*math.sin(t*math.pi/2)
-            v.co=((old.y+.1)*.18 if row<0 else old.y*.48,row*.046+old.x*width,.004+old.z-top)
-        for index in range(10):
-            o=original.copy();bpy.context.collection.objects.link(o);o.name=f'{slug} clip {index+1:02}'
-            o.location.x=-.163+index*.326/9
-    for o in garments:bpy.data.objects.remove(o,do_unlink=True)
+if not LOADED_ONLY:
+    reset();socks();save('red-socks','RedSocksPair.glb')
+    reset();boxers();save('red-boxers','RedBoxers.glb')
+# Simulate one template per garment. Bake before placing ten copies at the clips.
+reset();red=mat('Red viscose jersey',(.55,.009,.017),.92);knit(red)
+boxer=hanging('boxers',red)
+boxer_mesh=boxer.data.copy();boxer_mesh.use_fake_user=True
+bpy.data.objects.remove(boxer,do_unlink=True)
+red=mat('Red cotton knit',(.55,.012,.022),.95);knit(red)
+sock=hanging('sock',red)
+# Keep the simulated meshes across scene reset; no live cloth solver at runtime.
+boxer_mesh.use_fake_user=True
+sock_mesh=sock.data.copy();sock_mesh.use_fake_user=True
+bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+bpy.ops.import_scene.gltf(filepath=str(ROOT/'public/items/temu-sock-dryer-20/SockDryer20.glb'))
+for slug,data,row in [('red-boxers',boxer_mesh,1),('red-socks',sock_mesh,-1)]:
+    # Fabric plane perpendicular to the frame. A pair shares a single jaw patch.
+    for index in range(10):
+        for pair_offset in ((-.001,.001) if row<0 else (0,)):
+            o=bpy.data.objects.new(f'{slug} clip {index+1:02}',data)
+            bpy.context.collection.objects.link(o)
+            o.rotation_euler.z=math.pi/2
+            o.location=(-.163+index*.326/9+pair_offset,row*.046,.004)
 save('temu-sock-dryer-20','SockDryer20Loaded.glb')
+if LOADED_ONLY:
+    manifest=ROOT/'scripts/laundry-household-manifest.json'
+    previous=json.loads(manifest.read_text());previous.update(REPORT)
+    manifest.write_text(json.dumps(previous,indent=2)+'\n')
+    os._exit(0)
 
 reset();foam=mat('White open cell cleaning foam',(.94,.94,.92),1)
 # Packed pore normal map supported by glTF (not a Blender-only shader).

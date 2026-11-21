@@ -42,7 +42,7 @@ for (const slug of ['red-socks', 'red-boxers']) {
       document.body.innerHTML = '<div id="fixture" style="width:1000px;height:950px"></div>';
       const fixtures = [
         h('group', {name:'rack',position:[32,0,0],rotation:[0,Math.PI/2,0]}, h(Mackapar50530988), h(MackaparHangers)),
-        h('group', {name:'loaded',position:[40,122.42,0],rotation:[0,Math.PI/3,0]}, h('group',{position:[.0406,0,-4.6]},h(SockDryer20Loaded))),
+        h('group', {name:'loaded',position:[40,122.42,0],rotation:[0,Math.PI/3,0]}, h('group',{position:[.4332,0,-3.1088]},h(SockDryer20Loaded))),
         h('group', {name:'sponge',position:[110,0,0]}, h(MagicSponge)),
         h('group', {name:'steamer',position:[100,0,-30],rotation:[0,Math.PI,0]}, h(RowentaDR8250)),
         h('group', {name:'basket',position:[100,0,30]}, h(Plogsvaeng), h('group',{position:[0,.4,0]},h(MagicSponge))),

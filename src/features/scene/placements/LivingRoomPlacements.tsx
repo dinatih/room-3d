@@ -116,8 +116,8 @@ const MACK_UPPER_RAIL_TOP = 189.08;
 const MACK_LOWER_RAIL_TOP = 122.08;
 // Loaded GLB is centred on its bounds. Offset of the hook from that centre,
 // measured by generate-laundry-household.py (see laundry-household-manifest.json).
-const SOCK_DRYER_HOOK_X = -0.0406;
-const SOCK_DRYER_HOOK_Z = 4.6;
+const SOCK_DRYER_HOOK_X = -0.4332;
+const SOCK_DRYER_HOOK_Z = 3.1088;
 const SOCK_DRYER_WIRE_DIAMETER = 0.34;
 const MACK_HALF_DEPTH = 16.035; // structure du meuble seule, sans les Drona du haut qui débordent
 const MACK_Z = ROOM_D - 38.251 * 2 - FURNITURE_WALL_CLEARANCE - MACK_HALF_DEPTH; // plaqué contre Kallax Cuisine
