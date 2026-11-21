@@ -670,6 +670,7 @@ export function Studio() {
         if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
         if (k === 'i') { e.preventDefault(); toggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
         if (k === 'w') { e.preventDefault(); onToggleLayer('wallStructure'); cameraState.invalidate?.(); return; }
+        if (k === 's') { e.preventDefault(); if (e.repeat) return; onToggleLayer('cutWalls'); cameraState.invalidate?.(); return; }
         if (k === 'q') { e.preventDefault(); onToggleLayer('structure'); cameraState.invalidate?.(); return; }
         if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }
         if (k === 'd') { e.preventDefault(); onToggleLayer('decor'); cameraState.invalidate?.(); return; }

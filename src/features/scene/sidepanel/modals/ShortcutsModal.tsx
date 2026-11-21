@@ -89,6 +89,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Équipements (toggle)"       keys={['Alt+U']} />
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
+              <R label="Murs coupés à 1,35 m (toggle)" keys={['Alt+S']} />
               <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
               <R label={<><i className="bi bi-box-seam me-1" aria-hidden="true" />Grille des objets d’inventaire (toggle)</>} keys={['Alt+I']} />
               <R label={<><i className="bi bi-rulers me-1" aria-hidden="true" />Mesures réelles (toggle)</>} keys={['Alt+M']} />
