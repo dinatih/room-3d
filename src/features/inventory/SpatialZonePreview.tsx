@@ -1,3 +1,5 @@
+import { PreviewCameraKeyboardController } from './PreviewCameraKeyboardController';
+import { resolveCameraView } from '../scene/camera/cameraViews';
 import { memo, useState, useMemo, useEffect, useRef, useLayoutEffect, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Html, AdaptiveDpr, PerformanceMonitor, useProgress } from '@react-three/drei';
@@ -450,7 +452,7 @@ function SpatialZoneStatsCollector({ onStats }: { onStats?: (s: { triangles: num
 
 // ── Camera view controller for preview ────────────────────────────────────
 
-function PreviewCameraController({
+export function SpatialZoneCameraControls({
   centerX, centerY, centerZ, camDistance, zoneSize,
 }: {
   centerX: number; centerY: number; centerZ: number; camDistance: number; zoneSize: number;
@@ -569,10 +571,13 @@ function PreviewCameraController({
 
       // The shared presets are expressed in the apartment's world coordinates.
       // A zone preview needs the same direction, recentered and scaled locally.
-      const fallback = new THREE.Vector3(pos[0] - target[0], pos[1] - target[1], pos[2] - target[2]).normalize();
-      const direction = key && CAMERA_VIEW_DIRECTIONS[key]
-        ? new THREE.Vector3(...CAMERA_VIEW_DIRECTIONS[key]).normalize()
-        : fallback;
+      let direction: THREE.Vector3;
+      if (key && CAMERA_VIEW_DIRECTIONS[key]) {
+        direction = new THREE.Vector3(...CAMERA_VIEW_DIRECTIONS[key]).normalize();
+      } else {
+        const preset = key ? resolveCameraView(key, detail.projection ?? 'persp') : { pos, target };
+        direction = new THREE.Vector3(...preset.pos).sub(new THREE.Vector3(...preset.target)).normalize();
+      }
       const dx = direction.x;
       const dy = direction.y;
       const dz = direction.z;
@@ -654,6 +659,10 @@ export function SpatialZonePreview({
 
   const isMobile = useIsMobile();
   const [showFpsGraph, setShowFpsGraph] = useState(() => !isMobile);
+  const togglePerformance = useCallback(() => setShowFpsGraph(value => !value), []);
+  const resetView = useCallback(() => {
+    document.dispatchEvent(new CustomEvent('camera-view', { detail: { key: 'iso-se', projection: 'persp' } }));
+  }, []);
   const [readyZoneId, setReadyZoneId] = useState<string | null>(null);
   const sceneReady = readyZoneId === zone.id;
   const warmupChannel = useMemo(() => new ZoneWarmupChannel(), [zone.id]);
@@ -693,7 +702,8 @@ export function SpatialZonePreview({
         {sceneReady && <DevToolsCollector />}
         <SpatialZoneStatsCollector onStats={onStats} />
 
-        <PreviewCameraController
+        <PreviewCameraKeyboardController onResetView={resetView} onTogglePerformance={togglePerformance} />
+        <SpatialZoneCameraControls
           centerX={centerX}
           centerY={centerY}
           centerZ={centerZ}
