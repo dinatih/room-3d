@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } fr
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
 import { InventorySmartActions, getInventorySmartObjects, type SmartActionPreviewRequest } from './InventorySmartActions';
-import { SpatialZonePreview } from './SpatialZonePreview';
+import { SpatialZonePreview, SpatialZoneAiToggle } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
 import { DUO_ANIMATIONS } from '@features/scene/animations/duoAnimations';
 import { LaraLifePanel } from '@features/scene/sidepanel/sections/LaraLifePanel';
@@ -121,7 +121,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
           />
         </div>
 
-        <ViewControlBar inline showOrbitControls inventoryLayout />
+        <ViewControlBar inline showOrbitControls inventoryLayout afterToolbarActions={<SpatialZoneAiToggle />} />
 
         <div className="p-3">
           <h3 className="fw-bold mb-1 text-dark fs-5">{zone.name}</h3>

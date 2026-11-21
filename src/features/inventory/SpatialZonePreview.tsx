@@ -617,6 +617,22 @@ function PreviewCameraController({
   );
 }
 
+export function SpatialZoneAiToggle() {
+  const showZoneUi = useSceneStore(state => state.layers.aiZones);
+  const toggleLayer = useSceneStore(state => state.toggleLayer);
+  return (
+    <button
+      type="button"
+      onClick={() => toggleLayer('aiZones')}
+      aria-pressed={showZoneUi}
+      title={showZoneUi ? 'Masquer les marqueurs des zones IA' : 'Afficher les marqueurs des zones IA'}
+      className={`btn btn-sm ${showZoneUi ? 'btn-primary' : 'btn-light border'} shadow-sm`}
+    >
+      🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
+    </button>
+  );
+}
+
 export function SpatialZonePreview({
   zone,
   height = '100%',
@@ -642,8 +658,6 @@ export function SpatialZonePreview({
   const sceneReady = readyZoneId === zone.id;
   const warmupChannel = useMemo(() => new ZoneWarmupChannel(), [zone.id]);
   const handleSceneReady = useCallback(() => setReadyZoneId(zone.id), [zone.id]);
-  const showZoneUi = useSceneStore(state => state.layers.aiZones);
-  const toggleLayer = useSceneStore(state => state.toggleLayer);
 
   const camPosition: [number, number, number] = [
     centerX + camDistance * 0.75, centerY + camDistance * 0.7, centerZ + camDistance * 0.75,
@@ -721,39 +735,6 @@ export function SpatialZonePreview({
             <i className="bi bi-bar-chart-fill" style={{ fontSize: 13 }} aria-hidden="true" />
           </button>
         ))}
-        <div className="bg-body text-body border rounded px-2 py-1 small fw-bold d-flex align-items-center gap-2 shadow-sm">
-          <span>{zone.environment === 'indoor' ? '🏠' : '🌳'}</span>
-          <span>Vue Découpée : {zone.name}</span>
-        </div>
-      </div>
-
-      <div style={{
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        display: 'flex',
-        gap: 6
-      }}>
-        <button
-          onClick={() => toggleLayer('aiZones')}
-          aria-pressed={showZoneUi}
-          title={showZoneUi ? 'Masquer les marqueurs des zones IA' : 'Afficher les marqueurs des zones IA'}
-          className={`btn btn-sm ${showZoneUi ? 'btn-primary' : 'btn-light border'} shadow-sm`}
-        >
-          🤖 {showZoneUi ? 'Masquer zones IA' : 'Afficher zones IA'}
-        </button>
-        {sceneReady && (
-          <button
-            onClick={() => setShowFpsGraph(v => !v)}
-            className={`btn btn-sm ${showFpsGraph ? 'btn-primary' : 'btn-light border'} shadow-sm`}
-          >
-            📊 {showFpsGraph ? 'Masquer FPS' : 'Afficher FPS'}
-          </button>
-        )}
-      </div>
-
-      <div className="position-absolute bottom-0 end-0 m-2 bg-body text-body-secondary border rounded px-2 py-1 small pe-none">
-        Clic gauche : rotation • Molette : zoom • Clic droit : translation
       </div>
     </div>
   );
