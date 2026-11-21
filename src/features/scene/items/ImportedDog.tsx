@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { AnimationMixer, Group, LoopOnce, Vector3, type AnimationAction } from 'three';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
 import { useAnimPreviewStore } from '@features/inventory/useAnimPreviewStore';
 import { cameraState } from '../cameraState';
 import { glbLocalBBox } from '../glbUtils';
+import { BlobShadow } from '../BlobShadow';
 import { useGLTFClone } from '../useGLTFClone';
 import { createDogBehavior, resumeDogBehavior, updateDogBehavior, releaseDogRoute, transitionDogAction, type DogContext } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
@@ -18,6 +19,7 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
   const { scene, animations } = useGLTFClone(path);
   const mixer = useMemo(() => new AnimationMixer(scene), [scene]);
   const root = useRef<Group>(null);
+  const [shadowSize, setShadowSize] = useState<[number, number] | null>(null);
   const life = useMemo(createDogBehavior, []);
   const active = useRef<AnimationAction | null>(null);
   const navigationEnabled = useNavigationEnabled();
@@ -52,6 +54,7 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
     scene.position.set(-(bounds.min.x + bounds.max.x) / 2 * scale, -bounds.min.y * scale, -(bounds.min.z + bounds.max.z) / 2 * scale);
     size.multiplyScalar(scale);
     onSize?.(size);
+    setShadowSize([size.x, size.z]);
     if (autonomous) {
       setAgentProfile(agentId!, { radius: Math.min(size.x, size.z) / 2, height });
       root.current!.updateWorldMatrix(true, false);
@@ -78,5 +81,10 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
     root.current!.getWorldQuaternion(life.rotation);
     cameraState.positions[agentId!] = { x: life.position.x, y: life.position.y, z: life.position.z, yaw: life.euler.setFromQuaternion(life.rotation).y };
   } mixer.update(delta); });
-  return <group ref={root}><primitive object={scene} /></group>;
+  return (
+    <group ref={root}>
+      {shadowSize && <BlobShadow size={shadowSize} />}
+      <primitive object={scene} />
+    </group>
+  );
 }
