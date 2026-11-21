@@ -4,7 +4,7 @@
  * upper=true → cadre haut GLB, matelas Anneland + surmatelas Nasfjallet
  * Coordonnées locales : centré XZ (longueur sur X), Y=0 = sol.
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useGLTFClone, preloadSceneGLTF } from '@features/scene/useGLTFClone';
 import { removeGlbLines, mergeGlbByMaterial, glbLocalBBox } from '@features/scene/glbUtils';
 import * as THREE from 'three';
@@ -21,12 +21,17 @@ const DUVET_GLB = 'models/bed-duvet.glb';
 import { Blaskata50569513 } from './Blaskata50569513';
 
 function RealisticBolsters({ topY, zOffset = -26 }: { topY: number; zOffset?: number }) {
+  const jitter = useMemo(() => ([
+    { dx: (Math.random() * 2 - 1) * 1.5, dz: (Math.random() * 2 - 1) * 1.5, rotY: (Math.random() * 2 - 1) * 0.07 },
+    { dx: (Math.random() * 2 - 1) * 1.5, dz: (Math.random() * 2 - 1) * 1.5, rotY: (Math.random() * 2 - 1) * 0.07 },
+  ]), []);
+
   return (
     <group position={[0, topY + 5, zOffset]}>
-      <group position={[-50, 0, 0]} rotation={[0, 0, 0]}>
+      <group position={[-50 + jitter[0].dx, 0, jitter[0].dz]} rotation={[0, jitter[0].rotY, 0]}>
         <Blaskata50569513 />
       </group>
-      <group position={[50, 0, 0]} rotation={[0, 0, 0]}>
+      <group position={[50 + jitter[1].dx, 0, jitter[1].dz]} rotation={[0, jitter[1].rotY, 0]}>
         <Blaskata50569513 />
       </group>
     </group>
