@@ -1,7 +1,7 @@
 /**
  * Tapis pelouse synthétique SDB — modèle Blender GLB (200 × 100 × 1,2 cm).
  * Rendu en coordonnées locales : centre X/Z à l'origine, Y=0 = sol.
- * Utilisé dans BathroomPlacements.tsx. Pas d'entrée inventaire.
+ * Utilisé dans BathroomPlacements.tsx. Inventaire : grass-rug-sdb.
  */
 import { createStaticGlbItem } from './createStaticGlbItem';
 

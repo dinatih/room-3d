@@ -59,6 +59,14 @@ export const INVENTORY: InventoryItem[] = [
   {"id":"axe-provocation","name":"AXE Provocation — gel douche 5-en-1 400 ml","brand":"AXE","category":"bathroom","qty":1,"dims":{"w":8,"d":4.4,"h":19.8},"price":"3,38","location":"Étagère du placard SDB","url":"https://www.amazon.fr/dp/B0F1TVYMQ1?th=1","notes":"Noix de coco et poivre noir. Flacon noir à ailes violettes. Reconstitution Blender depuis les photos produit ; dimensions estimées.","glbPath":"items/axe-provocation/axe-provocation.glb","photos":["items/axe-provocation/product-1.jpg","items/axe-provocation/product-2.jpg","items/axe-provocation/product-3.jpg","items/axe-provocation/product-4.jpg","items/axe-provocation/product-5.jpg","items/axe-provocation/product-6.jpg","items/axe-provocation/product-7.jpg","items/axe-provocation/preview-three-quarter.png","items/axe-provocation/preview-front.png","items/axe-provocation/preview-back.png"],"description":"Noix de coco et poivre noir. Flacon noir à ailes violettes."},
   {"id":"mixa-bebe","name":"Mixa Bébé — lait de toilette très doux 750 ml","brand":"Mixa","category":"bathroom","qty":1,"dims":{"w":9,"d":5,"h":25},"price":"6,50","location":"Bord du meuble SDB Est, devant le DRÖNA","url":"https://www.amazon.fr/Mixa-B%C3%A9b%C3%A9-Quotidienne-D%C3%A9licates-Hypoallerg%C3%A9nique/dp/B0FCSL71BG","notes":"Lait de toilette sans rinçage, huile d’amande douce et vitamine E ; flacon blanc à pompe bleue. Reconstitution Blender depuis les photos produit ; dimensions estimées.","glbPath":"items/mixa-bebe/mixa-bebe.glb","photos":["items/mixa-bebe/product-1.jpg","items/mixa-bebe/product-2.jpg","items/mixa-bebe/product-3.jpg","items/mixa-bebe/product-4.jpg","items/mixa-bebe/product-5.jpg","items/mixa-bebe/product-6.jpg","items/mixa-bebe/preview-three-quarter.png","items/mixa-bebe/preview-front.png","items/mixa-bebe/preview-back.png"],"description":"Lait de toilette sans rinçage, huile d’amande douce et vitamine E ; flacon blanc à pompe bleue."},
   {
+    id: 'grass-rug-sdb', name: 'Tapis gazon synthétique', brand: 'Lidl',
+    category: 'bathroom', qty: 1, price: '15,00', dims: { w: 200, d: 100, h: 1.2 },
+    glbPath: 'items/grass-rug/grass-rug.glb',
+    location: 'Salle de bain (au sol devant la douche)',
+    tags: ['salle de bain', 'tapis', 'gazon'],
+    notes: 'Tapis gazon synthétique 200 × 100 × 1,2 cm acheté chez Lidl (15 €). Modèle Blender GLB avec texture seamless et sous-face caoutchouc.'
+  },
+  {
     id: 'kabba-laundry-bag', name: 'Cabas KABBA rouge MAXI FAMILLE — linge sale', brand: 'Maxi Bazar',
     category: 'bathroom', qty: 1, price: '5,99', dims: { w: 69.46, d: 28.01, h: 77.03 },
     glbPath: 'items/kabba-laundry-bag/KabbaLaundryBag.glb',
