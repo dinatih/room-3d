@@ -2,47 +2,30 @@ import { useRef, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Mackapar50530988 } from './Mackapar50530988';
 import { SpruttigInstances } from './Spruttig20317079';
-import { TShirtHanging } from './TShirt';
 import { DroneCell, DF } from './Drona';
 import type { SceneModelProps } from '@shared/types';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-// Hauteurs des tringles de penderie MACKAPÄR
+// Hauteur de la tringle haute de penderie MACKAPÄR
 const TOP_RAIL_Y    = 172; // 174 - 2 cm
-const BOTTOM_RAIL_Y = 106; // 107 - 1 cm
 const HANGER_Z      = [-25, -15, -5, 5, 15, 25];
 // Cintres de biais : leur largeur (~41 cm) dépasse la profondeur du meuble (32 cm) et traverserait le Kallax voisin.
 const HANGER_ROTS   = [0.75, 0.8, 0.7, 0.78, 0.72, 0.76];
 
-// Keep the twelve ordinary hangers: eleven above, one below for the tee.
-// The other lower-rail positions belong to the clip dryer, without coat hangers
-// passing through the socks and underwear.
+// Keep the eleven upper-rail hangers. The lower-rail positions belong to the
+// clip dryer, without coat hangers passing through the socks and underwear.
 const UPPER_HANGER_COUNT = HANGER_Z.length * 2 - 1;
-const MACKAPAR_HANGER_TRANSFORMS = [
-  ...Array.from({ length: UPPER_HANGER_COUNT }, (_, i) => ({
-    position: [0, TOP_RAIL_Y, HANGER_Z[0] + (HANGER_Z[HANGER_Z.length - 1] - HANGER_Z[0]) * i / (UPPER_HANGER_COUNT - 1)] as [number, number, number],
-    rotation: [0, HANGER_ROTS[i % HANGER_ROTS.length], 0] as [number, number, number],
-  })),
-  {
-    position: [0, BOTTOM_RAIL_Y, HANGER_Z[0]] as [number, number, number],
-    rotation: [0, HANGER_ROTS[0], 0] as [number, number, number],
-  },
-];
+const MACKAPAR_HANGER_TRANSFORMS = Array.from({ length: UPPER_HANGER_COUNT }, (_, i) => ({
+  position: [0, TOP_RAIL_Y, HANGER_Z[0] + (HANGER_Z[HANGER_Z.length - 1] - HANGER_Z[0]) * i / (UPPER_HANGER_COUNT - 1)] as [number, number, number],
+  rotation: [0, HANGER_ROTS[i % HANGER_ROTS.length], 0] as [number, number, number],
+}));
 
 export function MackaparHangers() {
   return (
-    <>
-      {/* 12 cintres Spruttig instanciés en un seul draw call */}
-      <SpruttigInstances
-        transforms={MACKAPAR_HANGER_TRANSFORMS}
-        userData={{ sceneItemRoot: true, itemName: 'Cintres Spruttig Mackapär' }}
-      />
-
-      {/* T-shirt noir suspendu sur le cintre le plus à l'ouest de la barre basse (z = -25) */}
-      <group position={[0, BOTTOM_RAIL_Y - 8, HANGER_Z[0]]} rotation={[0, HANGER_ROTS[0], 0]}>
-        <TShirtHanging />
-      </group>
-    </>
+    <SpruttigInstances
+      transforms={MACKAPAR_HANGER_TRANSFORMS}
+      userData={{ sceneItemRoot: true, itemName: 'Cintres Spruttig Mackapär' }}
+    />
   );
 }
 

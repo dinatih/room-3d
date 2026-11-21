@@ -737,8 +737,8 @@ export function LivingRoomDecor() {
         <JordanHexMule />
       </group>
 
-      {/* Cintres et vêtements Mackapär (T-shirt noir + cintres Spruttig) */}
-      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, itemName: 'Cintres et T-shirt Mackapär' }}>
+      {/* Cintres Mackapär (tringle haute) */}
+      <group position={[MACK_X, 0, MACK_Z]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, itemName: 'Cintres Mackapär' }}>
         <MackaparHangers />
       </group>
 
