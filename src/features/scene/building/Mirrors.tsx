@@ -1,8 +1,8 @@
 /**
  * Mirrors.tsx — Miroirs Nissedal et plans de réflexion Three.js Reflector.
  */
-import { useEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -54,6 +54,8 @@ function MirrorSurface({ geometry, position, rotationY }: {
   rotationY: number;
 }) {
   const [x, y, z] = position;
+  const antialias = useSceneStore(state => state.mirrorAntialias);
+  const invalidate = useThree(state => state.invalidate);
   const reflector = useMemo(() => {
     geometry.computeBoundingBox();
     const mir = new Reflector(geometry, { textureWidth: MIRROR_RESOLUTION, textureHeight: MIRROR_RESOLUTION, color: 0xbbbbbb, multisample: 0 });
@@ -102,6 +104,16 @@ function MirrorSurface({ geometry, position, rotationY }: {
 
     return mir;
   }, [geometry, x, y, z, rotationY]);
+  useLayoutEffect(() => {
+    const target = reflector.getRenderTarget();
+    const samples = antialias ? 4 : 0;
+    if (target.samples !== samples) {
+      // Reallocate the GPU buffers when changing multisampling in place.
+      target.dispose();
+      target.samples = samples;
+      invalidate();
+    }
+  }, [reflector, antialias, invalidate]);
   useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }

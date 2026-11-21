@@ -25,6 +25,8 @@ export function LayersSection({
   lidarOpacity,
   onToggleLidarOpacity,
 }: LayersSectionProps) {
+  const mirrorAntialias = useSceneStore(state => state.mirrorAntialias);
+  const setMirrorAntialias = useSceneStore(state => state.setMirrorAntialias);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const screenVideosEnabled = useSceneStore(state => state.screenVideosEnabled);
   const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
@@ -176,6 +178,21 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-robot', 'Robots'), 'robots')}
       {layerBtn('Surfaces des miroirs',           'mirrorSurfaces')}
       {layerBtn('Miroirs MD (Moyenne déf)',       'mirrors')}
+      <div className="px-3 py-2 border-bottom">
+        <div className="form-check form-switch small mb-0">
+          <input
+            id="mirror-antialias"
+            type="checkbox"
+            role="switch"
+            className="form-check-input"
+            checked={mirrorAntialias}
+            onChange={(e) => setMirrorAntialias(e.target.checked)}
+          />
+          <label htmlFor="mirror-antialias" className="form-check-label" title="Lisse les contours des reflets, avec un coût GPU supplémentaire.">
+            Anticrénelage des miroirs (MSAA ×4)
+          </label>
+        </div>
+      </div>
       {layerBtn(iconLabel('bi-robot', 'Zones IA'), 'aiZones')}
       {layerBtn(iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn(iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
