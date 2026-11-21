@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { LAYER_SHORTCUTS } from '../../layerShortcuts';
 
 export function ShortcutsModal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
@@ -48,10 +49,8 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Inventaire Animations (direct)" keys={['Shift+I']} />
               <R label="Basculer Ortho / Perspective" keys={['O', 'P']} />
               <R label="Inventaire Personnages (direct)" keys={['Alt+P']} />
-              <R label={<><i className="bi bi-masks-theater me-1" aria-hidden="true" />Personnages Extra (toggle)</>} keys={['Alt+E']} />
               <R label="Sélecteur d'animations (toggle)" keys={['A']} />
               <R label="Sélecteur animations Duo (toggle)" keys={['Z']} />
-              <R label="Zones IA (toggle)"          keys={['Shift+A']} />
               <R label="Debug gabarits PNJ + trajets et obstacles (toggle)" keys={['J']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
               <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
@@ -59,8 +58,6 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label={<>Ambiance HDRI aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['5']} />
               <R label={<><i className="bi bi-chat-dots me-1" aria-hidden="true" />Bulle de pensées (toggle)</>} keys={['6']} />
-              <R label={<><i className="bi bi-crosshair me-1" aria-hidden="true" />Pistolets Lara (toggle)</>} keys={['7']} />
-              <R label={<><i className="bi bi-handbag me-1" aria-hidden="true" />Accessoires Lara (toggle)</>} keys={['8']} />
               <R label="Minimap 2D (toggle)"        keys={['M', '9']} />
               <R label={<><i className="bi bi-heart-pulse-fill me-1 text-danger" aria-hidden="true" />Vie du personnage actif (ouvrir/fermer)</>} keys={['N']} />
               <R label="Performances & Stats (toggle)" keys={['H']} />
@@ -69,30 +66,23 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Vue du dessus"               keys={['Alt+T']} />
               <R label="Vue top-down suivi perso (toggle)" keys={['Y']} />
               <R label="Avion en papier (toggle)"   keys={['Alt+V']} />
-              <R label="Afficher / masquer la grille" keys={['Alt+B']} />
               <R label="Grille de personnages (toggle)"       keys={['G']} />
-              <R label={<><i className="bi bi-grid-3x3 me-1" aria-hidden="true" />Wireframe coloré (toggle)</>} keys={['W']} />
               <R label="Enlever le haut (toggle)"   keys={['Alt+Z']} />
               <R label="Enlever le bas (toggle)"    keys={['Alt+C']} />
               <R label="Déshabiller les Lara (toggle)" keys={['Alt+X']} />
               <R label="Haut bikini (toggle)"       keys={['Shift+Z']} />
               <R label="Bas bikini (toggle)"        keys={['Shift+C']} />
               <R label="Haut et bas bikini (toggle)" keys={['Shift+X']} />
-              <R label="Chaussures Lara (toggle)" keys={['Shift+V']} />
-              <R label="Lunettes Lara (toggle)"   keys={['Shift+B']} />
-              <R label="Squelettes / Bones (toggle)" keys={['K']} />
-              <R label="Structure murale (toggle)"  keys={['Alt+W']} />
-              <R label="Dalle et plafond (toggle)"  keys={['Alt+Q']} />
-              <R label="Mobilier (toggle)"          keys={['Alt+F']} />
-              <R label="Décoration (toggle)"        keys={['Alt+D']} />
-              <R label="Habillage (toggle)"         keys={['Alt+H']} />
-              <R label="Équipements (toggle)"       keys={['Alt+U']} />
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
-              <R label="Arêtes des murs (toggle)"   keys={['Alt+A']} />
-              <R label="Murs coupés à 1,35 m (toggle)" keys={['Alt+S']} />
-              <R label="Piliers seuls (toggle)"     keys={['Alt+Shift+P']} />
-              <R label={<><i className="bi bi-box-seam me-1" aria-hidden="true" />Grille des objets d’inventaire (toggle)</>} keys={['Alt+I']} />
-              <R label={<><i className="bi bi-rulers me-1" aria-hidden="true" />Mesures réelles (toggle)</>} keys={['Alt+M']} />
+              {LAYER_SHORTCUTS.map(entry => (
+                <R
+                  key={entry.layerKey}
+                  label={entry.modalIcon
+                    ? <><i className={`bi ${entry.modalIcon} me-1`} aria-hidden="true" />{entry.modalLabel} (toggle)</>
+                    : `${entry.modalLabel} (toggle)`}
+                  keys={[entry.shortcut]}
+                />
+              ))}
               <R label="Quitter follow / top-down / ortho" keys={['Échap']} />
               <R label="Changer de personnage"      keys={['L']} />
             </div>

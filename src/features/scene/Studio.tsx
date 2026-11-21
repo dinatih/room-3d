@@ -27,6 +27,7 @@ import { CharacterButton } from './CharacterButton';
 import { PanelPopover } from './sidepanel/PanelPopover';
 import { TOOLBAR_BUTTON_CLASS } from './toolbarStyles';
 import { ShortcutsModal } from './sidepanel/modals/ShortcutsModal';
+import { matchLayerShortcut } from './layerShortcuts';
 import { Walls, Floor, DoorsPlacement, MirrorFrames, MirrorReflectors } from './Building';
 import { MagazineCutController } from './building/MagazineCutController';
 import { MAGAZINE_CUT_HEIGHT } from './photo/clipGeometryY';
@@ -644,7 +645,18 @@ export function Studio() {
       const t = e.target as HTMLElement | null;
       if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
 
-      // Alt+<key> → layer toggles
+      if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase()) && !e.altKey && !e.shiftKey) return;
+
+      const layerShortcut = matchLayerShortcut(e);
+      if (layerShortcut) {
+        e.preventDefault();
+        if (e.repeat) return;
+        toggleLayer(layerShortcut.layerKey);
+        cameraState.invalidate?.();
+        return;
+      }
+
+      // Alt+<key> → actions non-calques
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         const k = e.key.toLowerCase();
         if (k === 'k') {
@@ -654,29 +666,12 @@ export function Studio() {
           store.setLaraCount(store.layers.laraCount === ALL_LARA_COUNT ? 4 : ALL_LARA_COUNT);
           return;
         }
-        if (k === 'p') {
+        if (k === 'p' && !e.shiftKey) {
           e.preventDefault();
-          if (e.shiftKey) {
-            onToggleLayer('pillarsOnly');
-            cameraState.invalidate?.();
-          } else {
-            setInventoryInitialCat('characters');
-            setShowInventory(true);
-          }
+          setInventoryInitialCat('characters');
+          setShowInventory(true);
           return;
         }
-        if (k === 'b' && !e.shiftKey) { e.preventDefault(); if (e.repeat) return; onToggleLayer('grid'); cameraState.invalidate?.(); return; }
-        if (k === 'm') { e.preventDefault(); onToggleLayer('measuredDimensions'); cameraState.invalidate?.(); return; }
-        if (k === 'a') { e.preventDefault(); onToggleLayer('wallEdges'); cameraState.invalidate?.(); return; }
-        if (k === 'i') { e.preventDefault(); toggleLayer('inventoryGrid'); cameraState.invalidate?.(); return; }
-        if (k === 'w') { e.preventDefault(); onToggleLayer('wallStructure'); cameraState.invalidate?.(); return; }
-        if (k === 's') { e.preventDefault(); if (e.repeat) return; onToggleLayer('cutWalls'); cameraState.invalidate?.(); return; }
-        if (k === 'q') { e.preventDefault(); onToggleLayer('structure'); cameraState.invalidate?.(); return; }
-        if (k === 'f') { e.preventDefault(); onToggleLayer('furniture'); cameraState.invalidate?.(); return; }
-        if (k === 'd') { e.preventDefault(); onToggleLayer('decor'); cameraState.invalidate?.(); return; }
-        if (k === 'h') { e.preventDefault(); onToggleLayer('furnishings'); cameraState.invalidate?.(); return; }
-        if (k === 'e') { e.preventDefault(); onToggleLayer('extraCharacters'); cameraState.invalidate?.(); return; }
-        if (k === 'u') { e.preventDefault(); onToggleLayer('equipment'); cameraState.invalidate?.(); return; }
         if (k === 'z') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraTop', useSceneStore.getState().layers.laraTop === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'c') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraBottom', useSceneStore.getState().layers.laraBottom === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'x') { e.preventDefault(); const store = useSceneStore.getState(); const value = store.layers.laraTop === 'none' && store.layers.laraBottom === 'none' ? 'native' : 'none'; store.setLaraClothing('laraTop', value); store.setLaraClothing('laraBottom', value); cameraState.invalidate?.(); return; }
@@ -713,43 +708,14 @@ export function Studio() {
           cameraState.invalidate?.();
           return;
         }
-        if (k === 'a' || e.code === 'KeyA') {
-          e.preventDefault();
-          if (e.repeat) return;
-          onToggleLayer('aiZones');
-          cameraState.invalidate?.();
-          return;
-        }
-        if (k === 'v' || e.code === 'KeyV') {
-          e.preventDefault();
-          if (e.repeat) return;
-          onToggleLayer('laraShoes');
-          cameraState.invalidate?.();
-          return;
-        }
-        if (k === 'b' || e.code === 'KeyB') {
-          e.preventDefault();
-          if (e.repeat) return;
-          onToggleLayer('laraGlasses');
-          cameraState.invalidate?.();
-          return;
-        }
       }
 
-      if (cameraState.mode === 'plane' && ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) return;
-
-      if (e.key === 'w' || e.key === 'W') {
-        onToggleLayer('wireframe');
-        cameraState.invalidate?.();
-      } else if (e.key === 'i' || e.key === 'I') {
+      if (e.key === 'i' || e.key === 'I') {
         e.preventDefault();
         if (e.repeat) return;
         setInventoryInitialCat(e.shiftKey ? 'animations' : 'all');
         if (e.shiftKey) setShowInventory(true);
         else setShowInventory(prev => !prev);
-      } else if (e.key === 'k' || e.key === 'K') {
-        onToggleLayer('skeleton');
-        cameraState.invalidate?.();
       } else if (e.key === '5' || e.code === 'Digit5' || e.code === 'Numpad5') {
         const store = useSceneStore.getState();
         const otherHdris = HDRI_LIST.filter(h => h.id !== store.currentHdri);
@@ -757,12 +723,6 @@ export function Studio() {
         if (next) {
           store.setHdri(next.id);
         }
-      } else if (e.key === '7' || e.code === 'Digit7' || e.code === 'Numpad7') {
-        onToggleLayer('laraPistols');
-        cameraState.invalidate?.();
-      } else if (e.key === '8' || e.code === 'Digit8' || e.code === 'Numpad8') {
-        onToggleLayer('accessories');
-        cameraState.invalidate?.();
       } else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') {
         toggleHideUI();
       } else if (e.key === 'h' || e.key === 'H') {

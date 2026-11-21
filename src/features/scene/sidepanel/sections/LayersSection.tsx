@@ -2,6 +2,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import type { ScreenVideoQuality } from '../../screenVideoConfig';
 import { dispatchKey, type LayerState, type LidarMode } from '../types';
 import { NAVIGATION_COMFORT_CM, NAVIGATION_COMFORT_COLOR } from '../../ai/navigation/comfort';
+import { LAYER_SHORTCUT_BY_LAYER } from '../../layerShortcuts';
 import { DEBUG_PRESETS } from '../../store/debugPresets';
 import { LAYER_DEFAULTS } from '../../store/layerUrlParams';
 
@@ -67,6 +68,7 @@ export function LayersSection({
   ) => {
     const on = layers[key];
     const wfOn = wireframeKey ? !!layers[wireframeKey] : false;
+    const shortcut = LAYER_SHORTCUT_BY_LAYER[key];
     return (
       <div 
         className="w-100 border-0 border-bottom py-1 px-3 d-flex align-items-center justify-content-between gap-2"
@@ -80,7 +82,7 @@ export function LayersSection({
           className="btn btn-sm btn-link p-0 text-start text-dark text-decoration-none flex-grow-1 text-truncate small"
           onClick={() => onToggleLayer(key)}
         >
-          {label}
+          {label}{shortcut ? ` (${shortcut})` : ''}
         </button>
         <div className="d-flex align-items-center gap-1 flex-shrink-0">
           <button
@@ -147,11 +149,11 @@ export function LayersSection({
           </select>
         </div>
       </div>
-      {layerBtn(iconLabel('bi-bricks', 'Structure murale (Alt+W)'), 'wallStructure', 'wireframeWallStructure')}
+      {layerBtn(iconLabel('bi-bricks', 'Structure murale'), 'wallStructure', 'wireframeWallStructure')}
       {layerBtn(iconLabel('bi-layers', 'Revêtements sol (+ plinthes)'), 'floorCoverings')}
-      {layerBtn(iconLabel('bi-building', 'Dalle et plafond (Alt+Q)'), 'structure', 'wireframeStructure')}
+      {layerBtn(iconLabel('bi-building', 'Dalle et plafond'), 'structure', 'wireframeStructure')}
       {layerBtn(iconLabel('bi-door-open', 'Portes'), 'doors', 'wireframeDoors')}
-      {layerBtn(iconLabel('bi-scissors', 'Murs coupés à 1,35 m (Magazine) (Alt+S)'), 'cutWalls')}
+      {layerBtn(iconLabel('bi-scissors', 'Murs coupés à 1,35 m (Magazine)'), 'cutWalls')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-geo-alt', 'Repère BNF (Domicile)'), 'bnfMarker')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-stars', 'Scintillement Tour Eiffel ✨'), 'eiffelSparkle')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-building', 'Lumières Tour Montparnasse'), 'montparnasseLights')}
@@ -162,11 +164,11 @@ export function LayersSection({
       {currentHdri === 'default' && layerBtn(iconLabel('bi-tree', 'Lisières du bois de Boulogne'), 'boisLights')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-water', 'Péniches Seine (Nuit) 🚢'), 'seineBoats')}
       {currentHdri === 'default' && layerBtn(iconLabel('bi-bezier2', 'Tracé Seine (Debug) 🌊'), 'seineDebugPath')}
-      {layerBtn('Piliers seuls (Alt+Shift+P)',     'pillarsOnly')}
-      {layerBtn('Équipements (Alt+U)',             'equipment')}
-      {layerBtn('Mobilier (Furniture) (Alt+F)',    'furniture')}
-      {layerBtn('Habillage (Furnishings) (Alt+H)', 'furnishings')}
-      {layerBtn('Décoration (Decor) (Alt+D)',      'decor')}
+      {layerBtn('Piliers seuls',     'pillarsOnly')}
+      {layerBtn('Équipements',             'equipment')}
+      {layerBtn('Mobilier (Furniture)',    'furniture')}
+      {layerBtn('Habillage (Furnishings)', 'furnishings')}
+      {layerBtn('Décoration (Decor)',      'decor')}
       {layerBtn(iconLabel('bi-people-fill', 'Personnages 3D'), 'character', 'characterWireframe')}
       {layerBtn(iconLabel('bi-arrows-move', 'Lissage origine (anti-téléportation)'), 'animOriginLerp')}
       {layerBtn(iconLabel('bi-bezier2', 'Fondu squelettique (Crossfade)'), 'animCrossfade')}
@@ -174,7 +176,7 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-robot', 'Robots'), 'robots')}
       {layerBtn('Surfaces des miroirs',           'mirrorSurfaces')}
       {layerBtn('Miroirs MD (Moyenne déf)',       'mirrors')}
-      {layerBtn(iconLabel('bi-robot', 'Zones IA (Shift+A)'), 'aiZones')}
+      {layerBtn(iconLabel('bi-robot', 'Zones IA'), 'aiZones')}
       {layerBtn(iconLabel('bi-people', 'Collisions inter-PNJ'), 'npcCollisions')}
       {layers.npcCollisions && layerBtn(iconLabel('bi-circle', 'Debug gabarits PNJ'), 'debugNpcCollisions')}
       {layerBtn(iconLabel('bi-rulers', 'Debug trajets et obstacles'), 'debugFurnitureCollisions')}
@@ -188,9 +190,9 @@ export function LayersSection({
       {layerBtn(iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('Voisins',       'neighbors')}
 
-      {layerBtn(iconLabel('bi-rulers', 'Mesures réelles (Alt+M)'), 'measuredDimensions')}
-      {layerBtn('Aff. arêtes murs (Alt+A)', 'wallEdges')}
-      {layerBtn(iconLabel('bi-grid-3x3', 'Wireframe coloré (W)'), 'wireframe')}
+      {layerBtn(iconLabel('bi-rulers', 'Mesures réelles'), 'measuredDimensions')}
+      {layerBtn('Aff. arêtes murs', 'wallEdges')}
+      {layerBtn(iconLabel('bi-grid-3x3', 'Wireframe coloré'), 'wireframe')}
       {layerBtn(iconLabel('bi-lightbulb', 'Lumières'), 'lights')}
       {layerBtn(iconLabel('bi-broadcast', 'LiDAR scan'), 'lidar')}
       {layers.lidar && b0(['Photo', 'Filaire', 'Points', 'Hauteur'][lidarMode] + ' →', onCycleLidar)}
