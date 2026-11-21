@@ -1,6 +1,7 @@
 import extraDogs from '../../inventory/extraDogs.json';
 import { ImportedDog } from '../items/ImportedDog';
 import { useRobotVisibility } from '../store/useRobotVisibility';
+import { useAnimalVisibility } from '../store/useAnimalVisibility';
 import { WindPlant } from '../WindPlant';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
 import { getObjectActionIds } from '../objectActions';
@@ -105,30 +106,39 @@ export function GardenDecor() {
 // Animaux autonomes (Robin Bird & Shiba Inu)
 export function GardenAnimals() {
   const visible = useRobotVisibility(state => state.visible);
+  const visibleAnimals = useAnimalVisibility(state => state.visible);
   return (
     <>
-      <group position={BATHTUB.position} rotation={BATHTUB.rotation}
-             userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Poisson rouge Jikin' }}>
-        <Goldfish />
-      </group>
+      {visibleAnimals.includes('jikin-goldfish') && (
+        <group position={BATHTUB.position} rotation={BATHTUB.rotation}
+               userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Poisson rouge Jikin' }}>
+          <Goldfish />
+        </group>
+      )}
       <group position={BATHTUB.position} rotation={BATHTUB.rotation}>
-        <Goldfish species="tosakin" />
-        <Goldfish species="comet" />
+        {visibleAnimals.includes('tosakin-goldfish') && <Goldfish species="tosakin" />}
+        {visibleAnimals.includes('comet-goldfish') && <Goldfish species="comet" />}
         <BathtubStarfish />
       </group>
-      <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'animal-robin-fpv', 'animal-robin-follow'] } }}>
-        <RobinBird />
-      </group>
+      {visibleAnimals.includes('robin-bird') && (
+        <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Oiseau Robin', hoverAction: { label: 'Oiseau Robin', actions: ['robin-bird-replay', 'animal-robin-fpv', 'animal-robin-follow'] } }}>
+          <RobinBird />
+        </group>
+      )}
       <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Drone Black Hornet Nano', hoverAction: { label: 'Black Hornet Nano Drone', actions: getObjectActionIds('black-hornet-drone') } }}>
         {visible.includes('black-hornet-drone') && <BlackHornetDrone />}
       </group>
-      <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Shiba Inu' }}>
-        <ShibaInu />
-      </group>
-      <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
-        <ImportedDog path="/characters/dachshund-sculpt/dog.glb" height={30} clip="idle 50" agentId="dachshund-sculpt" walkClip="walk_fwd 29" runClip="run_fwd 13" />
-      </group>
-      {extraDogs.map((dog, index) => (
+      {visibleAnimals.includes('ushiro') && (
+        <group userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Shiba Inu' }}>
+          <ShibaInu />
+        </group>
+      )}
+      {visibleAnimals.includes('dachshund-sculpt') && (
+        <group position={[210, 0, -200]} rotation={[0, -Math.PI / 4, 0]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: 'Ulotte (Teckel)' }}>
+          <ImportedDog path="/characters/dachshund-sculpt/dog.glb" height={30} clip="idle 50" agentId="dachshund-sculpt" walkClip="walk_fwd 29" runClip="run_fwd 13" />
+        </group>
+      )}
+      {extraDogs.map((dog, index) => visibleAnimals.includes(dog.id) && (
         <group key={dog.id} position={index === 0 ? [180, 0, -40] : [50 + (index % 3) * 90, 0, -200 - Math.floor(index / 3) * 90]} userData={{ sceneItemRoot: true, dynamicActor: true, skipMerge: true, itemName: dog.name }}>
           <ImportedDog path={'/' + dog.glbPath} height={dog.dims.h} clip={dog.idleClip} heading={dog.forwardRotationY} agentId={dog.id} walkClip={dog.walkClip} runClip={dog.runClip} />
         </group>
