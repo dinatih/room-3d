@@ -1,11 +1,12 @@
 /**
  * Mirrors.tsx — Miroirs Nissedal et plans de réflexion Three.js Reflector.
  */
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { getAutoMirrorResolution } from './mirrorResolution';
 import { useSceneStore } from '../store/useSceneStore';
 import { getLoadedSkyTexture } from '../SkySphere';
 import { NissedalFrame, NissedalGlbFrame, GLB_40x150, GLB_65x65 } from '../items/NissedalMirror';
@@ -54,14 +55,12 @@ function MirrorSurface({ geometry, position, rotationY }: {
   rotationY: number;
 }) {
   const [x, y, z] = position;
-  const resolution = useSceneStore(state => state.mirrorResolution);
-  const antialias = useSceneStore(state => state.mirrorAntialias);
-  const invalidate = useThree(state => state.invalidate);
   const reflector = useMemo(() => {
     geometry.computeBoundingBox();
     const mir = new Reflector(geometry, { textureWidth: MIRROR_RESOLUTION, textureHeight: MIRROR_RESOLUTION, color: 0xbbbbbb, multisample: 0 });
     mir.position.set(x, y, z);
     mir.rotation.y = rotationY;
+    const cameraPosition = new THREE.Vector3();
     const origOnBeforeRender = mir.onBeforeRender.bind(mir);
     mir.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
       if (_reflectionDepth >= 1) return;
@@ -69,6 +68,13 @@ function MirrorSurface({ geometry, position, rotationY }: {
       const renderCam = (camera as any).isArrayCamera && (camera as any).cameras?.[0]
         ? (camera as any).cameras[0]
         : camera;
+
+      const settings = useSceneStore.getState();
+      const resolution = settings.mirrorAutoResolution
+        ? getAutoMirrorResolution(mir, renderCam.getWorldPosition(cameraPosition))
+        : settings.mirrorResolution;
+      // setSize only reallocates buffers when the requested size changes.
+      mir.getRenderTarget().setSize(resolution, resolution);
 
       const savedProj = renderCam.projectionMatrix.clone();
       const savedRenderTarget = renderer.getRenderTarget();
@@ -105,17 +111,6 @@ function MirrorSurface({ geometry, position, rotationY }: {
 
     return mir;
   }, [geometry, x, y, z, rotationY]);
-  useLayoutEffect(() => {
-    const target = reflector.getRenderTarget();
-    const samples = antialias ? 4 : 0;
-    if (target.samples !== samples || target.width !== resolution || target.height !== resolution) {
-      // Reallocate the GPU buffers when changing multisampling in place.
-      target.dispose();
-      target.samples = samples;
-      target.setSize(resolution, resolution);
-      invalidate();
-    }
-  }, [reflector, antialias, resolution, invalidate]);
   useEffect(() => () => { reflector.dispose(); reflector.geometry.dispose(); }, [reflector]);
   return <primitive object={reflector} />;
 }

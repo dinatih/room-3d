@@ -27,8 +27,8 @@ export function LayersSection({
 }: LayersSectionProps) {
   const mirrorResolution = useSceneStore(state => state.mirrorResolution);
   const setMirrorResolution = useSceneStore(state => state.setMirrorResolution);
-  const mirrorAntialias = useSceneStore(state => state.mirrorAntialias);
-  const setMirrorAntialias = useSceneStore(state => state.setMirrorAntialias);
+  const mirrorAutoResolution = useSceneStore(state => state.mirrorAutoResolution);
+  const setMirrorAutoResolution = useSceneStore(state => state.setMirrorAutoResolution);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const screenVideosEnabled = useSceneStore(state => state.screenVideosEnabled);
   const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
@@ -187,6 +187,7 @@ export function LayersSection({
             id="mirror-resolution"
             className="form-select form-select-sm bg-transparent text-dark border-secondary"
             value={mirrorResolution}
+            disabled={mirrorAutoResolution}
             onKeyDown={(e) => e.stopPropagation()}
             onChange={(e) => setMirrorResolution(Number(e.target.value))}
           >
@@ -197,15 +198,15 @@ export function LayersSection({
         </div>
         <div className="form-check form-switch small mb-0">
           <input
-            id="mirror-antialias"
+            id="mirror-auto-resolution"
             type="checkbox"
             role="switch"
             className="form-check-input"
-            checked={mirrorAntialias}
-            onChange={(e) => setMirrorAntialias(e.target.checked)}
+            checked={mirrorAutoResolution}
+            onChange={(e) => setMirrorAutoResolution(e.target.checked)}
           />
-          <label htmlFor="mirror-antialias" className="form-check-label" title="Lisse les contours des reflets, avec un coût GPU supplémentaire.">
-            Anticrénelage des miroirs (MSAA ×4)
+          <label htmlFor="mirror-auto-resolution" className="form-check-label" title="2048 à moins de 50 cm, 1024 à moins de 1 m, sinon 512.">
+            Résolution automatique selon la distance
           </label>
         </div>
       </div>
