@@ -498,7 +498,7 @@ function SneakersPair() {
   return (
     <>
       {[0.5, 36.5].flatMap(y => [-SNEAKER_PAIR_DX, SNEAKER_PAIR_DX].map(dx => (
-        <group key={`${y}-${dx}`} position={[MIRROR_CX + dx, y, pz]} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges' }}>
+        <group key={`${y}-${dx}`} position={[MIRROR_CX + dx, y, pz]} rotation-y={Math.PI / 6} userData={{ sceneItemRoot: true, itemName: 'Baskets Sneakers Rouges' }}>
           <SneakersRed />
         </group>
       )))}
