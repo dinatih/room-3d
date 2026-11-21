@@ -11,6 +11,7 @@ import { celestialState } from './astronomy';
 const NIGHT_INDIRECT_LIGHT_FACTOR = 0.3;
 
 export function DayNight() {
+  const moonShadows = useSceneStore(state => state.layers.moonShadows);
   const scene = useThree(state => state.scene);
   useLayoutEffect(() => () => {
     for (const object of scene.children) {
@@ -100,7 +101,7 @@ export function DayNight() {
           node.layers.enableAll();
         }
       }}
-      color="#b9ceff" intensity={0} castShadow
+      color="#b9ceff" intensity={0} castShadow={moonShadows}
       shadow-mapSize={[2048, 2048]} shadow-camera-near={Math.max(1, 2 * SKY_RADIUS - 1400)} shadow-camera-far={2 * SKY_RADIUS + 1400}
       shadow-camera-left={-1100} shadow-camera-right={1100}
       shadow-camera-top={1100} shadow-camera-bottom={-1100}

@@ -16,6 +16,16 @@ function browser(href) {
     replaceState(_, __, url) { window.location = new URL(url); },
   } };
 }
+it('désactive les ombres lunaires indépendamment des ombres générales et conserve le choix dans l’URL', () => {
+  browser('https://room.test/?shadows=1&perfGraph=1');
+  updateUrlLayer('moonShadows', false);
+  assert.equal(window.location.searchParams.get('moonShadows'), '0');
+  assert.equal(parseUrlLayerOverrides().moonShadows, false);
+  assert.equal(parseUrlLayerOverrides().shadows, true);
+  assert.equal(window.location.searchParams.get('perfGraph'), '1');
+  updateUrlLayer('moonShadows', true);
+  assert.equal(window.location.searchParams.has('moonShadows'), false);
+});
 it('reads HD lighting on, off and hash URL flags', () => {
   for (const [query, expected] of [['?lightsHD=1', true], ['?lightsHD=0', false], ['?lightsHD', true], ['#/?lightsHD=1', true]]) {
     browser(`https://room.test/${query}`);

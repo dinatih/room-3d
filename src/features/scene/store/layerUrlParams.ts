@@ -53,6 +53,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   lights: false,
   lightsHD: false,
   shadows: true,
+  moonShadows: true,
   // Personnages
   character: true,
   extraCharacters: false,
@@ -206,6 +207,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'shadows',
     canonicalParam: 'shadows',
     urlParams: ['shadows', 'shadow', 'ombres', 'ombre'],
+  },
+  {
+    layerKey: 'moonShadows',
+    canonicalParam: 'moonShadows',
+    urlParams: ['moonshadows'],
   },
   {
     layerKey: 'extraCharacters',

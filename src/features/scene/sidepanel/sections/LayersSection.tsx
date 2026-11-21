@@ -184,6 +184,7 @@ export function LayersSection({
         Confort Native : +{NAVIGATION_COMFORT_CM} cm (préférence)
       </div>}
       {layerBtn('Ombres',        'shadows')}
+      {layerBtn(iconLabel('bi-moon', 'Ombres de la lune'), 'moonShadows')}
       {layerBtn(iconLabel('bi-person-fill', 'Ombres personnage'), 'characterShadows')}
       {layerBtn('Voisins',       'neighbors')}
 

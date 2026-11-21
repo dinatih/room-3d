@@ -134,6 +134,7 @@ export interface LayerState {
   lights:       boolean;
   lightsHD:     boolean;
   shadows:      boolean;
+  moonShadows:  boolean;
   pillarsOnly:    boolean;
   bermudaGrass: boolean;
   groundType?:  GroundType;
