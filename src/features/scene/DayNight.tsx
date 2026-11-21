@@ -7,6 +7,9 @@ import { Points, ShaderMaterial } from 'three';
 import { SKY_CENTER, SKY_RADIUS } from './skyBounds';
 import { celestialState } from './astronomy';
 
+// Conserver 30 % de l'éclairage indirect pour rendre les extérieurs lisibles la nuit.
+const NIGHT_INDIRECT_LIGHT_FACTOR = 0.3;
+
 export function DayNight() {
   const scene = useThree(state => state.scene);
   useLayoutEffect(() => () => {
@@ -55,6 +58,7 @@ export function DayNight() {
   useFrame(({ scene }) => {
     const sky = celestialState();
     const light = sky.daylight;
+    const indirectLightFactor = NIGHT_INDIRECT_LIGHT_FACTOR + (1 - NIGHT_INDIRECT_LIGHT_FACTOR) * light;
     const night = sky.sun.elevation < 0;
     if (previousNight.current !== night) {
       previousNight.current = night;
@@ -66,12 +70,12 @@ export function DayNight() {
       if (object.type === 'AmbientLight') {
         const source = object as import('three').Light;
         if (source.userData.lastNightIntensity !== source.intensity) source.userData.dayIntensity = source.intensity;
-        source.intensity = source.userData.dayIntensity * (0.12 + 0.88 * light);
+        source.intensity = source.userData.dayIntensity * indirectLightFactor;
         source.userData.lastNightIntensity = source.intensity;
       }
     }
     if (scene.userData.lastNightEnvironment !== scene.environmentIntensity) scene.userData.dayEnvironmentIntensity = scene.environmentIntensity;
-    scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * (0.12 + 0.88 * light);
+    scene.environmentIntensity = scene.userData.dayEnvironmentIntensity * indirectLightFactor;
     scene.userData.lastNightEnvironment = scene.environmentIntensity;
     moon.current.position.copy(sky.moon.direction).multiplyScalar(SKY_RADIUS * 0.8);
     moon.current.lookAt(...SKY_CENTER); // la même face est toujours tournée vers l'observateur
