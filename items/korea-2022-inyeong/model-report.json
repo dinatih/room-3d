@@ -1,0 +1,14 @@
+{
+  "dimensionsCm": {
+    "w": 54.759,
+    "d": 8.794,
+    "h": 77.948
+  },
+  "simulation": {
+    "solver": "Blender Cloth",
+    "frames": 90,
+    "shoulderPinnedVertices": 68,
+    "selfCollision": true
+  },
+  "reference": "Nike Korea home 2022/23, black tiger crest; personalized INYEONG 24"
+}
