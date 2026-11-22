@@ -6,6 +6,7 @@
   <title>GTA 6 — Catalogue des styles de Lucia</title>
   <script data-goatcounter="https://dinatih.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <style>
     .preview-img {
       width: 100%;
@@ -51,9 +52,12 @@
 </head>
 <body class="bg-body-tertiary">
   <nav class="navbar navbar-expand-lg bg-body border-bottom sticky-top">
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-4 gap-2">
       <span class="navbar-brand fw-bold">GTA 6 — Lucia Styles Catalog</span>
-      <div class="d-flex flex-wrap gap-2 small" id="statsBadges"></div>
+      <div class="d-flex flex-wrap align-items-center gap-2 small ms-auto">
+        <div class="d-flex flex-wrap gap-2" id="statsBadges"></div>
+        <div class="dropdown" id="globalShareWrap"></div>
+      </div>
     </div>
   </nav>
 
@@ -126,7 +130,19 @@
           <img id="zoomImg" src="" class="img-fluid rounded" alt="" />
           <div class="d-flex justify-content-center gap-2 mt-2 flex-wrap" id="zoomThumbs"></div>
         </div>
-        <div class="modal-footer py-2 justify-content-between small" id="zoomMeta"></div>
+        <div class="modal-footer py-2 justify-content-between small flex-wrap gap-2">
+          <div id="zoomMeta" class="d-flex align-items-center gap-2 flex-wrap"></div>
+          <div id="zoomShare" class="d-flex align-items-center gap-1 flex-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="shareToast" class="toast align-items-center text-bg-success border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body small" id="shareToastBody">Lien copié !</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
   </div>
@@ -168,9 +184,110 @@
       shopFilter.appendChild(opt);
     });
 
-    const zoomModal = new bootstrap.Modal(document.getElementById("zoomModal"));
+    const zoomModalEl = document.getElementById("zoomModal");
+    const zoomModal = new bootstrap.Modal(zoomModalEl);
+    const shareToast = new bootstrap.Toast(document.getElementById("shareToast"), { delay: 2500 });
     let activeZoomItem = null;
     let activeZoomIdx = 0;
+
+    function slugify(str) {
+      return String(str || "")
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function getItemHash(item) {
+      return `${item.id}-${slugify(item.name)}`;
+    }
+
+    function getItemUrl(item) {
+      const base = `${location.origin}${location.pathname}${location.search}`;
+      return item ? `${base}#${getItemHash(item)}` : base;
+    }
+
+    function showToast(msg) {
+      document.getElementById("shareToastBody").textContent = msg;
+      shareToast.show();
+    }
+
+    async function copyText(text, msg = "Lien copié !") {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(msg);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        showToast(msg);
+      }
+    }
+
+    function buildShareDropdownHtml(btnClass = "btn btn-sm btn-outline-secondary") {
+      return `
+        <button class="${btnClass} dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Partager">
+          <i class="bi bi-share-fill"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow">
+          <li><button class="dropdown-item small js-share-copy" type="button"><i class="bi bi-link-45deg me-2"></i>Copier le lien</button></li>
+          ${navigator.share ? `<li><button class="dropdown-item small js-share-native" type="button"><i class="bi bi-phone me-2"></i>Partager…</button></li>` : ""}
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item small js-share-x" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter-x me-2"></i>X.com</a></li>
+          <li><button class="dropdown-item small js-share-insta" type="button"><i class="bi bi-instagram me-2"></i>Instagram</button></li>
+          <li><a class="dropdown-item small js-share-snap" target="_blank" rel="noopener noreferrer"><i class="bi bi-snapchat me-2"></i>Snapchat</a></li>
+          <li><a class="dropdown-item small js-share-fb" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook me-2"></i>Facebook</a></li>
+          <li><a class="dropdown-item small js-share-reddit" target="_blank" rel="noopener noreferrer"><i class="bi bi-reddit me-2"></i>Reddit</a></li>
+          <li><a class="dropdown-item small js-share-wa" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-2"></i>WhatsApp</a></li>
+        </ul>
+      `;
+    }
+
+    function bindShareContainer(container, getShareData) {
+      const { url, title } = getShareData();
+      const encUrl = encodeURIComponent(url);
+      const encTitle = encodeURIComponent(title);
+      const encBoth = encodeURIComponent(`${title} — ${url}`);
+
+      const xLink = container.querySelector(".js-share-x");
+      const snapLink = container.querySelector(".js-share-snap");
+      const fbLink = container.querySelector(".js-share-fb");
+      const redditLink = container.querySelector(".js-share-reddit");
+      const waLink = container.querySelector(".js-share-wa");
+
+      if (xLink) xLink.href = `https://twitter.com/intent/tweet?text=${encTitle}&url=${encUrl}`;
+      if (snapLink) snapLink.href = `https://www.snapchat.com/scan?attachmentUrl=${encUrl}`;
+      if (fbLink) fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`;
+      if (redditLink) redditLink.href = `https://www.reddit.com/submit?url=${encUrl}&title=${encTitle}`;
+      if (waLink) waLink.href = `https://wa.me/?text=${encBoth}`;
+
+      container.querySelector(".js-share-copy")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        copyText(url, "Lien copié dans le presse-papiers !");
+      });
+      container.querySelector(".js-share-native")?.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try { await navigator.share({ title, text: title, url }); } catch {}
+      });
+      container.querySelector(".js-share-insta")?.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (navigator.share) {
+          try { await navigator.share({ title, text: `${title} ${url}`, url }); return; } catch {}
+        }
+        await copyText(`${title} — ${url}`, "Lien copié pour Instagram !");
+        window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
+      });
+    }
+
+    const globalShareWrap = document.getElementById("globalShareWrap");
+    globalShareWrap.innerHTML = buildShareDropdownHtml("btn btn-sm btn-outline-light");
+    bindShareContainer(globalShareWrap, () => ({
+      url: getItemUrl(null),
+      title: "GTA 6 — Catalogue des styles de Lucia"
+    }));
 
     function setZoomImage(idx) {
       if (!activeZoomItem) return;
@@ -197,9 +314,35 @@
         <span>${item.category} ${item.tab ? "• " + item.tab : ""} ${item.index ? "• " + item.index : ""} • ${list.length} vue(s)</span>
         <span class="fw-bold text-success">${item.price || "—"}</span>
       `;
+      const shareUrl = getItemUrl(item);
+      const shareTitle = `GTA 6 Lucia — ${item.name} (${item.shop})`;
+      const zoomShare = document.getElementById("zoomShare");
+      zoomShare.innerHTML = `
+        <div class="dropdown dropup">${buildShareDropdownHtml("btn btn-sm btn-primary")}</div>
+        <button class="btn btn-sm btn-outline-light js-share-copy" type="button" title="Copier le lien"><i class="bi bi-link-45deg"></i> Copier</button>
+        <a class="btn btn-sm btn-outline-secondary js-share-x" target="_blank" rel="noopener noreferrer" title="X.com"><i class="bi bi-twitter-x"></i></a>
+        <button class="btn btn-sm btn-outline-secondary js-share-insta" type="button" title="Instagram"><i class="bi bi-instagram"></i></button>
+        <a class="btn btn-sm btn-outline-secondary js-share-snap" target="_blank" rel="noopener noreferrer" title="Snapchat"><i class="bi bi-snapchat"></i></a>
+        <a class="btn btn-sm btn-outline-secondary js-share-fb" target="_blank" rel="noopener noreferrer" title="Facebook"><i class="bi bi-facebook"></i></a>
+        <a class="btn btn-sm btn-outline-secondary js-share-reddit" target="_blank" rel="noopener noreferrer" title="Reddit"><i class="bi bi-reddit"></i></a>
+        <a class="btn btn-sm btn-outline-secondary js-share-wa" target="_blank" rel="noopener noreferrer" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+      `;
+      bindShareContainer(zoomShare, () => ({ url: shareUrl, title: shareTitle }));
+
+      const targetHash = `#${getItemHash(item)}`;
+      if (location.hash !== targetHash) {
+        history.replaceState(null, "", targetHash);
+      }
       setZoomImage(startIdx);
       zoomModal.show();
     }
+
+    zoomModalEl.addEventListener("hidden.bs.modal", () => {
+      activeZoomItem = null;
+      if (location.hash) {
+        history.replaceState(null, "", `${location.pathname}${location.search}`);
+      }
+    });
 
     document.addEventListener("keydown", (e) => {
       if (!document.getElementById("zoomModal").classList.contains("show")) return;
@@ -229,6 +372,8 @@
         const list = item.previews || [item.preview];
         const col = document.createElement("div");
         col.className = "col-6 col-sm-4 col-md-3 col-lg-2";
+        const itemHash = getItemHash(item);
+        col.dataset.itemHash = itemHash;
         const stripHtml = list.length > 1
           ? `<div class="d-flex gap-1 px-2 pt-2 bg-black justify-content-center">${list.map((src, i) => `<img src="${src}" class="angle-dot ${i === 0 ? 'active' : ''}" data-idx="${i}" title="${i === 0 ? 'Principale' : 'Vue ' + (i + 1)}" loading="lazy" />`).join("")}</div>`
           : "";
@@ -236,6 +381,7 @@
           <div class="card h-100 card-style border shadow-sm">
             <div class="position-relative">
               <img src="${list[0]}" class="card-img-top preview-img" loading="lazy" alt="${item.name}" />
+              <div class="dropdown position-absolute top-0 start-0 m-1 js-card-share">${buildShareDropdownHtml("btn btn-sm btn-dark bg-opacity-75 border-0 py-0 px-1")}</div>
               ${list.length > 1 ? `<span class="badge text-bg-dark bg-opacity-75 position-absolute top-0 end-0 m-1">${list.length} vues</span>` : ""}
             </div>
             ${stripHtml}
@@ -254,6 +400,10 @@
             </div>
           </div>
         `;
+        bindShareContainer(col.querySelector(".js-card-share"), () => ({
+          url: getItemUrl(item),
+          title: `GTA 6 Lucia — ${item.name} (${item.shop})`
+        }));
         const mainImg = col.querySelector(".preview-img");
         let currentIdx = 0;
         mainImg.addEventListener("click", () => openZoom(item, currentIdx));
@@ -303,6 +453,21 @@
       el.addEventListener("change", render);
     });
     render();
+
+    function openFromHash() {
+      const h = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
+      if (!h) return;
+      const item = ITEMS.find(x => getItemHash(x) === h || String(x.id) === h);
+      if (!item) return;
+      const gridTabBtn = document.querySelector('[data-bs-target="#gridPane"]');
+      if (gridTabBtn) bootstrap.Tab.getOrCreateInstance(gridTabBtn).show();
+      const cardCol = document.querySelector(`[data-item-hash="${getItemHash(item)}"]`);
+      if (cardCol) cardCol.scrollIntoView({ behavior: "smooth", block: "center" });
+      openZoom(item, 0);
+    }
+
+    window.addEventListener("hashchange", openFromHash);
+    openFromHash();
   </script>
   <footer class="container-fluid px-4 pb-4 d-flex flex-column align-items-center gap-2">
     <div class="d-flex flex-column align-items-center rounded bg-light p-2">
