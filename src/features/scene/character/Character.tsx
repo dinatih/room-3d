@@ -17,6 +17,7 @@ import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { CharacterClothing } from './CharacterClothing';
+import { RedPlate } from '../items/RedPlate';
 import { resolveLaraGarmentGlbPath } from './laraOutfits';
 import { applyLaraVariantStyles, disposeLaraVariantMaterials, applyLaraRealisticTextures } from '../LaraVariants';
 import { isCharacterVisibleInMode, AUTONOMOUS_NPC_IDS, isExtraCharacter, findCharacter } from '../characterConfig';
@@ -29,7 +30,7 @@ import {
   normalizeNonLaraCharacterMaterials,
   isHeadMesh,
 } from '../characterParts';
-import { LAYER_WALKER_DETAIL } from '@config';
+import { LAYER_WALKER, LAYER_WALKER_DETAIL } from '@config';
 import { buildGuidedTour } from '../ai/scenarios';
 import { buildAutonomousActivities } from '../ai/autonomousActivities';
 import { isLifeCharacter } from '../ai/laraLife';
@@ -101,6 +102,20 @@ const LGBTA_HAIR_COLORS = [
   'arc-en-ciel', 'rose', 'violet', 'bleu', 'vert', 'rouge',
   'blanc', 'blond', 'roux', 'brun', 'noir'
 ];
+
+function MealPlateModel({ shadows }: { shadows: boolean }) {
+  const ref = useRef<THREE.Group>(null);
+  useLayoutEffect(() => {
+    ref.current!.traverse(object => {
+      object.layers.set(LAYER_WALKER);
+      if (object instanceof THREE.Mesh) {
+        object.castShadow = shadows;
+        object.receiveShadow = shadows;
+      }
+    });
+  }, [shadows]);
+  return <group ref={ref}><RedPlate /></group>;
+}
 
 export function Character({
   id,
@@ -229,7 +244,7 @@ export function Character({
     [scene, headBone],
   );
   const hipsBone = parts.bones.hips;
-  const mealPlateRef = useRef<THREE.Mesh>(null);
+  const mealPlateRef = useRef<THREE.Group>(null);
   const mealPlatePose = useMemo(() => {
     if (!isLara) return null;
     const knees = ['LeftLeg', 'RightLeg'].map(side => {
@@ -240,12 +255,6 @@ export function Character({
     });
     return { knees, left: new THREE.Vector3(), right: new THREE.Vector3(), hips: new THREE.Vector3() };
   }, [isLara, scene]);
-  // Centimetres: a 24 cm plate with a shallow raised rim.
-  const mealPlateProfile = useMemo(() => [
-    new THREE.Vector2(0, 0), new THREE.Vector2(9, 0),
-    new THREE.Vector2(12, 1), new THREE.Vector2(12, 1.5),
-    new THREE.Vector2(9, 0.5), new THREE.Vector2(0, 0.5),
-  ], []);
   const leftEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_left') as THREE.Bone | null) : null), [scene]);
   const rightEyeBone = useMemo(() => (scene ? (scene.getObjectByName('head_eyeball_right') as THREE.Bone | null) : null), [scene]);
 
@@ -1404,10 +1413,11 @@ export function Character({
         <primitive ref={modelRef} object={scene} />
       </group>
 
-      {isLara && <mesh ref={mealPlateRef} name="lara-meal-plate" visible={false} castShadow={characterShadows} receiveShadow={characterShadows}>
-        <latheGeometry args={[mealPlateProfile, 32]} />
-        <meshStandardMaterial color="#d71920" roughness={0.35} />
-      </mesh>}
+      {isLara && <group ref={mealPlateRef} name="lara-meal-plate" visible={false}>
+        <Suspense fallback={null}>
+          <MealPlateModel shadows={characterShadows} />
+        </Suspense>
+      </group>}
 
       {isLara && id !== 'romana' && variant !== 'romana' && <CharacterPendant
         ref={pendantRef}
