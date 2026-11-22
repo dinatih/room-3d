@@ -158,9 +158,9 @@ export function CharacterClothing({
   // Covered fabric is omitted under the native short, whose source surface
   // intersects the reconstructed body underneath the waistband.
   useLayoutEffect(() => {
-    if (clothingId !== 'body-native-green') return;
+    if (clothingId !== 'body-native-red') return;
     const gusset = laraScene.getObjectByName(containerName)?.getObjectByName('native_body_gusset');
-    if (!gusset) throw new Error('Native green body is missing its gusset section');
+    if (!gusset) throw new Error('Native red body is missing its gusset section');
     gusset.visible = bottomId !== 'native';
   }, [laraScene, garmentScene, containerName, clothingId, bottomId, visible]);
 

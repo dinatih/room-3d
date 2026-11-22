@@ -863,7 +863,7 @@ def build_bikini_bottom(name: str, style: str, bvhs, mat_swimwear):
 
 
 def generate_swimwear(bvhs, mats, armature, only_ids: set[str] | None = None):
-    if only_ids is None or "body-native-green" in only_ids:
+    if only_ids is None or "body-native-red" in only_ids:
         from .native_body import generate_native_body
         generate_native_body(armature)
 

@@ -17,20 +17,20 @@ const launch = require('./browser-test-options.cjs');
     const select=[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith(label)).querySelector('select');
     select.value=value; select.dispatchEvent(new Event('change',{bubbles:true}));
    };
-   window.bodyTestSelect('Haut / robe / maillot','body-native-green');
+   window.bodyTestSelect('Haut / robe / maillot','body-native-red');
    const extras=[...document.querySelectorAll('label')].find(l=>l.textContent.trim()==='Accessoires natifs');
    if(extras?.querySelector('input').checked)extras.querySelector('input').click();
   });
   await page.waitForFunction(()=>{
    const scene=window.bodyTestScene();let count=0;
-   scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-green')count++;});
+   scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-red')count++;});
    return count===1;
   },{timeout:60000});
   await page.evaluate(async()=>{
    const {Vector3,Box3}=await import('/node_modules/.vite/deps/three.js');
    const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js');
    const store=_roots.get(document.querySelector('canvas')).store.getState();
-   let garment;store.scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-green')garment=o;});
+   let garment;store.scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-red')garment=o;});
    const box=new Box3().setFromObject(garment),center=box.getCenter(new Vector3());
    store.camera.position.set(center.x+90,center.y+15,center.z+190);
    store.camera.lookAt(center);
@@ -38,7 +38,7 @@ const launch = require('./browser-test-options.cjs');
   });
   const state=await page.evaluate(()=>{
    const scene=window.bodyTestScene();let garment;
-   scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-green')garment=o;});
+   scene.traverse(o=>{if(o.name==='lara_custom_clothing_body-native-red')garment=o;});
    const native=garment.parent;
    const visible=name=>{let found=false,shown=false;native.getObjectByName(name)?.traverse(o=>{if(o.isMesh){found=true;shown ||= o.visible;}});if(!found)throw new Error(`Missing mesh ${name}`);return shown;};
    return {shirt:visible('shirt'),skin:visible('body_torso'),nude:visible('body_nude_torso'),shorts:visible('shorts'),bottom:[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Bas')).querySelector('select').value};
@@ -47,7 +47,7 @@ const launch = require('./browser-test-options.cjs');
   for (const bottom of ['none','native']) {
    await page.evaluate(v=>window.bodyTestSelect('Bas',v),bottom);
    await page.waitForFunction(expected=>{
-    let garment;window.bodyTestScene().traverse(o=>{if(o.name==='lara_custom_clothing_body-native-green')garment=o;});
+    let garment;window.bodyTestScene().traverse(o=>{if(o.name==='lara_custom_clothing_body-native-red')garment=o;});
     return garment.getObjectByName('native_body_gusset')?.visible===expected;
    },{},bottom!=='native');
    for (const animation of ['idle','walking','sitting-idle']) {
@@ -56,7 +56,7 @@ const launch = require('./browser-test-options.cjs');
     await page.screenshot({path:`/tmp/native-body-browser-${bottom}-${animation}.png`});
     const valid=await page.evaluate(()=>{
      let valid=true,count=0,garment;
-     window.bodyTestScene().traverse(o=>{if(o.name==='lara_custom_clothing_body-native-green')garment=o;});
+     window.bodyTestScene().traverse(o=>{if(o.name==='lara_custom_clothing_body-native-red')garment=o;});
      garment.traverse(o=>{
       if(o.isSkinnedMesh){
        count++;

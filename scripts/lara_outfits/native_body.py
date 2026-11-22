@@ -1,4 +1,4 @@
-"""Native-cut green body: preserve the shirt, fit the new gusset with Blender Cloth.
+"""Native-cut red body: preserve the shirt, fit the new gusset with Blender Cloth.
 
 The source shirt includes two detached boot-lining triangles. They are not part
 of the torso and are excluded using the pelvis bone as the anatomical boundary.
@@ -23,7 +23,7 @@ def generate_native_body(armature):
     source = bpy.data.objects['shirt']
     obj = source.copy()
     obj.data = source.data.copy()
-    obj.name = 'lara_body_native_green'
+    obj.name = 'lara_body_native_red'
     bpy.context.collection.objects.link(obj)
     obj.animation_data_clear()
     obj.modifiers.clear()
@@ -156,21 +156,40 @@ def generate_native_body(armature):
     texture = next(n.image for n in source.data.materials[0].node_tree.nodes if n.type == 'TEX_IMAGE')
     import numpy as np
     pixels = np.array(texture.pixels[:]).reshape(-1, 4)
+    # ViviDa-Bisa (Vivida 2): #ff0000 multiplied by the standard grayscale
+    # atlas (130% brightness, 140% contrast), roughness .4, no metalness.
+    gray = np.clip((pixels[:, :3] @ np.array([0.2126, 0.7152, 0.0722]) * 1.3 - 0.5) * 1.4 + 0.5, 0, 1)
+    red_pixels = pixels.copy()
+    red_pixels[:, 0] = gray
+    red_pixels[:, 1:3] = 0
+    red_texture = bpy.data.images.new('Native body Vivida 2 red', width=texture.size[0], height=texture.size[1], alpha=True)
+    red_texture.colorspace_settings.name = 'sRGB'
+    red_texture.pixels.foreach_set(red_pixels.astype(np.float32).ravel())
+    red_texture.pack()
+    upper_material = bpy.data.materials.new('Native body Vivida 2 red textile')
+    upper_material.use_nodes = True
+    upper_shader = upper_material.node_tree.nodes['Principled BSDF']
+    upper_shader.inputs['Roughness'].default_value = 0.4
+    upper_shader.inputs['Metallic'].default_value = 0
+    node = upper_material.node_tree.nodes.new('ShaderNodeTexImage')
+    node.image = red_texture
+    upper_material.node_tree.links.new(node.outputs['Color'], upper_shader.inputs['Base Color'])
+    obj.data.materials[0] = upper_material
     w, h = texture.size
     samples = []
     for loop in source.data.uv_layers.active.data:
         u, v = loop.uv
         rgb = pixels[(int(v*h) % h)*w + int(u*w) % w, :3]
         if rgb[1] > rgb[0] and rgb[2] > rgb[0]:
-            samples.append(rgb)
+            samples.append(red_pixels[(int(v*h) % h)*w + int(u*w) % w, :3])
     if not samples:
         raise RuntimeError('Native shirt has no turquoise textile samples')
     colour = Color(np.median(samples, axis=0)).from_srgb_to_scene_linear()
-    material = bpy.data.materials.new('Native green reconstructed fabric')
+    material = bpy.data.materials.new('Native red reconstructed fabric')
     material.use_nodes = True
     shader = material.node_tree.nodes['Principled BSDF']
     shader.inputs['Base Color'].default_value = (*colour, 1)
-    shader.inputs['Roughness'].default_value = 0.5
+    shader.inputs['Roughness'].default_value = 0.4
     obj.data.materials.append(material)
     # Keep original upper UVs; only reconstructed faces use the sampled fabric.
     for f in bm.faces:
@@ -276,6 +295,6 @@ def generate_native_body(armature):
     obj.vertex_groups.remove(obj.vertex_groups['New fabric fit'])
     bind_and_transfer_weights(gusset, [skin], armature, smooth_passes=0)
     bpy.data.objects.remove(collider, do_unlink=True)
-    export_garment_glb([obj,gusset],armature,'swimwear/lara_body_native_green.glb')
+    export_garment_glb([obj,gusset],armature,'swimwear/lara_body_native_red.glb')
     print(f'Native body: {len(obj.data.vertices)} vertices, Cloth {CLOTH_FRAMES} frames, native cut displacement {moved:.8f} m')
     return obj

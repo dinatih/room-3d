@@ -600,7 +600,7 @@ export const useSceneStore = create<SceneStore>((set) => ({
   setLaraClothing: (key, value) => {
     set((state) => {
       const nextLayers: LayerState = { ...state.layers, [key]: value };
-      if (key === 'laraTop' && isOnePieceTop(value as LaraClothing) && value !== 'body-native-green' && (state.layers.laraBottom === 'native' || state.layers.laraBottom === 'bikini')) {
+      if (key === 'laraTop' && isOnePieceTop(value as LaraClothing) && value !== 'body-native-red' && (state.layers.laraBottom === 'native' || state.layers.laraBottom === 'bikini')) {
         nextLayers.laraBottom = 'none';
         updateUrlLaraClothing('laraBottom', 'none');
       }
