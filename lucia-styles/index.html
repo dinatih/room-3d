@@ -124,6 +124,9 @@
       <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#shopsPane" type="button">By Shop</button>
       </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#demoPane" type="button"><i class="bi bi-play-circle-fill me-1"></i>Demo</button>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -132,6 +135,22 @@
       </div>
       <div class="tab-pane fade" id="shopsPane">
         <div class="row g-3" id="shopsSummary"></div>
+      </div>
+      <div class="tab-pane fade" id="demoPane">
+        <div class="d-flex flex-column align-items-center py-2">
+          <div class="card shadow-sm bg-white border-danger border-opacity-25 w-100" style="max-width: 420px;">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+              <span class="fw-bold small"><i class="bi bi-phone me-1"></i>Portrait Demo (15s · 9:16)</span>
+              <a href="lucia-styles-demo.mp4" download="lucia-styles-demo.mp4" class="btn btn-sm btn-light text-danger fw-semibold py-0 px-2">
+                <i class="bi bi-download me-1"></i>MP4
+              </a>
+            </div>
+            <div class="card-body p-2 bg-dark text-center">
+              <video src="lucia-styles-demo.mp4" controls playsinline muted loop preload="metadata" class="w-100 rounded" style="aspect-ratio: 9 / 16;"></video>
+            </div>
+            <div class="card-footer bg-white d-flex flex-wrap justify-content-center align-items-center gap-1 py-2" id="demoShare"></div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -483,9 +502,29 @@
     });
     render();
 
+    const demoShare = document.getElementById("demoShare");
+    const demoUrl = `${location.origin}${location.pathname}${location.search}#demo`;
+    const demoTitle = "GTA 6 — Lucia Styles Catalog (Demo)";
+    demoShare.innerHTML = `
+      <div class="dropdown dropup">${buildShareDropdownHtml("btn btn-sm btn-danger")}</div>
+      <button class="btn btn-sm btn-outline-danger js-share-copy" type="button" title="Copy link"><i class="bi bi-link-45deg"></i> Copy</button>
+      <a class="btn btn-sm btn-outline-secondary js-share-x" target="_blank" rel="noopener noreferrer" title="X.com"><i class="bi bi-twitter-x"></i></a>
+      <button class="btn btn-sm btn-outline-secondary js-share-insta" type="button" title="Instagram"><i class="bi bi-instagram"></i></button>
+      <a class="btn btn-sm btn-outline-secondary js-share-snap" target="_blank" rel="noopener noreferrer" title="Snapchat"><i class="bi bi-snapchat"></i></a>
+      <a class="btn btn-sm btn-outline-secondary js-share-fb" target="_blank" rel="noopener noreferrer" title="Facebook"><i class="bi bi-facebook"></i></a>
+      <a class="btn btn-sm btn-outline-secondary js-share-reddit" target="_blank" rel="noopener noreferrer" title="Reddit"><i class="bi bi-reddit"></i></a>
+      <a class="btn btn-sm btn-outline-secondary js-share-wa" target="_blank" rel="noopener noreferrer" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+    `;
+    bindShareContainer(demoShare, () => ({ url: demoUrl, title: demoTitle }));
+
     function openFromHash() {
       const h = decodeURIComponent(location.hash.replace(/^#/, "")).trim();
       if (!h) return;
+      if (h === "demo") {
+        const demoTabBtn = document.querySelector('[data-bs-target="#demoPane"]');
+        if (demoTabBtn) bootstrap.Tab.getOrCreateInstance(demoTabBtn).show();
+        return;
+      }
       const item = ITEMS.find(x => getItemHash(x) === h || String(x.id) === h);
       if (!item) return;
       const gridTabBtn = document.querySelector('[data-bs-target="#gridPane"]');
