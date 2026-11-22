@@ -24,9 +24,11 @@ from scripts.lara_outfits.materials import create_material_library
 from scripts.lara_outfits.swimwear import generate_swimwear
 from scripts.lara_outfits.tops import generate_tops
 from scripts.lara_outfits.trousers import generate_trousers
+from scripts.lara_outfits.sol_high_bottoms import generate_sol_high_bottoms
 
 
 FAMILIES = {
+    "sol-high-bottoms": generate_sol_high_bottoms,
     "trousers": generate_trousers,
     "hoodies": generate_hoodies,
     "swimwear": generate_swimwear,

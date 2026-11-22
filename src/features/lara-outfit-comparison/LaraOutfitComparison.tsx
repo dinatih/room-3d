@@ -84,6 +84,13 @@ export function LaraOutfitComparison() {
       <fieldset><legend className="h6">Chaussures et accessoires</legend>{extras.map(([key, label]) => <label className="d-block small mb-2" key={key}><input className="form-check-input me-2" type="checkbox" checked={Boolean(current.clothing[key])} onChange={e => clothing({ [key]: e.target.checked })} />{label}</label>)}</fieldset>
       <div className="d-flex flex-wrap gap-2"><button className="btn btn-primary btn-sm" onClick={() => add([{ ...current, id: crypto.randomUUID(), name: `${current.name} copie`, clothing: { ...current.clothing } }])}>Dupliquer</button><button className="btn btn-outline-danger btn-sm" disabled={outfits.length === 1} onClick={() => { setOutfits(outfits.filter(o => o.id !== selected)); setSelected(outfits.find(o => o.id !== selected)!.id); }}>Supprimer</button></div>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_TOP_SPECS.map(s => ({ ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'native'), name: s.label })))}>Ajouter tous les hauts</button>
+      <button className="btn btn-outline-primary btn-sm" onClick={() => {
+        const comparisons = LARA_BOTTOM_SPECS.filter(s => s.id.endsWith('-sol-high')).flatMap(s => {
+          const original = LARA_BOTTOM_SPECS.find(o => o.id === s.id.replace('-sol-high', ''))!;
+          return [original, s].map(spec => { const outfit = makeOutfit('native', spec.id); return { ...outfit, name: spec.label, clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
+        });
+        add(comparisons);
+      }}>Comparer les bas · GPT-6.1-Sol high</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_BOTTOM_SPECS.map(s => ({ ...makeOutfit('native', s.id), name: s.label })))}>Ajouter tous les bas</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(wigs.map(w => ({ ...current, id: crypto.randomUUID(), name: w.name, hair: w.id, clothing: { ...current.clothing } })))}>Comparer toutes les perruques</button>
     </div></section></aside>
@@ -93,7 +100,7 @@ export function LaraOutfitComparison() {
         <Clock playback={playback} playing={playing} speed={speed} time={time} />
         <NavigationEnabledContext.Provider value={false}><CharacterRuntimeProvider isPreview>{outfits.map((o, i) => <group key={o.id} position={[(i % columns - (columns - 1) / 2) * 220, ((rows - 1) / 2 - Math.floor(i / columns)) * 240, 0]}>
           <Grid args={[200, 180]} cellSize={20} sectionSize={100} fadeDistance={10000} />
-          <Html position={[0, 200, 0]} center><button className={`btn btn-sm text-nowrap ${selected === o.id ? 'btn-primary' : 'btn-light'}`} onClick={() => setSelected(o.id)}>{i + 1}. {o.name}</button></Html>
+          <Html position={[0, 200, 0]} center><button className={`btn btn-sm text-nowrap ${selected === o.id ? 'btn-primary' : 'btn-light'}`} title={o.name} onClick={() => setSelected(o.id)}>{i + 1}. {o.name.split(' · ')[0].replace(/^Bas maillot /, '')}{o.name.includes(' · ') && <span className="d-block small">{o.name.split(' · ').slice(1).join(' · ')}</span>}</button></Html>
           <ModelError><Suspense fallback={<Html center><span className="badge bg-secondary">Chargement…</span></Html>}><Character id="native" variant="native" name={o.name} modelPath="characters/lara/lara_native.glb" isLara targetHeight={173.4} isActive={false} isPreview isGridPartner instanceId={o.id} characterAnim={animation} previewPlayback={playback} previewOutfit={{ ...o.clothing, characterWireframe: wireframe }} previewHaircut={o.hair} previewHairColor={o.color} previewPosition={[0, 0, 0]} previewRotationY={angle} /></Suspense></ModelError>
         </group>)}</CharacterRuntimeProvider></NavigationEnabledContext.Provider>
       </Canvas></div>
