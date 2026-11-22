@@ -31,7 +31,7 @@ export const lifeSpecialtyActivity = (objectId?: string, slotId?: string): 'danc
   : objectId === 'rain-dance' ? 'dance' : objectId === 'est-neighbor-flat'
     ? slotId?.startsWith('combat') ? 'combat' : slotId?.startsWith('locomotion') ? null : 'dance'
     : lifeSocialActivity(objectId, slotId) === 'massage' ? 'massage' : null;
-export const LIFE_PERSONALITY: Partial<Record<LifeCharacterId, string>> = { helena: 'Timide et geek technologique' };
+export const LIFE_PERSONALITY: Partial<Record<LifeCharacterId, string>> = { helena: 'Timide et geek technologique', marissa: 'Coiffeuse' };
 
 export const LIFE_PHASE_LABELS = {
   storage: 'Prendre un objet dans un rangement',

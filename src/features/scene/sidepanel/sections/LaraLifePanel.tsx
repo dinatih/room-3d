@@ -62,6 +62,21 @@ export function LaraLifePanel({ characterId }: { characterId?: LifeCharacterId }
       </button>}
       {!characterId && <LifeSpeedButton />}
     </div>
+    {selectedCharacterId === 'marissa' && (
+      <div className="d-flex align-items-center justify-content-between gap-2 mb-1 p-1 rounded bg-danger-subtle border border-danger-subtle">
+        <span className="small fw-semibold text-danger"><i className="bi bi-scissors me-1" aria-hidden="true" />Coiffeuse</span>
+        <a
+          href="/lucia-styles/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-sm btn-danger py-0 px-2 d-inline-flex align-items-center gap-1"
+          title="Ouvrir le catalogue GTA 6 — Lucia Styles"
+        >
+          <span>Lucia Styles</span>
+          <i className="bi bi-box-arrow-up-right" aria-hidden="true" />
+        </a>
+      </div>
+    )}
     <div id={characterId ? undefined : 'life-character-panel'}>
       {(Object.keys(needs) as (keyof LifeNeeds)[]).map(key => <label key={key} className="row align-items-center gx-2 mb-0">
         <span className="col-4" title={key === 'environment' ? cleanliness : LIFE_NEED_LABELS[key]}>{NEED_LABELS[key]}</span>
