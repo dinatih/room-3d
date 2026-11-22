@@ -24,6 +24,7 @@ interface CharacterClothingProps {
   showWallhack: boolean;
   wireframe: boolean;
   visible?: boolean;
+  bottomId?: LaraClothing;
 }
 
 export function CharacterClothing({
@@ -34,6 +35,7 @@ export function CharacterClothing({
   showWallhack,
   wireframe,
   visible = true,
+  bottomId,
 }: CharacterClothingProps) {
   const modelPath = resolveLaraGarmentGlbPath(clothingId, hoodieZip);
   if (!modelPath) {
@@ -152,6 +154,15 @@ export function CharacterClothing({
       }
     });
   }, [laraScene, containerName, shadows, showWallhack, wireframe]);
+
+  // Covered fabric is omitted under the native short, whose source surface
+  // intersects the reconstructed body underneath the waistband.
+  useLayoutEffect(() => {
+    if (clothingId !== 'body-native-green') return;
+    const gusset = laraScene.getObjectByName(containerName)?.getObjectByName('native_body_gusset');
+    if (!gusset) throw new Error('Native green body is missing its gusset section');
+    gusset.visible = bottomId !== 'native';
+  }, [laraScene, garmentScene, containerName, clothingId, bottomId, visible]);
 
   // Libérer uniquement les matériaux clonés par ownMaterials=true au démontage
   useLayoutEffect(() => {

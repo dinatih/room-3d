@@ -390,8 +390,12 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   setPartVisibility(parts.bikiniBottom,opts.laraBottom === 'bikini');
 
   // Torso / Legs
-  setPartVisibility(parts.torsoClothed, !isTopNude);
-  setPartVisibility(parts.torsoNude, isTopNude);
+  const nativeBody = opts.laraTop === 'body-native-green';
+  setPartVisibility(parts.torsoClothed, !isTopNude || nativeBody);
+  if (nativeBody) {
+    setPartVisibility(parts.torsoClothed.filter(({ mesh }) => mesh.name.startsWith('shirt')), false);
+  }
+  setPartVisibility(parts.torsoNude, isTopNude && !nativeBody);
   setPartVisibility(parts.legsClothed, !isBottomNude);
   setPartVisibility(parts.legsClothed.filter(({ mesh }) => mesh.name === 'body_legs'), !isBottomNude && showNativeBoots);
   setPartVisibility(parts.legsBarefoot, !isBottomNude && !showNativeBoots);

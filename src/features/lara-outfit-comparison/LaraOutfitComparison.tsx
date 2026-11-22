@@ -76,7 +76,7 @@ export function LaraOutfitComparison() {
       <h2 className="h5 mb-0">{outfits.length} tenues sur la grille</h2>
       <Select label="Tenue à modifier" value={selected} options={outfits.map((o, i) => ({ id: o.id, label: `${i + 1}. ${o.name}` }))} onChange={setSelected} />
       <label className="small">Nom<input className="form-control form-control-sm" value={current.name} onChange={e => update({ name: e.target.value })} /></label>
-      <Select label="Haut / robe / maillot" value={current.clothing.laraTop!} options={LARA_TOP_SPECS} onChange={s => clothing({ laraTop: s as PreviewOutfit['laraTop'], ...(isOnePieceTop(s as LaraTopId) ? { laraBottom: 'none' as const } : {}) })} />
+      <Select label="Haut / robe / maillot" value={current.clothing.laraTop!} options={LARA_TOP_SPECS} onChange={s => clothing({ laraTop: s as PreviewOutfit['laraTop'], ...(isOnePieceTop(s as LaraTopId) && s !== 'body-native-green' ? { laraBottom: 'none' as const } : {}) })} />
       <Select label="Bas" value={current.clothing.laraBottom!} options={LARA_BOTTOM_SPECS} onChange={s => clothing({ laraBottom: s as PreviewOutfit['laraBottom'] })} />
       <Select label="Fermeture du sweat" value={current.clothing.laraHoodieZip!} options={LARA_HOODIE_ZIP_OPTIONS} onChange={s => clothing({ laraHoodieZip: s as PreviewOutfit['laraHoodieZip'] })} />
       <Select label="Perruque" value={current.hair} options={[{ id: 'original', label: 'Cheveux d’origine' }, ...wigs.map(w => ({ id: w.id, label: w.name }))]} onChange={s => update({ hair: s })} />

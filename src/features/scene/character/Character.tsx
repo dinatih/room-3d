@@ -1424,6 +1424,7 @@ export function Character({
         <Suspense fallback={null}>
           <CharacterClothing
             clothingId={laraTop}
+            bottomId={laraBottom}
             hoodieZip={laraHoodieZip}
             laraScene={scene}
             shadows={characterShadows}
