@@ -11,7 +11,7 @@ const launch = require('./browser-test-options.cjs');
   await page.goto(`${process.env.LARA_COMPARISON_URL || 'http://127.0.0.1:5174'}/lara-outfit-comparison.html`);
   await page.waitForFunction(()=>document.body.innerText.includes('4 tenues'));
   await page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent==='Comparer les bas · GPT-6.1-Sol high').click());
-  await page.waitForFunction(()=>document.body.innerText.includes('16 tenues'));
+  await page.waitForFunction(()=>document.body.innerText.includes('18 tenues'));
   await page.evaluate(async()=>{
    const {_roots}=await import('/node_modules/.vite/deps/@react-three_fiber.js');
    window.bottomTestScene=()=>_roots.get(document.querySelector('canvas')).store.getState().scene;
@@ -19,6 +19,7 @@ const launch = require('./browser-test-options.cjs');
   await page.waitForFunction(()=>{
    let count=0;window.bottomTestScene().traverse(o=>{if(o.name.startsWith('lara_custom_clothing_')&&o.name.endsWith('-sol-high'))count++;});return count===6;
   },{timeout:60000});
+  assert.ok(await page.evaluate(()=>document.body.innerText.includes('Short natif') && document.body.innerText.includes('Bikini natif')), 'Native waist references are present');
   const options=await page.evaluate(()=>[...document.querySelectorAll('label')].find(l=>l.textContent.startsWith('Bas')).querySelector('select').options.length);
   assert.equal(options,15);
   for (const animation of ['idle','walking','sitting-idle']) {

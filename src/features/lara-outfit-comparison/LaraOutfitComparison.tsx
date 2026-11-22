@@ -89,7 +89,8 @@ export function LaraOutfitComparison() {
           const original = LARA_BOTTOM_SPECS.find(o => o.id === s.id.replace('-sol-high', ''))!;
           return [original, s].map(spec => { const outfit = makeOutfit('native', spec.id); return { ...outfit, name: spec.label, clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
         });
-        add(comparisons);
+        const references = (['native', 'bikini'] as const).map(bottom => { const outfit = makeOutfit('native', bottom); return { ...outfit, name: bottom === 'native' ? 'Référence · Short natif' : 'Référence · Bikini natif', clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
+        add([...references, ...comparisons]);
       }}>Comparer les bas · GPT-6.1-Sol high</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_BOTTOM_SPECS.map(s => ({ ...makeOutfit('native', s.id), name: s.label })))}>Ajouter tous les bas</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(wigs.map(w => ({ ...current, id: crypto.randomUUID(), name: w.name, hair: w.id, clothing: { ...current.clothing } })))}>Comparer toutes les perruques</button>

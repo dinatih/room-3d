@@ -10,11 +10,12 @@ from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 from .rigging import bind_and_transfer_weights, export_garment_glb
 
+# None selects the measured native bikini waist; trousers keep their higher cut.
 STYLES = {
-    'bikini-slip-sol-high': ('swimwear/lara_bikini_slip_sol_high.glb', .965, .036, .095, .125),
-    'bikini-shorty-sol-high': ('swimwear/lara_bikini_shorty_sol_high.glb', .985, .732),
-    'bikini-tanga-sol-high': ('swimwear/lara_bikini_tanga_sol_high.glb', .975, .018, .082, .072),
-    'bikini-string-sol-high': ('swimwear/lara_bikini_string_sol_high.glb', .982, .008, .068, .024),
+    'bikini-slip-sol-high': ('swimwear/lara_bikini_slip_sol_high.glb', None, .036, .095, .125),
+    'bikini-shorty-sol-high': ('swimwear/lara_bikini_shorty_sol_high.glb', None, .732),
+    'bikini-tanga-sol-high': ('swimwear/lara_bikini_tanga_sol_high.glb', None, .018, .082, .072),
+    'bikini-string-sol-high': ('swimwear/lara_bikini_string_sol_high.glb', None, .008, .068, .024),
     'legging-sol-high': ('bottoms/lara_legging_sol_high.glb', 1.095, .145),
     'sweatpants-sol-high': ('bottoms/lara_sweatpants_sol_high.glb', 1.080, .155),
 }
@@ -74,7 +75,7 @@ def _clip(points, distance):
     return result
 
 
-def _cut_surface(collider, crotch_z, garment_id, spec, mats):
+def _cut_surface(collider, crotch_z, garment_id, spec, mats, minimum_waist):
     bm = bmesh.new()
     bm.from_mesh(collider.data)
     # One refinement makes the curved cuts finer than the source skin triangles.
@@ -82,7 +83,7 @@ def _cut_surface(collider, crotch_z, garment_id, spec, mats):
     bmesh.ops.triangulate(bm, faces=list(bm.faces))
     is_swim = garment_id.startswith('bikini-')
     is_jogging = garment_id == 'sweatpants-sol-high'
-    waist = spec[1]
+    waist = minimum_waist if spec[1] is None else spec[1]
     brief = len(spec) == 5
     hem = min(v.co.z for v in collider.data.vertices) if brief else spec[2]
     distances = [lambda p: waist-p.z, lambda p: p.z-hem]
@@ -127,7 +128,10 @@ def _cut_surface(collider, crotch_z, garment_id, spec, mats):
         # Skin-derived topology already follows the perineum, so there is no
         # synthetic crotch fan to hang beneath the actual body.
         ease = .0145 if is_jogging else CLEARANCE
+        upper_edge = math.isclose(v.co.z, waist, rel_tol=0, abs_tol=1e-7)
         v.co += v.normal*ease
+        if upper_edge:
+            v.co.z = waist
     bm.to_mesh(mesh)
     bm.free()
     obj = bpy.data.objects.new('lara_'+garment_id.replace('-','_'),mesh)
@@ -137,24 +141,32 @@ def _cut_surface(collider, crotch_z, garment_id, spec, mats):
     return obj
 
 
-def _validate_openings(obj):
+def _validate_openings(obj, minimum_waist):
     """A bottom must have one waist and two leg openings, not an open gusset."""
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     boundary = {e for e in bm.edges if e.is_boundary}
-    count = 0
+    openings = []
     while boundary:
-        count += 1
-        pending = list(boundary.pop().verts)
+        vertices = set(boundary.pop().verts)
+        pending = list(vertices)
         while pending:
             vertex = pending.pop()
             for edge in vertex.link_edges:
                 if edge in boundary:
                     boundary.remove(edge)
-                    pending.append(edge.other_vert(vertex))
+                    neighbour = edge.other_vert(vertex)
+                    vertices.add(neighbour)
+                    pending.append(neighbour)
+        openings.append([v.co.z for v in vertices])
     bm.free()
+    count = len(openings)
     if count != 3:
         raise RuntimeError(f'{obj.name}: expected waist + two legs, got {count} openings')
+    waist = max(openings, key=lambda zs: sum(zs)/len(zs))
+    if min(waist) < minimum_waist-1e-6:
+        raise RuntimeError(f'{obj.name}: waist below native bikini ({min(waist)} < {minimum_waist})')
+    print(f'{obj.name}: waist {min(waist):.6f}..{max(waist):.6f} m; native bikini minimum {minimum_waist:.6f} m',flush=True)
 
 
 def _fit_cloth(obj):
@@ -200,14 +212,15 @@ def _fit_cloth(obj):
 
 
 def generate_sol_high_bottoms(bvhs, mats, armature, only_ids=None):
+    minimum_waist = max((bpy.data.objects['bikini_bottom'].matrix_world @ v.co).z for v in bpy.data.objects['bikini_bottom'].data.vertices)
     collider,crotch_z = _body_surface()
     print(f'Sol High measured crotch: {crotch_z:.6f} m',flush=True)
     donors = [bpy.data.objects[n] for n in ('body_nude_legs','body_nude_feet','body_nude_torso')]
     for garment_id,spec in STYLES.items():
         if only_ids is not None and garment_id not in only_ids: continue
-        obj = _cut_surface(collider,crotch_z,garment_id,spec,mats)
-        _validate_openings(obj)
+        obj = _cut_surface(collider,crotch_z,garment_id,spec,mats,minimum_waist)
         _fit_cloth(obj)
+        _validate_openings(obj,minimum_waist)
         bind_and_transfer_weights(obj,donors,armature,smooth_passes=0)
         obj['generation'] = 'GPT-6.1-Sol high'
         obj['cloth_fit_frames'] = CLOTH_FRAMES
