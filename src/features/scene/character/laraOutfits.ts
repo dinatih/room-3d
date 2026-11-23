@@ -43,6 +43,37 @@ export const LARA_TOP_IDS = [
   'denim-midi-dress-long-g4h-high',
   'denim-midi-dress-short-g4h-high',
   'denim-midi-dress-sleeveless-g4h-high',
+  // Basiques 01 · Maillots de bain (Gemini 4 Hydrogen High)
+  'swim-onepiece-classic-g4h-high',
+  'swim-onepiece-halter-g4h-high',
+  'swim-onepiece-asymmetric-g4h-high',
+  'swim-onepiece-training-g4h-high',
+  'swim-top-triangle-g4h-high',
+  'swim-top-bandeau-g4h-high',
+  'swim-top-bralette-g4h-high',
+  'swim-top-balconette-g4h-high',
+  'swim-top-tankini-g4h-high',
+  'swim-trikini-g4h-high',
+  'swim-top-rashguard-g4h-high',
+  'swim-fullcover-g4h-high',
+  // Basiques 02 · Tenues de sport (Gemini 4 Hydrogen High)
+  'sport-top-bra-g4h-high',
+  'sport-top-tank-g4h-high',
+  'sport-top-tshirt-g4h-high',
+  'sport-tennis-dress-g4h-high',
+  'sport-yoga-unitard-g4h-high',
+  'sport-dance-leotard-g4h-high',
+  'sport-top-longsleeve-g4h-high',
+  'sport-top-sweatshirt-g4h-high',
+  'sport-top-trackjacket-g4h-high',
+  'sport-cycling-skinsuit-g4h-high',
+  // Basiques 03 · Streetwear & Hoodies (Gemini 4 Hydrogen High)
+  'street-jumpsuit-hoodie-g4h-high',
+  'street-hoodie-sleeveless-g4h-high',
+  'street-hoodie-crop-long-g4h-high',
+  'street-hoodie-crop-sleeveless-g4h-high',
+  'street-dress-hoodie-long-g4h-high',
+  'street-dress-hoodie-sleeveless-g4h-high',
   'none',
 ] as const;
 
@@ -64,6 +95,18 @@ export const LARA_BOTTOM_IDS = [
   'denim-shorts-g4h-high',
   'denim-shorty-g4h-high',
   'denim-skirt-g4h-high',
+  // Basiques 01 · Bas maillots (Gemini 4 Hydrogen High)
+  'swim-bottom-tie-g4h-high',
+  'swim-bottom-classic-g4h-high',
+  'swim-bottom-highwaist-g4h-high',
+  // Basiques 02 · Bas sport (Gemini 4 Hydrogen High)
+  'sport-bottom-legging-g4h-high',
+  'sport-bottom-cycliste-g4h-high',
+  'sport-bottom-runningshorts-g4h-high',
+  'sport-bottom-skort-g4h-high',
+  'sport-bottom-flarelegging-g4h-high',
+  'sport-bottom-jogging-g4h-high',
+  'sport-bottom-trackpants-g4h-high',
   'none',
 ] as const;
 
@@ -128,6 +171,37 @@ export const LARA_TOP_SPECS: ReadonlyArray<LaraGarmentSpec & { id: LaraTopId }> 
   { id: 'denim-midi-dress-long-g4h-high', label: 'Robe midi manches longues · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_midi_dress_long_g4h_high.glb', isOnePiece: true },
   { id: 'denim-midi-dress-short-g4h-high', label: 'Robe midi manches courtes · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_midi_dress_short_g4h_high.glb', isOnePiece: true },
   { id: 'denim-midi-dress-sleeveless-g4h-high', label: 'Robe midi sans manches · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_midi_dress_sleeveless_g4h_high.glb', isOnePiece: true },
+  // Basiques 01 · Maillots de bain (Gemini 4 Hydrogen High)
+  { id: 'swim-onepiece-classic-g4h-high', label: 'Une-pièce classique · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_onepiece_classic_g4h_high.glb', isOnePiece: true },
+  { id: 'swim-onepiece-halter-g4h-high', label: 'Une-pièce dos nu · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_onepiece_halter_g4h_high.glb', isOnePiece: true },
+  { id: 'swim-onepiece-asymmetric-g4h-high', label: 'Une-pièce asymétrique · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_onepiece_asymmetric_g4h_high.glb', isOnePiece: true },
+  { id: 'swim-onepiece-training-g4h-high', label: 'Maillot de natation · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_onepiece_training_g4h_high.glb', isOnePiece: true },
+  { id: 'swim-top-triangle-g4h-high', label: 'Bikini triangle (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_triangle_g4h_high.glb' },
+  { id: 'swim-top-bandeau-g4h-high', label: 'Bikini bandeau (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_bandeau_g4h_high.glb' },
+  { id: 'swim-top-bralette-g4h-high', label: 'Bikini brassière (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_bralette_g4h_high.glb' },
+  { id: 'swim-top-balconette-g4h-high', label: 'Bikini taille haute (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_balconette_g4h_high.glb' },
+  { id: 'swim-top-tankini-g4h-high', label: 'Tankini (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_tankini_g4h_high.glb' },
+  { id: 'swim-trikini-g4h-high', label: 'Trikini · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_trikini_g4h_high.glb', isOnePiece: true },
+  { id: 'swim-top-rashguard-g4h-high', label: 'Maillot de surf (haut) · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_top_rashguard_g4h_high.glb' },
+  { id: 'swim-fullcover-g4h-high', label: 'Maillot couvrant · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_fullcover_g4h_high.glb', isOnePiece: true },
+  // Basiques 02 · Tenues de sport (Gemini 4 Hydrogen High)
+  { id: 'sport-top-bra-g4h-high', label: 'Brassière de sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_bra_g4h_high.glb' },
+  { id: 'sport-top-tank-g4h-high', label: 'Débardeur de sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_tank_g4h_high.glb' },
+  { id: 'sport-top-tshirt-g4h-high', label: 'T-shirt de sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_tshirt_g4h_high.glb' },
+  { id: 'sport-tennis-dress-g4h-high', label: 'Robe de tennis · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_tennis_dress_g4h_high.glb', isOnePiece: true },
+  { id: 'sport-yoga-unitard-g4h-high', label: 'Combinaison de yoga · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_yoga_unitard_g4h_high.glb', isOnePiece: true },
+  { id: 'sport-dance-leotard-g4h-high', label: 'Justaucorps de danse · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_dance_leotard_g4h_high.glb', isOnePiece: true },
+  { id: 'sport-top-longsleeve-g4h-high', label: 'Haut manches longues sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_longsleeve_g4h_high.glb' },
+  { id: 'sport-top-sweatshirt-g4h-high', label: 'Sweat crewneck · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_sweatshirt_g4h_high.glb' },
+  { id: 'sport-top-trackjacket-g4h-high', label: 'Veste zippée sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_top_trackjacket_g4h_high.glb' },
+  { id: 'sport-cycling-skinsuit-g4h-high', label: 'Combinaison de cyclisme · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_cycling_skinsuit_g4h_high.glb', isOnePiece: true },
+  // Basiques 03 · Streetwear & Hoodies (Gemini 4 Hydrogen High)
+  { id: 'street-jumpsuit-hoodie-g4h-high', label: 'Combinaison streetwear · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_jumpsuit_hoodie_g4h_high.glb', isOnePiece: true },
+  { id: 'street-hoodie-sleeveless-g4h-high', label: 'Hoodie zippé sans manches · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_hoodie_sleeveless_g4h_high.glb' },
+  { id: 'street-hoodie-crop-long-g4h-high', label: 'Hoodie zippé court manches longues · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_hoodie_crop_long_g4h_high.glb' },
+  { id: 'street-hoodie-crop-sleeveless-g4h-high', label: 'Hoodie zippé court sans manches · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_hoodie_crop_sleeveless_g4h_high.glb' },
+  { id: 'street-dress-hoodie-long-g4h-high', label: 'Robe hoodie zippée manches longues · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_dress_hoodie_long_g4h_high.glb', isOnePiece: true },
+  { id: 'street-dress-hoodie-sleeveless-g4h-high', label: 'Robe hoodie zippée sans manches · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/streetwear/lara_street_dress_hoodie_sleeveless_g4h_high.glb', isOnePiece: true },
   { id: 'none', label: 'Aucun' },
 ];
 
@@ -149,6 +223,18 @@ export const LARA_BOTTOM_SPECS: ReadonlyArray<LaraGarmentSpec & { id: LaraBottom
   { id: 'denim-shorts-g4h-high', label: 'Short en jean · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_shorts_g4h_high.glb' },
   { id: 'denim-shorty-g4h-high', label: 'Shorty en jean · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_shorty_g4h_high.glb' },
   { id: 'denim-skirt-g4h-high', label: 'Jupe en jean · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/denim/lara_denim_skirt_g4h_high.glb' },
+  // Basiques 01 · Bas maillots (Gemini 4 Hydrogen High)
+  { id: 'swim-bottom-tie-g4h-high', label: 'Bas bikini noué · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_bottom_tie_g4h_high.glb' },
+  { id: 'swim-bottom-classic-g4h-high', label: 'Bas bikini classique · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_bottom_classic_g4h_high.glb' },
+  { id: 'swim-bottom-highwaist-g4h-high', label: 'Bas bikini taille haute · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/swimwear/lara_swim_bottom_highwaist_g4h_high.glb' },
+  // Basiques 02 · Bas sport (Gemini 4 Hydrogen High)
+  { id: 'sport-bottom-legging-g4h-high', label: 'Legging sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_legging_g4h_high.glb' },
+  { id: 'sport-bottom-cycliste-g4h-high', label: 'Cycliste sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_cycliste_g4h_high.glb' },
+  { id: 'sport-bottom-runningshorts-g4h-high', label: 'Short de course · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_runningshorts_g4h_high.glb' },
+  { id: 'sport-bottom-skort-g4h-high', label: 'Jupe-short sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_skort_g4h_high.glb' },
+  { id: 'sport-bottom-flarelegging-g4h-high', label: 'Legging évasé · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_flarelegging_g4h_high.glb' },
+  { id: 'sport-bottom-jogging-g4h-high', label: 'Jogging sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_jogging_g4h_high.glb' },
+  { id: 'sport-bottom-trackpants-g4h-high', label: 'Pantalon sport · Gemini 4 Hydrogen (High)', glbBasePath: 'characters/clothing/lara/sport/lara_sport_bottom_trackpants_g4h_high.glb' },
   { id: 'none', label: 'Aucun' },
 ];
 

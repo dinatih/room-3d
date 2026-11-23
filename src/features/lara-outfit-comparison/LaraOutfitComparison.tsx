@@ -85,6 +85,60 @@ export function LaraOutfitComparison() {
       <div className="d-flex flex-wrap gap-2"><button className="btn btn-primary btn-sm" onClick={() => add([{ ...current, id: crypto.randomUUID(), name: `${current.name} copie`, clothing: { ...current.clothing } }])}>Dupliquer</button><button className="btn btn-outline-danger btn-sm" disabled={outfits.length === 1} onClick={() => { setOutfits(outfits.filter(o => o.id !== selected)); setSelected(outfits.find(o => o.id !== selected)!.id); }}>Supprimer</button></div>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_TOP_SPECS.map(s => ({ ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'native'), name: s.label })))}>Ajouter tous les hauts</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => {
+        const paired: Array<[string, LaraTopId, LaraBottomId]> = [
+          ['Une-pièce classique', 'swim-onepiece-classic-g4h-high', 'none'],
+          ['Une-pièce dos nu', 'swim-onepiece-halter-g4h-high', 'none'],
+          ['Une-pièce asymétrique', 'swim-onepiece-asymmetric-g4h-high', 'none'],
+          ['Maillot de natation', 'swim-onepiece-training-g4h-high', 'none'],
+          ['Bikini triangle', 'swim-top-triangle-g4h-high', 'swim-bottom-tie-g4h-high'],
+          ['Bikini bandeau', 'swim-top-bandeau-g4h-high', 'swim-bottom-classic-g4h-high'],
+          ['Bikini brassière', 'swim-top-bralette-g4h-high', 'swim-bottom-classic-g4h-high'],
+          ['Bikini taille haute', 'swim-top-balconette-g4h-high', 'swim-bottom-highwaist-g4h-high'],
+          ['Tankini', 'swim-top-tankini-g4h-high', 'swim-bottom-classic-g4h-high'],
+          ['Trikini', 'swim-trikini-g4h-high', 'none'],
+          ['Maillot de surf', 'swim-top-rashguard-g4h-high', 'swim-bottom-classic-g4h-high'],
+          ['Maillot couvrant', 'swim-fullcover-g4h-high', 'none'],
+        ];
+        add(paired.map(([name, top, bottom]) => {
+          const o = makeOutfit(top, bottom);
+          return { ...o, name: `${name} · Gemini 4 Hydrogen (High)`, clothing: { ...o.clothing, laraShoes: false, accessories: false } };
+        }));
+      }}>Basiques 01 · Maillots · Gemini 4 Hydrogen (High)</button>
+      <button className="btn btn-outline-primary btn-sm" onClick={() => {
+        const paired: Array<[string, LaraTopId, LaraBottomId]> = [
+          ['Brassière + legging', 'sport-top-bra-g4h-high', 'sport-bottom-legging-g4h-high'],
+          ['Débardeur + legging', 'sport-top-tank-g4h-high', 'sport-bottom-legging-g4h-high'],
+          ['Brassière + cycliste', 'sport-top-bra-g4h-high', 'sport-bottom-cycliste-g4h-high'],
+          ['T-shirt + short de course', 'sport-top-tshirt-g4h-high', 'sport-bottom-runningshorts-g4h-high'],
+          ['Débardeur + jupe-short', 'sport-top-tank-g4h-high', 'sport-bottom-skort-g4h-high'],
+          ['Robe de tennis', 'sport-tennis-dress-g4h-high', 'none'],
+          ['Combinaison de yoga', 'sport-yoga-unitard-g4h-high', 'none'],
+          ['Justaucorps de danse', 'sport-dance-leotard-g4h-high', 'none'],
+          ['Haut manches longues + legging évasé', 'sport-top-longsleeve-g4h-high', 'sport-bottom-flarelegging-g4h-high'],
+          ['Sweat + jogging', 'sport-top-sweatshirt-g4h-high', 'sport-bottom-jogging-g4h-high'],
+          ['Veste zippée + pantalon', 'sport-top-trackjacket-g4h-high', 'sport-bottom-trackpants-g4h-high'],
+          ['Combinaison de cyclisme', 'sport-cycling-skinsuit-g4h-high', 'none'],
+        ];
+        add(paired.map(([name, top, bottom]) => {
+          const o = makeOutfit(top, bottom);
+          return { ...o, name: `${name} · Gemini 4 Hydrogen (High)`, clothing: { ...o.clothing, laraShoes: false, accessories: false } };
+        }));
+      }}>Basiques 02 · Sport · Gemini 4 Hydrogen (High)</button>
+      <button className="btn btn-outline-primary btn-sm" onClick={() => {
+        const paired: Array<[string, LaraTopId, LaraBottomId]> = [
+          ['Combinaison streetwear', 'street-jumpsuit-hoodie-g4h-high', 'none'],
+          ['Hoodie zippé sans manches', 'street-hoodie-sleeveless-g4h-high', 'sport-bottom-legging-g4h-high'],
+          ['Hoodie zippé court manches longues', 'street-hoodie-crop-long-g4h-high', 'sport-bottom-legging-g4h-high'],
+          ['Hoodie zippé court sans manches', 'street-hoodie-crop-sleeveless-g4h-high', 'sport-bottom-legging-g4h-high'],
+          ['Robe hoodie zippée manches longues', 'street-dress-hoodie-long-g4h-high', 'none'],
+          ['Robe hoodie zippée sans manches', 'street-dress-hoodie-sleeveless-g4h-high', 'none'],
+        ];
+        add(paired.map(([name, top, bottom]) => {
+          const o = makeOutfit(top, bottom);
+          return { ...o, name: `${name} · Gemini 4 Hydrogen (High)`, clothing: { ...o.clothing, laraShoes: false, accessories: false } };
+        }));
+      }}>Basiques 03 · Streetwear · Gemini 4 Hydrogen (High)</button>
+      <button className="btn btn-outline-primary btn-sm" onClick={() => {
         const denimTops = LARA_TOP_SPECS.filter(s => s.id.startsWith('denim-') && s.id.endsWith('-g4h-high')).map(s => ({
           ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'denim-jeans-classic-g4h-high'),
           name: s.label,
