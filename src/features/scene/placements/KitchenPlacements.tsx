@@ -17,7 +17,6 @@ import { Tackan } from '../items/Tackan';
 import { Annons80298474 } from '../items/Annons80298474';
 import { Citronhaj40553211 } from '../items/Citronhaj40553211';
 import { Kejserlig90511501 } from '../items/Kejserlig90511501';
-import { Middagsmat60463714 } from '../items/Middagsmat60463714';
 import { SyckRc003a } from '../items/SyckRc003a';
 import { Rinnig30407814 } from '../items/Rinnig30407814';
 import { Lillviken20317852 } from '../items/Lillviken20317852';
@@ -170,11 +169,6 @@ export function KitchenFurnishings() {
         <Tackan fillLevel={1 / 2} />
       </group>
 
-      {/* Cuiseur à riz Senya SYCK-RC003/A — sur les plaques contre le mur sud */}
-      <group position={[KITCHEN_WEST_WALL + 70, 93.8, KITCHEN_SOUTH_WALL - 11]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
-        <SyckRc003a actionState={as} />
-      </group>
-
       {/* Deux CITRONHAJ 8 cm (sel & herbes de Provence) sur la planche du bas du meuble haut, devant la hotte. */}
       <group position={[KITCHEN_WEST_WALL + 67, HOOD_CABINET_BOTTOM_TOP, ROOM_D + 25.1]} userData={{ sceneItemRoot: true, itemName: 'CITRONHAJ Sel 8 cm' }}>
         <Citronhaj40553211 contents="salt" />
@@ -183,9 +177,9 @@ export function KitchenFurnishings() {
         <Citronhaj40553211 contents="herbes-de-provence" />
       </group>
 
-      {/* Casseroles sur la tablette existante du meuble METOD couché. */}
-      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={-Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Casserole MIDDAGSMAT' }}>
-        <Middagsmat60463714 />
+      {/* Cuiseur à riz et faitout sur la tablette existante du meuble METOD couché. */}
+      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
+        <SyckRc003a actionState={as} />
       </group>
       <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Faitout ANNONS' }}>
         <Annons80298474 />
