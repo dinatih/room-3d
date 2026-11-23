@@ -133,6 +133,27 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     img_canvas_col = _make_image("tex_sneaker_canvas_red_col", canvas_rgba, "sRGB")
     img_canvas_nrm = _make_image("tex_sneaker_canvas_nrm", _height_to_normal_rgba(canvas_h, 0.60), "Non-Color")
 
+    # 7. Red Denim Twill (3x1 diagonal twill weave + subtle stonewash slub)
+    twill_phase = (xx * (128.0 / size) + yy * (128.0 / size)) * 2.0 * math.pi
+    warp = np.sin(xx / size * 128.0 * 2.0 * math.pi) * 0.30
+    weft = np.sin(yy / size * 128.0 * 2.0 * math.pi) * 0.25
+    twill = np.sin(twill_phase) * 0.60 + warp + weft
+    slub = low_noise * 0.14 + fine_noise * 0.18
+    denim_h = twill * 0.55 + slub
+    denim_base = np.array([0.76, 0.048, 0.058], dtype=np.float32)
+    denim_wash = np.clip(1.0 + low_noise * 0.045 + fine_noise * 0.030 + twill * 0.032, 0.84, 1.16)
+    denim_rgb = np.clip(denim_base[None, None, :] * denim_wash[..., None], 0.0, 1.0)
+    denim_rgba = np.ones((size, size, 4), dtype=np.float32)
+    denim_rgba[..., :3] = denim_rgb
+    img_denim_col = _make_image("tex_denim_red_col", denim_rgba, "sRGB")
+
+    denim_seam_base = np.array([0.56, 0.032, 0.040], dtype=np.float32)
+    denim_seam_rgb = np.clip(denim_seam_base[None, None, :] * denim_wash[..., None], 0.0, 1.0)
+    denim_seam_rgba = np.ones((size, size, 4), dtype=np.float32)
+    denim_seam_rgba[..., :3] = denim_seam_rgb
+    img_denim_seam_col = _make_image("tex_denim_red_seam_col", denim_seam_rgba, "sRGB")
+    img_denim_nrm = _make_image("tex_denim_twill_nrm", _height_to_normal_rgba(denim_h, 0.75), "Non-Color")
+
     return {
         "red_fleece_col": img_red_fleece_col,
         "red_rib_col": img_red_rib_col,
@@ -150,6 +171,9 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
         "bandana_nrm": img_bandana_nrm,
         "canvas_col": img_canvas_col,
         "canvas_nrm": img_canvas_nrm,
+        "denim_col": img_denim_col,
+        "denim_seam_col": img_denim_seam_col,
+        "denim_nrm": img_denim_nrm,
     }
 
 
@@ -364,5 +388,34 @@ def create_material_library() -> dict[str, bpy.types.Material]:
             normal_img=textures["fine_rib_nrm"],
             normal_strength=0.55,
             uv_scale=2.6,
+        ),
+        "denim": make_pbr_material(
+            "Denim_Twill_Red",
+            base_color=(0.55, 0.014, 0.020, 1.0),
+            roughness=0.82,
+            metallic=0.0,
+            color_img=textures["denim_col"],
+            normal_img=textures["denim_nrm"],
+            normal_strength=0.55,
+            uv_scale=3.2,
+            specular=0.22,
+        ),
+        "denim_seam": make_pbr_material(
+            "Denim_Seam_Red",
+            base_color=(0.38, 0.010, 0.015, 1.0),
+            roughness=0.86,
+            metallic=0.0,
+            color_img=textures["denim_seam_col"],
+            normal_img=textures["denim_nrm"],
+            normal_strength=0.50,
+            uv_scale=3.2,
+            specular=0.18,
+        ),
+        "denim_hardware": make_pbr_material(
+            "Denim_Brass_Button",
+            base_color=(0.76, 0.54, 0.24, 1.0),
+            roughness=0.28,
+            metallic=0.88,
+            specular=0.60,
         ),
     }

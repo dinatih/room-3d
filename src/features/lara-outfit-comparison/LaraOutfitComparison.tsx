@@ -85,6 +85,19 @@ export function LaraOutfitComparison() {
       <div className="d-flex flex-wrap gap-2"><button className="btn btn-primary btn-sm" onClick={() => add([{ ...current, id: crypto.randomUUID(), name: `${current.name} copie`, clothing: { ...current.clothing } }])}>Dupliquer</button><button className="btn btn-outline-danger btn-sm" disabled={outfits.length === 1} onClick={() => { setOutfits(outfits.filter(o => o.id !== selected)); setSelected(outfits.find(o => o.id !== selected)!.id); }}>Supprimer</button></div>
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_TOP_SPECS.map(s => ({ ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'native'), name: s.label })))}>Ajouter tous les hauts</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => {
+        const denimTops = LARA_TOP_SPECS.filter(s => s.id.endsWith('-g4h-medium')).map(s => ({
+          ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'denim-jeans-classic-g4h-medium'),
+          name: s.label,
+          clothing: { ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'denim-jeans-classic-g4h-medium').clothing, laraShoes: false, accessories: false },
+        }));
+        const denimBottoms = LARA_BOTTOM_SPECS.filter(s => s.id.endsWith('-g4h-medium')).map(s => ({
+          ...makeOutfit('none', s.id),
+          name: s.label,
+          clothing: { ...makeOutfit('none', s.id).clothing, laraShoes: false, accessories: false },
+        }));
+        add([...denimTops, ...denimBottoms]);
+      }}>Ajouter basiques denim · Gemini 4 Hydrogen medium</button>
+      <button className="btn btn-outline-primary btn-sm" onClick={() => {
         const comparisons = LARA_BOTTOM_SPECS.filter(s => s.id.endsWith('-sol-high')).flatMap(s => {
           const original = LARA_BOTTOM_SPECS.find(o => o.id === s.id.replace('-sol-high', ''));
           return (original ? [original, s] : [s]).map(spec => { const outfit = makeOutfit('native', spec.id); return { ...outfit, name: spec.label, clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });

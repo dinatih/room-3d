@@ -16,6 +16,7 @@ if REPO_ROOT not in sys.path:
 
 from scripts.lara_outfits.accessories import generate_accessories
 from scripts.lara_outfits.common import BLEND_PATH
+from scripts.lara_outfits.denim_basiques import generate_denim_basiques
 from scripts.lara_outfits.dresses import generate_dresses
 from scripts.lara_outfits.footwear import generate_footwear
 from scripts.lara_outfits.geometry import build_body_bvhs
@@ -29,6 +30,7 @@ from scripts.lara_outfits.sol_high_bottoms import generate_sol_high_bottoms
 
 FAMILIES = {
     "sol-high-bottoms": generate_sol_high_bottoms,
+    "denim-basiques": generate_denim_basiques,
     "trousers": generate_trousers,
     "hoodies": generate_hoodies,
     "swimwear": generate_swimwear,
