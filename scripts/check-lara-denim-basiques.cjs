@@ -23,7 +23,7 @@ const launch = require('./browser-test-options.cjs');
     await page.waitForFunction(() => document.body.innerText.includes('4 tenues'));
     await page.evaluate(() =>
       [...document.querySelectorAll('button')]
-        .find((b) => b.textContent === 'Ajouter basiques denim · Gemini 4 Hydrogen medium')
+        .find((b) => b.textContent === 'Basiques · Denim · Gemini 4 Hydrogen (High)')
         .click(),
     );
     await page.waitForFunction(() => document.body.innerText.includes('35 tenues'));
@@ -34,12 +34,12 @@ const launch = require('./browser-test-options.cjs');
     });
 
     // Wait for all 31 denim garments + 4 cropped/vest pairs (7 bottoms + 24 tops/one-pieces = 31,
-    // note: the 4 jackets/vests are paired with denim-jeans-classic-g4h-medium, so 31 + 4 = 35 custom meshes!)
+    // note: the 4 jackets/vests are paired with denim-jeans-classic-g4h-high, so 31 + 4 = 35 custom meshes!)
     await page.waitForFunction(
       () => {
         let count = 0;
         window.denimTestScene().traverse((o) => {
-          if (o.name.startsWith('lara_custom_clothing_') && o.name.endsWith('-g4h-medium')) count++;
+          if (o.name.startsWith('lara_custom_clothing_denim-') && o.name.endsWith('-g4h-high')) count++;
         });
         return count === 35;
       },
@@ -59,7 +59,7 @@ const launch = require('./browser-test-options.cjs');
       const report = await page.evaluate(() => {
         const result = [];
         window.denimTestScene().traverse((root) => {
-          if (!root.name.startsWith('lara_custom_clothing_') || !root.name.endsWith('-g4h-medium')) return;
+          if (!root.name.startsWith('lara_custom_clothing_denim-') || !root.name.endsWith('-g4h-high')) return;
           let vertices = 0;
           let valid = true;
           root.traverse((o) => {
@@ -88,7 +88,7 @@ const launch = require('./browser-test-options.cjs');
 
     assert.deepEqual(errors, []);
     console.log(
-      'PASS: 31 Basiques Denim (Gemini 4 Hydrogen medium) outfits loaded; idle, walking, sitting; native skeletons and finite animated vertices',
+      'PASS: 31 Basiques Denim (Gemini 4 Hydrogen (High)) outfits loaded; idle, walking, sitting; native skeletons and finite animated vertices',
     );
   } finally {
     await browser.close();
