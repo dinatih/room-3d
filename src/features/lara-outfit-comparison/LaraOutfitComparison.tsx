@@ -86,8 +86,8 @@ export function LaraOutfitComparison() {
       <button className="btn btn-outline-primary btn-sm" onClick={() => add(LARA_TOP_SPECS.map(s => ({ ...makeOutfit(s.id, s.isOnePiece ? 'none' : 'native'), name: s.label })))}>Ajouter tous les hauts</button>
       <button className="btn btn-outline-primary btn-sm" onClick={() => {
         const comparisons = LARA_BOTTOM_SPECS.filter(s => s.id.endsWith('-sol-high')).flatMap(s => {
-          const original = LARA_BOTTOM_SPECS.find(o => o.id === s.id.replace('-sol-high', ''))!;
-          return [original, s].map(spec => { const outfit = makeOutfit('native', spec.id); return { ...outfit, name: spec.label, clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
+          const original = LARA_BOTTOM_SPECS.find(o => o.id === s.id.replace('-sol-high', ''));
+          return (original ? [original, s] : [s]).map(spec => { const outfit = makeOutfit('native', spec.id); return { ...outfit, name: spec.label, clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
         });
         const references = (['native', 'bikini'] as const).map(bottom => { const outfit = makeOutfit('native', bottom); return { ...outfit, name: bottom === 'native' ? 'Référence · Short natif' : 'Référence · Bikini natif', clothing: { ...outfit.clothing, laraShoes: false, accessories: false } }; });
         add([...references, ...comparisons]);

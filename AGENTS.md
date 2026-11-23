@@ -57,10 +57,10 @@ Chaque meuble ou objet interactif est un composant autonome implémentant l'inte
 
 ## Signatures des Commits Git
 
-Toujours ajouter en pied de message de commit le co-auteur correspondant à l'agent qui a réellement réalisé les modifications :
-- **Codex (OpenAI, CLI ou application)** : `Co-authored-by: Codex <noreply@openai.com>`
-- **Antigravity IDE (Desktop App)** : `Co-authored-by: Antigravity Agent (IDE) <antigravity-agent-ide@deepmind.google>`
-- **Antigravity CLI (Terminal / antigravity-cli / agy)** : `Co-authored-by: Antigravity Agent (CLI) <antigravity-agent-cli@deepmind.google>`
+Toujours ajouter en pied de message de commit le co-auteur correspondant à l'agent qui a réellement réalisé les modifications, **en précisant le modèle sous-jacent et son niveau d'effort** dans le libellé du `Co-authored-by` **et** dans le message de commit :
+- **Codex (OpenAI, CLI ou application)** : `Co-authored-by: Codex (<Modèle>, <Effort>) <noreply@openai.com>`
+- **Antigravity IDE (Desktop App)** : `Co-authored-by: Antigravity Agent (IDE - <Modèle>, <Effort>) <antigravity-agent-ide@deepmind.google>`
+- **Antigravity CLI (Terminal / antigravity-cli / agy)** : `Co-authored-by: Antigravity Agent (CLI - <Modèle>, <Effort>) <antigravity-agent-cli@deepmind.google>`
 
 Le terminal ou l'IDE utilisé ne détermine pas l'identité de l'agent. Codex ne doit jamais signer comme Antigravity.
 

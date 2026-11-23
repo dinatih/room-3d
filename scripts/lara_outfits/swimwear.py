@@ -916,11 +916,3 @@ def generate_swimwear(bvhs, mats, armature, only_ids: set[str] | None = None):
             smooth_passes=1,
         )
         export_garment_glb([btop], armature, "swimwear/lara_bikini_top_red.glb")
-
-    for style in ("slip", "shorty", "tanga", "string"):
-        oid = f"bikini-{style}"
-        if only_ids is not None and oid not in only_ids:
-            continue
-        bbot = build_bikini_bottom(f"lara_bikini_{style}", style, bvhs, mats["swimwear"])
-        bind_and_transfer_weights(bbot, donor_legs, armature, smooth_passes=1)
-        export_garment_glb([bbot], armature, f"swimwear/lara_bikini_{style}.glb")
