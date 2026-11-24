@@ -246,14 +246,43 @@
     const locations = [...new Set(ITEMS.map(x => x.location).filter(Boolean))].sort();
     const totalAngles = ITEMS.reduce((acc, x) => acc + (x.previews ? x.previews.length : 1), 0);
 
-    document.getElementById("statsBadges").innerHTML = `
-      <span class="badge bg-gta-pink">${ITEMS.length} items (${totalAngles} views)</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["TOPS"] || 0} Tops</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["BOTTOMS"] || 0} Bottoms</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["DRESSES & OUTFITS"] || 0} Dresses/Outfits</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["SWIMWEAR"] || 0} Swimwear</span>
-      <span class="badge bg-gta-cyan">${shops.length} Shops</span>
+    const statsBadges = document.getElementById("statsBadges");
+    statsBadges.innerHTML = `
+      <button type="button" class="badge bg-gta-pink border-0" style="cursor: pointer;" data-stat-action="all" title="Show all items">${ITEMS.length} items (${totalAngles} views)</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="TOPS" title="Filter Tops">${counts["TOPS"] || 0} Tops</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="BOTTOMS" title="Filter Bottoms">${counts["BOTTOMS"] || 0} Bottoms</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="DRESSES & OUTFITS" title="Filter Dresses & Outfits">${counts["DRESSES & OUTFITS"] || 0} Dresses/Outfits</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="SWIMWEAR" title="Filter Swimwear">${counts["SWIMWEAR"] || 0} Swimwear</button>
+      <button type="button" class="badge bg-gta-cyan border-0" style="cursor: pointer;" data-stat-action="shops" title="View By Shop">${shops.length} Shops</button>
     `;
+    function syncStatsBadges() {
+      const activeCat = categoryFilter.value;
+      statsBadges.querySelectorAll("[data-stat-cat]").forEach(btn => {
+        const isActive = btn.dataset.statCat === activeCat;
+        btn.classList.toggle("border-info", isActive);
+        btn.classList.toggle("text-gta-cyan", isActive);
+        btn.classList.toggle("border-secondary", !isActive);
+      });
+    }
+    statsBadges.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.statAction === "shops") {
+        const shopsTabBtn = document.querySelector('[data-bs-target="#shopsPane"]');
+        if (shopsTabBtn) bootstrap.Tab.getOrCreateInstance(shopsTabBtn).show();
+        return;
+      }
+      const gridTabBtn = document.querySelector('[data-bs-target="#gridPane"]');
+      if (gridTabBtn) bootstrap.Tab.getOrCreateInstance(gridTabBtn).show();
+      if (btn.dataset.statAction === "all") {
+        categoryFilter.value = "";
+      } else if (btn.dataset.statCat) {
+        categoryFilter.value = categoryFilter.value === btn.dataset.statCat ? "" : btn.dataset.statCat;
+      }
+      render();
+      syncStatsBadges();
+    });
+    categoryFilter.addEventListener("change", syncStatsBadges);
 
     categories.forEach(c => {
       const opt = document.createElement("option");
