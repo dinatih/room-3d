@@ -116,6 +116,10 @@
   <nav class="navbar navbar-expand-lg gta-navbar navbar-dark shadow sticky-top">
     <div class="container-fluid px-4 gap-2">
       <span class="navbar-brand fw-bold text-white"><span class="text-gta-pink">GTA 6</span> — Lucia Styles Catalog</span>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Lucia catalogs">
+        <a href="/lucia-styles/" class="btn btn-gta fw-semibold"><i class="bi bi-scissors me-1"></i>Hair &amp; Makeup</a>
+        <a href="/lucia-clothes/" class="btn btn-outline-gta fw-semibold"><i class="bi bi-bag-heart me-1"></i>Clothes &amp; Accessories</a>
+      </div>
       <div class="d-flex flex-wrap align-items-center gap-2 small ms-auto">
         <div class="d-flex flex-wrap gap-2" id="statsBadges"></div>
         <div class="dropdown" id="globalShareWrap"></div>
@@ -257,14 +261,43 @@
     const counts = ITEMS.reduce((acc, x) => { acc[x.category] = (acc[x.category] || 0) + 1; return acc; }, {});
     const shops = [...new Set(ITEMS.map(x => x.shop))].sort();
     const totalAngles = ITEMS.reduce((acc, x) => acc + (x.previews ? x.previews.length : 1), 0);
-    document.getElementById("statsBadges").innerHTML = `
-      <span class="badge bg-gta-pink">${ITEMS.length} styles (${totalAngles} views)</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["HAIRSTYLE"] || 0} Hairstyles</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["CREATIVE STYLES"] || 0} Creative</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["HAIR COLOR"] || 0} Hair Colors</span>
-      <span class="badge text-bg-dark border border-secondary">${counts["MAKEUP"] || 0} Makeup</span>
-      <span class="badge bg-gta-cyan">${shops.length} Shops</span>
+    const statsBadges = document.getElementById("statsBadges");
+    statsBadges.innerHTML = `
+      <button type="button" class="badge bg-gta-pink border-0" style="cursor: pointer;" data-stat-action="all" title="Show all styles">${ITEMS.length} styles (${totalAngles} views)</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="HAIRSTYLE" title="Filter Hairstyles">${counts["HAIRSTYLE"] || 0} Hairstyles</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="CREATIVE STYLES" title="Filter Creative Styles">${counts["CREATIVE STYLES"] || 0} Creative</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="HAIR COLOR" title="Filter Hair Colors">${counts["HAIR COLOR"] || 0} Hair Colors</button>
+      <button type="button" class="badge text-bg-dark border border-secondary" style="cursor: pointer;" data-stat-cat="MAKEUP" title="Filter Makeup">${counts["MAKEUP"] || 0} Makeup</button>
+      <button type="button" class="badge bg-gta-cyan border-0" style="cursor: pointer;" data-stat-action="shops" title="View By Shop">${shops.length} Shops</button>
     `;
+    function syncStatsBadges() {
+      const activeCat = categoryFilter.value;
+      statsBadges.querySelectorAll("[data-stat-cat]").forEach(btn => {
+        const isActive = btn.dataset.statCat === activeCat;
+        btn.classList.toggle("border-info", isActive);
+        btn.classList.toggle("text-gta-cyan", isActive);
+        btn.classList.toggle("border-secondary", !isActive);
+      });
+    }
+    statsBadges.addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.statAction === "shops") {
+        const shopsTabBtn = document.querySelector('[data-bs-target="#shopsPane"]');
+        if (shopsTabBtn) bootstrap.Tab.getOrCreateInstance(shopsTabBtn).show();
+        return;
+      }
+      const gridTabBtn = document.querySelector('[data-bs-target="#gridPane"]');
+      if (gridTabBtn) bootstrap.Tab.getOrCreateInstance(gridTabBtn).show();
+      if (btn.dataset.statAction === "all") {
+        categoryFilter.value = "";
+      } else if (btn.dataset.statCat) {
+        categoryFilter.value = categoryFilter.value === btn.dataset.statCat ? "" : btn.dataset.statCat;
+      }
+      render();
+      syncStatsBadges();
+    });
+    categoryFilter.addEventListener("change", syncStatsBadges);
     shops.forEach(s => {
       const opt = document.createElement("option");
       opt.value = s;
