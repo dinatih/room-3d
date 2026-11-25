@@ -235,7 +235,6 @@ export function Tile() {
     tBath.needsUpdate = true;
     const mBath = new THREE.MeshStandardMaterial({
       map: tBath, roughness: 0.25, metalness: 0.05,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     const brownCanvas = document.createElement('canvas');
@@ -251,7 +250,6 @@ export function Tile() {
     tB.needsUpdate = true;
     const mB = new THREE.MeshStandardMaterial({
       map: tB, roughness: 0.25, metalness: 0.05,
-      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
     });
 
     return { bathGeo: g, bathMat: mBath, closetMat: mB };
