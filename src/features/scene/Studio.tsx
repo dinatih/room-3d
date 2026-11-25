@@ -80,7 +80,6 @@ import { resolveAnimationId, resolveAnimationPath }    from './animations/animat
 import { NPC_WALK_ANIMATIONS }   from './ai/agent/agentWalkAnimations';
 import { cacheDynamicGLTF }      from './character/useCharacterAnimations';
 import { duoSessionManager }     from './ai/duoSessionManager';
-import { LoadingBall } from './LoadingBall';
 import { useIsMobile } from '@shared/hooks/useIsMobile';
 import { ROOM_W, ROOM_D, WALL_H } from './wallData';
 import { getObjectActionIds } from './objectActions';
@@ -756,7 +755,7 @@ export function Studio() {
 
 
   const [assetsLoaded,     setAssetsLoaded]     = useState(false);
-  const [showLoadingBall, setShowLoadingBall] = useState(true);
+  const [showLoadingProgress, setShowLoadingProgress] = useState(true);
   const [sceneWarmReady,   setSceneWarmReady]   = useState(false);
 
   const handleAssetsLoaded = useCallback(() => {
@@ -843,7 +842,7 @@ export function Studio() {
   }, []);
 
   const handleLaunch = useCallback(() => {
-    setShowLoadingBall(false);
+    setShowLoadingProgress(false);
     revealScene();
     const raytracingPreset = getRaytracingPreset();
     if (raytracingPreset === 'iso' || raytracingPreset === 'magazine') {
@@ -878,10 +877,9 @@ export function Studio() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      {showLoadingBall && <>
+      {showLoadingProgress && (
         <LoadingProgress sceneReady={sceneWarmReady} onAssetsLoaded={handleAssetsLoaded} onLaunch={handleLaunch} />
-        <LoadingBall />
-      </>}
+      )}
       <Canvas
         style={{ width: '100%', height: '100%' }}
         dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 1.5)]}
