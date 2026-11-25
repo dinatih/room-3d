@@ -40,6 +40,7 @@ import { SdbLaundryHook, LAUNDRY_HOOK_HEIGHT, LAUNDRY_HOOK_GRIP_HEIGHT } from '.
 import { ViledaSprayOne, VILEDA_SPRAY_ONE_SIZE } from '../items/ViledaSprayOne';
 import { ToiletPaperRoll, PaperTowelRoll, TOILET_PAPER_DIAMETER, PAPER_TOWEL_DIAMETER } from '../items/PaperRolls';
 import { AxeCherryFizzRollOn, AxeUltimeCherryFizz, SignalCocoToothpaste, ElmexBlancheurDouce } from '../items/AmazonBathroomProducts';
+import { FishToiletBrush } from '../items/FishToiletBrush';
 
 import { WALL_H, BATH_SOUTH_WALL, BATH_WEST_WALL, BATH_EAST_WALL, BATH_NORTH_WALL, SHOWER_SOUTH_WALL, DiagWall } from '../wallData';
 
@@ -288,6 +289,14 @@ export function BathroomFurnishings() {
           <PaperTowelRoll />
         </group>
       ))}
+
+      {/* Brosse WC poisson au sol contre le mur SDB nord, entre le WC et le meuble vasque. */}
+      <group
+        position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + 7.95 / 2 + 1]}
+        userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Brosse WC poisson', hoverAction: { label: 'Brosse WC poisson', actions: getObjectActionIds('fish-toilet-brush-red') } }}
+      >
+        <NavigationObstacle id="fish-toilet-brush-red"><FishToiletBrush /></NavigationObstacle>
+      </group>
 
       {/* Spray transparent au sol, au milieu du passage entre le WC et le meuble vasque. */}
       <group position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + HAVBACK_D / 2]} userData={{ sceneItemRoot: true, itemName: 'Spray nettoyant transparent SDB' }}>
