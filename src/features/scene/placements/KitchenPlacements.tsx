@@ -1,5 +1,7 @@
+import { KitchenCookingMotion, KitchenCookingEffects } from './KitchenCookingMotion';
 import { MagicSponge } from '../items/LaundryHousehold';
-import { useEffect, useState } from 'react';
+import { Vector3 } from 'three';
+import { useEffect, useState, useRef } from 'react';
 import { PositionTransition } from '../utils/PositionTransition';
 import { getKitchenTrashParking, KITCHEN_TRASH_POSITION } from '../ai/diyChairClearance';
 import { NavigationObstacle } from '../ai/navigation/NavigationObstacle';
@@ -95,6 +97,7 @@ export function KitchenTrashBin() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function KitchenFurnishings() {
+  const cookingSizes = useRef({ rice: new Vector3(), pot: new Vector3() });
   const as = useFurnitureToggles(['lamp-kitchen-toggle', ...getObjectActionIds('syck-rc003a')]);
   const lightsHD = useSceneStore(state => state.layers.lightsHD);
   const { name, color, brightness } = useLightAppearance('lampKitchen', 0xfff5e6);
@@ -128,8 +131,8 @@ export function KitchenFurnishings() {
           <group key={contents}
             position={[w2 / 2 - KALLAX_FRAME - (i + 0.5) * KALLAX_CELL_WIDTH / IKEA365_COUNT, KALLAX_UPPER_CELL_BASE, -(KALLAX_DEPTH - IKEA365_LENGTH) / 2]}
             rotation-y={Math.PI / 2}
-            userData={{ sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
-            <Ikea36590066708 contents={contents} fillLevel={fillLevel} />
+            userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Boîte IKEA 365+' }}>
+            <KitchenCookingMotion recipe={contents}><Ikea36590066708 contents={contents} fillLevel={fillLevel} /></KitchenCookingMotion>
           </group>
         ))}
       </group>
@@ -178,11 +181,12 @@ export function KitchenFurnishings() {
       </group>
 
       {/* Cuiseur à riz et faitout sur la tablette existante du meuble METOD couché. */}
-      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} userData={{ sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
-        <SyckRc003a actionState={as} />
+      <group position={[KITCHEN_WEST_WALL + 50, HOOD_SHELF_TOP, ROOM_D + 41.5]} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Cuiseur à riz Senya SYCK-RC003/A' }}>
+        <KitchenCookingMotion vessel recipe="rice"><SyckRc003a actionState={as} onSize={size => cookingSizes.current.rice.copy(size)} /></KitchenCookingMotion>
       </group>
-      <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Faitout ANNONS' }}>
-        <Annons80298474 />
+      <group position={[KITCHEN_WEST_WALL + 86.5, HOOD_SHELF_TOP, ROOM_D + 41.5]} rotation-y={Math.PI / 2} userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Faitout ANNONS' }}>
+        <KitchenCookingMotion vessel><Annons80298474 onSize={size => cookingSizes.current.pot.copy(size)} /></KitchenCookingMotion>
+
       </group>
       <group position={[KITCHEN_WEST_WALL + 14, 93, KITCHEN_SOUTH_WALL - 5]} userData={{ sceneItemRoot: true, itemName: 'Brosse RINNIG' }}>
         <Rinnig30407814 />
@@ -198,6 +202,8 @@ export function KitchenFurnishings() {
           <Pepprig70567650 />
         </group>
       ))}
+
+      <KitchenCookingEffects sizes={cookingSizes} />
 
       {/* KÖLVATTEN éclairage LED avec capteur — angle bas meuble haut METOD / mur ouest */}
       <group

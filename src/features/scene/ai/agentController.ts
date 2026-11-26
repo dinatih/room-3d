@@ -1,3 +1,4 @@
+import { startCooking, cancelCooking, advanceCooking, kitchenCooking, COOKING_DURATION } from './kitchenCooking';
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
@@ -325,6 +326,7 @@ export function createAgentController(
   };
 
   const releaseClaimedSlot = () => {
+    cancelCooking(_characterId);
     activeLifeMeals.delete(_characterId);
     activeLifeDances.delete(_characterId);
     beginSlotExit();
@@ -716,7 +718,6 @@ export function createAgentController(
     const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] ?? scenario?.[stepIndex] : scenario?.[stepIndex + 1];
     const current = hasNavStep ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
     if (hasLife && loop && next?.lifePhase === 'eat-meal' && current?.lifePhase === 'prepare-meal') {
-      prepareLifeMeals(lifeId, Object.keys(cameraState.positions).filter(isLifeCharacter).filter(id => characterLives[id].needs.meal >= LIFE_SETTINGS.priority && !activeLifeMeals.has(id)));
       logLife('life_meal_shared', `${actorName} termine un repas : ${lifeHousehold.meals.portions} portion(s) à partager.`, { portions: lifeHousehold.meals.portions }, current);
       if (connected) document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'meal', activity: 'meal', fromId: _characterId, room: LIMITED_ROOMS.find(room => isInRoom(room, state)) ?? 'garden' } }));
     }
@@ -1634,6 +1635,7 @@ export function createAgentController(
           }
 
           agentStatus = 'INTERACTING';
+          if (objId === 'cuisine-group' && slotId === 'cook-stove') startCooking(_characterId);
           if (hasLife && loop && lifeActivity && objId) {
             const key = `${objId}:${slotId.split(':')[0]}`;
             life.places[key] = (life.places[key] ?? 0) + 1;
@@ -1741,7 +1743,9 @@ export function createAgentController(
       }
 
       const target = getResolvedCoords(currentInstruction);
-      state.animation = resolveAnimationId(currentInstruction.animation || target.anim || 'idle');
+      const cooking = currentInstruction.smartObjectId === 'cuisine-group' && currentInstruction.slotId === 'cook-stove';
+      state.animation = resolveAnimationId(cooking && kitchenCooking.session && kitchenCooking.session.elapsed >= 13
+        ? 'kit-551-pour03-poses' : currentInstruction.animation || target.anim || 'idle');
       if (currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'INTERACT') {
         if (currentInstruction.smartObjectId) { state.x = target.tx; state.z = target.tz; }
         state.y = target.ty !== undefined ? target.ty : getWalkableGroundY(state.x, state.z);
@@ -1757,8 +1761,15 @@ export function createAgentController(
         if (playback?.animation !== state.animation || !playback.finished) return state;
         timer = 0;
       }
-      if (hasLife && loop && lifeActivity && animationPlayback?.animation !== state.animation) return state;
-      timer -= dt;
+      if (!cooking && hasLife && loop && lifeActivity && animationPlayback?.animation !== state.animation) return state;
+      if (cooking) {
+        const complete = advanceCooking(_characterId, state.animationPaused ? 0 : dt);
+        timer = COOKING_DURATION - kitchenCooking.session!.elapsed;
+        if (complete) {
+          if (hasLife) prepareLifeMeals(lifeId, Object.keys(cameraState.positions).filter(isLifeCharacter).filter(id => characterLives[id].needs.meal >= LIFE_SETTINGS.priority && !activeLifeMeals.has(id)));
+          cancelCooking(_characterId);
+        }
+      } else timer -= dt;
       const cleaningTask = getHomeTask(currentInstruction.smartObjectId, currentInstruction.slotId);
       const cleaningDone = cleaningTask !== undefined && homeDirt[cleaningTask] === 0;
       if (timer <= 0 || cleaningDone) {

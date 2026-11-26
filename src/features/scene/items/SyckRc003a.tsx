@@ -1,3 +1,4 @@
+import { kitchenCooking } from '../ai/kitchenCooking';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -71,6 +72,14 @@ export function SyckRc003a({ actionState = {}, onSize, isPreview = false }: Part
     const advance = (time: number, target: number) =>
       time < target ? Math.min(target, time + delta) : Math.max(target, time - delta);
 
+    const cooking = !isPreview && kitchenCooking.session?.recipe === 'rice' ? kitchenCooking.session : null;
+    if (cooking) {
+      const t = cooking.elapsed;
+      r.lid.time = r.lid.getClip().duration * (t < 3 ? Math.min(1, t / 3) : t < 5 ? 1 : Math.max(0, 1 - (t - 5)));
+      r.pot.time = 0;
+      r.mixer.update(0);
+      return;
+    }
     const lidEnd = wantLid ? r.lid.getClip().duration : 0;
     const potEnd = wantPot ? r.pot.getClip().duration : 0;
     if (r.lid.time === lidEnd && r.pot.time === potEnd) return;

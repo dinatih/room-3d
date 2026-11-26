@@ -43,6 +43,7 @@ for (const [name, primaryKey, secondaryKey, clipNames] of [
     '@features/scene/useGLTFClone': clone, '../useGLTFClone': clone,
     '@features/scene/glbUtils': utils, '../glbUtils': utils,
     '@features/scene/store/useSceneStore': sceneStore, '../store/useSceneStore': sceneStore,
+    '../ai/kitchenCooking': { kitchenCooking: { session: null } },
     '../objectActions': { getObjectActionIds: () => [primaryKey] }, '../ai/smartObjectRegistry': { SMART_OBJECTS: { fridge: { slots: [] } } },
     '../utils/useSceneGlass': { useSceneGlass() {} },
   });

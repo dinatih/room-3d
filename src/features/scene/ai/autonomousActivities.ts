@@ -6,8 +6,7 @@ import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 function mealPreparations(characterId: string, excluded: ReadonlySet<string>) {
   return getAvailableAutonomousActivities(characterId).filter(({ id, slotId }) =>
-    !excluded.has(`${id}:${slotId}`) && (id === 'cuisine-group' && ['cook-stove', 'cook-oven'].includes(slotId)
-      || ['fridge', 'freezer'].includes(id) && slotId === 'open-pick'));
+    !excluded.has(`${id}:${slotId}`) && (id === 'cuisine-group' && slotId === 'cook-stove'));
 }
 
 // Répartition initiale des Smart Objects par personnage (pour un spawn direct sur leur 1ère action)

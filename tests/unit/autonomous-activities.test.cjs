@@ -29,10 +29,10 @@ function fixture(characterId = 'rosanna') {
 }
 
 describe('Tirage autonome par slot', () => {
-  it('varie les préparations de repas entre les appareils libres sans remplacer leurs smart actions', () => {
+  it('prépare les repas sur les plaques en conservant les autres smart actions', () => {
     const { objects, occupied, getLaraLifeCandidates, buildLaraLifeInstructions } = fixture('native');
     objects.push(
-      { id: 'cuisine-group', slots: [{ slotId: 'cook-stove', animation: 'cooking-stir-pan', duration: 9.3 }, { slotId: 'cook-oven', animation: 'entering-code' }, { slotId: 'wash-dishes' }] },
+      { id: 'cuisine-group', slots: [{ slotId: 'cook-stove', animation: 'cooking-stir-pan', duration: 15 }, { slotId: 'cook-oven', animation: 'entering-code' }, { slotId: 'wash-dishes' }] },
       ...['fridge', 'freezer'].map(id => ({ id, slots: [{ slotId: 'open-pick', animation: id }] })),
       { id: 'sofa', category: 'seating', position: [0, 0, 0], slots: [{ slotId: 'sit', entryAnimation: 'stand-to-sit', exitAnimation: 'sit-to-stand' }] },
     );
@@ -41,11 +41,11 @@ describe('Tirage autonome par slot', () => {
     assert(meal);
     const random = Math.random;
     try {
-      for (const [index, animation] of ['cooking-stir-pan', 'entering-code', 'fridge', 'freezer'].entries()) {
+      for (const index of [0, 1, 2, 3]) {
         Math.random = () => index / 4;
         const [move, use, eat] = buildLaraLifeInstructions('native', meal);
-        assert.equal(use.animation, animation);
-        assert.equal(use.duration, index === 0 ? 9.3 : undefined);
+        assert.equal(use.animation, 'cooking-stir-pan');
+        assert.equal(use.duration, 15);
         assert.equal(move.lifePhase, 'prepare-meal');
         assert.equal(use.lifePhase, 'prepare-meal');
         assert.equal(eat.lifePhase, 'eat-meal');
@@ -57,7 +57,7 @@ describe('Tirage autonome par slot', () => {
       const excluded = new Set(['freezer:open-pick']);
       assert(!getLaraLifeCandidates('native', false, {}, {}, 0, excluded).some(candidate => candidate.activity === 'meal'));
       assert.throws(() => buildLaraLifeInstructions('native', meal, excluded), /Aucune préparation/);
-      assert.equal(buildLaraLifeInstructions('native', meal)[1].smartObjectId, 'freezer');
+      assert.throws(() => buildLaraLifeInstructions('native', meal), /Aucune préparation/);
       assert(!getLaraLifeCandidates('native', true).some(candidate => candidate.activity === 'meal'));
     } finally { Math.random = random; }
   });

@@ -6,6 +6,8 @@ const life = require('../../src/features/scene/ai/laraLife.ts');
 // Exercise the actual controller with a synchronous navigation world. Geometry,
 // GLB playback and posture transitions are covered by the browser scenario.
 function world(id = 'native', withMeal = false, withSleep = false, withHygiene = false, diagnostics = false, restoredLife) {
+  const cooking = require('../../src/features/scene/ai/kitchenCooking.ts');
+  cooking.kitchenCooking.session = null;
   const journal = [];
   const home = require('../../src/features/scene/ai/lifeHousekeeping.ts');
   const dirt = home.createHomeDirt();
@@ -44,6 +46,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const duoTicks = [];
   const duoDefinitions = {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
+    './kitchenCooking': require('../../src/features/scene/ai/kitchenCooking.ts'),
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => {
       const object = objects[objectId];
       return object?.rotationY ? { ...object, slots: object.slots.map(slot => ({ ...slot, rotY: (slot.rotY ?? 0) + object.rotationY })) } : object;
@@ -381,6 +384,7 @@ it('prépare puis mange sans satisfaire la faim pendant la préparation ou le ch
   w.tick();
   assert(w.lifeState.needs.meal > hungry);
   assert.equal(w.lifeState.lastActivity, 'work');
+  for (let second = 0; second < 14; second++) w.tick();
   w.tick();
   assert.equal(w.controller.state.animation, 'eat');
   const beforeEating = w.lifeState.needs.meal;
@@ -592,7 +596,7 @@ it('reporte une invitation pendant un repas sans perdre sa place et redevient di
     assert.deepEqual(w.lifeState, before);
     assert.deepEqual([...w.reservations], reservations);
     assert(w.logs.some(log => log.action === 'life_invitation_later'));
-    w.tick(); w.tick(); w.tick();
+    w.tick(15); w.tick(); w.tick();
     w.lifeState.needs = { ...w.lifeState.needs, meal: 0, work: 100 };
     w.tick(); w.tick();
     assert.equal(invite(), true);
@@ -902,7 +906,7 @@ for (const outcome of ['available', 'busy', 'removed', 'manual', 'urgent', 'mode
     } else if (outcome === 'mode') {
       w.controller.configure({ scenario: [], loop: false, landingAnim: 'idle' });
     } else {
-      w.tick(); w.tick(); w.tick();
+      w.tick(15); w.tick(); w.tick();
       w.lifeState.needs.meal = 0;
       w.lifeState.needs.work = outcome === 'urgent' ? 100 : 0;
       if (outcome === 'busy') w.duo.getSessionFor = id => id === 'cha' ? {} : undefined;
@@ -1069,7 +1073,7 @@ it('recherche une place partagée après la préparation, sans réserver la plac
     w.tick(1, false);
     activeLifeMeals.set('sabira', { objectId: 'bench', slotId: 'seat-a' });
     w.candidates.push({ activity: 'meal', id: 'bench', slotId: 'seat-b', x: 10, z: 10, mealPartnerId: 'sabira', companyScore: 1 });
-    w.tick(2);
+    w.tick(15);
     assert.equal(w.scenario[1].smartObjectId, 'bench');
     assert.equal(w.scenario[1].slotId, 'seat-b');
     assert(w.logs.some(log => log.action === 'life_meal_join' && log.data.partnerId === 'sabira'));
@@ -1128,7 +1132,7 @@ it('revérifie le voisinage après la cuisine et garde la dernière assise quand
       w.objects['quiet-seat'] = { id: 'quiet-seat', category: 'seating', position: [50, 0, 10], slots: [{ slotId: 'use', animation: 'sit' }] };
       w.candidates.push({ activity: 'meal', id: 'quiet-seat', slotId: 'use', x: 50, z: 10 });
     }
-    w.tick(2);
+    w.tick(15);
     assert.equal(w.scenario[1].smartObjectId, alternative ? 'quiet-seat' : 'rest');
     assert.equal(w.logs.some(log => log.action === 'life_meal_seat_changed'), alternative);
     assert(!w.reservations.size, 'The next seat must still be reserved on arrival');
@@ -1239,7 +1243,7 @@ it('reprend une invitation de massage après le repas en conservant le rôle de 
     assert.equal(document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
       detail: { targetId: 'native', fromId: 'cha', objectId: 'interx-affection-point', slotId: 'massage:roleA' } })), false);
     w.duo.startDuoSession = (...args) => { calls.push(args); return { targetA: 'native', targetB: 'cha', posA: [60, 0, 10], posB: [60, 0, 110], rotA: 0, rotB: 0, actualSlotId: 'massage' }; };
-    for (let i = 0; i < 15 && !calls.length; i++) {
+    for (let i = 0; i < 30 && !calls.length; i++) {
       if (w.controller.state.animation === 'eat') w.lifeState.needs.meal = 0;
       w.tick();
     }
@@ -1433,7 +1437,7 @@ it('la cuisinière propose une autre place sur son assise une seule fois, même 
   const respond = event => { if (event.detail.targetId === 'cha') { invitations.push(event.detail); event.detail.deferred = true; } };
   document.addEventListener('npc-invite-life-activity', respond);
   try {
-    for (let i = 0; i < 16 && !invitations.length; i++) w.tick(.5);
+    for (let i = 0; i < 40 && !invitations.length; i++) w.tick(.5);
     assert.equal(invitations.length, 1);
     assert.equal(invitations[0].activity, 'meal');
     assert.equal(invitations[0].objectId, 'rest');
@@ -1494,4 +1498,30 @@ for (const variation of [false, true]) for (const accepted of [false, true]) it(
   assert.equal(w.controller.state.animation, accepted ? 'female-standing-pose' : 'idle');
   assert(!w.logs.some(log => log.action === 'use_object' && log.animation?.id === clip));
   if (!accepted) assert.equal(w.reservations.size, 0);
+});
+
+it('pilote les quinze secondes de cuisine sans portions anticipées et annule sur déplacement manuel', () => {
+  const { kitchenCooking } = require('../../src/features/scene/ai/kitchenCooking.ts');
+  for (const interrupted of [false, true]) {
+    Object.assign(life.lifeHousehold, life.createLifeHousehold());
+    const w = world('native', true);
+    w.tick(); w.tick();
+    w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 95, hygiene: 0, toilet: 0, company: 0, environment: 0 };
+    w.tick(); w.tick();
+    assert.equal(kitchenCooking.session.elapsed, 0);
+    const hunger = w.lifeState.needs.meal;
+    w.tick(3);
+    w.tick(0);
+    assert.equal(kitchenCooking.session.elapsed, 3);
+    w.tick(2 * 5);
+    assert.equal(kitchenCooking.session.elapsed, 13);
+    assert.equal(life.lifeHousehold.meals.portions, 0);
+    assert.deepEqual(life.lifeHousehold.meals.held, {});
+    assert(w.lifeState.needs.meal >= hunger);
+    if (interrupted) w.controller.setPosition(10, 0, 10);
+    else w.tick(2);
+    assert.equal(kitchenCooking.session, null);
+    assert.equal(Boolean(life.lifeHousehold.meals.held.native), !interrupted);
+    if (interrupted) assert(!w.reservations.has('cuisine-group:cook-stove'));
+  }
 });

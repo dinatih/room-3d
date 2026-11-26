@@ -482,6 +482,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
   // ── CUISINE & APPAREILS ───────────────────────────────────────────────────
   'cuisine-group': {
     id: 'cuisine-group',
+    exclusive: true,
     exclusiveGroup: 'kallax-cuisine',
     name: 'Meuble Cuisine',
     category: 'surface',
@@ -504,7 +505,8 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         slotId: 'cook-stove',
         name: 'Cuisiner Plaques',
         animation: 'cooking-stir-pan',
-        duration: 9.3,
+        duration: 15,
+        repeatCount: 1,
         offset: [80, 0, ROOM_D - HUMAN_BODY_RADIUS],
         rotY: 0,
       },
