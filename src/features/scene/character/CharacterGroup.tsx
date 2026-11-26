@@ -6,6 +6,7 @@
  */
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { preloadSceneGLTF } from '../useGLTFClone';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import { Character } from './Character';
 import { cacheDynamicGLTF } from './useCharacterAnimations';
@@ -186,7 +187,7 @@ export function CharacterGroup(props: CharacterGroupProps) {
 const LARA_PATH = 'characters/lara/lara_native.glb';
 
 useGLTF.preload(LARA_PATH);
-useGLTF.preload('/items/famnig27470460/Famnig27470460.glb');
+preloadSceneGLTF('/items/famnig27470460/Famnig27470460.glb');
 
 // Pré-chauffage asynchrone des animations de base
 cacheDynamicGLTF('animations/miley/miley_armature_idle01_f.glb');

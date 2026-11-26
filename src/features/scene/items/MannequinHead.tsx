@@ -37,18 +37,27 @@ const TARGET_H = 45; // cm
 
 // Keep track of used initial wigs to avoid duplicates on startup
 let usedInitialWigs: number[] = [];
-function getUniqueRandomWig(): number {
+// A suspended first render can retry before useState commits. Keep the choice
+// by placement ID so those retries request the same GLB instead of every wig.
+const initialWigs = new Map<string, number>();
+function getUniqueRandomWig(mannequinId: string): number {
+  const cached = initialWigs.get(mannequinId);
+  if (cached !== undefined) return cached;
   if (usedInitialWigs.length >= WIGS_ITEMS.length) usedInitialWigs = [];
   let index;
   do {
     index = Math.floor(Math.random() * WIGS_ITEMS.length);
   } while (usedInitialWigs.includes(index));
   usedInitialWigs.push(index);
+  initialWigs.set(mannequinId, index);
   return index;
 }
 
 let usedInitialColors: string[] = [];
-function getUniqueRandomColor(): string {
+const initialColors = new Map<string, string>();
+function getUniqueRandomColor(mannequinId: string): string {
+  const cached = initialColors.get(mannequinId);
+  if (cached !== undefined) return cached;
   const colorKeys = [...Object.keys(HAIR_COLORS), 'arc-en-ciel'];
   if (usedInitialColors.length >= colorKeys.length) usedInitialColors = [];
   let color;
@@ -56,6 +65,7 @@ function getUniqueRandomColor(): string {
     color = colorKeys[Math.floor(Math.random() * colorKeys.length)];
   } while (usedInitialColors.includes(color));
   usedInitialColors.push(color);
+  initialColors.set(mannequinId, color);
   return color;
 }
 
@@ -74,8 +84,8 @@ export function MannequinHead({
     ? WIGS_ITEMS.findIndex(w => w.id === wigId || w.id.replace('hair_', '') === wigId.replace('hair_', ''))
     : initialWigIndex;
 
-  const [wigIndex, setWigIndex] = useState<number>(() => resolvedInitialIndex !== undefined && resolvedInitialIndex >= 0 ? resolvedInitialIndex : getUniqueRandomWig());
-  const [hairColor, setHairColor] = useState<string | undefined>(() => initialHairColor ?? (wigId ? undefined : getUniqueRandomColor()));
+  const [wigIndex, setWigIndex] = useState<number>(() => resolvedInitialIndex !== undefined && resolvedInitialIndex >= 0 ? resolvedInitialIndex : getUniqueRandomWig(mannequinId));
+  const [hairColor, setHairColor] = useState<string | undefined>(() => initialHairColor ?? (wigId ? undefined : getUniqueRandomColor(mannequinId)));
   const [windEnabled, setWindEnabled] = useState<boolean>(initialWindEnabled ?? false);
 
   useEffect(() => {
@@ -222,7 +232,7 @@ export function LaraWigBust({
     }
     laraScene.userData.hasMarissaPiercings = false;
 
-    applyLaraVariantStyles(laraScene, laraVariant);
+    applyLaraVariantStyles(laraScene, laraVariant, false);
     const nativeHairSet = new Set(parts.nativeHairMeshes.map(item => item.mesh));
     const torsoClothedSet = new Set(parts.torsoClothed.map(item => item.mesh));
 

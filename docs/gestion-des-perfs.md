@@ -1,5 +1,77 @@
 # Gestion des perfs de l’app
 
+## Audit des ressources et réduction mémoire du 26 novembre 2026
+
+L'inventaire de 4 161 GLB, variantes comprises à ce stade de l'audit, distingue le poids du fichier compressé du volume de pixels décodés. Le relevé navigateur initial est `test-results/asset-audit-sJ5VUv/assets.json` : 153 chemins de modèles présents, environ 703,4 Mio de pixels RGBA de base pour les sources de textures uniques des matériaux montés. Cela exclut notamment mipmaps, render targets, buffers temporaires et caches de modèles non montés. Un fichier vide préexistant est signalé explicitement par l'audit : `public/items/tous49514017/Tous49514017.glb`.
+
+Corrections appliquées :
+
+- **18 variantes de scène à 512 px** ajoutées : Shiba, poissons Jikin/Tosakin, produits Axe, Cif, Elmex, eau de Javel W5, passerelle Dirigera, prise Koppla, mules Jordan, sac à linge Kabba, figurine coréenne, clôture et bureau Bollsidan. Les originaux restent disponibles dans les previews. Les modifications de pixels représentent 173,9 Mio de RGBA de base économisés, dont 152,9 Mio pour les modèles chargés par défaut. Le détail reproductible des dimensions est dans `docs/scene-assets-2026-11-26.json`. Géométrie, animations, skinning, matériaux et données non image sont vérifiés identiques octet par octet.
+- **Choix des mannequins stable pendant Suspense** : les initialisateurs de `useState` relançaient le tirage aléatoire avant le premier montage validé. Chaque nouvelle perruque suspendait à son tour le rendu, chargeant presque toute la collection. Le choix initial et la couleur sont maintenant mémorisés par identifiant de placement ; les commandes de changement restent actives. Le relevé initial comptait 63 téléchargements de perruques ; une première vérification après correction n'en compte que 5, pour les personnages et mannequins réellement présents. Le test reproduit 100 rendus initiaux abandonnés sans changer de choix.
+- **Chargements superflus** : le scan LiDAR masqué n'est plus préchargé à l'import du module ; son activation continue de charger le modèle. Le préchargement de l'ours Famnig suit désormais sa variante de scène, évitant de conserver également l'original. Clôture et bureau utilisent `useGLTFClone` et les mêmes variantes que les autres objets.
+- **Atlas de tatouage de scène** : Sara et le bras de Marissa composaient des textures de 4096 × 2048, soit 32 Mio par source de pixels, y compris pour les parties du corps masquées. Dans la scène, le tatouage est composé aux dimensions de la texture de peau d'origine ; les previews conservent leur définition détaillée. Les caches distinguent les deux résolutions et le placement UV reste identique. Les détails fins peuvent être moins nets lors d'un rapprochement dans la scène ; aucun changement de géométrie ou de dessin du tatouage.
+- **Réseau de test** : les scénarios Studio de suivi bloquent désormais les ressources externes dès l'ouverture du navigateur. Cela a révélé la dépendance du libellé BNF aux polices CDN. Les mêmes sous-ensembles Noto Sans et Noto Emoji sont maintenant servis localement, y compris la graisse utilisée par le préchargement Drei. Sources, périmètre et licences sont dans `public/fonts/unicode/README.md`. Ce sous-ensemble couvre le libellé fixe ; étendre les caractères ou styles exige de compléter les données locales.
+
+Les poissons Jikin et Tosakin sont masqués et absents des téléchargements initiaux : leur optimisation ne réduit donc pas le RSS de la configuration par défaut. Les originaux occupent 5,53 et 4,35 Mio sur disque, avec 16 et 12 Mio de pixels RGBA de base ; leurs variantes occupent 1,84 et 1,39 Mio sur disque, avec 4 et 3 Mio de pixels. Mipmaps, copies CPU/GPU et géométrie peuvent augmenter le coût en mémoire : ce ne sont pas deux fichiers de 40 Mo sur disque dans cette révision.
+
+Commandes d'audit et de vérification :
+
+```bash
+python scripts/audit-glb-textures.py > /tmp/room-glb-textures.json
+node scripts/audit-scene-assets.cjs --hardware-gpu
+python scripts/check-scene-asset-variants.py
+npx tsc --noEmit
+node --test --test-isolation=none --test-concurrency=1 tests/unit/mannequin-suspense.test.cjs tests/unit/tattoo-scene-textures.test.cjs tests/unit/character-materials.test.cjs tests/unit/scene-model-paths.test.cjs tests/unit/glb-source-lifetime.test.cjs
+```
+
+Pour reconstruire seulement certaines variantes, passer leurs clés du manifeste en arguments à `scripts/build-scene-models.py`. Ne pas reconstruire sans sélection les variantes de géométrie artisanales ; ce générateur ne réduit que les images.
+
+### Mesures finales après optimisation
+
+Campagne `test-results/2026-11-26T13-15-03.132Z-perf` : six passages réussis, même commit de départ `515c16f8` avec les modifications locales de cet audit. Trois chargements froids par condition, 15 s de chauffe et 60 s mesurées ; Radeon 840M/Vulkan headless, secteur, 1362 × 810, DPR 1. Aucun calque du scénario n’est désactivé pour réduire la mémoire. Le réseau externe est désormais bloqué et les tirages de perruques stabilisés : les résultats avant/après restent informatifs, sans constituer une référence strictement compatible. Les activités autonomes et leur ordonnancement peuvent varier.
+
+| Médiane des trois passages | Jour avant | Jour après | Nuit avant | Nuit après |
+| --- | ---: | ---: | ---: | ---: |
+| Pic RSS Chrome additionné (Gio) | 4.03 | 3.47 | 4.11 | 3.43 |
+| FPS moyens par passage | 20.54 | 23.58 | 25.89 | 24.38 |
+| Démarrage (s) | 32.02 | 26.92 | 30.92 | 27.19 |
+| Image p95 (ms) | 60.10 | 50.90 | 48.00 | 50.60 |
+| Pic tas JS (Mio) | 292.02 | 295.69 | 320.44 | 283.47 |
+
+Pics RSS par passage :
+
+- studio-9-high-day-run-1 : 3.420 Gio.
+- studio-9-high-day-run-2 : 3.473 Gio.
+- studio-9-high-day-run-3 : 3.477 Gio.
+- studio-9-high-night-run-1 : 3.448 Gio.
+- studio-9-high-night-run-2 : 3.432 Gio.
+- studio-9-high-night-run-3 : 3.299 Gio.
+
+**Les six pics RSS de session sont inférieurs à 3,5 Gio** (maximum observé 3.477 Gio). C’est un résultat sur ces fenêtres de mesure, pas un plafond de mémoire imposé au navigateur ni une garantie pour une session plus longue ou l’ouverture de previews HD. Le RSS additionné compte les pages partagées plusieurs fois ; ce n’est pas la mémoire physique unique. Les pics pendant le chargement initial ne sont pas échantillonnés par la métrique de session.
+
+Alimentation stable sur les six passages. Le swap peut encore varier : consulter `disturbances` dans chaque résultat ; aucune référence approuvée n’a été créée. TypeScript, sept tests ciblés (matériaux, tatouages, Suspense, chemins et durée de vie des sources GLTF), et la vérification des 18 variantes passent. Les captures de scène ont été examinées à la vue générale ; cela ne constitue pas une comparaison visuelle rapprochée exhaustive de chaque texture.
+
+### Fichiers des nouvelles variantes sur cette machine
+
+- /home/dinatih/Projects/room-3d/public/characters/ushiro/ushiro-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/axe-cherry-fizz-rollon/axe-cherry-fizz-rollon-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/axe-cherry-fizz/axe-cherry-fizz-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/axe-dark-temptation/axe-dark-temptation-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/axe-provocation/axe-provocation-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/axe-ultime-cherry-fizz/axe-ultime-cherry-fizz-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/cif-infinite-clean/CifInfiniteClean-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/dirigera10503406/Dirigera10503406-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/elmex-blancheur-douce/elmex-blancheur-douce-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/jordan-hex-mule/JordanHexMule-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/kabba-laundry-bag/KabbaLaundryBag-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/koppla00314741/Koppla00314741-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/korea-2022-inyeong/Korea2022Inyeong-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/w5-bleach/W5Bleach-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/characters/jikin-goldfish/jikin-goldfish-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/characters/tosakin-goldfish/tosakin-goldfish-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/fence-panel/fence-panel-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/items/bollsidan30574370/Bollsidan30574370-scene-512.glb
+
 ## Campagne du 26 novembre 2026
 
 Commande de suivi ci-dessous relancée sur le commit propre `7a4213d5` : **6 passages réussis sur 6**, en 669 secondes. Chromium 156.0.8078.47 headless, Radeon 840M via ANGLE/Vulkan, secteur pendant toute la campagne, viewport 1362 × 810, DPR 1. Trois chargements indépendants par condition, 15 secondes de chauffe puis 60 secondes mesurées ; décor, ombres, reflets, animaux et robots activés selon les réglages du scénario.

@@ -1,0 +1,564 @@
+[
+  {
+    "source": "public/characters/ushiro/ushiro.glb",
+    "target": "public/characters/ushiro/ushiro-scene-512.glb",
+    "bytesBefore": 62051036,
+    "bytesAfter": 50393416,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/axe-cherry-fizz-rollon/axe-cherry-fizz-rollon.glb",
+    "target": "public/items/axe-cherry-fizz-rollon/axe-cherry-fizz-rollon-scene-512.glb",
+    "bytesBefore": 279876,
+    "bytesAfter": 311540,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          566,
+          1500
+        ],
+        "after": [
+          193,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          566,
+          1500
+        ],
+        "after": [
+          193,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/axe-cherry-fizz/axe-cherry-fizz.glb",
+    "target": "public/items/axe-cherry-fizz/axe-cherry-fizz-scene-512.glb",
+    "bytesBefore": 696468,
+    "bytesAfter": 482700,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          497,
+          1500
+        ],
+        "after": [
+          170,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1500,
+          1428
+        ],
+        "after": [
+          512,
+          487
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/axe-dark-temptation/axe-dark-temptation.glb",
+    "target": "public/items/axe-dark-temptation/axe-dark-temptation-scene-512.glb",
+    "bytesBefore": 617508,
+    "bytesAfter": 454332,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          381,
+          1500
+        ],
+        "after": [
+          130,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1374,
+          1500
+        ],
+        "after": [
+          469,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/axe-provocation/axe-provocation.glb",
+    "target": "public/items/axe-provocation/axe-provocation-scene-512.glb",
+    "bytesBefore": 620664,
+    "bytesAfter": 529104,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          594,
+          1500
+        ],
+        "after": [
+          203,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          598,
+          1500
+        ],
+        "after": [
+          204,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/axe-ultime-cherry-fizz/axe-ultime-cherry-fizz.glb",
+    "target": "public/items/axe-ultime-cherry-fizz/axe-ultime-cherry-fizz-scene-512.glb",
+    "bytesBefore": 181320,
+    "bytesAfter": 215164,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          686,
+          1500
+        ],
+        "after": [
+          234,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/cif-infinite-clean/CifInfiniteClean.glb",
+    "target": "public/items/cif-infinite-clean/CifInfiniteClean-scene-512.glb",
+    "bytesBefore": 445436,
+    "bytesAfter": 475388,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          307,
+          1500
+        ],
+        "after": [
+          105,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          308,
+          1500
+        ],
+        "after": [
+          105,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/dirigera10503406/Dirigera10503406.glb",
+    "target": "public/items/dirigera10503406/Dirigera10503406-scene-512.glb",
+    "bytesBefore": 137756,
+    "bytesAfter": 455624,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          625,
+          625
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          625,
+          625
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 3,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/elmex-blancheur-douce/elmex-blancheur-douce.glb",
+    "target": "public/items/elmex-blancheur-douce/elmex-blancheur-douce-scene-512.glb",
+    "bytesBefore": 1051892,
+    "bytesAfter": 1125144,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1500,
+          1500
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/jordan-hex-mule/JordanHexMule.glb",
+    "target": "public/items/jordan-hex-mule/JordanHexMule-scene-512.glb",
+    "bytesBefore": 2413864,
+    "bytesAfter": 825416,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/kabba-laundry-bag/KabbaLaundryBag.glb",
+    "target": "public/items/kabba-laundry-bag/KabbaLaundryBag-scene-512.glb",
+    "bytesBefore": 169584,
+    "bytesAfter": 349824,
+    "images": [
+      {
+        "image": 1,
+        "before": [
+          740,
+          740
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/koppla00314741/Koppla00314741.glb",
+    "target": "public/items/koppla00314741/Koppla00314741-scene-512.glb",
+    "bytesBefore": 52960,
+    "bytesAfter": 266164,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          733,
+          733
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          733,
+          733
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/korea-2022-inyeong/Korea2022Inyeong.glb",
+    "target": "public/items/korea-2022-inyeong/Korea2022Inyeong-scene-512.glb",
+    "bytesBefore": 3175268,
+    "bytesAfter": 2431384,
+    "images": [
+      {
+        "image": 1,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          2048,
+          2048
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/w5-bleach/W5Bleach.glb",
+    "target": "public/items/w5-bleach/W5Bleach-scene-512.glb",
+    "bytesBefore": 2124532,
+    "bytesAfter": 415476,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1402,
+          1122
+        ],
+        "after": [
+          512,
+          410
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/characters/jikin-goldfish/jikin-goldfish.glb",
+    "target": "public/characters/jikin-goldfish/jikin-goldfish-scene-512.glb",
+    "bytesBefore": 5794900,
+    "bytesAfter": 1928308,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 3,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/characters/tosakin-goldfish/tosakin-goldfish.glb",
+    "target": "public/characters/tosakin-goldfish/tosakin-goldfish-scene-512.glb",
+    "bytesBefore": 4563564,
+    "bytesAfter": 1460816,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/fence-panel/fence-panel.glb",
+    "target": "public/items/fence-panel/fence-panel-scene-512.glb",
+    "bytesBefore": 4757356,
+    "bytesAfter": 1540464,
+    "images": [
+      {
+        "image": 0,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 1,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      },
+      {
+        "image": 2,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  },
+  {
+    "source": "public/items/bollsidan30574370/Bollsidan30574370.glb",
+    "target": "public/items/bollsidan30574370/Bollsidan30574370-scene-512.glb",
+    "bytesBefore": 82968,
+    "bytesAfter": 92356,
+    "images": [
+      {
+        "image": 1,
+        "before": [
+          1024,
+          1024
+        ],
+        "after": [
+          512,
+          512
+        ]
+      }
+    ]
+  }
+]

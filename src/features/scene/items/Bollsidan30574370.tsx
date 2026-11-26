@@ -6,7 +6,7 @@
  */
 import { useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
 import { removeGlbLines, glbLocalBBox, mergeGlbByMaterial } from '@features/scene/glbUtils';
@@ -31,7 +31,7 @@ export function Bollsidan30574370({ onSize, height, actionState }: SceneModelPro
     actionState?.['desk2-toggle'] ?? actionState?.['standing']
   );
   height ??= isStanding ? 105 : DEFAULT_H;
-  const { scene } = useGLTF(GLB_PATH);
+  const { scene } = useGLTFClone(GLB_PATH);
   const { invalidate } = useThree();
 
   const targetHRef = useRef(height);
@@ -113,4 +113,4 @@ export function Bollsidan30574370({ onSize, height, actionState }: SceneModelPro
   return <primitive object={clone} />;
 }
 
-useGLTF.preload(GLB_PATH);
+preloadSceneGLTF(GLB_PATH);

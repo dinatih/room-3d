@@ -66,7 +66,7 @@ function createGrayscaleTexture(
   return newTex;
 }
 
-export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVariant) {
+export function applyLaraVariantStyles(model: THREE.Object3D, style: LaraVariant | undefined, sceneTextures: boolean) {
   if (!style) return;
   const isNative = style === 'native';
   const isVivida = style === 'vivida';
@@ -131,7 +131,7 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
           return;
         }
         if (isSaraNudeTorso) {
-          mat.map = getSaraNapeTattooTexture(mat, true);
+          mat.map = getSaraNapeTattooTexture(mat, true, sceneTextures);
           mat.needsUpdate = true;
           return;
         }
@@ -536,12 +536,12 @@ export function applyLaraVariantStyles(model: THREE.Object3D, style?: LaraVarian
 
         // Independent anatomical sides: Marissa left, Delphina right.
         if (meshName === 'arms' || meshName === 'body_legs' || meshName.startsWith('body_legs_barefoot')) {
-          if (isMarissa && meshName === 'arms') applyMarissaTattoos(mat);
+          if (isMarissa && meshName === 'arms') applyMarissaTattoos(mat, sceneTextures);
           if (isDelphina) applyDelphinaTattoos(mat);
         }
 
         if (isSara && meshName === 'body_torso') {
-          mat.map = getSaraNapeTattooTexture(mat, false);
+          mat.map = getSaraNapeTattooTexture(mat, false, sceneTextures);
           mat.needsUpdate = true;
         }
         if (isDelphina && mat.userData.lara_delphina_shoulder_projection) {
@@ -601,8 +601,8 @@ export function disposeLaraVariantMaterials(model: THREE.Object3D) {
 
 // ── MARISSA TATTOO CANVAS GENERATOR ──────────────────────────────────────────
 
-function applyMarissaTattoos(mat: THREE.MeshStandardMaterial) {
-  mat.map = getMarissaArmTattooTexture(mat);
+function applyMarissaTattoos(mat: THREE.MeshStandardMaterial, sceneTextures: boolean) {
+  mat.map = getMarissaArmTattooTexture(mat, sceneTextures);
   mat.needsUpdate = true;
 }
 

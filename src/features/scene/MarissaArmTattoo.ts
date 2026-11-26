@@ -4,14 +4,15 @@ import lionUrl from './assets/marissa-lion.png';
 const textures = new Map<string, THREE.CanvasTexture>();
 
 /** Place the supplied lion on the anatomical left forearm's skin atlas. */
-export function getMarissaArmTattooTexture(material: THREE.MeshStandardMaterial) {
+export function getMarissaArmTattooTexture(material: THREE.MeshStandardMaterial, sceneTextures: boolean) {
   const base = material.map;
   if (!base?.image) throw new Error(`Missing Marissa arm skin: ${material.name}`);
-  const cached = textures.get(base.uuid);
+  const key = `${base.uuid}:${sceneTextures}`;
+  const cached = textures.get(key);
   if (cached) return cached;
   const image = base.image as HTMLImageElement;
   const canvas = document.createElement('canvas');
-  const resolution = 4;
+  const resolution = sceneTextures ? 1 : 4;
   canvas.width = image.width * resolution;
   canvas.height = image.height * resolution;
   const ctx = canvas.getContext('2d');
@@ -20,7 +21,7 @@ export function getMarissaArmTattooTexture(material: THREE.MeshStandardMaterial)
   const texture = new THREE.CanvasTexture(canvas);
   texture.flipY = base.flipY;
   texture.colorSpace = THREE.SRGBColorSpace;
-  textures.set(base.uuid, texture);
+  textures.set(key, texture);
   const lion = new Image();
   lion.onload = () => {
     const stamp = document.createElement('canvas');

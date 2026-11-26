@@ -161,5 +161,3 @@ export function LidarScan({ mode, opacity }: { mode: LidarMode; opacity: number 
     />
   );
 }
-
-useGLTF.preload(SCAN_PATH);

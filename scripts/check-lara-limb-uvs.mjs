@@ -86,7 +86,7 @@ try {
       const {scene}=await loader.loadAsync('/characters/lara/lara_native.glb');
       const bases=new Map();
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) bases.set(mat.map,mat.map?.image);});
-      variants.applyLaraVariantStyles(scene,style);
+      variants.applyLaraVariantStyles(scene,style,false);
       const materials=[];
       scene.traverse(m=>{if(m.isMesh) for(const mat of Array.isArray(m.material)?m.material:[m.material]) {
         if (!mat.map || !mat.userData.__ownedCharacterMaterial) continue;

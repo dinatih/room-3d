@@ -519,7 +519,7 @@ export function Character({
 
     if (isLara) {
       if (variant) {
-        applyLaraVariantStyles(scene, variant);
+        applyLaraVariantStyles(scene, variant, !isPreview);
       }
       if (laraRealisticTextures) {
         applyLaraRealisticTextures(scene, true);

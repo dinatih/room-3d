@@ -57,7 +57,7 @@ exports.performance = Object.fromEntries([0, 7, 15].map(count => {
 for (const [period, hour] of [['day', 12], ['night', 0]]) {
     const id = `studio-9-high-${period}`;
     exports.performance[id] = { ...apartment, id, count: 9, preset: 'high', camera: 'orbit',
-        activity: 'fixed-studio', behavior: `studio par défaut, 9 personnages, High, ${period}`,
+        activity: 'fixed-studio', localResourcesOnly: true, behavior: `studio par défaut, 9 personnages, High, ${period}`,
         viewport: { width: 1362, height: 810, deviceScaleFactor: 1 },
         fixedEnvironment: { date: '2026-11-09T12:00:00Z', hour, weather: 'clear' },
         query: { target: 'studio', weatherAuto: '0' }, stableMs: 15000, sessionMs: 60000, timeoutMs: 150000 };

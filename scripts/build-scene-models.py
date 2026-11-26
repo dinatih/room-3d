@@ -4,6 +4,7 @@ Requires Pillow. Only embedded image payloads change; geometry, animation,
 materials and samplers retain their original indices and values.
 """
 import io
+import argparse
 import json
 from pathlib import Path
 import struct
@@ -74,7 +75,15 @@ def build_model(data, max_size=TEXTURE_SIZE):
 
 
 if __name__ == '__main__':
-    for source, target in json.loads(MANIFEST.read_text()).items():
+    models = json.loads(MANIFEST.read_text())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('sources', nargs='*', help='Manifest source URLs to rebuild (default: all)')
+    args = parser.parse_args()
+    for source in args.sources:
+        if source not in models:
+            parser.error(f'Unknown scene model: {source}')
+    for source in args.sources or models:
+        target = models[source]
         data = (ROOT / 'public' / source.lstrip('/')).read_bytes()
         output, changes = build_model(data)
         destination = ROOT / 'public' / target.lstrip('/')

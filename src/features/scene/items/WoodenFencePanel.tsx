@@ -1,4 +1,4 @@
-import { useGLTF } from '@react-three/drei';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -7,10 +7,10 @@ import * as THREE from 'three';
  * Centré en (0,0,0) avec dimensions locales w (X), h (Y), d (Z).
  */
 export function WoodenFencePanel({ w, h, d }: { w: number; h: number; d: number }) {
-  const { scene } = useGLTF('/items/fence-panel/fence-panel.glb');
+  const { scene } = useGLTFClone('/items/fence-panel/fence-panel.glb');
 
   const { clone, groupRot, groupScale } = useMemo(() => {
-    const c = scene.clone(true);
+    const c = scene;
     c.position.set(0, 0, 0);
     c.scale.set(1, 1, 1);
     c.rotation.set(0, 0, 0);
@@ -52,5 +52,5 @@ export function WoodenFencePanel({ w, h, d }: { w: number; h: number; d: number 
   );
 }
 
-useGLTF.preload('/items/fence-panel/fence-panel.glb');
+preloadSceneGLTF('/items/fence-panel/fence-panel.glb');
 
