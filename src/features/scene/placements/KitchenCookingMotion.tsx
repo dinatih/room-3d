@@ -7,6 +7,9 @@ import { KITCHEN_WEST_WALL, ROOM_D } from '../wallData';
 
 const stove = new Vector3(KITCHEN_WEST_WALL + 65, 93, ROOM_D + 25);
 const front = ROOM_D - 12;
+const jarMouthHeight = 28.24; // IKEA 365+ opening, measured from the model's base in cm.
+const pourMouth = new Vector3(stove.x, stove.y + 37, stove.z);
+const uprightJar = new Vector3(stove.x, pourMouth.y - jarMouthHeight, stove.z);
 const smooth = (t: number) => { const x = Math.max(0, Math.min(1, t)); return x * x * (3 - 2 * x); };
 
 /** Pull clear of the shelf before lowering, then slide onto the worktop. */
@@ -22,6 +25,10 @@ export function KitchenCookingMotion({ children, recipe, vessel = false }: {
     const active = session && (vessel ? (recipe === 'rice') === (session.recipe === 'rice') : recipe === session.recipe);
     group.position.set(0, 0, 0);
     group.rotation.set(0, 0, 0);
+    if (!vessel) {
+      const lid = group.getObjectByName('ProcessedMeshNode');
+      if (lid) lid.visible = !active || session.elapsed < 3 || session.elapsed >= 5;
+    }
     if (!active) return;
     const parent = group.parent!;
     parent.localToWorld(origin.current.set(0, 0, 0));
@@ -31,13 +38,19 @@ export function KitchenCookingMotion({ children, recipe, vessel = false }: {
     const path = [origin.current,
       vessel ? new Vector3(origin.current.x, origin.current.y, front)
         : new Vector3(KALLAX_CUISINE_POSITION[0] + 39 / 2 + 17, origin.current.y, origin.current.z),
-      new Vector3(stove.x, vessel ? stove.y : stove.y + 38, front),
-      vessel ? stove : new Vector3(stove.x, stove.y + 38, stove.z)];
+      new Vector3(stove.x, vessel ? stove.y : uprightJar.y, front),
+      vessel ? stove : uprightJar];
     const segment = Math.min(2, Math.floor(travel * 3));
     point.current.copy(path[segment]).lerp(path[segment + 1], smooth(travel * 3 - segment));
+    if (!vessel) {
+      // Pivot around the mouth so the falling grains meet the opening.
+      const tip = Math.PI * 2 / 3 * smooth((t - 3) / 0.5) * (1 - smooth((t - 4.5) / 0.5));
+      group.rotation.z = tip;
+      point.current.x += Math.sin(tip) * jarMouthHeight;
+      point.current.y += (1 - Math.cos(tip)) * jarMouthHeight;
+    }
     parent.worldToLocal(point.current);
     group.position.copy(point.current);
-    if (!vessel) group.rotation.z = -Math.PI / 3 * smooth((t - 3) / 0.5) * (1 - smooth((t - 4.5) / 0.5));
   });
   return <group ref={ref} userData={{ skipMerge: true }}>{children}</group>;
 }
@@ -64,16 +77,16 @@ export function KitchenCookingEffects({ sizes }: { sizes: RefObject<{ rice: Vect
     const t = session?.elapsed ?? 0;
     const size = sizes.current[session?.recipe === 'rice' ? 'rice' : 'pot'];
     const radius = Math.min(size.x, size.z) / 2;
-    steam.current.visible = !!session && t >= 5 && t < 15;
-    grains.current.visible = !!session && t >= 3 && t < 5;
+    steam.current.visible = !!session && t >= 5 && t < 13;
+    grains.current.visible = !!session && t >= 3.5 && t < 4.5;
     steam.current.children.forEach((puff, i) => {
       const phase = ((t - 5) * 0.6 + i / steam.current.children.length) % 1;
       puff.position.set(Math.sin(i * 2.4 + t) * radius * phase, size.y + phase * size.y * 2, Math.cos(i * 2.4 + t) * radius * phase);
-      puff.scale.setScalar((radius * (0.15 + phase * 0.4)) * smooth((t - 5) / 2) * (1 - smooth((t - 13) / 2)));
+      puff.scale.setScalar((radius * (0.15 + phase * 0.4)) * smooth((t - 5) / 2) * (1 - smooth(t - 12)));
     });
     grains.current.children.forEach((grain, i) => {
       const phase = (t * 2 + i / grains.current.children.length) % 1;
-      grain.position.set(Math.sin(i * 2.4) * 2, size.y + 20 * (1 - phase), Math.cos(i * 2.4) * 2);
+      grain.position.set(Math.sin(i * 2.4) * 2, size.y + (pourMouth.y - stove.y - size.y) * (1 - phase), Math.cos(i * 2.4) * 2);
     });
   });
   return <group position={stove} userData={{ skipMerge: true }}>

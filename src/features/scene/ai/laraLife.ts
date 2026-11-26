@@ -162,13 +162,13 @@ export function releaseLifeMeal(id: LifeCharacterId, eaten = false) {
   delete lifeHousehold.meals.held[id];
   if (!eaten) lifeHousehold.meals.portions++;
 }
-export function prepareLifeMeals(id: LifeCharacterId, guests: LifeCharacterId[]) {
+export function prepareLifeMeals(id: LifeCharacterId, guests: LifeCharacterId[], reserveForCook = true) {
   const meals = lifeHousehold.meals;
   if (!meals.portions && !meals.held[id]) {
     meals.portions = new Set([id, ...guests].filter(guest => !meals.held[guest])).size;
     meals.preparedBy = id;
   }
-  claimLifeMeal(id);
+  if (reserveForCook) claimLifeMeal(id);
 }
 const lifeDay = (id: LifeCharacterId, at: number) => {
   const days = lifeHousehold.journal[id] ??= {};

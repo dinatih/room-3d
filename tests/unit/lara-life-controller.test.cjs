@@ -1525,3 +1525,23 @@ it('pilote les quinze secondes de cuisine sans portions anticipées et annule su
     if (interrupted) assert(!w.reservations.has('cuisine-group:cook-stove'));
   }
 });
+
+it('un ordre direct de cuisiner laisse une portion disponible sans engager le cuisinier à table', () => {
+  const originalDocument = global.document;
+  global.document = new EventTarget();
+  Object.assign(life.lifeHousehold, life.createLifeHousehold());
+  const w = world(), disconnect = w.controller.connect();
+  try {
+    w.tick();
+    document.dispatchEvent(new CustomEvent('agent-force-smartobject', {
+      detail: { targetId: 'native', objectId: 'cuisine-group', slotId: 'cook-stove' },
+    }));
+    w.tick();
+    w.tick(15);
+    assert.equal(life.lifeHousehold.meals.portions, 1);
+    assert.deepEqual(life.lifeHousehold.meals.held, {});
+  } finally {
+    disconnect();
+    global.document = originalDocument;
+  }
+});
