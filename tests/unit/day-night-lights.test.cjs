@@ -25,9 +25,12 @@ it('allume les lampes la nuit sans modifier la qualité HD', () => {
       './skyBounds': { SKY_CENTER: [0, 0, 0], SKY_RADIUS: 10000 },
       './astronomy': { simulatedHour: () => (8 + clock.minutes / 60) % 24, daylight,
         celestialState: () => astronomy.celestialState((8 + clock.minutes / 60) % 24, fixedDate) },
-      './store/useSceneStore': { useSceneStore: { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
-        toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
-        triggerAction: (...action) => actions.push(action) }) } },
+      './store/useSceneStore': { useSceneStore: Object.assign(
+        select => select({ layers }),
+        { setState: next => Object.assign(nightState, next), getState: () => ({ layers,
+          toggleLayer: key => { assert.equal(key, 'lightsHD'); qualities.push(layers.lightsHD = !layers.lightsHD); },
+          triggerAction: (...action) => actions.push(action) }) },
+      ) },
     });
     DayNight(); frame({ scene });
     assert.equal(moonSource.intensity, 0);

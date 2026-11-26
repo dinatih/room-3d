@@ -197,13 +197,15 @@ it('partage le rendu miroir et restaure la scène même quand une réflexion éc
       };
     }
     getReflectionCamera() { return reflectionCamera; }
+    getRenderTarget() { return { setSize() {} }; }
     dispose() {}
   }
   const { MirrorSurface, mirrorPlanesGeometry } = load('src/features/scene/building/Mirrors.tsx', {
     three: THREE, 'react/jsx-runtime': jsx, react: { useMemo: fn => fn(), useEffect: fn => cleanups.push(fn()) },
     '@react-three/fiber': {}, 'three/addons/objects/Reflector.js': { Reflector },
     'three/addons/utils/BufferGeometryUtils.js': await geometryUtils,
-    '../store/useSceneStore': {},
+    './mirrorResolution': { getAutoMirrorResolution: () => 512 },
+    '../store/useSceneStore': { useSceneStore: { getState: () => ({ mirrorAutoResolution: false, mirrorResolution: 512 }) } },
     '../SkySphere': { getLoadedSkyTexture: () => null },
     '../items/NissedalMirror': {}, './MergedStaticGroup': {}, '../wallData': {}, '@config': {},
   }, source => source + '\nexport { MirrorSurface, mirrorPlanesGeometry };');
@@ -266,7 +268,7 @@ it('conserve les hauteurs assis/debout BOLLSIDAN et la priorité de la hauteur e
       three: THREE, 'react/jsx-runtime': jsx,
       react: { useMemo: fn => fn(), useCallback: fn => fn, useRef: value => ({ current: value }), useLayoutEffect: fn => effects.push(fn) },
       '@react-three/fiber': { useThree: () => ({ invalidate() {} }), useFrame() {} },
-      '@react-three/drei': { useGLTF: Object.assign(() => ({ scene }), { preload() {} }) },
+      '../useGLTFClone': { preloadSceneGLTF() {}, useGLTFClone: () => ({ scene }) },
       '@features/scene/glbUtils': utils,
     });
     Bollsidan30574370({ ...props, onSize: size => sizes.push(size) }); effects.pop()();
