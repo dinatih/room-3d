@@ -64,6 +64,8 @@ Toujours ajouter en pied de message de commit le co-auteur correspondant à l'ag
 
 Le terminal ou l'IDE utilisé ne détermine pas l'identité de l'agent. Codex ne doit jamais signer comme Antigravity.
 
+Le champ `<Modèle>` doit contenir le **nom complet et exact du modèle réellement utilisé**, avec sa version (y compris la version mineure) et sa variante : par exemple `GPT-6.1-Sol` ou `GPT-6.1-Terra`, et non simplement `GPT 6`, `GPT-6.1` ou `Codex`. Cette précision est obligatoire dans le message de commit et dans le `Co-authored-by`. Le niveau d'effort reste un champ distinct : par exemple `Codex (GPT-6.1-Sol, low)` si ces informations correspondent à la session. Ne jamais deviner une version, une variante ou un niveau d'effort : si l'environnement ne les expose pas, indiquer explicitement les informations non disponibles plutôt que d'inventer une signature.
+
 ## Directives de communication avec l'utilisateur
 
 - **Format des liens de code pour Zed** : Ne JAMAIS utiliser la syntaxe d'ancre `#L<num>` (comme `file:///path#L96`), car Zed tente de créer un fichier inexistant `path#L96`. Pour ouvrir un fichier à une ligne précise dans Zed, TOUJOURS utiliser le schéma natif avec un libellé propre : `[NomFichier.tsx:Ligne](zed://file/chemin/absolu:Ligne)`.
