@@ -127,6 +127,25 @@ export const LIFE_EVENT_LABELS: Record<string, string> = {
   life_invitation_later: 'Invitations reportées', life_invitation_resumed: 'Invitations reprises', life_invitation_cancelled: 'Invitations annulées', life_invitation_proposed: 'Activités proposées', life_meal_shared: 'Repas préparés à partager',
 };
 
+// Runtime rendezvous: only guests who actually claim a portion join the meal.
+const lifeMealGuests = new Map<LifeCharacterId, { seated: boolean; started: boolean }>();
+export function waitForLifeMeal(id: LifeCharacterId, seated: boolean) {
+  if (!lifeHousehold.meals.held[id]) return false;
+  let guest = lifeMealGuests.get(id);
+  if (!guest) {
+    guest = { seated: false, started: false };
+    lifeMealGuests.set(id, guest);
+  }
+  guest.seated = seated;
+  if (guest.started) return false;
+  const guests = Object.keys(lifeHousehold.meals.held) as LifeCharacterId[];
+  if (guests.every(id => lifeMealGuests.get(id)?.seated)) {
+    for (const id of guests) lifeMealGuests.get(id)!.started = true;
+    return false;
+  }
+  return true;
+}
+
 /** Reserve a real portion before setting off; a held meal survives a reload. */
 export function claimLifeMeal(id: LifeCharacterId) {
   const meals = lifeHousehold.meals;
@@ -134,9 +153,11 @@ export function claimLifeMeal(id: LifeCharacterId) {
   if (meals.portions === 0) return false;
   meals.portions--;
   meals.held[id] = true;
+  lifeMealGuests.set(id, { seated: false, started: false });
   return true;
 }
 export function releaseLifeMeal(id: LifeCharacterId, eaten = false) {
+  lifeMealGuests.delete(id);
   if (!lifeHousehold.meals.held[id]) return;
   delete lifeHousehold.meals.held[id];
   if (!eaten) lifeHousehold.meals.portions++;

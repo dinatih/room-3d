@@ -290,9 +290,9 @@ export function BathroomFurnishings() {
         </group>
       ))}
 
-      {/* Brosse WC poisson au sol contre le mur SDB nord, entre le WC et le meuble vasque. */}
+      {/* Brosse WC poisson suspendue à 15 cm du sol contre le mur SDB nord, entre le WC et le meuble vasque. */}
       <group
-        position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 0, BATH_NORTH_WALL + 7.95 / 2 + 1]}
+        position={[(BATH_WEST_WALL + 60 + TOILET_W / 2 + BATH_EAST_WALL - 76 - 62 / 2) / 2, 15, BATH_NORTH_WALL + 7.95 / 2]}
         userData={{ skipMerge: true, sceneItemRoot: true, itemName: 'Brosse WC poisson', hoverAction: { label: 'Brosse WC poisson', actions: getObjectActionIds('fish-toilet-brush-red') } }}
       >
         <NavigationObstacle id="fish-toilet-brush-red"><FishToiletBrush /></NavigationObstacle>

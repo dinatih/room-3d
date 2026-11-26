@@ -75,3 +75,27 @@ it('la compagnie de danse exige une activité réelle dans le même lieu, sans e
   life.activeLifeDances.delete('rosanna');
   assert.equal(life.getLifeDancePartner('sabira', 'est-neighbor-flat', {}, 0), undefined);
 });
+
+it('attend les convives ayant une portion, puis laisse tout le groupe manger', () => {
+  life.prepareLifeMeals('native', ['cha', 'vivida']);
+  life.claimLifeMeal('cha');
+  assert.equal(life.waitForLifeMeal('native', true), true);
+  assert.equal(life.waitForLifeMeal('cha', false), true);
+  assert.equal(life.waitForLifeMeal('cha', true), false);
+  assert.equal(life.waitForLifeMeal('native', true), false);
+  // Une invitation non acceptée ne bloque pas le repas, ni une arrivée tardive.
+  life.claimLifeMeal('vivida');
+  assert.equal(life.waitForLifeMeal('native', true), false);
+  assert.equal(life.waitForLifeMeal('vivida', true), false);
+  life.releaseLifeMeal('cha', true);
+  assert.equal(life.waitForLifeMeal('native', true), false);
+});
+
+it('une annulation libère les convives qui attendent sans consommer la portion', () => {
+  life.prepareLifeMeals('native', ['cha']);
+  life.claimLifeMeal('cha');
+  assert.equal(life.waitForLifeMeal('native', true), true);
+  life.releaseLifeMeal('cha');
+  assert.equal(life.waitForLifeMeal('native', true), false);
+  assert.equal(life.lifeHousehold.meals.portions, 1);
+});

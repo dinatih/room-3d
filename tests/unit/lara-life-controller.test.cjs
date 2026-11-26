@@ -1345,6 +1345,7 @@ function withMealInvitation(id, run) {
   w.lifeState.needs.work = 0; w.lifeState.needs.meal = 60;
   const fromId = id === 'native' ? 'cha' : 'native';
   life.prepareLifeMeals(fromId, [id]);
+  w.seatHost = () => life.waitForLifeMeal(fromId, true);
   w.invite = (overrides = {}) => {
     const detail = { targetId: id, fromId, objectId: 'rest', slotId: 'use', activity: 'meal', ...overrides };
     document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail })); return detail;
@@ -1358,6 +1359,11 @@ it('accepte un repas déjà prêt même avec une faim urgente, sans recuisiner n
   assert(life.lifeHousehold.meals.held.native);
   assert.equal(w.lifeState.needs.meal, 95);
   for (let i = 0; i < 8 && !w.logs.some(log => log.action === 'life_started'); i++) w.tick(.25);
+  assert(!w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal'));
+  assert(w.lifeState.needs.meal >= 95, 'Waiting must not satisfy hunger');
+  assert(life.lifeHousehold.meals.held.native);
+  w.seatHost();
+  for (let i = 0; i < 8 && !w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal'); i++) w.tick(.25);
   assert(w.logs.some(log => log.action === 'life_started' && log.data.phase === 'eat-meal'));
   assert(!w.logs.some(log => log.data?.phase === 'prepare-meal'));
   assert(w.lifeState.needs.meal < 95);
@@ -1378,6 +1384,7 @@ it('reporte un repas pour se laver les mains puis reprend sur une assise disponi
 }));
 
 it('cherche une autre assise pour un repas reporté si la place proposée a été prise', () => withMealInvitation('native', w => {
+  w.seatHost();
   w.lifeState.needs.toilet = 95;
   assert(w.invite().deferred);
   w.candidates.splice(w.candidates.findIndex(candidate => candidate.activity === 'meal'), 1);

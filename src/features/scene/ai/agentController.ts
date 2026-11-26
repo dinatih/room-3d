@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
 import { getAvailableAutonomousActivities, getLaraLifeCandidates, buildLaraLifeInstructions } from './autonomousActivities';
-import { LIFE_EVENT_LABELS, activeLifeDances, getLifeDancePartner, lifeHousehold, prepareLifeMeals, releaseLifeMeal, recordLifeDay, recordLifeEvent, socialPartnerScore, chooseLifeActivity, chooseLifeLeisure, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
+import { LIFE_EVENT_LABELS, activeLifeDances, getLifeDancePartner, lifeHousehold, waitForLifeMeal, prepareLifeMeals, releaseLifeMeal, recordLifeDay, recordLifeEvent, socialPartnerScore, chooseLifeActivity, chooseLifeLeisure, preferLifePersonalSpace, evolveLife, rememberLifeActivity, rememberLifeConversation, lifeNeed, lifeEffect, lifeClock, lifePreferenceScore, lifeHabitScore, lifeFollowUp, routineActivities, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeInvitationResponse, lifeAffinity, activeLifeMeals, getLifeMealPartner, LIFE_LABELS, LIFE_NEED_LABELS, LIFE_PHASE_LABELS, LIFE_SETTINGS, LIFE_CHARACTER_LABELS, LIFE_INITIAL_ACTIVITIES, LIFE_INITIAL_PREFERENCES, isLifeCharacter, isLifeSeat, type LifeCharacterId, type LifeActivity } from './laraLife';
 import { evolveHome, homeDirt, roomDirt, getHomeTask, HOME_TASKS, type HomeRoom } from './lifeHousekeeping';
 import { characterLives, publishLife, useLaraLifeStore, type LifeSnapshot } from './laraLifeStore';
 import { OccupancyManager, LIMITED_ROOMS, isInRoom } from './occupancyManager';
@@ -1966,6 +1966,9 @@ export function createAgentController(
     if (hasLife) life.needs.environment = roomDirt(homeDirt, room);
     if (lifeActivity && !lifeConversation) lifeConversation = duoSessionManager.getSessionFor(_characterId);
     const wasMoving = agentStatus === 'MOVING';
+    const waitingForMeal = lifeRunning && !manualOverride && instruction?.lifePhase === 'eat-meal'
+      && waitForLifeMeal(lifeId, agentStatus === 'INTERACTING');
+    if (instruction?.lifePhase === 'eat-meal' && agentStatus === 'INTERACTING') state.animationPaused = waitingForMeal;
     const interacting = agentStatus === 'INTERACTING' && !state.animationPaused
       && animationPlayback?.animation === state.animation;
     const playedAnimation = lifeRunning && interacting ? resolveAnimationId(state.animation) : '';
@@ -1990,7 +1993,10 @@ export function createAgentController(
     let waitingForNavigation = false;
     let pendingReason: string | undefined;
     let pendingJob: NavigationJob<unknown> | undefined;
-    try { return navigationScope.run(() => updateCurrent(dt)); }
+    try {
+      if (waitingForMeal && agentStatus === 'INTERACTING') return state;
+      return navigationScope.run(() => updateCurrent(dt));
+    }
     catch (error) {
       if (!(error instanceof NavigationPending)) {
         devLog({ tag: _characterId, category: 'nav', action: 'nav_exception', data: { error, state, instruction, status: agentStatus } });
@@ -2060,7 +2066,7 @@ export function createAgentController(
           const current = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex], phase = current?.lifePhase;
           publish({ current: { status: agentStatus, animation: state.animation, smartObjectId: current?.smartObjectId, slotId: current?.slotId, animationRequest: current?.animation },
             room, needs: { ...life.needs }, memory: { ...life.memory }, relationships: { ...life.relationships }, elapsedSeconds: life.elapsedSeconds, activity: !lifeRunning ? useLaraLifeStore.getState().characters[lifeId].activity : lifeActivity
-            ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
+            ? `${agentStatus === 'MOVING' ? 'En route : ' : agentStatus === 'TRANSITIONING' ? 'Transition : ' : ''}${waitingForMeal && agentStatus === 'INTERACTING' ? 'Attendre les convives' : phase ? LIFE_PHASE_LABELS[phase] : LIFE_LABELS[lifeActivity]}`
             : 'Commande utilisateur' });
         }
       }
