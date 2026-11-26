@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { glbLocalBBox } from '../glbUtils';
 import { Kallax2x1 }      from './Kallax2x1';
 import { ShoeHatRack }    from './ShoeHatRack';
+import { SHOE_HAT_RACK }  from '../shoeHatRackData';
 import { DroneCell } from './Drona';
 import { Freezer }        from './Freezer';
 import type { SceneItemProps } from '@shared/types';
@@ -78,7 +79,7 @@ export function KallaxSE({ onSize, noDrona, noCaps, isPreview = false, actionSta
       {!noDrona && <KallaxSEDrona isPreview={isPreview} actionState={actionState} />}
 
       {/* Porte-chaussures bord à bord avec le congélateur (profondeur 47,37 cm). */}
-      <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ sceneItemRoot: true }}>
+      <group position={[-47.37 / 2 - SHOE_HAT_RACK.width / 2, 0, 45 / 2 - SHOE_HAT_RACK.depth / 2]} rotation-y={-Math.PI} userData={{ sceneItemRoot: true }}>
         <ShoeHatRack noCaps={noCaps} />
       </group>
     </group>

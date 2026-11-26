@@ -130,7 +130,29 @@ def make_cylinder_between(name: str, p1, p2, radius: float, segs: int, mat):
     return add_mesh_object(name, bm, mat, smooth=True)
 
 
+def center_scene_xz_ground_y():
+    """Normalize all root objects so overall bbox is centered in X/Z (glTF) and min Y = 0."""
+    bpy.context.view_layer.update()
+    pts = []
+    for obj in bpy.context.scene.objects:
+        if obj.type != "MESH":
+            continue
+        for v in obj.data.vertices:
+            pts.append(obj.matrix_world @ v.co)
+    if not pts:
+        return
+    # In Blender Z-up: glTF X = Blender X, glTF Y = Blender Z, glTF Z = -Blender Y
+    cx = 0.5 * (min(p.x for p in pts) + max(p.x for p in pts))
+    cy = 0.5 * (min(p.y for p in pts) + max(p.y for p in pts))
+    min_z = min(p.z for p in pts)
+    offset = Vector((-cx, -cy, -min_z))
+    for obj in bpy.context.scene.objects:
+        if obj.parent is None:
+            obj.location += offset
+
+
 def export_glb(rel_path: str):
+    center_scene_xz_ground_y()
     out_path = ITEMS_DIR / rel_path
     out_path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.export_scene.gltf(
@@ -224,11 +246,11 @@ def build_shoe_hat_rack():
 def build_meuble_t():
     reset_scene()
     W, H, D, T = 0.225, 0.55, 0.275, 0.015
-    LEFT_OVERHANG = 0.40
+    PL = 0.80
     RIGHT_OVERHANG = 0.18
-    PL = LEFT_OVERHANG + W + RIGHT_OVERHANG  # 0.805 m
+    LEFT_OVERHANG = PL - W - RIGHT_OVERHANG  # 0.395 m
     PT, PD = 0.037, 0.235
-    plank_x = (RIGHT_OVERHANG - LEFT_OVERHANG) / 2.0  # -0.11 m
+    plank_x = (RIGHT_OVERHANG - LEFT_OVERHANG) / 2.0  # -0.1075 m
     plank_y = 0.33 + PT / 2.0
     plank_z = -D / 2.0 + PD / 2.0  # -0.02 m
 

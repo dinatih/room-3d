@@ -30,6 +30,7 @@ import { MannequinHead } from '../items/MannequinHead';
 import { GoogleNestMini } from '../items/GoogleNestMini';
 import { Mulig30179435, MuligHangers } from '../items/Mulig30179435';
 import { ShoeHatRackCaps } from '../items/ShoeHatRack';
+import { SHOE_HAT_RACK } from '../shoeHatRackData';
 import { Smorkull, SMORKULL_FOOTPRINT } from '../items/Smorkull';
 import { SneakersRed } from '../items/SneakersRed';
 import { JordanHexMule } from '../items/JordanHexMule';
@@ -766,7 +767,9 @@ export function LivingRoomDecor() {
         <group position={[-7, MEUBLE_T_Y, -13]} userData={{ sceneItemRoot: true, itemName: 'Déodorant en spray (Axe)' }}><AxeDeodorant /></group>
         <group position={[3, MEUBLE_T_Y, -13]} userData={{ sceneItemRoot: true, itemName: 'Crème en distributeur' }}><CreamPump /></group>
         <group position={[-47.37 / 2, 0, 45 / 2]} rotation-y={-Math.PI} userData={{ skipMerge: true, itemName: 'Casquettes ShoeHatRack' }}>
-          <ShoeHatRackCaps />
+          <group position={[SHOE_HAT_RACK.width / 2, 0, SHOE_HAT_RACK.depth / 2]}>
+            <ShoeHatRackCaps />
+          </group>
           {/* Troisième tablette depuis le bas : dessus à 37 + 1,5 cm. */}
           <group position={[12, 38.5, 13]} userData={{ sceneItemRoot: true, itemName: 'Freebox Pop (Serveur)' }}><FreeboxPop /></group>
           <group position={[32, 38.5, 13]} userData={{ sceneItemRoot: true, itemName: 'DIRIGERA' }}><Dirigera10503406 /></group>

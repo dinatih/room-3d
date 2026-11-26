@@ -119,10 +119,10 @@ export function KallaxNW({ onSize, noDrona, noMannequins, isPreview = false, act
       </group>
 
       {/* MeubleT — au sol (Y = 0) à gauche des meubles Kallax, plaqué contre la glace des miroirs */}
-      <group position={[59.5, 0, 0.75]} rotation-y={Math.PI}>
+      <group position={[59.5 + 10.75, 0, 0.75]} rotation-y={Math.PI}>
         <MeubleT />
         {/* Pistolet de massage OYeet NEX Pro II + socle posé sur la planche droite du meuble en T */}
-        <group position={[26, 36.7, -2]} rotation-y={-Math.PI / 6} userData={{ sceneItemRoot: true, itemName: 'OYeet NEX Pro II' }}>
+        <group position={[26 - 10.75, 36.7, -2]} rotation-y={-Math.PI / 6} userData={{ sceneItemRoot: true, itemName: 'OYeet NEX Pro II' }}>
           <OyeetNexProII />
         </group>
       </group>

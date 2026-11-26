@@ -73,7 +73,6 @@ import { Bathtub }                                    from '@features/scene/item
 import { ChestBench }                                 from '@features/scene/items/ChestBench';
 import { Vatterso20562909 }                           from '@features/scene/items/Vatterso20562909';
 import { ShoeHatRack } from '@features/scene/items/ShoeHatRack';
-import { SHOE_HAT_RACK } from '@features/scene/shoeHatRackData';
 import { AltappenRug }                                from '@features/scene/items/AltappenRug';
 import { JordanHexMule }                              from '@features/scene/items/JordanHexMule';
 import { SummerOutdoorBoot }                           from '@features/scene/items/SummerOutdoorBoot';
@@ -131,11 +130,7 @@ function ScooterPreview(props: SceneItemProps) {
 }
 
 function ShoeHatRackPreview(props: SceneItemProps) {
-  return (
-    <group position={[-SHOE_HAT_RACK.width / 2, 0, -SHOE_HAT_RACK.depth / 2]}>
-      <ShoeHatRack {...props} noCaps />
-    </group>
-  );
+  return <ShoeHatRack {...props} noCaps />;
 }
 
 /** Model rotations applied internally in inventory previews. */

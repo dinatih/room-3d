@@ -1,8 +1,7 @@
 /**
  * ShoeHatRack.tsx — Range-chaussures / porte-chapeaux tubulaire.
  *
- * Géométrie locale : X=largeur (0→W), Y=hauteur (0→H), Z=profondeur (0→D).
- * Origine = coin bas-gauche avant.
+ * Géométrie locale : centrée XZ, Y=0 = sol.
  */
 import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
@@ -15,7 +14,7 @@ import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 const PATH = '/items/shoe-hat-rack/shoe-hat-rack.glb';
 preloadSceneGLTF(PATH);
 
-const { width: W } = SHOE_HAT_RACK;
+const { width: W, depth: D } = SHOE_HAT_RACK;
 const TR = 0.8;
 const Y_MID = 105;
 const Y_TOP = 140;
@@ -25,7 +24,7 @@ export function ShoeHatRackCaps() {
   return (
     <>
       {HOOK_XS.flatMap(x => ([Y_MID, Y_TOP] as const).filter(barY => !(x === HOOK_XS[0] && barY === Y_MID)).map(barY => (
-        <group key={`${x}-${barY}`} position={[x, barY + 1.5, TR + 8.5]} rotation={[Math.PI / 2, 0, 0]}>
+        <group key={`${x}-${barY}`} position={[x - W / 2, barY + 1.5, TR + 8.5 - D / 2]} rotation={[Math.PI / 2, 0, 0]}>
           <TruckerCap />
         </group>
       )))}
@@ -43,8 +42,9 @@ export function ShoeHatRack({ onSize, noCaps }: SceneModelProps & { noCaps?: boo
     } else {
       scene.scale.set(1, 1, 1);
     }
-    scene.position.set(0, 0, 0);
-    onSize?.(glbLocalBBox(scene).getSize(new THREE.Vector3()));
+    const box = glbLocalBBox(scene);
+    scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+    onSize?.(box.getSize(new THREE.Vector3()));
   }, [scene, onSize]);
 
   return (
