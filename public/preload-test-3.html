@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="preload" as="image" href="/environment/ciel_paris_bg_aligned.webp" />
+    <link href="/fonts/bebas-neue/font.css" rel="stylesheet" />
+    <title>Preview 3 — Bento Spatial</title>
+    <style>
+      html { font-size: 14px !important; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        background: #0f172a;
+        overflow: hidden;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      /* Barre de test temporaire */
+      .preview-toolbar {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        font-size: 12px;
+        color: #cbd5e1;
+        white-space: nowrap;
+      }
+      .preview-toolbar a, .preview-toolbar button {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        color: #cbd5e1;
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        transition: background 0.15s, color 0.15s;
+      }
+      .preview-toolbar a:hover, .preview-toolbar button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .preview-toolbar a.active {
+        background: #ef4444;
+        color: #fff;
+      }
+      .preview-toolbar .sep {
+        width: 1px;
+        height: 14px;
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      #loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+      }
+      #loading-backdrop {
+        position: absolute;
+        inset: 0;
+        background: #0f172a url('/environment/ciel_paris_bg_aligned.webp') repeat-x 0% 50% / auto 100%;
+        animation: loading-bg-scroll 60s linear infinite;
+        transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 1.35s cubic-bezier(0.2, 0, 0.2, 1);
+        pointer-events: none;
+      }
+      @keyframes loading-bg-scroll {
+        from { background-position-x: 0%; }
+        to { background-position-x: -100%; }
+      }
+      #loading-backdrop::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, rgba(15, 23, 42, 0.35) 0%, rgba(15, 23, 42, 0.78) 100%);
+        pointer-events: none;
+      }
+      #loading-backdrop.exiting {
+        opacity: 0;
+        transform: scale(1.05);
+      }
+
+      #loading-envelope {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        width: 100%;
+        padding-bottom: 12px;
+        clip-path: inset(-40px -40px 0);
+      }
+      #loading-envelope::after {
+        content: '';
+        position: absolute;
+        z-index: 2;
+        bottom: 0;
+        left: 24px;
+        width: calc(100% - 48px);
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+        transform-origin: center center;
+        animation: loading-canvas-split 0.55s ease-in-out both;
+        pointer-events: none;
+      }
+      @keyframes loading-canvas-split {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
+      }
+      #loading-envelope.exiting::after {
+        animation: loading-canvas-close 1.6s ease-in-out both;
+      }
+      @keyframes loading-canvas-close {
+        0%, 75% { transform: scaleX(1); }
+        100% { transform: scaleX(0); }
+      }
+
+      #loading-card {
+        position: relative;
+        z-index: 1;
+        background: rgba(17, 24, 39, 0.78);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        animation: loading-card-enter 1.15s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+        color: #f8fafc;
+      }
+      @keyframes loading-card-enter {
+        from { transform: translateY(calc(100% + 12px)); }
+        to { transform: translateY(0); }
+      }
+      #loading-card.exiting {
+        animation: loading-card-exit 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+        pointer-events: none;
+      }
+      @keyframes loading-card-exit {
+        from { transform: translateY(0); }
+        to { transform: translateY(calc(100% + 12px)); }
+      }
+
+      .bento-block {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+
+      .bento-profile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .bento-identity {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .bento-avatars {
+        display: flex;
+        align-items: center;
+      }
+      .bento-avatars img {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #1e293b;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      }
+      .bento-avatars img + img {
+        margin-left: -16px;
+      }
+
+      #loading-title h1 {
+        font-size: 19px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+        margin-bottom: 2px;
+      }
+      #loading-title h2 {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #cbd5e1;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.14);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #6ee7b7;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .status-pill::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #34d399;
+      }
+
+      .bento-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tag-pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 11.5px;
+        color: #e2e8f0;
+        font-weight: 500;
+      }
+      .tag-pill.accent {
+        background: rgba(239, 68, 68, 0.14);
+        border-color: rgba(239, 68, 68, 0.28);
+        color: #fca5a5;
+      }
+
+      .bento-links {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      .bento-link-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .bento-link-btns a {
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f8fafc;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 11.5px;
+        transition: background 0.15s;
+      }
+      .bento-link-btns a:hover {
+        background: rgba(239, 68, 68, 0.85);
+      }
+
+      #loading-progress-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #loading-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      #loading-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #ef4444, #fb923c);
+        border-radius: 999px;
+        transition: width 0.15s ease;
+        box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+      }
+      #loading-bar.is-preparing {
+        animation: loading-pulse 1s ease-in-out infinite alternate;
+      }
+      @keyframes loading-pulse {
+        from { opacity: 1; }
+        to { opacity: 0.45; }
+      }
+      .bento-progress-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        color: #94a3b8;
+      }
+      #loading-item {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #e2e8f0;
+      }
+      #loading-shaders {
+        flex-shrink: 0;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #cbd5e1;
+      }
+      #loading-shaders:empty {
+        display: none;
+      }
+
+      @media (max-width: 520px) {
+        .bento-profile { flex-direction: column; align-items: flex-start; }
+        .bento-links { flex-direction: column; align-items: flex-start; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #loading-card, #loading-card.exiting { animation: none; }
+        #loading-card.exiting { visibility: hidden; }
+        #loading-envelope::after { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="preview-toolbar" aria-label="Choix de maquette">
+      <a href="/preload-test-1.html">1 · Blueprint</a>
+      <a href="/preload-test-2.html">2 · Éditorial</a>
+      <a href="/preload-test-3.html" class="active">3 · Bento</a>
+      <span class="sep"></span>
+      <button type="button" id="btn-replay">Rejouer</button>
+      <button type="button" id="btn-exit">Tester sortie</button>
+    </nav>
+
+    <div id="loading">
+      <div id="loading-backdrop"></div>
+      <div id="loading-envelope">
+        <div id="loading-card">
+          <div class="bento-block bento-profile">
+            <div class="bento-identity">
+              <div class="bento-avatars">
+                <img src="/david_profile.jpeg" alt="David HERELLE" />
+                <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="GitHub dinatih" />
+              </div>
+              <div id="loading-title">
+                <h1>David HERELLE</h1>
+                <h2>Tech Lead · Architecte Web &amp; Agents IA</h2>
+              </div>
+            </div>
+            <span class="status-pill">Dispo 2026</span>
+          </div>
+
+          <div class="bento-block bento-tags">
+            <span class="tag-pill accent">8+ ans · JobTeaser, Tracktor</span>
+            <span class="tag-pill">Ruby on Rails</span>
+            <span class="tag-pill">React / R3F</span>
+            <span class="tag-pill">Three.js</span>
+            <span class="tag-pill">Agents IA</span>
+          </div>
+
+          <div class="bento-block bento-links">
+            <span>Paris 13e (BNF / Station F)</span>
+            <div class="bento-link-btns">
+              <a href="https://github.com/dinatih" target="_blank" rel="noreferrer">GitHub</a>
+              <a href="https://www.linkedin.com/in/dinatih/" target="_blank" rel="noreferrer">LinkedIn</a>
+            </div>
+          </div>
+
+          <div id="loading-progress-section" class="bento-block">
+            <div id="loading-track"><div id="loading-bar"></div></div>
+            <div class="bento-progress-meta">
+              <div id="loading-item">Chargement des éléments…</div>
+              <div id="loading-shaders" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const bar = document.getElementById('loading-bar');
+        const item = document.getElementById('loading-item');
+        const shaders = document.getElementById('loading-shaders');
+        const card = document.getElementById('loading-card');
+        const envelope = document.getElementById('loading-envelope');
+        const backdrop = document.getElementById('loading-backdrop');
+        let timer;
+
+        function runSimulation() {
+          clearInterval(timer);
+          card.classList.remove('exiting');
+          envelope.classList.remove('exiting');
+          backdrop.classList.remove('exiting');
+          bar.classList.remove('is-preparing');
+          let pct = 0;
+          const files = ['lara_rig.glb', 'kitchen_cabinet.glb', 'bermuda_ground.webp', 'ciel_paris_hdr.exr', 'walking_anim.glb'];
+          timer = setInterval(() => {
+            pct += 4;
+            if (pct < 100) {
+              bar.style.width = pct + '%';
+              const f = files[Math.floor((pct / 100) * files.length)];
+              item.textContent = `📦 ${f} (${Math.ceil(pct / 2)}/50)`;
+              shaders.textContent = '';
+            } else {
+              clearInterval(timer);
+              bar.style.width = '100%';
+              bar.classList.add('is-preparing');
+              item.textContent = '⚡ Compilation des shaders GPU…';
+              shaders.textContent = 'Shaders : 42';
+            }
+          }, 90);
+        }
+
+        document.getElementById('btn-replay').addEventListener('click', runSimulation);
+        document.getElementById('btn-exit').addEventListener('click', () => {
+          card.classList.add('exiting');
+          envelope.classList.add('exiting');
+          backdrop.classList.add('exiting');
+        });
+        runSimulation();
+      })();
+    </script>
+  </body>
+</html>
