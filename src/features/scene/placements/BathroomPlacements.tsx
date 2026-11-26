@@ -48,6 +48,7 @@ const TOWEL_RACK_BASE_Y = 111;
 const TOWEL_RACK_Z = BATH_NORTH_WALL + 64 + 20.1;
 const HEATER_ABOVE_RACK_GAP = 22;
 const HEATER_DEPTH = 18;
+const HEATER_WALL_GAP = 0.5;
 // Viewed from the bathroom, the right-hand closet panel is the -X side.
 const CLOSET_RIGHT_EDGE_X = SDB_CLOSET_X - SDB_CLOSET_W / 2;
 const CLOSET_SHELF_FRONT_Z = SDB_CLOSET_Z + SDB_CLOSET_D / 2;
@@ -116,7 +117,7 @@ export function BathroomEquipment() {
       </group>
 
       {/* Cecotec : bas du chauffage à 22 cm au-dessus du sommet du porte-serviettes. */}
-      <group position={[BATH_WEST_WALL + HEATER_DEPTH / 2, TOWEL_RACK_BASE_Y + WY0083_HEIGHT + HEATER_ABOVE_RACK_GAP, TOWEL_RACK_Z]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Chauffage Cecotec ReadyWarm' }}>
+      <group position={[BATH_WEST_WALL + HEATER_DEPTH / 2 + HEATER_WALL_GAP, TOWEL_RACK_BASE_Y + WY0083_HEIGHT + HEATER_ABOVE_RACK_GAP, TOWEL_RACK_Z]} rotation-y={Math.PI / 2} userData={{ sceneItemRoot: true, itemName: 'Chauffage Cecotec ReadyWarm' }}>
         <CecotecReadywarm />
       </group>
 
@@ -219,7 +220,7 @@ export function BathroomFurnishings() {
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
-      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, 0, BATH_SOUTH_WALL - 53]} userData={{ sceneItemRoot: true, itemName: 'Tapis Gazon SDB' }}>
+      <group position={[(BATH_WEST_WALL + BATH_EAST_WALL) / 2, 0.5, BATH_SOUTH_WALL - 53]} userData={{ sceneItemRoot: true, itemName: 'Tapis Gazon SDB' }}>
         <GrassRug />
       </group>
 

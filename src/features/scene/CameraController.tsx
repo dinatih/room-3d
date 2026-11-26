@@ -1040,7 +1040,7 @@ export function CameraController({ planeMode = false }: { planeMode?: boolean } 
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     if (cam.isPerspectiveCamera) {
-      cam.near = (mode === 'follow' || mode === 'fpv') ? 0.1 : 5;
+      cam.near = mode === 'fpv' ? 0.1 : 5;
       cam.updateProjectionMatrix();
     }
 
