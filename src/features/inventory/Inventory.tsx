@@ -8,6 +8,7 @@ import { getObjectActionIds } from '@features/scene/objectActions';
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { INVENTORY, CATEGORIES, STORAGE_SPACES, WIG_SOURCES, getWigSource, type InventoryItem, type StorageSpace } from './inventoryData';
 import { InventoryPreview } from './InventoryPreview';
+import { ModelFileStats } from './ModelFileStats';
 import { InventorySmartActions, getInventorySmartObjects, type SmartActionPreviewRequest } from './InventorySmartActions';
 import { SpatialZonePreview, SpatialZoneAiToggle } from './SpatialZonePreview';
 import { SpatialZoneManager, SpatialZone } from '@features/scene/ai/SpatialZone';
@@ -167,7 +168,7 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
             </div>
             <div className="col-12">
               <div className="card bg-info-subtle border border-info-subtle p-2">
-                <div className="text-uppercase text-info-emphasis fw-bold small" style={{ fontSize: '0.7rem' }}>Triangles & Draw Calls</div>
+                <div className="text-uppercase text-info-emphasis fw-bold small" style={{ fontSize: '0.7rem' }}>Aperçu affiché : triangles & draw calls</div>
                 <div className="fw-semibold small">
                   {glbStats ? (
                     <>
@@ -346,30 +347,15 @@ function ItemDetailContent({ item, wigColor, wigBustVariant, initialSmartAction 
               <div className="col-6">
                 <div className="card bg-primary-subtle border border-primary-subtle p-2 h-100">
                   <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Fichier GLB</div>
-                  {(() => {
-                    const activeGlbPath = glbStats?.glbPath !== undefined ? glbStats.glbPath : glbPath;
-                    const glbLabel = activeGlbPath ? activeGlbPath.split('/').pop() : 'Procédural (Drona.tsx)';
-                    return (
-                      <div className="fw-semibold small text-truncate" title={activeGlbPath || glbLabel}>
-                        {glbLabel}
-                        {glbStats?.fileSize !== undefined ? (
-                          <span className="d-block text-muted small mt-1">
-                            Taille : {glbStats.fileSize === 0
-                              ? '0 Ko (procédural)'
-                              : glbStats.fileSize > 1024 * 1024
-                                ? `${(glbStats.fileSize / (1024 * 1024)).toFixed(2)} Mo`
-                                : `${(glbStats.fileSize / 1024).toFixed(1)} Ko`}
-                          </span>
-                        ) : null}
-                      </div>
-                    );
-                  })()}
+                  {(glbStats?.glbPath ?? glbPath) ? (
+                    <ModelFileStats path={glbStats?.glbPath ?? glbPath} />
+                  ) : <div className="small">Procédural — aucun fichier GLB</div>}
                 </div>
               </div>
 
               <div className="col-6">
                 <div className="card bg-primary-subtle border border-primary-subtle p-2 h-100">
-                  <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Triangles & Draw Calls</div>
+                  <div className="text-uppercase text-primary fw-bold small" style={{ fontSize: '0.7rem' }}>Aperçu affiché : triangles & draw calls</div>
                   <div className="fw-semibold small">
                     {glbStats ? (
                       <>

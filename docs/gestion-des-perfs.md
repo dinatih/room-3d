@@ -2,6 +2,19 @@
 
 ## Audit des ressources et réduction mémoire du 26 novembre 2026
 
+L’inventaire affiche désormais les statistiques propres à chaque fichier : original/aperçu et variante de scène, ou fichier unique si les deux utilisent le même modèle. Le poids des buffers d’animation est séparé du poids total ; les triangles et primitives du fichier incluent les parties masquées et sont distincts des compteurs de l’aperçu affiché. Ces chiffres ne mesurent pas le RSS ni les draw calls effectifs du rendu.
+
+Le catalogue `public/model-file-stats.json` est généré par `python scripts/build-model-file-stats.py` ; le régénérer après ajout ou remplacement de modèles. Il est chargé à l’ouverture d’une fiche, sans télécharger les modèles pour lire leurs statistiques. Les GLB vides sont signalés explicitement.
+
+Exemples vérifiés : Shiba original 59,18 Mio / scène 48,06 Mio, avec 79 animations et 42,48 Mio de buffers d’animation dans les deux fichiers ; Robin utilise un fichier unique de 28,77 Mio, avec 12 animations et 23,55 Mio de buffers d’animation.
+
+Chemins sur cette machine :
+
+- /home/dinatih/Projects/room-3d/public/characters/ushiro/ushiro.glb
+- /home/dinatih/Projects/room-3d/public/characters/ushiro/ushiro-scene-512.glb
+- /home/dinatih/Projects/room-3d/public/characters/robin/robin.glb
+
+
 L'inventaire de 4 161 GLB, variantes comprises à ce stade de l'audit, distingue le poids du fichier compressé du volume de pixels décodés. Le relevé navigateur initial est `test-results/asset-audit-sJ5VUv/assets.json` : 153 chemins de modèles présents, environ 703,4 Mio de pixels RGBA de base pour les sources de textures uniques des matériaux montés. Cela exclut notamment mipmaps, render targets, buffers temporaires et caches de modèles non montés. Un fichier vide préexistant est signalé explicitement par l'audit : `public/items/tous49514017/Tous49514017.glb`.
 
 Corrections appliquées :
