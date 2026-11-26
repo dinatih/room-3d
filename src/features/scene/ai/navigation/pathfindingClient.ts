@@ -236,6 +236,14 @@ export function readDuoAnchor(graph: NavigationGraph, duo: DuoQuery): Point | nu
   return navigationQuery(`${graph.id}:duo:${JSON.stringify(duo)}`, () => request(graph.id, graph.definition, { kind: 'duo', duo })) as Point | null;
 }
 
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', () => {
+    worker?.terminate();
+    worker = undefined;
+    workerGraphIds.clear();
+  });
+}
+
 if (import.meta.hot) import.meta.hot.dispose(() => {
   worker?.terminate();
   fail(new Error('Navigation worker replaced during hot reload'));

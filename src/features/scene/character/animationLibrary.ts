@@ -97,4 +97,11 @@ export function acquireAnimationLibrary(scene: THREE.Object3D) {
   };
 }
 
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', () => {
+    worker?.terminate();
+    worker = undefined;
+  });
+}
+
 if (import.meta.hot) import.meta.hot.dispose(() => { worker?.terminate(); fail(new Error('Animation worker replaced during hot reload')); });

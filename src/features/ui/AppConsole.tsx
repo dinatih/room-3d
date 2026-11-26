@@ -118,7 +118,7 @@ const LOG_CATEGORY_LABELS: Record<AppLogCategory, string> = {
 
 let _logCounter = 0;
 export const APP_LOG_HISTORY: AppLogEntry[] = [];
-const MAX_LOGS = 10_000;
+const MAX_LOGS = 1_000;
 
 function inferLogCategory(tag: string, meta?: AppLogMetadata): AppLogCategory {
   if (meta?.category) return meta.category;

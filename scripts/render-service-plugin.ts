@@ -1,10 +1,23 @@
 import type { Plugin } from 'vite';
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { closeSync, openSync } from 'node:fs';
 
 const RENDER_PORT = Number(process.env.RENDER_PORT || 5174);
 const SERVICE_URL = `http://127.0.0.1:${RENDER_PORT}`;
 const LOG_FILE = '/tmp/room-3d-render-service.log';
+
+let managedChild: ChildProcess | null = null;
+
+function stopManagedRenderService(): void {
+  const child = managedChild;
+  if (!child || child.pid === undefined) return;
+  managedChild = null;
+  try {
+    process.kill(-child.pid, 'SIGTERM');
+  } catch {
+    try { child.kill('SIGTERM'); } catch { /* ignore */ }
+  }
+}
 
 async function isRenderServiceReady(): Promise<boolean> {
   try {
@@ -28,6 +41,10 @@ async function startRenderService(root: string): Promise<void> {
   });
   closeSync(logFd);
   child.unref();
+  managedChild = child;
+  child.once('exit', () => {
+    if (managedChild === child) managedChild = null;
+  });
 
   let exitError: string | null = null;
   const onError = (error: Error) => {
@@ -60,6 +77,8 @@ export function renderServicePlugin(): Plugin {
   return {
     name: 'render-service-launcher',
     configureServer(server) {
+      server.httpServer?.once('close', stopManagedRenderService);
+      process.once('exit', stopManagedRenderService);
       server.middlewares.use('/api/render-service/start', (req, res) => {
         if (req.method !== 'POST') {
           res.statusCode = 405;

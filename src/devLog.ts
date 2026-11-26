@@ -1,7 +1,7 @@
 /** Development journal, independent of console visibility and rendering frames. */
 export const DEV_LOG_ENABLED = Boolean(import.meta.hot);
 type DevEntry = { tag: string; category?: string; action?: string; message?: string; data?: unknown };
-const host = window as Window & { __roomDevLog?: { session: string; pageStartedAt: string; sequence: number } };
+const host = window as Window & { __roomDevLog?: { session: string; pageStartedAt: string; sequence: number; closed?: boolean } };
 const firstLoad = DEV_LOG_ENABLED && !host.__roomDevLog;
 const session = DEV_LOG_ENABLED ? host.__roomDevLog ??= {
   session: crypto.randomUUID(), pageStartedAt: new Date(performance.timeOrigin).toISOString(), sequence: 0,
@@ -48,8 +48,10 @@ function sanitizeForLog(
       if (jsonVal !== target) return sanitizeForLog(jsonVal, ancestors, normalized);
     }
     const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(target)) {
-      const sanitized = sanitizeForLog(v, ancestors, normalized);
+    const record = target as Record<string, unknown>;
+    for (const k in record) {
+      if (!Object.prototype.hasOwnProperty.call(record, k)) continue;
+      const sanitized = sanitizeForLog(record[k], ancestors, normalized);
       if (sanitized !== undefined) out[k] = sanitized;
     }
     return out;
@@ -59,7 +61,7 @@ function sanitizeForLog(
 }
 
 export function devLog(entry: DevEntry): void {
-  if (!session) return;
+  if (!session || session.closed) return;
   const started = performance.now();
   const serializable = sanitizeForLog(entry, new Set<object>(), new WeakMap<object, object>()) as Record<string, unknown>;
   import.meta.hot!.send('room:app-log', {
@@ -85,6 +87,10 @@ if (firstLoad) {
     console[level] = (...args: unknown[]) => { devLog({ tag: 'error', action: `console_${level}`, data: args }); original(...args); };
   }
   document.addEventListener('visibilitychange', () => devLog({ tag: 'system', action: 'page_visibility', data: document.visibilityState }));
-  window.addEventListener('pagehide', () => devLog({ tag: 'system', action: 'page_hide' }));
-  setInterval(() => devLog({ tag: 'system', action: 'page_heartbeat', data: { visibility: document.visibilityState } }), 1000);
+  const heartbeat = setInterval(() => devLog({ tag: 'system', action: 'page_heartbeat', data: { visibility: document.visibilityState } }), 1000);
+  window.addEventListener('pagehide', () => {
+    clearInterval(heartbeat);
+    devLog({ tag: 'system', action: 'page_hide' });
+    if (session) session.closed = true;
+  });
 }

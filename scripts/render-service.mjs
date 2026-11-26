@@ -75,3 +75,16 @@ for (const file of await readdir('renders')) {
 }
 await server.listen();
 console.log(`Service raytracing : ${serviceUrl}/render-jobs.html — résultats dans renders/`);
+
+async function shutdown() {
+  for (const job of jobs.values()) {
+    if (job.browser) {
+      job.state = 'cancelled';
+      try { await job.browser.close(); } catch { /* ignore */ }
+    }
+  }
+  try { await server.close(); } catch { /* ignore */ }
+  process.exit(0);
+}
+process.once('SIGTERM', () => void shutdown());
+process.once('SIGINT', () => void shutdown());

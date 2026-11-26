@@ -925,10 +925,13 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     const workerBlob = new Blob([
       'let timer = null; self.onmessage = e => { if (e.data.action === "start") { clearInterval(timer); timer = setInterval(() => postMessage(0), e.data.ms || 25); } else { clearInterval(timer); } };'
     ], { type: 'application/javascript' });
-    const bgWorker = new Worker(URL.createObjectURL(workerBlob));
+    const workerUrl = URL.createObjectURL(workerBlob);
+    const bgWorker = new Worker(workerUrl);
+    URL.revokeObjectURL(workerUrl);
     let bgActive = false;
 
     const scheduleStep = (delay = 0) => {
+      if (isDisposed) return;
       if (document.hidden) {
         if (!bgActive) {
           bgWorker.postMessage({ action: 'start', ms: Math.max(10, delay || GPU_COOLDOWN_MS) });
@@ -950,13 +953,13 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     };
 
     bgWorker.onmessage = () => {
-      if (document.hidden && isRunning) {
+      if (document.hidden && isRunning && !isDisposed) {
         renderStep();
       }
     };
 
     const onVisibilityChange = () => {
-      if (!isRunning) return;
+      if (!isRunning || isDisposed) return;
       if (!document.hidden && bgActive) {
         bgWorker.postMessage({ action: 'stop' });
         bgActive = false;
@@ -965,7 +968,17 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
         scheduleStep(GPU_COOLDOWN_MS);
       }
     };
+    const onPageHide = () => {
+      isDisposed = true;
+      isRunning = false;
+      bgActive = false;
+      bgWorker.terminate();
+      bvhWorker.dispose();
+      if (timeoutId) clearTimeout(timeoutId);
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
 
     const renderStep = () => {
       if (!pathTracerRef.current || isPausedRef.current || isDisposed) {
@@ -1118,6 +1131,7 @@ export function RaytracingPhotoModal({ gl, scene, camera, onClose }: RaytracingP
     return () => {
       isDisposed = true;
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
       bgWorker.terminate();
       bvhWorker.dispose();
       clearTimeout(timer);

@@ -380,15 +380,21 @@ function FrameloopController({ isIdle, showInventory, isCvModalOpen, isPhotoMode
       setFrameloop(loop);
       if (loop !== 'never') invalidate();
     };
+    const stopLoop = () => {
+      internal.frames = 0;
+      setFrameloop('never');
+    };
     const events = ['start-camera-intro', 'vr-state-change', 'immersive-state-change'];
     updateLoop();
     events.forEach(event => document.addEventListener(event, updateLoop));
     gl.xr.addEventListener('sessionend', updateLoop);
     window.addEventListener('camera-intro-finished', updateLoop);
+    window.addEventListener('pagehide', stopLoop);
     return () => {
       events.forEach(event => document.removeEventListener(event, updateLoop));
       gl.xr.removeEventListener('sessionend', updateLoop);
       window.removeEventListener('camera-intro-finished', updateLoop);
+      window.removeEventListener('pagehide', stopLoop);
     };
   }, [isIdle, showInventory, isCvModalOpen, isPhotoModeOpen, isFisheyeModalOpen, isOrbiting, setFrameloop, invalidate, gl, internal]);
 
