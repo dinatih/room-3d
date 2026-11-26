@@ -1,7 +1,7 @@
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
-import { claimLifeMeal, lifeHousehold, LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, lifeAffinity, getLifeMealPartner, socialPartnerScore, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeRelationships, type LifeCharacterId, type LifeCandidate } from './laraLife';
+import { claimLifeMeal, lifeHousehold, LIFE_INITIAL_ACTIVITIES, LIFE_PHASE_LABELS, canStartLifeActivity, lifeSpecialtyActivity, getLifeMealPartner, isLifeCharacter, isLifeSeat, lifeSocialActivity, type LifePhase, type LifeCharacterId, type LifeCandidate } from './laraLife';
 import { homeDirt, getHomeTask } from './lifeHousekeeping';
 
 function mealPreparations(characterId: string, excluded: ReadonlySet<string>) {
@@ -68,9 +68,8 @@ export function buildAutonomousActivities(characterId: string): AgentInstruction
   return activities.flatMap(({ id, slotId }) => buildSmartObjectInstructionSequence(id, slotId, characterId));
 }
 
-export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, places: Record<string, number> = {}, relationships: LifeRelationships = {}, elapsedSeconds = 0, excluded: ReadonlySet<string> = new Set()): LifeCandidate[] {
+export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: boolean, excluded: ReadonlySet<string> = new Set()): LifeCandidate[] {
   const objects = getAllSmartObjects().filter(object => object.id !== 'bed-arrangement' && OccupancyManager.canUseObject(object.id, characterId));
-  const reservations = OccupancyManager.getReservations();
   const canPrepare = lifeHousehold.meals.portions > 0 || lifeHousehold.meals.held[characterId] || mealPreparations(characterId, excluded).length > 0;
   return objects.flatMap(object =>
     object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
@@ -92,16 +91,13 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
           : seat ? 'rest' : null);
         if (activity && activity !== 'massage' && !canStartLifeActivity(characterId, activity)) return [];
         const position = slot.offset ?? object.position;
-        const avoidedNeighbors = seat || object.category === 'bed' || object.id === 'bathtub-garden' ? [...new Set(reservations
-          .filter(reservation => reservation.slot.slice(0, reservation.slot.indexOf(':')) === object.id && lifeAffinity(characterId, reservation.characterId) < 0)
-          .map(reservation => reservation.characterId))] : [];
-        const candidate = { ...(avoidedNeighbors.length ? { avoidedNeighbors } : {}), id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
-          visits: places[`${object.id}:${slot.slotId}`] ?? 0, ...(task ? { urgency: homeDirt[task] } : {}) };
+        const candidate = { id: object.id, slotId: slot.slotId, x: position[0], z: position[2],
+          ...(task ? { urgency: homeDirt[task] } : {}) };
         if (activity === 'massage') return [{ ...candidate, activity: 'receive-massage' }, ...(canStartLifeActivity(characterId, 'massage') ? [{ ...candidate, activity: 'massage' }] : [])] as LifeCandidate[];
-        const mealPartnerId = seat && !slot.isDuo ? getLifeMealPartner(characterId, object.id, slot.slotId, relationships, elapsedSeconds) : undefined;
+        const mealPartnerId = seat && !slot.isDuo ? getLifeMealPartner(characterId, object.id, slot.slotId) : undefined;
         return activity ? [{ ...candidate, activity }, ...(activity === 'work' ? [{ ...candidate, activity: 'read' }] : []),
           ...(activity === 'rest' && slot.isDuo ? [{ ...candidate, activity: 'social' }] : []),
-          ...(activity === 'rest' && !slot.isDuo && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal', ...(mealPartnerId ? { mealPartnerId, companyScore: socialPartnerScore(relationships, mealPartnerId, elapsedSeconds, 'meal') } : {}) }] : [])] as LifeCandidate[] : [];
+          ...(activity === 'rest' && !slot.isDuo && canPrepare && !handsDirty ? [{ ...candidate, activity: 'meal', ...(mealPartnerId ? { mealPartnerId, companyScore: 1 } : {}) }] : [])] as LifeCandidate[] : [];
       }));
 }
 

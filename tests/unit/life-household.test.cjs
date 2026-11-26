@@ -67,13 +67,13 @@ it('danser ou combattre fatigue davantage que le bureau, et recevoir un massage 
   assert(after('receive-massage').rest < needs.rest);
 });
 
-it('la compagnie de danse exige une activité réelle dans le même lieu, sans ennemie', () => {
+it('la compagnie de danse exige une activité réelle dans le même lieu', () => {
   life.activeLifeDances.set('rosanna', 'est-neighbor-flat');
   life.activeLifeDances.set('marissa', 'est-neighbor-flat');
   life.activeLifeDances.set('delphina', 'rain-dance');
-  assert.equal(life.getLifeDancePartner('sabira', 'est-neighbor-flat', life.createLife('sabira').relationships, 0), 'rosanna');
+  assert.equal(life.getLifeDancePartner('sabira', 'est-neighbor-flat'), 'rosanna');
   life.activeLifeDances.delete('rosanna');
-  assert.equal(life.getLifeDancePartner('sabira', 'est-neighbor-flat', {}, 0), undefined);
+  assert.equal(life.getLifeDancePartner('sabira', 'est-neighbor-flat'), 'marissa');
 });
 
 it('attend les convives ayant une portion, puis laisse tout le groupe manger', () => {

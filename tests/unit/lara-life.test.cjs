@@ -75,17 +75,17 @@ describe('Besoins de Lara Native', () => {
   });
 
   it('choisit selon l’urgence, puis la mémoire, la proximité et un ordre stable', () => {
-    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 80, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8, {}, 0).activity, 'rest');
-    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, 'work', 8, {}, 0).activity, 'rest');
-    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8, {}, 0).activity, 'work');
+    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 80, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8).activity, 'rest');
+    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, 'work', 8).activity, 'rest');
+    assert.equal(chooseLifeActivity({ rest: 50, work: 50, walk: 50, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8).activity, 'work');
     const seats = ['b', 'a'].map(id => ({ ...candidates[1], id }));
-    assert.equal(chooseLifeActivity({ rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, seats, position, null, 8, {}, 0).id, 'a');
+    assert.equal(chooseLifeActivity({ rest: 90, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, seats, position, null, 8).id, 'a');
   });
 
   it('fait une pause si les besoins sont faibles ou les activités indisponibles', () => {
-    assert.equal(chooseLifeActivity({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8, {}, 0), null);
-    assert.equal(chooseLifeActivity({ rest: 90, work: 90, walk: 90, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 }, [], position, null, 8, {}, 0), null);
-    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, [candidates[0]], position, null, 8, {}, 0).activity, 'work');
+    assert.equal(chooseLifeActivity({ rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, candidates, position, null, 8), null);
+    assert.equal(chooseLifeActivity({ rest: 90, work: 90, walk: 90, meal: 90, hygiene: 0, toilet: 0, company: 0, environment: 0 }, [], position, null, 8), null);
+    assert.equal(chooseLifeActivity({ rest: 90, work: 50, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 }, [candidates[0]], position, null, 8).activity, 'work');
   });
 
   it('borne les besoins et signale explicitement les données invalides', () => {
@@ -144,7 +144,7 @@ it('fait monter la faim pendant la marche et les autres activités, puis la réd
   for (const activity of [null, 'rest', 'work', 'walk', 'pause']) assert(evolveLife(initial, 10, activity, true).meal > initial.meal);
   assert.equal(evolveLife(initial, 10, 'meal', false).meal, 35);
   assert.equal(evolveLife(initial, 60, 'meal', false).meal, 0);
-  assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null, 8, {}, 0).activity, 'meal');
+  assert.equal(chooseLifeActivity({ ...initial, meal: 90 }, [{ ...candidates[1], activity: 'meal' }], position, null, 8).activity, 'meal');
 });
 
 it('récupère du repos en mangeant assis, seulement pendant le repas réel', () => {
@@ -162,11 +162,11 @@ it('récupère du repos en mangeant assis, seulement pendant le repas réel', ()
 it('réserve le lit à la grande fatigue et choisit une pause assise si tous les lits sont indisponibles', () => {
   const bed = { activity: 'sleep', id: 'bed-west', slotId: 'lie-down', x: 1000, z: 0 };
   const mild = { rest: LIFE_SETTINGS.sleepPriority - 1, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
-  assert.equal(chooseLifeActivity(mild, [...candidates, bed], position, null, 8, {}, 0).activity, 'rest');
+  assert.equal(chooseLifeActivity(mild, [...candidates, bed], position, null, 8).activity, 'rest');
   const tired = { ...mild, rest: LIFE_SETTINGS.sleepPriority };
-  assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null, 8, {}, 0).activity, 'sleep', 'The nearer sofa must not replace an available bed');
-  assert.equal(chooseLifeActivity(tired, candidates, position, null, 8, {}, 0).activity, 'rest');
-  assert.equal(chooseLifeActivity(tired, [], position, null, 8, {}, 0), null);
+  assert.equal(chooseLifeActivity(tired, [...candidates, bed], position, null, 8).activity, 'sleep', 'The nearer sofa must not replace an available bed');
+  assert.equal(chooseLifeActivity(tired, candidates, position, null, 8).activity, 'rest');
+  assert.equal(chooseLifeActivity(tired, [], position, null, 8), null);
   const rested = evolveLife(tired, 120, 'sleep', false);
   assert.equal(rested.rest, 0);
   assert(rested.meal > tired.meal);
@@ -178,7 +178,7 @@ it('finit par choisir le sommeil au cours d’une vie autonome, malgré les paus
   let needs = createLife('native').needs, last = 'work', slept = false;
   needs = evolveLife(needs, LIFE_SETTINGS.activitySeconds, 'work', false);
   for (let seconds = LIFE_SETTINGS.activitySeconds; seconds < 48 * 60;) {
-    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, lifeClock(seconds).hour, {}, seconds);
+    const selected = chooseLifeActivity(needs, [...candidates, bed], position, last, lifeClock(seconds).hour);
     if (selected?.activity === 'sleep') { slept = true; break; }
     const activity = selected?.activity ?? 'pause';
     if (activity === 'walk') needs = evolveLife(needs, 8, null, true);
@@ -230,7 +230,7 @@ it('distingue toilettes, douche et lavage des mains, sans récupération pendant
   assert.equal(lifeEffect('toilet', 'use-toilet'), 'toilet');
   assert.equal(lifeEffect('toilet', 'wash-hands'), 'wash-hands');
   const wash = { activity: 'wash-hands', id: 'sink', slotId: 'wash-hands', x: 100, z: 0 };
-  assert.equal(chooseLifeActivity({ ...needs, rest: 100 }, [...candidates, wash], position, null, 8, {}, 0), wash);
+  assert.equal(chooseLifeActivity({ ...needs, rest: 100 }, [...candidates, wash], position, null, 8), wash);
 });
 
 it('préserve la chaîne sanitaire et les événements des objets, et interdit un repas avec les mains sales', () => {
@@ -301,17 +301,17 @@ it('organise les loisirs, repas et sommeil selon l’heure sans ignorer les urge
   assert(routineActivities(12).includes('meal'));
   const options = ['work', 'read', 'watch-tv', 'social', 'meal', 'sleep', 'rest'].map(activity => ({ ...candidates[0], activity, id: activity }));
   const needs = { rest: 50, work: 50, walk: 0, meal: 40, hygiene: 0, toilet: 0, company: 50, environment: 0 };
-  assert.equal(chooseLifeActivity(needs, options, position, null, 10, {}, 0).activity, 'read');
-  assert.equal(chooseLifeActivity({ ...needs, company: 65 }, options, position, null, 10, {}, 0).activity, 'social');
-  assert.equal(chooseLifeActivity(needs, options, position, null, 12, {}, 0).activity, 'meal');
-  assert.equal(chooseLifeActivity({ ...needs, rest: 0 }, options, position, 'read', 21, {}, 0).activity, 'social');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 10).activity, 'read');
+  assert.equal(chooseLifeActivity({ ...needs, company: 65 }, options, position, null, 10).activity, 'social');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 12).activity, 'meal');
+  assert.equal(chooseLifeActivity({ ...needs, rest: 0 }, options, position, 'read', 21).activity, 'social');
   for (const hour of [22, 23]) {
     assert(routineActivities(hour).includes('sleep'));
-    assert.equal(chooseLifeActivity(needs, options, position, null, hour, {}, 0).activity, 'sleep');
+    assert.equal(chooseLifeActivity(needs, options, position, null, hour).activity, 'sleep');
     assert.equal(lifeClock((hour - 8) * 60).period, 'Soirée');
   }
-  assert.equal(chooseLifeActivity(needs, options, position, null, 0, {}, 0).activity, 'sleep');
-  assert.equal(chooseLifeActivity({ ...needs, meal: 100 }, options, position, null, 23, {}, 0).activity, 'meal');
+  assert.equal(chooseLifeActivity(needs, options, position, null, 0).activity, 'sleep');
+  assert.equal(chooseLifeActivity({ ...needs, meal: 100 }, options, position, null, 23).activity, 'meal');
   for (const activity of ['read', 'watch-tv', 'social']) {
     assert(evolveLife(needs, 10, activity, false).work < needs.work);
     assert.equal(lifeEffect(activity), null, 'Travelling to leisure must not relieve boredom');
@@ -345,68 +345,14 @@ it('propose les loisirs libres et conserve leurs phases et les actions de la té
   }
 });
 
-it('apprend ses goûts uniquement grâce au soulagement réel et conserve les souvenirs sans modifier les besoins', () => {
-  const { rememberLifeActivity, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife('native'), before = { ...life.needs, work: 80 };
-  assert.equal(favoriteLifeActivity(life.memory), null);
-  rememberLifeActivity(life, null, before, before);
-  assert.deepEqual(life.memory, {});
-  rememberLifeActivity(life, 'read', before, before);
-  assert.equal(favoriteLifeActivity(life.memory), null, 'A remembered activity is not automatically enjoyable');
-  life.elapsedSeconds = 60;
-  const after = evolveLife(before, 20, 'read', false);
-  rememberLifeActivity(life, 'read', before, after);
-  assert.equal(life.memory.read.satisfaction, 24);
-  assert.equal(life.memory.read.lastAt, 60);
-  assert.equal(favoriteLifeActivity(life.memory), 'read');
-  rememberLifeActivity(life, 'watch-tv', before, evolveLife(before, 30, 'watch-tv', false));
-  assert.equal(favoriteLifeActivity(life.memory), 'watch-tv', 'Tastes must evolve with experience');
-  assert.equal(before.work, 80);
-});
-
-it('varie ses loisirs avec la mémoire, garde une affinité pour ses favoris et respecte les urgences', () => {
-  const needs = { rest: 0, work: 60, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 60, environment: 0 };
-  const options = ['read', 'watch-tv', 'social'].map(activity => ({ ...candidates[0], id: activity, activity }));
-  const memory = { read: { satisfaction: 60, lastAt: 0 }, 'watch-tv': { satisfaction: 10, lastAt: 0 } };
-  const choose = (entries, at, available = options, values = needs) => chooseLifeActivity(values, available, position, null, 21, entries, at);
-  assert.equal(choose(memory, 0).activity, 'social', 'An untried activity must compete with recent favorites');
-  assert.equal(choose(memory, 600).activity, 'read', 'An older favorite can become attractive again');
-  const equalTastes = { read: { satisfaction: 10, lastAt: 600 }, 'watch-tv': { satisfaction: 10, lastAt: 0 } };
-  assert.equal(choose(equalTastes, 600, options.slice(0, 2)).activity, 'watch-tv');
-  assert.equal(choose(memory, 600, [...options, { ...candidates[1], activity: 'meal' }], { ...needs, meal: 100 }).activity, 'meal');
-  assert.equal(choose(memory, 600, [options[1]]).activity, 'watch-tv', 'An unavailable favorite must not prevent another activity');
-});
-
 it('laisse les goûts départager des besoins différents sans supplanter une urgence', () => {
   const options = ['read', 'social'].map(activity => ({ ...candidates[0], id: activity, activity }));
   const needs = { ...createLife('native').needs, rest: 0, work: 50, company: 65, walk: 0 };
-  const reader = { read: { satisfaction: 90, lastAt: 0 }, social: { satisfaction: 10, lastAt: 0 } };
-  const sociable = { read: { satisfaction: 10, lastAt: 0 }, social: { satisfaction: 90, lastAt: 0 } };
-  const choose = (memory, values = needs) => chooseLifeActivity(values, options, position, null, 21, memory, 600);
-  assert.equal(choose(reader).activity, 'read');
-  assert.equal(choose(sociable).activity, 'social');
-  assert.equal(choose(reader, { ...needs, company: LIFE_SETTINGS.sleepPriority }).activity, 'social');
-  assert.equal(choose({ ...reader, read: { ...reader.read, lastAt: 600 } }).activity, 'social');
-  assert.equal(choose(reader, { ...needs, work: 0 }).activity, 'social', 'A favorite cannot create an unmet need');
-});
-
-it('construit les affinités seulement avec du temps réellement partagé et préserve les nouvelles rencontres', () => {
-  const { rememberLifeConversation, closestLifeFriend, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife('native');
-  assert.equal(closestLifeFriend(life.relationships), null);
-  rememberLifeConversation(life, 'rosanna', 0);
-  assert.deepEqual(life.relationships, {});
-  life.elapsedSeconds = 60;
-  rememberLifeConversation(life, 'rosanna', 30);
-  rememberLifeConversation(life, 'rosanna', 30);
-  assert.deepEqual(life.relationships.rosanna, { seconds: 60, lastAt: 60 });
-  assert.equal(closestLifeFriend(life.relationships), 'rosanna');
-  assert(socialPartnerScore(life.relationships, 'marissa', 60) > socialPartnerScore(life.relationships, 'rosanna', 60), 'A recent conversation must leave room to meet someone else');
-  assert(socialPartnerScore(life.relationships, 'rosanna', 600) > socialPartnerScore(life.relationships, 'marissa', 600), 'Familiar company becomes attractive again after time apart');
-  rememberLifeConversation(life, 'marissa', 90);
-  assert.equal(closestLifeFriend(life.relationships), 'marissa');
-  for (const seconds of [-1, NaN, Infinity]) assert.throws(() => rememberLifeConversation(life, 'rosanna', seconds));
-  assert.throws(() => rememberLifeConversation(life, 'native', 1));
+  const choose = (preferences, values = needs) => chooseLifeActivity(values, options, position, null, 21, preferences);
+  assert.equal(choose(['read']).activity, 'read');
+  assert.equal(choose(['social']).activity, 'social');
+  assert.equal(choose(['read'], { ...needs, company: LIFE_SETTINGS.sleepPriority }).activity, 'social');
+  assert.equal(choose(['read'], { ...needs, work: 0 }).activity, 'social');
 });
 
 it('distingue la solitude de l’ennui et recherche une discussion pour le besoin de compagnie', () => {
@@ -420,30 +366,14 @@ it('distingue la solitude de l’ennui et recherche une discussion pour le besoi
   const satisfied = evolveLife(lonely, 60, 'social', false);
   assert.equal(satisfied.company, 0);
   assert.equal(getLifeMood(satisfied).label, 'Épanouie');
-  assert.equal(chooseLifeActivity(lonely, [...candidates, conversation], position, null, 10, {}, 0), conversation);
-  assert.equal(chooseLifeActivity({ ...lonely, company: 0, environment: 0, work: 90 }, [conversation], position, null, 21, {}, 0), null, 'Boredom alone must not masquerade as loneliness');
+  assert.equal(chooseLifeActivity(lonely, [...candidates, conversation], position, null, 10), conversation);
+  assert.equal(chooseLifeActivity({ ...lonely, company: 0, environment: 0, work: 90 }, [conversation], position, null, 21), null, 'Boredom alone must not masquerade as loneliness');
   assert.equal(lifeEffect('social'), null, 'Moving or waiting for someone cannot satisfy company');
-  assert.equal(chooseLifeActivity({ ...lonely, rest: 50 }, candidates, position, null, 10, {}, 0).activity, 'rest', 'A lonely Lara must keep living when a conversation is unavailable');
-});
-
-it('conserve les besoins, souvenirs et affinités propres à chacune des colocataires', () => {
-  const { rememberLifeConversation, rememberLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
-  const native = createLife('native'), cha = createLife('cha');
-  const nativeBefore = structuredClone(native);
-  cha.needs.meal = 90;
-  cha.handsDirty = true;
-  const before = cha.needs;
-  cha.needs = evolveLife(before, 10, 'meal', false);
-  rememberLifeActivity(cha, 'meal', before, cha.needs);
-  rememberLifeConversation(cha, 'native', 10);
-  assert.deepEqual(native, nativeBefore);
-  assert.equal(cha.relationships.native.seconds, 10);
-  assert.throws(() => rememberLifeConversation(cha, 'cha', 1));
+  assert.equal(chooseLifeActivity({ ...lonely, rest: 50 }, candidates, position, null, 10).activity, 'rest', 'A lonely Lara must keep living when a conversation is unavailable');
 });
 
 it('publie uniquement les jauges du personnage concerné avec une vitesse commune', () => {
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
-    './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'),
     './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
   });
@@ -509,14 +439,14 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
     './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true,
       isSlotOccupied: (id, slotId) => occupied.has(`${id}:${slotId}`) } },
   });
-  const { LIFE_CHARACTER_IDS, lifeEffect, favoriteLifeActivity, rememberLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  const { LIFE_CHARACTER_IDS, lifeEffect } = require('../../src/features/scene/ai/laraLife.ts');
   for (const id of LIFE_CHARACTER_IDS) {
     const candidates = getLaraLifeCandidates(id, false);
     assert.equal(candidates.filter(candidate => candidate.activity === 'bath').length, 3);
     assert(!candidates.some(candidate => candidate.activity === 'meal'));
     const life = createLife(id);
     life.needs = { ...life.needs, rest: 50, work: 0, walk: 0 };
-    const selected = chooseLifeActivity(life.needs, candidates, { x: 120, z: -300 }, null, 10, {}, 0);
+    const selected = chooseLifeActivity(life.needs, candidates, { x: 120, z: -300 }, null, 10);
     assert.equal(selected.id, 'bathtub-garden');
     assert.equal(selected.activity, 'bath');
     const [move, use] = buildLaraLifeInstructions(id, selected);
@@ -528,10 +458,8 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
     const after = evolveLife(life.needs, 10, 'bath', false);
     assert(after.rest < life.needs.rest);
     assert(after.walk > life.needs.walk, 'A seated outdoor bath must not masquerade as walking');
-    rememberLifeActivity(life, 'bath', life.needs, after);
-    assert.equal(favoriteLifeActivity(life.memory), 'bath');
     const bed = { activity: 'sleep', id: 'bed-east', slotId: 'lie-down', x: 120, z: -300 };
-    assert.equal(chooseLifeActivity({ ...life.needs, rest: 90 }, [...candidates, bed], { x: 120, z: -300 }, null, 23, {}, 0), bed);
+    assert.equal(chooseLifeActivity({ ...life.needs, rest: 90 }, [...candidates, bed], { x: 120, z: -300 }, null, 23), bed);
   }
   occupied.add('bathtub-garden:center');
   assert(!getLaraLifeCandidates('vivida', false).some(candidate => candidate.id === 'bathtub-garden' && candidate.slotId === 'center'));
@@ -539,7 +467,6 @@ it('propose le bain extérieur pour le repos, seulement sur les places libres', 
 
 it('isole les jauges de Vivida des autres colocataires', () => {
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
-    './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'), './laraLife': require('../../src/features/scene/ai/laraLife.ts'), './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
   });
   const before = useLaraLifeStore.getState();
@@ -550,7 +477,7 @@ it('isole les jauges de Vivida des autres colocataires', () => {
   assert.equal(after.characters.vivida.needs.rest, 90);
 });
 
-it('fait varier les assises et propose les bords de lit pour le repos et les repas', () => {
+it('propose les bords de lit pour le repos et les repas', () => {
   const life = require('../../src/features/scene/ai/laraLife.ts');
   const objects = [
     { id: 'bed-east', category: 'bed', position: [0, 0, 0], slots: [{ slotId: 'seat-middle' }, { slotId: 'lie-down' }] },
@@ -562,12 +489,12 @@ it('fait varier les assises et propose les bords de lit pour le repos et les rep
     './smartObjectRegistry': { getAllSmartObjects: () => objects },
     './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: () => false } },
   });
-  const candidates = getLaraLifeCandidates('native', false, { 'bed-east:seat-middle': 1 });
+  const candidates = getLaraLifeCandidates('native', false);
   assert(candidates.some(candidate => candidate.id === 'bed-east' && candidate.slotId === 'seat-middle' && candidate.activity === 'meal'));
   assert(candidates.some(candidate => candidate.id === 'sofa' && candidate.activity === 'social'));
   assert(!candidates.some(candidate => candidate.id === 'sofa' && candidate.activity === 'meal'));
   const needs = { ...createLife('native').needs, rest: 50, work: 0, walk: 0 };
-  assert.equal(chooseLifeActivity(needs, candidates, position, null, 10, {}, 0).id, 'sofa', 'The nearest seat must not monopolize every rest');
+  assert.equal(chooseLifeActivity(needs, candidates, position, null, 10).id, 'bed-east');
   const social = evolveLife({ ...needs, company: 80 }, 10, 'rest', false, true);
   assert(social.rest < needs.rest && social.company < 80);
   assert(evolveLife(needs, 30, null, false).environment === needs.environment, 'A timer cannot invent house dirt');
@@ -649,34 +576,16 @@ it('propose les huit places de yoga libres chez Églantine avec stimulation et e
   assert(after.rest > needs.rest, 'Exercise must not be treated as sleep');
   assert.equal(life.lifeEffect('yoga'), null, 'Travelling to a yoga slot must not give yoga benefits');
   const yoga = getLaraLifeCandidates('native', false)[0];
-  assert.equal(chooseLifeActivity({ ...needs, work: 0 }, [yoga], position, null, 10, {}, 0), yoga,
+  assert.equal(chooseLifeActivity({ ...needs, work: 0 }, [yoga], position, null, 10), yoga,
     'Yoga must also be chosen for exercise when the character is not bored');
-  assert.equal(chooseLifeActivity(needs, [{ ...candidates[0], visits: 1 }, yoga], position, 'work', 10,
-    { work: { satisfaction: 20, lastAt: 0 } }, 0).activity, 'yoga', 'The daytime routine must allow alternatives to the computer');
-});
-
-it('apprend ses lieux et moments préférés seulement grâce au soulagement réel', () => {
-  const { rememberLifeActivity, lifeHabitScore } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife('native'), needs = { ...life.needs, rest: 60, work: 0, walk: 0 };
-  const favorite = { ...candidates[1], id: 'favorite', slotId: 'seat', visits: 20, x: 100 };
-  const other = { ...favorite, id: 'other', visits: 0, x: 0 };
-  rememberLifeActivity(life, 'rest', needs, needs, 'favorite:seat');
-  assert.equal(life.memory.rest.places, undefined, 'An arrival or a loading wait cannot teach a place preference');
-  rememberLifeActivity(life, 'rest', needs, evolveLife(needs, 10, 'rest', false), 'favorite:seat');
-  assert.equal(life.memory.rest.periods.Matin, 3.5);
-  assert.equal(life.memory.rest.places['favorite:seat'].satisfaction, 3.5);
-  assert(lifeHabitScore(favorite, life.memory, 8, 600) > lifeHabitScore(favorite, life.memory, 20, 600));
-  assert.equal(chooseLifeActivity(needs, [other, favorite], position, null, 8, life.memory, 600), favorite,
-    'A learned favorite may outweigh proximity and raw visit counts');
-  assert.equal(chooseLifeActivity(needs, [other], position, null, 8, life.memory, 600), other);
-  assert.equal(createLife('cha').memory.rest, undefined, 'Habits belong to one character');
+  assert.equal(chooseLifeActivity(needs, [candidates[0], yoga], position, 'work', 10).activity, 'yoga', 'The daytime routine must allow alternatives to the computer');
 });
 
 it('enchaîne selon les besoins restants sans forcer la douche, la vaisselle ou le repos', () => {
   const base = { ...createLife('native').needs, rest: 0, meal: 0, hygiene: 0, company: 0, work: 65 };
   const shower = { ...candidates[0], activity: 'shower', id: 'shower' };
   const dishes = { ...candidates[0], activity: 'clean', id: 'cuisine-group', slotId: 'wash-dishes', urgency: 40 };
-  const choose = (last, needs, options) => chooseLifeActivity(needs, options, position, last, 10, {}, 0);
+  const choose = (last, needs, options) => chooseLifeActivity(needs, options, position, last, 10);
   assert.equal(choose('yoga', { ...base, hygiene: 50 }, [candidates[0], shower]), shower);
   assert.equal(choose('yoga', base, [candidates[0], shower]), candidates[0]);
   assert.equal(choose('meal', base, [candidates[0], dishes]), dishes);
@@ -686,23 +595,6 @@ it('enchaîne selon les besoins restants sans forcer la douche, la vaisselle ou 
   assert.equal(choose('meal', base, [candidates[0]]), candidates[0], 'Unavailable follow-ups must not block daily life');
 });
 
-it('se souvient des activités partagées avec chaque partenaire et les utilise pour le retrouver', () => {
-  const { rememberLifeConversation, socialPartnerScore } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife('native');
-  rememberLifeConversation(life, 'cha', 0, 'affection');
-  assert.deepEqual(life.relationships, {});
-  rememberLifeConversation(life, 'cha', 60, 'affection');
-  rememberLifeConversation(life, 'vivida', 60, 'social');
-  assert.equal(life.relationships.cha.activities.affection, 60);
-  assert.equal(life.relationships.cha.activities.social, undefined);
-  assert(socialPartnerScore(life.relationships, 'unknown', 0, 'affection') > socialPartnerScore(life.relationships, 'cha', 0, 'affection'),
-    'A recent shared favorite must still leave room for new encounters');
-  assert(socialPartnerScore(life.relationships, 'cha', 600, 'affection') > socialPartnerScore(life.relationships, 'vivida', 600, 'affection'));
-  assert(socialPartnerScore(life.relationships, 'vivida', 600, 'social') > socialPartnerScore(life.relationships, 'cha', 600, 'social'));
-  rememberLifeConversation(life, 'cha', 10, 'rest');
-  assert.deepEqual(life.relationships.cha.activities, { affection: 60, rest: 10 });
-});
-
 it('utilise des clips de réaction existants avec leur durée naturelle', () => {
   const { ANIMATION_DEFINITIONS } = require('../../src/features/scene/animations/animationRegistry.ts');
   for (const id of ['waving', 'thankful', 'thoughtful-head-shake']) {
@@ -710,25 +602,6 @@ it('utilise des clips de réaction existants avec leur durée naturelle', () => 
     assert(animation && animation.duration > 0);
     assert(require('node:fs').existsSync(require('node:path').join(__dirname, '../../public', animation.path)));
   }
-});
-
-it('initialise les sept vies et les relations réciproques sans inventer de moments partagés', () => {
-  const { LIFE_CHARACTER_IDS, lifeAffinity, closestLifeFriend, socialPartnerScore, rememberLifeConversation } = require('../../src/features/scene/ai/laraLife.ts');
-  assert.deepEqual(LIFE_CHARACTER_IDS, ['native', 'cha', 'vivida', 'delphina', 'marissa', 'rosanna', 'sabira', 'sara', 'helena', 'rajaa', 'sandra']);
-  const sabira = createLife('sabira');
-  assert.equal(closestLifeFriend(sabira.relationships), 'cha');
-  assert.equal(closestLifeFriend(createLife('rosanna').relationships), 'sabira');
-  for (const [a, b, affinity] of [['cha', 'delphina', -1], ['cha', 'marissa', -1], ['sabira', 'cha', 2], ['sabira', 'rosanna', 1], ['sabira', 'marissa', -1]]) {
-    assert.equal(lifeAffinity(a, b), affinity);
-    assert.equal(lifeAffinity(b, a), affinity);
-    assert.equal(createLife(a).relationships[b].seconds, 0);
-  }
-  assert(socialPartnerScore(sabira.relationships, 'cha', 0) > socialPartnerScore(sabira.relationships, 'rosanna', 0));
-  assert(socialPartnerScore(sabira.relationships, 'rosanna', 0) > socialPartnerScore(sabira.relationships, 'native', 0));
-  rememberLifeConversation(sabira, 'cha', 10, 'social');
-  assert.equal(sabira.relationships.cha.affinity, 2);
-  assert.equal(sabira.relationships.cha.seconds, 10);
-  assert.equal(createLife('cha').relationships.sabira.seconds, 0);
 });
 
 it('affiche la vidéo du bureau sur le téléviseur même si son écran statique est éteint', () => {
@@ -750,7 +623,7 @@ it('affiche la vidéo du bureau sur le téléviseur même si son écran statique
   }
 });
 
-it('préfère un repas près d’une amie sur une place distincte, en gardant faim et urgences prioritaires', () => {
+it('préfère un repas en compagnie sur une place distincte, en gardant faim et urgences prioritaires', () => {
   const { activeLifeMeals, getLifeMealPartner } = require('../../src/features/scene/ai/laraLife.ts');
   try {
     activeLifeMeals.set('cha', { objectId: 'bed-west', slotId: 'seat-north' });
@@ -766,50 +639,24 @@ it('préfère un repas près d’une amie sur une place distincte, en gardant fa
       './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
     });
     const sabira = createLife('sabira');
-    const meals = getLaraLifeCandidates('sabira', false, {}, sabira.relationships).filter(c => c.activity === 'meal');
+    const meals = getLaraLifeCandidates('sabira', false).filter(c => c.activity === 'meal');
     const friend = meals.find(c => c.id === 'bed-west');
     assert.equal(friend.slotId, 'seat-middle');
     assert.equal(friend.mealPartnerId, 'cha');
-    assert.equal(getLifeMealPartner('sabira', 'bed-west', 'seat-north', sabira.relationships), undefined, 'Neither the same seat nor a disliked neighbor counts');
     const needs = { ...sabira.needs, rest: 0, work: 0, meal: 50, company: 80 };
-    assert.equal(chooseLifeActivity(needs, meals, position, null, 12, {}, 0), friend);
-    assert.equal(chooseLifeActivity({ ...needs, meal: 0 }, meals, position, null, 12, {}, 0), null, 'Company cannot force a meal without hunger');
+    assert(chooseLifeActivity(needs, meals, position, null, 12).mealPartnerId);
+    assert.equal(chooseLifeActivity({ ...needs, meal: 0 }, meals, position, null, 12), null, 'Company cannot force a meal without hunger');
     const toilet = { activity: 'toilet', id: 'toilet', slotId: 'use', x: 0, z: 0 };
-    assert.equal(chooseLifeActivity({ ...needs, toilet: 90 }, [...meals, toilet], position, null, 12, {}, 0), toilet);
+    assert.equal(chooseLifeActivity({ ...needs, toilet: 90 }, [...meals, toilet], position, null, 12), toilet);
     activeLifeMeals.delete('cha');
-    assert.equal(getLifeMealPartner('sabira', 'bed-west', 'seat-middle', sabira.relationships), undefined);
     assert(!getLaraLifeCandidates('sabira', true).some(c => c.activity === 'meal'));
     occupied.add('cuisine-group:cook-stove');
     assert(!getLaraLifeCandidates('sabira', false).some(c => c.activity === 'meal'));
   } finally { activeLifeMeals.clear(); }
 });
 
-it('préfère une autre assise à une voisine détestée sans interdire la dernière place disponible', () => {
-  const life = require('../../src/features/scene/ai/laraLife.ts');
-  const reservations = [{ slot: 'bed-east:seat-north:roleB', characterId: 'delphina' }];
-  const occupied = new Set(['bed-east:seat-north']);
-  const objects = ['bed-east', 'bed-west'].map((id, index) => ({ id, category: 'bed', position: [index * 100, 0, 0],
-    slots: [{ slotId: 'seat-north' }, { slotId: 'seat-middle' }] }));
-  const { getLaraLifeCandidates } = load('src/features/scene/ai/autonomousActivities.ts', {
-    './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'),
-    './smartObjectRegistry': { getAllSmartObjects: () => objects },
-    './occupancyManager': { OccupancyManager: { getReservations: () => reservations, canUseObject: () => true, isSlotOccupied: (id, slot) => occupied.has(`${id}:${slot}`) } },
-  });
-  const needs = { ...createLife('cha').needs, rest: 70, work: 0, walk: 0 };
-  const choose = (id = 'cha') => chooseLifeActivity(needs, getLaraLifeCandidates(id, false), position, null, 10, {}, 0);
-  assert.equal(choose().id, 'bed-west', 'Another free seat wins over the nearest disliked neighbor');
-  assert.deepEqual(getLaraLifeCandidates('cha', false).find(c => c.id === 'bed-east').avoidedNeighbors, ['delphina']);
-  assert.equal(choose('native').id, 'bed-east', 'Neutral relationships do not invent avoidance');
-  occupied.add('bed-west:seat-north'); occupied.add('bed-west:seat-middle');
-  assert.equal(choose().id, 'bed-east', 'The only place still satisfies the need');
-  const toilet = { activity: 'toilet', id: 'toilet', slotId: 'use', x: 0, z: 0 };
-  assert.equal(chooseLifeActivity({ ...needs, toilet: 95 }, [...getLaraLifeCandidates('cha', false), toilet], position, null, 10, {}, 0), toilet);
-  occupied.clear(); reservations.length = 0;
-  assert.equal(choose().id, 'bed-east', 'The preference disappears when the neighbor leaves');
-});
-
 it('différencie les sept colocataires par leurs goûts initiaux sans forcer les activités ni créer de souvenirs', () => {
-  const { LIFE_INITIAL_PREFERENCES, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
+  const { LIFE_INITIAL_PREFERENCES } = require('../../src/features/scene/ai/laraLife.ts');
   const cases = [
     ['native', 'read', 'watch-tv', 20], ['cha', 'walk', 'yoga', 10], ['vivida', 'bath', 'rest', 10],
     ['delphina', 'read', 'watch-tv', 20], ['marissa', 'dance', 'walk', 10], ['rosanna', 'walk', 'work', 10], ['sabira', 'dance', 'bath', 20],
@@ -819,34 +666,12 @@ it('différencie les sept colocataires par leurs goûts initiaux sans forcer les
     const needs = Object.fromEntries(Object.keys(life.needs).map(key => [key, 60]));
     const favorite = { activity: preferred, id: 'favorite', slotId: 'use', x: 100, z: 0 };
     const ordinary = { ...favorite, activity: other, id: 'ordinary', x: 0 };
-    const choose = (values = needs, options = [ordinary, favorite]) => chooseLifeActivity(values, options, position, null, hour, life.memory, 0, preferences);
+    const choose = (values = needs, options = [ordinary, favorite]) => chooseLifeActivity(values, options, position, null, hour, preferences);
     assert.equal(choose(), favorite, id);
     assert.equal(choose(needs, [ordinary]), ordinary, 'Unavailable favorites cannot block daily life');
     const toilet = { ...ordinary, activity: 'toilet' };
     assert.equal(choose({ ...needs, toilet: 95 }, [favorite, toilet]), toilet, 'Urgent care wins');
     const satisfied = Object.fromEntries(Object.keys(needs).map(key => [key, 0]));
     assert.equal(choose(satisfied), null, 'A taste does not create a need');
-    assert.deepEqual(life.memory, {});
-    assert.equal(favoriteLifeActivity(life.memory), null, 'An initial preference is not a discovered favorite');
   }
-});
-
-it('laisse les expériences prendre le pas sur les goûts de départ tout en gardant une envie de découverte', () => {
-  const { LIFE_INITIAL_PREFERENCES, lifePreferenceScore, rememberLifeActivity, favoriteLifeActivity } = require('../../src/features/scene/ai/laraLife.ts');
-  const life = createLife('native'), preferences = LIFE_INITIAL_PREFERENCES.native;
-  const before = lifePreferenceScore('read', life.memory, 600, preferences);
-  const needs = { ...life.needs, work: 80 };
-  rememberLifeActivity(life, 'watch-tv', needs, evolveLife(needs, 60, 'watch-tv', false));
-  const after = lifePreferenceScore('read', life.memory, 600, preferences);
-  assert(after > 1 && after < before, 'The initial bias fades as real experience grows');
-  assert(lifePreferenceScore('watch-tv', life.memory, 600, preferences) > after);
-  assert.equal(favoriteLifeActivity(life.memory), 'watch-tv');
-  assert.equal(life.memory.read, undefined);
-  assert.equal(life.memory['watch-tv'].satisfaction, 60);
-  assert.equal(createLife('cha').memory['watch-tv'], undefined);
-  const fresh = { read: { satisfaction: 1, lastAt: 600 } };
-  const recent = { activity: 'read', id: 'read', slotId: 'use', x: 0, z: 0 };
-  const untried = { ...recent, activity: 'watch-tv', id: 'tv', x: 100 };
-  assert.equal(chooseLifeActivity({ ...createLife('native').needs, work: 50 }, [recent, untried], position, 'read', 20, fresh, 600, preferences), untried,
-    'An initial taste cannot monopolize every choice after being played');
 });

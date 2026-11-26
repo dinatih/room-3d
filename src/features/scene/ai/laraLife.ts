@@ -12,11 +12,6 @@ export const LIFE_INITIAL_PREFERENCES = {
 } as const satisfies Record<LifeCharacterId, readonly LifeActivity[]>;
 export const isLifeCharacter = (id: string | undefined): id is LifeCharacterId => LIFE_CHARACTER_IDS.some(characterId => characterId === id);
 export type LifeNeeds = { rest: number; work: number; walk: number; meal: number; hygiene: number; toilet: number; company: number; environment: number };
-type LifeExperience = { satisfaction: number; lastAt: number };
-export type LifeMemory = Partial<Record<LifeActivity, LifeExperience & {
-  places?: Record<string, LifeExperience>; periods?: Partial<Record<LifePeriod, number>>;
-}>>;
-export type LifeRelationships = Record<string, { seconds: number; lastAt: number; affinity?: number; activities?: Partial<Record<LifeActivity, number>> }>;
 type LifePeriod = 'Nuit' | 'Matin' | 'Journée' | 'Soirée';
 const lifePeriod = (hour: number): LifePeriod => hour < 6 ? 'Nuit' : hour < 10 ? 'Matin' : hour < 18 ? 'Journée' : 'Soirée';
 const LEISURE_ACTIVITIES: LifeActivity[] = ['storage', 'dance', 'combat', 'massage', 'receive-massage', 'tech', 'read', 'watch-tv', 'walk', 'social', 'affection', 'bath', 'yoga'];
@@ -55,10 +50,8 @@ export interface LifeCandidate {
   x: number;
   z: number;
   urgency?: number;
-  visits?: number;
   mealPartnerId?: string;
   companyScore?: number;
-  avoidedNeighbors?: string[];
 }
 
 // Positive needs grow four times more slowly; real interactions retain their relief rates.
@@ -108,13 +101,6 @@ const rates: Record<LifeActivity, LifeNeeds> = {
   'watch-tv': { rest: 0.1, work: -1, walk: 0.5, meal: 0.2, hygiene: 0.12, toilet: 0.18, company: 0.2, environment: 0 },
   social: socialRates, affection: socialRates,
 };
-
-// Symmetric personal relationships: dislike, friend, best friend. Shared time stays factual.
-const INITIAL_RELATIONSHIPS: [LifeCharacterId, LifeCharacterId, number][] = [
-  ['cha', 'delphina', -1], ['cha', 'marissa', -1], ['sabira', 'cha', 2],
-  ['sabira', 'rosanna', 1], ['sabira', 'marissa', -1],
-];
-export const lifeAffinity = (a: string, b: string) => INITIAL_RELATIONSHIPS.find(([x, y]) => x === a && y === b || x === b && y === a)?.[2] ?? 0;
 
 export type LifeDay = { activities: Partial<Record<LifeActivity, number>>; partners: Record<string, number>; unmet: Partial<Record<keyof LifeNeeds, number>>; events: Record<string, number> };
 export const createLifeHousehold = () => ({
@@ -193,65 +179,16 @@ export function recordLifeEvent(id: LifeCharacterId, at: number, event: string) 
 
 export function createLife(characterId: LifeCharacterId) {
   return { characterId, needs: { rest: 0, work: 65, walk: 15, meal: 0, hygiene: 10, toilet: 0, company: 10, environment: 0 } as LifeNeeds,
-    elapsedSeconds: 0, memory: {} as LifeMemory, relationships: Object.fromEntries(INITIAL_RELATIONSHIPS.filter(([a, b]) => a === characterId || b === characterId)
-      .map(([a, b, affinity]) => [a === characterId ? b : a, { seconds: 0, lastAt: 0, affinity }])) as LifeRelationships, handsDirty: false, places: {} as Record<string, number>, lastActivity: null as LifeActivity | null };
-}
-
-export function rememberLifeConversation(life: { characterId: LifeCharacterId; relationships: LifeRelationships; elapsedSeconds: number }, partnerId: string, seconds: number, activity?: LifeActivity) {
-  if (!partnerId || partnerId === life.characterId || !Number.isFinite(seconds) || seconds < 0) throw new Error('Invalid life conversation');
-  if (seconds === 0) return;
-  const previous = life.relationships[partnerId];
-  life.relationships[partnerId] = { ...previous, seconds: (previous?.seconds ?? 0) + seconds, lastAt: life.elapsedSeconds,
-    ...(activity ? { activities: { ...previous?.activities, [activity]: (previous?.activities?.[activity] ?? 0) + seconds } } : {}) };
-}
-
-export function closestLifeFriend(relationships: LifeRelationships): string | null {
-  return Object.keys(relationships).filter(id => (relationships[id].affinity ?? 0) >= 0 && (relationships[id].seconds > 0 || (relationships[id].affinity ?? 0) > 0)).sort((a, b) => (relationships[b].affinity ?? 0) - (relationships[a].affinity ?? 0) || relationships[b].seconds - relationships[a].seconds || a.localeCompare(b))[0] ?? null;
-}
-
-/** Familiar company grows attractive again after time apart; new encounters remain possible. */
-export function socialPartnerScore(relationships: LifeRelationships, partnerId: string, elapsedSeconds: number, activity?: LifeActivity) {
-  const relationship = relationships[partnerId];
-  if (!relationship?.seconds) return 1 + (relationship?.affinity ?? 0);
-  const since = elapsedSeconds - relationship.lastAt;
-  return (relationship.affinity ?? 0) + relationship.seconds / (relationship.seconds + LIFE_SETTINGS.activitySeconds)
-    + since / (since + LIFE_SETTINGS.activitySeconds)
-      * (1 + (activity ? relationship.activities?.[activity] ?? 0 : 0) / (relationship.seconds + LIFE_SETTINGS.activitySeconds));
+    elapsedSeconds: 0, handsDirty: false, lastActivity: null as LifeActivity | null };
 }
 
 /** Only controllers playing their eating animation appear here; no seats are reserved by this registry. */
 export const activeLifeMeals = new Map<string, { objectId: string; slotId: string }>();
 export const activeLifeDances = new Map<string, string>();
-export const getLifeDancePartner = (id: string, objectId: string, relationships: LifeRelationships, at: number) => [...activeLifeDances]
-  .filter(([other, place]) => other !== id && place === objectId && lifeAffinity(id, other) >= 0)
-  .sort(([a], [b]) => socialPartnerScore(relationships, b, at, 'dance') - socialPartnerScore(relationships, a, at, 'dance'))[0]?.[0];
-export function getLifeMealPartner(characterId: string, objectId: string, slotId: string, relationships: LifeRelationships = {}, elapsedSeconds = 0) {
-  return [...activeLifeMeals].filter(([id, meal]) => id !== characterId && meal.objectId === objectId && meal.slotId !== slotId
-    && lifeAffinity(characterId, id) >= 0).map(([id]) => id)
-    .sort((a, b) => socialPartnerScore(relationships, b, elapsedSeconds, 'meal') - socialPartnerScore(relationships, a, elapsedSeconds, 'meal') || a.localeCompare(b))[0];
-}
-
-/** Only real need relief builds a taste; even an interrupted activity remains a recent experience. */
-export function rememberLifeActivity(life: { memory: LifeMemory; elapsedSeconds: number }, activity: LifeActivity | null, before: LifeNeeds, after: LifeNeeds, place?: string) {
-  if (!activity || activity === 'pause') return;
-  const need = lifeNeed(activity, before);
-  const previous = life.memory[activity], relief = Math.max(0, before[need] - after[need]);
-  const period = lifeClock(life.elapsedSeconds).period;
-  life.memory[activity] = { ...previous, satisfaction: (previous?.satisfaction ?? 0) + relief, lastAt: life.elapsedSeconds,
-    ...(relief > 0 ? { periods: { ...previous?.periods, [period]: (previous?.periods?.[period] ?? 0) + relief },
-      ...(place ? { places: { ...previous?.places, [place]: { satisfaction: (previous?.places?.[place]?.satisfaction ?? 0) + relief, lastAt: life.elapsedSeconds } } } : {}) } : {}) };
-}
-
-/** Learned context is a preference, never a source of need relief. */
-export function lifeHabitScore(candidate: Pick<LifeCandidate, 'activity' | 'id' | 'slotId'>, memory: LifeMemory, hour: number, elapsedSeconds: number) {
-  const experience = memory[candidate.activity];
-  if (!experience?.satisfaction) return 1;
-  const place = experience.places?.[`${candidate.id}:${candidate.slotId}`];
-  const since = place ? elapsedSeconds - place.lastAt : 0;
-  const total = experience.satisfaction + LIFE_SETTINGS.priority;
-  return 1 + (experience.periods?.[lifePeriod(hour)] ?? 0) / total
-    + (place ? place.satisfaction / total * since / (since + LIFE_SETTINGS.activitySeconds) : 0);
-}
+export const getLifeDancePartner = (id: string, objectId: string) =>
+  [...activeLifeDances].find(([other, place]) => other !== id && place === objectId)?.[0];
+export const getLifeMealPartner = (id: string, objectId: string, slotId: string) =>
+  [...activeLifeMeals].find(([other, meal]) => other !== id && meal.objectId === objectId && meal.slotId !== slotId)?.[0];
 
 export function lifeFollowUp(last: LifeActivity | null, candidate: LifeCandidate, needs: LifeNeeds): string | null {
   if (last && ['yoga', 'dance', 'combat'].includes(last) && candidate.activity === 'shower' && needs.hygiene >= LIFE_SETTINGS.priority) return 'Après l’activité physique, se laver.';
@@ -260,21 +197,6 @@ export function lifeFollowUp(last: LifeActivity | null, candidate: LifeCandidate
   if (last && ['work', 'read', 'walk', 'yoga', 'dance', 'combat', 'clean'].includes(last) && candidate.activity === 'rest'
     && needs.rest >= LIFE_SETTINGS.priority) return 'Après une activité fatigante, se reposer assise.';
   return null;
-}
-
-export function favoriteLifeActivity(memory: LifeMemory): LifeActivity | null {
-  return LEISURE_ACTIVITIES.filter(activity => (memory[activity]?.satisfaction ?? 0) > 0)
-    .sort((a, b) => memory[b]!.satisfaction - memory[a]!.satisfaction)[0] ?? null;
-}
-
-export function lifePreferenceScore(activity: LifeActivity, memory: LifeMemory, elapsedSeconds: number, preferences: readonly LifeActivity[] = []) {
-  const experience = memory[activity];
-  const total = Object.values(memory).reduce((sum, entry) => sum + entry.satisfaction, 0);
-  // A starting taste has the weight of one decision's worth of need relief, shared between its activities.
-  const initial = preferences.includes(activity) ? LIFE_SETTINGS.priority / (LIFE_SETTINGS.priority + total) / preferences.length : 0;
-  if (!experience) return 1 + initial; // An untried activity remains a chance to discover a taste.
-  const since = elapsedSeconds - experience.lastAt;
-  return since / (since + LIFE_SETTINGS.activitySeconds) * (1 + initial) + (total > 0 ? experience.satisfaction / total : 0);
 }
 
 // The clock stores simulated minutes; a day lasts 12 real minutes at ×1.
@@ -306,12 +228,10 @@ export function evolveLife(needs: LifeNeeds, seconds: number, activity: LifeActi
 }
 
 /** Prefer another place for the same activity, without making the only available place unusable. */
-export const preferLifePersonalSpace = (candidates: LifeCandidate[]) => candidates.filter(candidate => !candidate.avoidedNeighbors?.length
-  || !candidates.some(other => other.activity === candidate.activity && !other.avoidedNeighbors?.length));
 
 /** Free time is spent on available leisure, never unnecessary meals, sleep or cleaning. */
 export function chooseLifeLeisure(candidates: LifeCandidate[], last: LifeActivity | null): LifeCandidate | null {
-  const leisure = preferLifePersonalSpace(candidates.filter(candidate => LEISURE_ACTIVITIES.includes(candidate.activity)));
+  const leisure = candidates.filter(candidate => LEISURE_ACTIVITIES.includes(candidate.activity));
   const pool = leisure.some(candidate => candidate.activity !== last) ? leisure.filter(candidate => candidate.activity !== last) : leisure;
   const activities = [...new Set(pool.map(candidate => candidate.activity))];
   const activity = activities[Math.floor(Math.random() * activities.length)];
@@ -319,17 +239,16 @@ export function chooseLifeLeisure(candidates: LifeCandidate[], last: LifeActivit
   return places[Math.floor(Math.random() * places.length)] ?? null;
 }
 
-export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, memory: LifeMemory, elapsedSeconds: number, preferences: readonly LifeActivity[] = []): LifeCandidate | null {
+export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[], position: { x: number; z: number }, last: LifeActivity | null, hour: number, preferences: readonly LifeActivity[] = []): LifeCandidate | null {
   const distance = (candidate: LifeCandidate) => Math.hypot(candidate.x - position.x, candidate.z - position.z);
   const need = (candidate: LifeCandidate) => candidate.urgency ?? needs[lifeNeed(candidate.activity, needs)];
   const routine = routineActivities(hour);
   const wantsSleep = needs.rest >= (routine.includes('sleep') ? LIFE_SETTINGS.priority : LIFE_SETTINGS.sleepPriority)
     && candidates.some(candidate => candidate.activity === 'sleep');
   const routineScore = (candidate: LifeCandidate) => Number(routine.includes(candidate.activity));
-  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * lifePreferenceScore(candidate.activity, memory, elapsedSeconds, preferences)
-    * lifeHabitScore(candidate, memory, hour, elapsedSeconds) * (1 + (candidate.companyScore ?? 0) * needs.company / 100);
-  return preferLifePersonalSpace(candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
-    : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority)))
+  const preferenceScore = (candidate: LifeCandidate) => need(candidate) * (1 + (preferences.includes(candidate.activity) ? 1 / preferences.length : 0)) * (1 + (candidate.companyScore ?? 0) * needs.company / 100);
+  return candidates.filter(candidate => candidate.activity === 'wash-hands' || (candidate.activity === 'sleep' ? wantsSleep
+    : !(lifeNeed(candidate.activity) === 'rest' && wantsSleep) && need(candidate) >= LIFE_SETTINGS.priority))
     .sort((a, b) => Number(b.activity === 'wash-hands') - Number(a.activity === 'wash-hands')
       || (Math.max(need(a), need(b)) >= LIFE_SETTINGS.sleepPriority
         ? need(b) - need(a) : 0)
@@ -337,7 +256,6 @@ export function chooseLifeActivity(needs: LifeNeeds, candidates: LifeCandidate[]
       || routineScore(b) - routineScore(a)
       || preferenceScore(b) - preferenceScore(a)
       || Number(a.activity === last) - Number(b.activity === last)
-      || (a.visits ?? 0) - (b.visits ?? 0)
       || distance(a) - distance(b) || a.id.localeCompare(b.id) || a.slotId.localeCompare(b.slotId))[0] ?? null;
 }
 

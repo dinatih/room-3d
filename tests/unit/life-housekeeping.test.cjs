@@ -56,11 +56,10 @@ it('partage l’état de la maison entre les colocataires et choisit une tâche 
     './occupancyManager': { OccupancyManager: { getReservations: () => [], canUseObject: () => true, isSlotOccupied: () => false } },
   });
   const { useLaraLifeStore, publishLife } = load('src/features/scene/ai/laraLifeStore.ts', {
-    './lifePersistence': require('../../src/features/scene/ai/lifePersistence.ts'),
     zustand: require('zustand'), './laraLife': life, './lifeHousekeeping': { ...home, homeDirt: dirt },
   });
   const needs = { ...life.createLife('native').needs, rest: 0, work: 0, walk: 0 };
-  const candidate = life.chooseLifeActivity(needs, getLaraLifeCandidates('native', false), { x: 0, z: 0 }, null, 10, {}, 0);
+  const candidate = life.chooseLifeActivity(needs, getLaraLifeCandidates('native', false), { x: 0, z: 0 }, null, 10);
   assert.equal(candidate.activity, 'clean');
   assert.equal(candidate.urgency, 90);
   publishLife('native', { room: 'bathroom' });

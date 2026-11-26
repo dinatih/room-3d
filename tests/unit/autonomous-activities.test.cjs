@@ -55,7 +55,7 @@ describe('Tirage autonome par slot', () => {
       occupied.add('cuisine-group:cook-oven');
       occupied.add('fridge:open-pick');
       const excluded = new Set(['freezer:open-pick']);
-      assert(!getLaraLifeCandidates('native', false, {}, {}, 0, excluded).some(candidate => candidate.activity === 'meal'));
+      assert(!getLaraLifeCandidates('native', false, excluded).some(candidate => candidate.activity === 'meal'));
       assert.throws(() => buildLaraLifeInstructions('native', meal, excluded), /Aucune préparation/);
       assert.throws(() => buildLaraLifeInstructions('native', meal), /Aucune préparation/);
       assert(!getLaraLifeCandidates('native', true).some(candidate => candidate.activity === 'meal'));

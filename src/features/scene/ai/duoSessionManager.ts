@@ -11,7 +11,7 @@ import { findDuoAnchor } from './navigation/duoPlacement';
 import { navigationValue, resolveNavigation } from './navigation/navigationScope';
 import { getNavigationGraph } from './navigation/service';
 import { getAgentProfile } from './navigation/obstacles';
-import { isLifeCharacter, isLifeSeat, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, socialPartnerScore, lifeClock } from './laraLife';
+import { isLifeCharacter, isLifeSeat, lifeSocialActivity, lifeSpecialtyActivity, canStartLifeActivity, lifeClock } from './laraLife';
 import { characterLives } from './laraLifeStore';
 
 export type DuoRole = 'roleA' | 'roleB';
@@ -575,10 +575,6 @@ class DuoSessionManager {
         .filter(id => id !== excludeId && !this.getSessionFor(id) && isVisibleChar(id, allowPlayer)
           && (!respectLifeNeeds || sharedActivity !== 'massage' || requestedRole !== 'roleA' || canStartLifeActivity(id, 'massage')))
         .sort((a, b) => {
-          if (isLifeCharacter(excludeId) && !def.isCombat) {
-            const affinity = socialPartnerScore(characterLives[excludeId].relationships, b, characterLives[excludeId].elapsedSeconds, sharedActivity) - socialPartnerScore(characterLives[excludeId].relationships, a, characterLives[excludeId].elapsedSeconds, sharedActivity);
-            if (affinity) return affinity;
-          }
           const pa = cameraState.positions[a];
           const pb = cameraState.positions[b];
           return (pa ? Math.hypot(pa.x - bx, pa.z - bz) : Infinity) - (pb ? Math.hypot(pb.x - bx, pb.z - bz) : Infinity);
@@ -639,11 +635,10 @@ class DuoSessionManager {
 
     if (isLifeCharacter(targetA) && !def.isCombat) {
       const life = characterLives[targetA];
-      appLog(targetA, `🤝 ${targetA} choisit ${targetB} pour ${obj.name}, selon les affinités et la disponibilité.`, {
+      appLog(targetA, `🤝 ${targetA} choisit ${targetB} pour ${obj.name}, selon la disponibilité et la proximité.`, {
         category: 'life', action: 'life_partner', actors: [targetA, targetB],
         object: { id: objectId, label: obj.name, slotId: actualSlotId },
-        data: { clock: lifeClock(life.elapsedSeconds), partnerId: targetB, relationship: life.relationships[targetB] ? { ...life.relationships[targetB] } : null,
-          activity: sharedActivity, score: socialPartnerScore(life.relationships, targetB, life.elapsedSeconds, sharedActivity) },
+        data: { clock: lifeClock(life.elapsedSeconds), partnerId: targetB, activity: sharedActivity },
       });
     }
 

@@ -52,7 +52,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
       return object?.rotationY ? { ...object, slots: object.slots.map(slot => ({ ...slot, rotY: (slot.rotY ?? 0) + object.rotationY })) } : object;
     }, buildSmartObjectInstructionSequence: sequence, isDuoSlot: objectId => Boolean(objects[objectId]?.isDuo) },
     './autonomousActivities': { getAvailableAutonomousActivities: () => candidates,
-      getLaraLifeCandidates: (characterId, dirty, places, relationships, elapsed, excluded = new Set()) => candidates.filter(c => (c.activity !== 'wash-hands' || dirty)
+      getLaraLifeCandidates: (characterId, dirty, excluded = new Set()) => candidates.filter(c => (c.activity !== 'wash-hands' || dirty)
         && (c.activity !== 'meal' || !excluded.has(`${MEAL_PREPARATION.id}:${MEAL_PREPARATION.slotId}`))), buildLaraLifeInstructions: (characterId, candidate) => candidate.activity === 'toilet' ? [
         { ...sequence('toilet', 'use')[0], duration: 3, lifePhase: 'use-toilet' },
         { type: 'WAIT', animation: 'flush', duration: 1, lifePhase: 'flush' },
@@ -207,7 +207,7 @@ it('explique les décisions et journalise une interruption avant tout bénéfice
   assert.equal(decision.category, 'life');
   assert(decision.message.includes('Besoin urgent.'));
   assert.equal(decision.data.activity, 'work');
-  assert(decision.data.candidates.some(candidate => candidate.activity === 'work' && candidate.need >= 95 && candidate.preference > 0));
+  assert(decision.data.candidates.some(candidate => candidate.activity === 'work' && candidate.need >= 95));
   assert.equal(typeof decision.data.clock.time, 'string');
   const before = { ...w.lifeState.needs };
   w.controller.setPosition(50, 0, 50);
@@ -499,20 +499,6 @@ it('abandonne une conversation sans partenaire sans réessayer en boucle ni sati
   assert(w.lifeState.elapsedSeconds > 13 * 60);
 });
 
-it('mémorise les activités jouées, jamais le chargement, et préserve les goûts après interruption', () => {
-  const w = world();
-  w.tick(1, false); w.tick(1, false);
-  assert.deepEqual(w.lifeState.memory, {});
-  w.tick();
-  assert(w.lifeState.memory.work.satisfaction > 0);
-  assert(w.lifeState.memory.work.places['desk-bollsidan-2:use'].satisfaction > 0);
-  assert(w.lifeState.memory.work.periods.Matin > 0);
-  const memory = structuredClone(w.lifeState.memory);
-  w.controller.setPosition(50, 0, 50);
-  assert.deepEqual(w.lifeState.memory, memory);
-  w.tick(0);
-  assert.deepEqual(w.lifeState.memory, memory);
-});
 
 it('distingue une discussion achevée d’une attente expirée ou d’un partenaire parti', () => {
   for (const outcome of ['completed', 'timeout', 'cancelled']) {
@@ -531,52 +517,6 @@ it('distingue une discussion achevée d’une attente expirée ou d’un partena
   }
 });
 
-it('choisit une connaissance disponible pour discuter, sans inviter le joueur ou un personnage masqué', () => {
-  const originalDocument = global.document;
-  global.document = new EventTarget();
-  try {
-    for (const explicitPartner of [false, true]) for (const objectId of ['garden-conversation', 'hugs-point']) for (const animationId of ['conversation', 'kiss', 'interx-g022t008a029r019']) for (const unavailable of [null, 'player', 'hidden', 'busy', 'all-busy']) {
-      const lifeState = life.createLife('native');
-      lifeState.elapsedSeconds = 600;
-      life.rememberLifeConversation(lifeState, 'rosanna', 120);
-      lifeState.relationships.rosanna.lastAt = 0;
-      const activity = life.lifeSocialActivity(objectId);
-      lifeState.relationships.rosanna.activities = { [activity]: 120 };
-      lifeState.relationships.marissa = { seconds: 120, lastAt: 0, activities: { [activity === 'social' ? 'affection' : 'social']: 120 } };
-      const positions = { native: { x: 0, z: 0 }, marissa: { x: 20, z: 0 }, rosanna: { x: 200, z: 0 } };
-      const def = { id: animationId, label: 'Discussion', isCombat: false, animA: 'talk', animB: 'listen', duration: 60 };
-      const claims = [];
-      const { duoSessionManager } = load('src/features/scene/ai/duoSessionManager.ts', {
-        '../animations/duoAnimations': { DUO_ANIMATIONS: [def], canCharacterPerformDuo: () => true },
-        '../animations/duoWorldTransform': { computeWorldTransform: anchor => ({ posA: anchor, posB: [0, 0, 100], rotA: 0, rotB: Math.PI }) },
-        './occupancyManager': { LIMITED_ROOMS: [], OccupancyManager: { canUseObject: () => true, claimSlot: (...args) => (claims.push(args), true) } },
-        '@features/ui/AppConsole': { appLog: () => {} }, '../cameraState': { cameraState: { positions } },
-        '../characterConfig': { AUTONOMOUS_NPC_IDS: new Set(Object.keys(positions)), isCharacterVisibleInMode: id => !(unavailable === 'hidden' && id === 'rosanna') },
-        './smartObjectRegistry': { getSmartObject: () => ({ id: objectId, name: 'Moment partagé', slots: [{ slotId: 'chat', isDuo: true, duoAnimId: animationId, duoCount: 1, offset: [0, 0, 0] }] }) },
-        './autonomousActivities': { INITIAL_SMART_OBJECT_BY_CHAR: { marissa: objectId } },
-        '../store/useSceneStore': { useSceneStore: { getState: () => ({ activeCharacterId: unavailable === 'player' ? 'rosanna' : 'native', layers: {} }) } },
-        './navigation/duoPlacement': { findDuoAnchor: anchor => anchor },
-        './navigation/navigationScope': { navigationValue: (key, fn) => fn() },
-        './navigation/service': { getNavigationGraph: () => ({}) }, './navigation/obstacles': { getAgentProfile: () => ({}) },
-        './laraLife': life, './lifeHousekeeping': require('../../src/features/scene/ai/lifeHousekeeping.ts'), './laraLifeStore': { characterLives: { native: lifeState, cha: life.createLife('cha') } },
-      });
-      const onCheck = event => {
-        assert.equal(event.detail.allowDeferral, !explicitPartner);
-        if (unavailable === 'all-busy' || (unavailable === 'busy' && event.detail.targetId === 'rosanna')) event.preventDefault();
-      };
-      document.addEventListener('npc-check-life-invitation', onCheck);
-      let result;
-      try { result = duoSessionManager.startDuoSession(objectId, 'chat', 'native', explicitPartner ? 'rosanna' : undefined, undefined, true); }
-      finally { document.removeEventListener('npc-check-life-invitation', onCheck); }
-      if (unavailable === 'all-busy' || (explicitPartner && unavailable && unavailable !== 'player')) {
-        assert.equal(result, null);
-        assert.equal(claims.length, 0, 'A declined invitation must not reserve either participant');
-        assert.equal(duoSessionManager.getSessionFor('native'), null);
-      } else assert.equal(result.targetB, unavailable && !(explicitPartner && unavailable === 'player') ? 'marissa' : 'rosanna');
-      assert.deepEqual(lifeState.relationships.rosanna, { seconds: 120, lastAt: 0, activities: { [activity]: 120 } }, 'An invitation must not increase an affinity');
-    }
-  } finally { global.document = originalDocument; }
-});
 
 it('reporte une invitation pendant un repas sans perdre sa place et redevient disponible ensuite', () => {
   const originalDocument = global.document;
@@ -602,7 +542,6 @@ it('reporte une invitation pendant un repas sans perdre sa place et redevient di
     assert.equal(invite(), true);
     w.controller.setPosition(50, 0, 50);
     assert.equal(invite(), false);
-    assert(w.logs.some(log => log.action === 'life_invitation_declined'));
   } finally {
     disconnect();
     assert.equal(invite(), true, 'Disconnect must remove the invitation listener');
@@ -626,7 +565,6 @@ for (const objectId of ['garden-conversation', 'hugs-point', 'inyeong-cha-hugs-p
   });
   for (let i = 0; i < 5; i++) w.tick();
   assert(w.lifeState.needs.company >= 90);
-  assert.deepEqual(w.lifeState.relationships, {});
   playing = true;
   w.tick(1, false); w.tick(1, false);
   const lonely = w.lifeState.needs.company;
@@ -634,14 +572,12 @@ for (const objectId of ['garden-conversation', 'hugs-point', 'inyeong-cha-hugs-p
   assert.equal(w.duoTicks.at(-1), 0, 'The conversation timer must wait for actual playback');
   w.tick();
   assert(w.lifeState.needs.company < lonely);
-  assert(w.lifeState.relationships.rosanna.seconds > 0);
-  const needs = { ...w.lifeState.needs }, relationships = structuredClone(w.lifeState.relationships);
+  const needs = { ...w.lifeState.needs };
   const originalDocument = global.document;
   global.document = new EventTarget();
   try { w.controller.setPosition(10, 0, 10); w.tick(0); }
   finally { global.document = originalDocument; }
   assert.deepEqual(w.lifeState.needs, needs);
-  assert.deepEqual(w.lifeState.relationships, relationships);
 });
 
 it('laisse au partenaire son temps de déplacement normal même quand la vie de Lara est accélérée', () => {
@@ -667,7 +603,6 @@ it('fait vivre Cha et Vivida indépendamment de Lara et conserve leurs besoins a
     assert.notDeepEqual(w.lifeState.needs, nativeBefore.needs);
     assert.deepEqual(w.characterLives.native, { ...nativeBefore, elapsedSeconds: w.lifeState.elapsedSeconds });
     assert.equal(w.lifeState.characterId, id);
-    if (id === 'vivida') assert(w.lifeState.memory.bath.satisfaction > 0);
     const needs = { ...w.lifeState.needs };
     w.controller.setPosition(50, 0, 50); w.tick(0);
     assert.deepEqual(w.lifeState.needs, needs);
@@ -738,8 +673,6 @@ it('récupère repos et compagnie pour les deux rôles d’un duo assis, seuleme
         w.tick();
         assert(w.lifeState.needs.rest < before.rest);
         assert(w.lifeState.needs.company < before.company);
-        assert.equal(w.lifeState.relationships[partner].seconds, 2);
-        assert.equal(w.lifeState.relationships[partner].activities.rest, 2);
         animation.def.isCombat = true;
         const beforeCombat = { ...w.lifeState.needs };
         w.tick();
@@ -803,7 +736,6 @@ it('salue une connaissance pendant une pause, sans interrompre une réaction ni 
     w.tick(); w.tick();
     w.lifeState.needs = { rest: 0, work: 0, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
     w.tick(); w.tick();
-    life.rememberLifeConversation(w.lifeState, 'cha', 10, 'social');
     const arrive = room => document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'arrival', room, fromId: 'cha' } }));
     arrive('bathroom');
     assert(!w.logs.some(log => log.action === 'life_reaction'));
@@ -815,9 +747,7 @@ it('salue une connaissance pendant une pause, sans interrompre une réaction ni 
     w.controller.reportAnimationPlayback('waving', 1, true);
     w.controller.update(1);
     assert(w.lifeState.needs.company >= before.company && w.lifeState.needs.rest >= before.rest);
-    assert.equal(w.lifeState.relationships.cha.seconds, 10, 'A wave is not a conversation');
     assert.equal(w.lifeState.lastActivity, 'work', 'A reaction must preserve the last meaningful activity');
-    assert.equal(w.lifeState.memory.pause, undefined);
     w.tick();
     w.lifeState.needs.meal = 100;
     arrive('living');
@@ -863,7 +793,6 @@ it('réagit une fois à une place occupée, puis choisit ailleurs sans faux bén
     w.tick(1, false); w.tick(1, false);
     assert.equal(w.controller.state.animation, 'thoughtful-head-shake');
     assert(w.lifeState.needs.work >= 65);
-    assert.equal(w.lifeState.memory.work, undefined);
     w.controller.reportAnimationPlayback('thoughtful-head-shake', 1, true);
     w.controller.update(1);
     for (let tick = 0; tick < 5; tick++) w.tick();
@@ -923,7 +852,6 @@ for (const outcome of ['available', 'busy', 'removed', 'manual', 'urgent', 'mode
       assert.equal(calls.length, 1);
       assert.deepEqual(calls[0], [objectId, slotId, 'native', outcome === 'replaced' ? 'vivida' : 'cha', seated ? 'seat-duo' : undefined, true, undefined]);
       assert(w.logs.some(log => log.action === 'life_invitation_resumed'));
-      assert.deepEqual(w.lifeState.relationships, {}, 'Resuming an invitation is not played time together');
     } else if (outcome === 'noreturn') {
       assert.equal(calls.length, 0, 'A return availability check must not create a reverse invitation');
     } else {
@@ -953,23 +881,6 @@ it('une reprise confirmée ne prend jamais la main sur un contrôle utilisateur'
   } finally { disconnect(); global.document = originalDocument; }
 });
 
-it('refuse les invitations entre colocataires en conflit, avec une raison dans le journal', () => {
-  const originalDocument = global.document;
-  global.document = new EventTarget();
-  try {
-    for (const [targetId, fromId] of [['cha', 'delphina'], ['delphina', 'cha'], ['cha', 'marissa'], ['marissa', 'cha'], ['sabira', 'marissa'], ['marissa', 'sabira']]) {
-      const w = world(targetId), disconnect = w.controller.connect();
-      try {
-        w.tick();
-        const event = new CustomEvent('npc-check-life-invitation', { cancelable: true, detail: { targetId, fromId, objectId: 'garden-conversation', slotId: 'chat' } });
-        assert.equal(document.dispatchEvent(event), false);
-        const log = w.logs.find(log => log.action === 'life_invitation_declined');
-        assert(log.message.includes('Ne s’entend pas'));
-        assert.equal(log.data.deferred, false);
-      } finally { disconnect(); }
-    }
-  } finally { global.document = originalDocument; }
-});
 
 it('éteint la télé au départ du spectateur sans couper le bureau utilisé par un autre PNJ', () => {
   const originalDocument = global.document;
@@ -1029,38 +940,20 @@ it('partage faim et compagnie seulement pendant les animations des deux repas, a
     const alone = a.lifeState.needs.company;
     a.tick();
     assert(a.lifeState.needs.company > alone);
-    assert.equal(a.lifeState.relationships.sabira, undefined);
     b.tick();
     const before = { ...a.lifeState.needs };
     a.tick();
     assert(a.lifeState.needs.meal < before.meal && a.lifeState.needs.company < before.company);
-    assert(a.lifeState.relationships.sabira.activities.meal > 0);
-    assert(b.lifeState.relationships.native.activities.meal > 0);
     assert(a.logs.some(log => log.action === 'life_started' && log.data.partnerId === 'sabira'));
     b.controller.setPosition(70, 0, 10);
     assert(!activeLifeMeals.has('sabira'));
-    const afterDeparture = { ...a.lifeState.needs }, sharedSeconds = a.lifeState.relationships.sabira.seconds;
+    const afterDeparture = { ...a.lifeState.needs };
     a.tick();
     assert(a.lifeState.needs.meal < afterDeparture.meal && a.lifeState.needs.company > afterDeparture.company);
-    assert.equal(a.lifeState.relationships.sabira.seconds, sharedSeconds);
     assert.equal(a.controller.state.animation, 'eat', 'The remaining person finishes her own meal');
   } finally { activeLifeMeals.clear(); }
 });
 
-it('ne transforme pas un repas entre colocataires en conflit en moment amical', () => {
-  const { activeLifeMeals } = life;
-  const w = world('cha');
-  try {
-    activeLifeMeals.set('delphina', { objectId: 'bench', slotId: 'seat-a' });
-    w.objects.bench = { id: 'bench', category: 'seating', position: [10, 0, 10], slots: [{ slotId: 'seat-b', animation: 'eat' }] };
-    w.scenario.splice(0, w.scenario.length, { type: 'USE_OBJECT', smartObjectId: 'bench', slotId: 'seat-b', animation: 'eat', duration: 10, lifePhase: 'eat-meal' });
-    w.tick(1, false);
-    const before = { ...w.lifeState.needs };
-    w.tick();
-    assert(w.lifeState.needs.meal < before.meal && w.lifeState.needs.company > before.company);
-    assert.equal(w.lifeState.relationships.delphina.seconds, 0);
-  } finally { activeLifeMeals.clear(); }
-});
 
 it('recherche une place partagée après la préparation, sans réserver la place de sa voisine', () => {
   const w = world('native', true);
@@ -1079,7 +972,6 @@ it('recherche une place partagée après la préparation, sans réserver la plac
     assert(w.logs.some(log => log.action === 'life_meal_join' && log.data.partnerId === 'sabira'));
     assert(!w.reservations.has('bench:seat-a'));
     assert(!w.reservations.has('bench:seat-b'), 'Preparing food cannot claim the future seat');
-    assert.equal(w.lifeState.relationships.sabira, undefined, 'The intent to join is not shared time');
     w.tick(1, false);
     assert.equal(w.reservations.get('bench:seat-b'), 'native');
     assert(!activeLifeMeals.has('native'), 'Arrival without playback does not count as eating');
@@ -1107,69 +999,18 @@ it('retire un repas actif à sa fin, au changement de mode et au démontage du c
   } finally { global.document = originalDocument; }
 });
 
-it('explique le choix d’une assise à l’écart d’une colocataire détestée', () => {
-  const w = world('cha');
-  w.tick(); w.tick(); w.tick();
-  w.lifeState.needs = { ...w.lifeState.needs, rest: 70, work: 0, walk: 0 };
-  w.candidates.find(c => c.activity === 'rest').avoidedNeighbors = ['delphina'];
-  w.objects['quiet-seat'] = { id: 'quiet-seat', category: 'seating', position: [50, 0, 10], slots: [{ slotId: 'use', animation: 'sit' }] };
-  w.candidates.push({ activity: 'rest', id: 'quiet-seat', slotId: 'use', x: 50, z: 10 });
-  for (let i = 0; i < 5 && !w.logs.some(log => log.action === 'life_decision' && log.object?.id === 'quiet-seat'); i++) w.tick();
-  const decision = w.logs.find(log => log.action === 'life_decision' && log.object?.id === 'quiet-seat');
-  assert(decision.message.includes('à l’écart de Delphina'));
-  assert(decision.data.candidates.some(c => c.avoidedNeighbors?.includes('delphina')));
-});
 
-it('revérifie le voisinage après la cuisine et garde la dernière assise quand aucune alternative n’existe', () => {
-  for (const alternative of [true, false]) {
-    const w = world('cha', true);
-    w.scenario.splice(0, w.scenario.length,
-      { type: 'USE_OBJECT', smartObjectId: 'cuisine-group', slotId: 'cook-stove', animation: 'cook', duration: 2, lifePhase: 'prepare-meal' },
-      { type: 'USE_OBJECT', smartObjectId: 'rest', slotId: 'use', animation: 'eat', duration: 10, lifePhase: 'eat-meal' });
-    w.tick(1, false);
-    w.candidates.find(c => c.activity === 'meal').avoidedNeighbors = ['delphina'];
-    if (alternative) {
-      w.objects['quiet-seat'] = { id: 'quiet-seat', category: 'seating', position: [50, 0, 10], slots: [{ slotId: 'use', animation: 'sit' }] };
-      w.candidates.push({ activity: 'meal', id: 'quiet-seat', slotId: 'use', x: 50, z: 10 });
-    }
-    w.tick(15);
-    assert.equal(w.scenario[1].smartObjectId, alternative ? 'quiet-seat' : 'rest');
-    assert.equal(w.logs.some(log => log.action === 'life_meal_seat_changed'), alternative);
-    assert(!w.reservations.size, 'The next seat must still be reserved on arrival');
-  }
-});
 
 it('utilise et explique le goût initial de Cha pour la marche dans une décision réelle', () => {
   const w = world('cha');
   w.tick(); w.tick(); w.tick();
-  w.lifeState.memory = {};
   w.lifeState.needs = { ...w.lifeState.needs, rest: 0, work: 60, walk: 60 };
   for (let i = 0; i < 5 && !w.logs.some(log => log.action === 'life_decision' && log.data.activity === 'walk'); i++) w.tick();
   const decision = w.logs.find(log => log.action === 'life_decision' && log.data.activity === 'walk');
   assert(decision.message.includes('Goût initial.'));
   assert.deepEqual(decision.data.initialPreferences, life.LIFE_INITIAL_PREFERENCES.cha);
-  assert(decision.data.candidates.find(c => c.activity === 'walk').preference > decision.data.candidates.find(c => c.activity === 'work').preference);
 });
 
-it('Helena accepte les nouvelles rencontres selon son envie de compagnie, puis reconnaît ses connaissances', () => {
-  const originalDocument = global.document;
-  global.document = new EventTarget();
-  const w = world('helena'), disconnect = w.controller.connect();
-  const invite = () => document.dispatchEvent(new CustomEvent('npc-check-life-invitation', { cancelable: true,
-    detail: { targetId: 'helena', fromId: 'native', objectId: 'garden-conversation', slotId: 'chat' } }));
-  try {
-    w.tick();
-    assert.equal(invite(), false);
-    assert(w.logs.some(log => log.action === 'life_invitation_declined' && log.message.includes('Timide')));
-    w.lifeState.needs.company = 50;
-    assert.equal(invite(), true);
-    w.lifeState.needs.company = 0;
-    life.rememberLifeConversation(w.lifeState, 'native', 1, 'social');
-    assert.equal(invite(), true);
-    w.lifeState.needs.toilet = 95;
-    assert.equal(invite(), false, 'Even a familiar person cannot interrupt urgent care');
-  } finally { disconnect(); global.document = originalDocument; }
-});
 
 it('applique l’exercice des deux rôles d’un combat réel sans remplir la compagnie ni créer une amitié', () => {
   const originalDocument = global.document;
@@ -1196,7 +1037,6 @@ it('applique l’exercice des deux rôles d’un combat réel sans remplir la co
         w.tick();
         assert(w.lifeState.needs.work < before.work && w.lifeState.needs.walk < before.walk);
         assert(w.lifeState.needs.company > before.company);
-        assert.equal(w.lifeState.relationships.sara, undefined);
       } finally { disconnect(); }
     }
   } finally { global.document = originalDocument; }
@@ -1223,7 +1063,6 @@ it('distingue les bénéfices de la masseuse et de la receveuse pendant un vrai 
         const before = { ...w.lifeState.needs }; w.tick();
         assert(w.lifeState.needs.company < before.company);
         assert(role === 'roleA' ? w.lifeState.needs.rest < before.rest : w.lifeState.needs.rest > before.rest);
-        assert(w.lifeState.relationships.native.activities[role === 'roleA' ? 'receive-massage' : 'massage'] > 0);
       } finally { disconnect(); }
     }
   } finally { global.document = originalDocument; }
@@ -1256,13 +1095,11 @@ it('reprend une vie sauvegardée en choisissant ses besoins actuels plutôt que 
   const w = world('native', true, false, true, false, {
     elapsedSeconds: 360, handsDirty: true,
     needs: { ...life.createLife('native').needs, work: 10, meal: 95 },
-    memory: { yoga: { satisfaction: 20, lastAt: 300 } },
   });
   w.tick(1, false); w.tick(1, false);
   assert.equal(w.controller.state.animation, 'wash-hands');
   assert(w.logs.some(log => log.action === 'life_decision' && log.data.activity === 'wash-hands'));
   assert(!w.logs.some(log => log.action === 'life_started' && log.data.activity === 'work'));
-  assert.equal(w.lifeState.memory.yoga.satisfaction, 20);
   assert(w.lifeState.elapsedSeconds >= 360);
 });
 
@@ -1281,15 +1118,13 @@ it('accepte une invitation précise à danser sur une autre place et conserve sa
   } finally { disconnect(); global.document = previous; }
 });
 
-it('reporte une danse pour un besoin urgent puis la reprend, et refuse une invitation hostile', () => {
+it('reporte une danse pour un besoin urgent puis la reprend', () => {
   const previous = global.document; global.document = new EventTarget();
   const w = world('marissa'), disconnect = w.controller.connect();
   try {
     w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', name: 'Studio Damien', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
     w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
     const invite = fromId => { const detail = { targetId: 'marissa', fromId, objectId: 'est-neighbor-flat', slotId: 'dance-2' }; document.dispatchEvent(new CustomEvent('npc-invite-life-activity', { detail })); return detail; };
-    assert(!invite('cha').accepted);
-    assert(w.logs.some(log => log.action === 'life_invitation_declined'));
     w.lifeState.needs.meal = 95;
     w.reservations.set('est-neighbor-flat:dance-1', 'rosanna');
     assert(!invite('rosanna').accepted);
@@ -1338,7 +1173,6 @@ it('une activité commencée par une coloc inspire une danse pendant une pause, 
     assert(w.logs.some(log => log.action === 'life_reaction'));
     for (let i = 0; i < 12 && !w.logs.some(log => log.action === 'life_inspired'); i++) w.tick(1);
     assert(w.logs.some(log => log.action === 'life_inspired'));
-    assert.equal(w.lifeState.relationships.sabira.seconds, 0, 'Reacting to a friend does not invent shared activity time');
   } finally { disconnect(); global.document = previous; }
 });
 
@@ -1448,33 +1282,6 @@ it('la cuisinière propose une autre place sur son assise une seule fois, même 
   } finally { document.removeEventListener('npc-invite-life-activity', respond); }
 }));
 
-it('refuse un repas proposé par une colocataire détestée même si une portion est disponible', () => withMealInvitation('marissa', w => {
-  assert(!w.invite({ fromId: 'cha' }).accepted);
-  assert(w.logs.some(log => log.action === 'life_invitation_declined' && log.data.reason.includes('s’entend')));
-  assert(!life.lifeHousehold.meals.held.marissa);
-}));
-
-it('la musique inspire une danseuse disponible et respecte les urgences, la pièce et son arrêt', () => {
-  for (const outcome of ['dance', 'non-dancer', 'other-room', 'urgent', 'stopped']) {
-    const previous = global.document; global.document = new EventTarget();
-    const w = world(outcome === 'non-dancer' ? 'native' : 'rosanna'), disconnect = w.controller.connect();
-    w.candidates.splice(2, 1);
-    try {
-      w.tick(); w.tick();
-      w.lifeState.needs = { rest: 0, work: 10, walk: 0, meal: 0, hygiene: 0, toilet: 0, company: 0, environment: 0 };
-      w.tick(); w.tick();
-      w.objects['est-neighbor-flat'] = { id: 'est-neighbor-flat', position: [30, 0, 10], slots: [{ slotId: 'dance-2', animation: 'dance', duration: 3 }] };
-      w.candidates.push({ activity: 'dance', id: 'est-neighbor-flat', slotId: 'dance-2', x: 30, z: 10 });
-      if (outcome === 'urgent') w.lifeState.needs.toilet = 100;
-      document.dispatchEvent(new CustomEvent('npc-life-music', { detail: { playing: true, room: outcome === 'other-room' ? 'garden' : 'living' } }));
-      if (outcome === 'stopped') document.dispatchEvent(new CustomEvent('npc-life-music', { detail: { playing: false, room: 'living' } }));
-      for (let i = 0; i < 12; i++) w.tick(.5);
-      assert.equal(w.logs.some(log => log.action === 'life_inspired'), outcome === 'dance');
-      if (outcome === 'dance') assert(w.logs.some(log => log.action === 'life_reaction' && log.animation.id === 'listening-to-music'));
-      assert.equal(w.lifeState.relationships['google-nest-mini'], undefined);
-    } finally { disconnect(); global.document = previous; }
-  }
-});
 
 for (const variation of [false, true]) for (const accepted of [false, true]) it(`un clip duo tiré sur un objet exige une session : variation=${variation}, acceptée=${accepted}`, () => {
   const w = world('safa'), calls = [];
