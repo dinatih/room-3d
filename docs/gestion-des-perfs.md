@@ -1,5 +1,31 @@
 # Gestion des perfs de l’app
 
+## Campagne du 26 novembre 2026
+
+Commande de suivi ci-dessous relancée sur le commit propre `7a4213d5` : **6 passages réussis sur 6**, en 669 secondes. Chromium 156.0.8078.47 headless, Radeon 840M via ANGLE/Vulkan, secteur pendant toute la campagne, viewport 1362 × 810, DPR 1. Trois chargements indépendants par condition, 15 secondes de chauffe puis 60 secondes mesurées ; décor, ombres, reflets, animaux et robots activés selon les réglages du scénario.
+
+Rapports détaillés locaux : `test-results/2026-11-26T12-35-44.133Z-perf/report.json` et `report.md` (ignorés par Git).
+
+| Mesure, médiane des trois passages | Jour | Nuit |
+| --- | ---: | ---: |
+| FPS moyens par passage | 20,54 | 25,89 |
+| Étendue des FPS moyens | 20,27–22,47 | 24,90–26,39 |
+| Démarrage | 32,02 s | 30,92 s |
+| Intervalle des images p50 / p95 / p99 | 48,0 / 60,1 / 68,5 ms | 37,3 / 48,0 / 56,1 ms |
+| Plus longue interruption par passage | 103,9 ms | 92,8 ms |
+| Pic RSS Chrome additionné | 4,03 Gio | 4,11 Gio |
+| Pic du tas JS | 292,0 Mio | 320,4 Mio |
+| CPU du rendu | 18,5 ms | 13,0 ms |
+| GPU du rendu | 17,07 ms | 15,10 ms |
+| Appels de dessin par image | 1 618 | 1 025 |
+| Triangles soumis par image | 8,67 millions | 4,92 millions |
+
+Les FPS mesurent les images de la scène principale. Les temps CPU et GPU ne s'additionnent pas ; les intervalles entre images comprennent également le reste de l'activité de la page. Le RSS additionné compte certaines pages partagées plusieurs fois et ne mesure pas la mémoire physique unique.
+
+Le dernier rapport High complet de jour retrouvé (`2026-11-19T22-44-57.487Z-perf`, commit `69c22ba8`) donnait 17,06 FPS, un démarrage de 45,55 s, un p95 de 88,9 ms et un pic RSS médian de 2,08 Gio. Les écarts observés sont donc respectivement **+20,4 %**, **−29,7 %**, **−32,4 %** et **+93,6 %**. Cette comparaison reste indicative : le noyau est passé de `7.2.11-arch1-1` à `7.2.15-4-omarchy`, des objets chargés et les options de scène ont changé. Elle ne permet pas d'attribuer les écarts à une optimisation précise. Le rapport de jour ultérieur du 19 novembre est marqué en échec ; aucune référence High nuit complète n'a été retrouvée dans les campagnes précédentes inspectées.
+
+La RAM disponible minimale observée va de 2,21 à 3,36 Gio selon le passage. Le swap augmente de 121,3 / 8,6 / 29,5 Mio sur les passages de jour, et de −8,6 / 4,9 / 13,1 Mio la nuit. Ces variations invitent à examiner la pression mémoire avant d'approuver une référence ; aucune référence n'a été créée. Le rendu reste sous 30 FPS dans les deux conditions, avec un coût de rendu et un nombre de soumissions supérieurs le jour ; cette campagne ne contient pas de profil CPU permettant d'isoler le reste du coût.
+
 ## Qualité unique depuis le 16 novembre 2026
 
 Les niveaux Low/Mid/High et le calque `mirrorsHD` sont supprimés. La scène utilise les réglages de l’ancien High : ciel 4K, vidéos HD et reflets complets à 512 × 512 pixels, sans rétrogradation selon le mode caméra. Le calque Miroirs permet toujours de masquer les reflets. Les paramètres de qualité des anciennes URL ne pilotent plus le rendu.
