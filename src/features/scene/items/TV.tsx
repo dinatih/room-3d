@@ -2,7 +2,7 @@
  * TV.tsx — CHiQ L32H7A 32" (items/tv/tv.glb).
  * Scaled to TV_W=73 cm. Action 'tv-toggle' : écran ON/OFF.
  */
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTexture } from '@react-three/drei';
 import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 import * as THREE from 'three';
@@ -28,7 +28,12 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
   const isTvOn = actionState[ACTION_KEY] ?? false;
   const isDisplaying = isVideoActive || isTvOn;
   const activeTex = isVideoActive ? videoTex : (isTvOn ? screenTex : null);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
   const [screenZ, setScreenZ] = useState(0);
+
+  useLayoutEffect(() => {
+    if (matRef.current) matRef.current.needsUpdate = true;
+  }, [activeTex, isVideoActive]);
 
   useLayoutEffect(() => {
     removeGlbLines(scene);
@@ -55,6 +60,7 @@ export function TV({ actionState = {}, onSize, isPreview = false }: Partial<Omit
       <mesh position={[0, 0, screenZ]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[TV_W - 4, TV_H - 4]} />
         <meshStandardMaterial
+          ref={matRef}
           side={THREE.DoubleSide}
           map={activeTex}
           color={isDisplaying ? 0xffffff : 0x060606}

@@ -74,11 +74,13 @@ function useScreenVideo(requested: boolean, sources: Record<ScreenVideoQuality, 
   const quality = useSceneStore(s => s.screenVideoQuality);
   const invalidate = useThree(s => s.invalidate);
   const [resource, setResource] = useState<ScreenVideo | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
   const [stillTexture, setStillTexture] = useState<THREE.Texture | null>(null);
 
   useEffect(() => {
     if (!requested) {
       setResource(null);
+      setVideoReady(false);
       setStillTexture(null);
       return;
     }
@@ -86,6 +88,7 @@ function useScreenVideo(requested: boolean, sources: Record<ScreenVideoQuality, 
     if (!enabled) {
       // En SD : les vidéos sont désactivées, charger l'image statique (poster)
       setResource(null);
+      setVideoReady(false);
       const loader = new THREE.TextureLoader();
       const tex = loader.load('items/omarchy-screen/omarchy-screen.png', () => {
         tex.colorSpace = THREE.SRGBColorSpace;
@@ -101,6 +104,18 @@ function useScreenVideo(requested: boolean, sources: Record<ScreenVideoQuality, 
     setStillTexture(null);
     const acquired = acquireVideo(sources, quality, muted);
     setResource(acquired);
+    const hasFrame = acquired.video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    setVideoReady(hasFrame);
+    const onLoadedData = () => {
+      acquired.texture.needsUpdate = true;
+      setVideoReady(true);
+      invalidate();
+    };
+    if (hasFrame) {
+      acquired.texture.needsUpdate = true;
+    } else {
+      acquired.video.addEventListener('loadeddata', onLoadedData, { once: true });
+    }
     // Render on decoded video frames, rather than forcing a continuous render loop.
     let frameId: number;
     const onVideoFrame = () => {
@@ -110,13 +125,14 @@ function useScreenVideo(requested: boolean, sources: Record<ScreenVideoQuality, 
     frameId = acquired.video.requestVideoFrameCallback(onVideoFrame);
     invalidate();
     return () => {
+      acquired.video.removeEventListener('loadeddata', onLoadedData);
       acquired.video.cancelVideoFrameCallback(frameId);
       releaseVideo(acquired);
       invalidate();
     };
   }, [requested, enabled, quality, sources, muted, invalidate]);
 
-  const active = requested && (enabled ? resource?.quality === quality : Boolean(stillTexture));
+  const active = requested && (enabled ? (resource?.quality === quality && videoReady) : Boolean(stillTexture));
   const currentTex = enabled ? (resource?.texture ?? null) : stillTexture;
   return { isVideoActive: active, texture: active ? currentTex : null };
 }

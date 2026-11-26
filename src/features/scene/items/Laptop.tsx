@@ -6,7 +6,7 @@
  * Ports et couleurs intégrés au modèle ; préparation statique mise en cache.
  * DRACOLoader configuré en amont dans main.tsx (useGLTF.setDecoderPath).
  */
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useGLTFClone } from '../useGLTFClone';
 import { getPreparedLaptopScene } from './prepareLaptopScene';
 import * as THREE from 'three';
@@ -27,6 +27,11 @@ const GLB_POS: [number, number, number] = [0, 0, -0.41];
 export function Laptop({ onSize, actionState = {}, isPreview = false }: Partial<Omit<SceneItemProps, 'item'>>) {
   const { scene: clone } = useGLTFClone(GLB_PATH, false, getPreparedLaptopScene);
   const { isVideoActive, texture: videoTex } = useDeskScreenVideo(isPreview ? !!actionState['desk2-screen-toggle'] : undefined);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  useLayoutEffect(() => {
+    if (matRef.current) matRef.current.needsUpdate = true;
+  }, [isVideoActive, videoTex]);
 
   useLayoutEffect(() => {
     onSize?.(new THREE.Vector3(BASE_W, BASE_H + SCREEN_D, BASE_D));
@@ -43,6 +48,7 @@ export function Laptop({ onSize, actionState = {}, isPreview = false }: Partial<
       >
         <planeGeometry args={[28.5, 19.0]} />
         <meshStandardMaterial
+          ref={matRef}
           side={THREE.DoubleSide}
           map={isVideoActive ? videoTex : null}
           color={isVideoActive ? 0xffffff : 0x080808}
