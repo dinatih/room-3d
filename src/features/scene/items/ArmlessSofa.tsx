@@ -1,31 +1,32 @@
 /**
  * ArmlessSofa.tsx — Canapé de jardin 100×60×100cm sans accoudoirs.
- * Coordonnées locales : X=profondeur centré, Z=largeur centré, Y=0=sol.
- * Placement monde dans Garden.tsx.
+ * Coordonnées locales : X/Z centrés, Y=0 = sol.
  */
-import { useLayoutEffect, useMemo } from 'react';
+import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { SceneModelProps } from '@shared/types';
+import { glbLocalBBox } from '../glbUtils';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 
-const W = 100, D = 60, H = 100, SEAT_H = 40, BACK_T = 10, R = 6;
-
-const redMat = new THREE.MeshStandardMaterial({ color: 0xcc0000, roughness: 0.7 });
+const PATH = '/items/armless-sofa/armless-sofa.glb';
+preloadSceneGLTF(PATH);
 
 export function ArmlessSofa({ onSize }: SceneModelProps) {
-  const seatGeo = useMemo(() => new RoundedBoxGeometry(W, SEAT_H, D, 3, R), []);
-  const backGeo = useMemo(() => new RoundedBoxGeometry(W, H, BACK_T, 3, R), []);
+  const { scene } = useGLTFClone(PATH);
 
   useLayoutEffect(() => {
-    onSize?.(new THREE.Vector3(W, H, D));
-  }, []);
+    scene.scale.setScalar(100);
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.userData.birdPerch = true;
+      }
+    });
+    const box = glbLocalBBox(scene);
+    scene.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+    onSize?.(box.getSize(new THREE.Vector3()));
+  }, [scene, onSize]);
 
-  return (
-    <group>
-      <mesh userData={{ birdPerch: true }} geometry={seatGeo} material={redMat}
-        position={[0, SEAT_H / 2, 0]} castShadow receiveShadow />
-      <mesh userData={{ birdPerch: true }} geometry={backGeo} material={redMat}
-        position={[0, H / 2, -D / 2 + BACK_T / 2 + 0.5]} castShadow />
-    </group>
-  );
+  return <primitive object={scene} />;
 }

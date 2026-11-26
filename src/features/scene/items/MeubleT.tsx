@@ -1,50 +1,31 @@
 /**
- * MeubleT.tsx — Meuble TV BESTÅ en T (procédural).
- * Coordonnées locales : centré XZ, Y=0 = base du meuble.
- * Placement scène (sur Kallax SE, contre mur B) dans Decor.tsx.
+ * MeubleT.tsx — Meuble bibliothèque en T (étagère excentrée : 40 cm gauche, 18 cm droite).
+ * Coordonnées locales : X/Z centrés sur le caisson, Y=0 = base du meuble.
  */
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import type { SceneModelProps } from '@shared/types';
+import { glbLocalBBox, mergeGlbByMaterial } from '../glbUtils';
+import { useGLTFClone, preloadSceneGLTF } from '../useGLTFClone';
 
-const woodMat       = new THREE.MeshStandardMaterial({ color: 0xc8a46e, roughness: 0.85 });
-const whitePlanMat  = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.85 });
-
-const W = 22.5, H = 55, D = 27.5, T = 1.5;
-const PL = 80, PT = 3.7, PD = 23.5;
-const plankY = 33 + PT / 2;
-const plankZ = -D / 2 + PD / 2;
+const PATH = '/items/meuble-t/meuble-t.glb';
+preloadSceneGLTF(PATH);
 
 export function MeubleT({ onSize }: SceneModelProps) {
-  const groupRef = useRef<THREE.Group>(null!);
+  const { scene } = useGLTFClone(PATH);
 
   useLayoutEffect(() => {
-    groupRef.current.updateMatrixWorld(true);
-    onSize?.(new THREE.Box3().setFromObject(groupRef.current).getSize(new THREE.Vector3()));
-  }, []);
+    if (!scene.userData.merged) {
+      scene.scale.setScalar(100);
+      mergeGlbByMaterial(scene);
+    } else {
+      scene.scale.set(1, 1, 1);
+    }
+    const box = glbLocalBBox(scene);
+    // Conserve X=0, Z=0 au centre du caisson (l'étagère est volontairement excentrée)
+    scene.position.set(0, -box.min.y, 0);
+    onSize?.(box.getSize(new THREE.Vector3()));
+  }, [scene, onSize]);
 
-  return (
-    <group ref={groupRef}>
-      {/* Dessus */}
-      <mesh position={[0, H - T / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[W, T, D]} />
-      </mesh>
-      {/* Dessous */}
-      <mesh position={[0, T / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[W, T, D]} />
-      </mesh>
-      {/* Côté gauche */}
-      <mesh position={[-W / 2 + T / 2, H / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[T, H, D]} />
-      </mesh>
-      {/* Côté droit */}
-      <mesh position={[W / 2 - T / 2, H / 2, 0]} castShadow receiveShadow material={woodMat}>
-        <boxGeometry args={[T, H, D]} />
-      </mesh>
-      {/* Planche blanche horizontale */}
-      <mesh position={[0, plankY, plankZ]} castShadow material={whitePlanMat}>
-        <boxGeometry args={[PL, PT, PD]} />
-      </mesh>
-    </group>
-  );
+  return <primitive object={scene} />;
 }

@@ -2,7 +2,8 @@ import { forwardRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react
 import * as THREE from 'three';
 import { LAYER_WALKER } from '@config';
 import type { LaraVariant } from '../LaraVariants';
-import { getPendantResources } from '../items/DoubleVenusPendant';
+import { useGLTFClone } from '../useGLTFClone';
+import { GLB_DOUBLE_VENUS_PENDANT } from '../items/DoubleVenusPendant';
 
 export interface CharacterPendantHandle {
   update: (delta: number, reset: boolean) => void;
@@ -31,6 +32,7 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
   { neck, scene, torso, visible, shadows, resetKey, variant }, ref,
 ) {
   if (!neck) throw new Error('Lara pendant requires a neck bone');
+  const { scene: pendantScene } = useGLTFClone(GLB_DOUBLE_VENUS_PENDANT);
   const rig = useMemo(() => {
     const root = new THREE.Group();
     root.name = 'lara_necklace';
@@ -50,14 +52,14 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
     root.add(cord);
     const pendant = new THREE.Group();
     pendant.name = 'lara_double_venus_pendant';
-    pendant.scale.setScalar(.01);
-    const resources = getPendantResources();
-    for (const geometry of [resources.body, resources.bail]) {
-      const mesh = new THREE.Mesh(geometry, resources.steel);
-      mesh.userData.isPendant = true;
-      mesh.position.y = -BAIL_Y;
-      pendant.add(mesh);
-    }
+    pendantScene.scale.set(1, 1, 1);
+    pendantScene.position.set(0, -BAIL_Y * 0.01, 0);
+    pendantScene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        obj.userData.isPendant = true;
+      }
+    });
+    pendant.add(pendantScene);
     root.add(pendant);
     root.traverse(obj => { obj.layers.set(LAYER_WALKER); });
     const anchorLocal = new THREE.Vector3(.0025, .020, .0305);
@@ -152,7 +154,7 @@ export const CharacterPendant = forwardRef<CharacterPendantHandle, Props>(functi
       lastAnchor.copy(anchor);
     }
     return { root, cordGeometry, cordMaterial, update, setColorSync: (sync: () => void) => { syncCordColor = sync; }, reset: () => { initialized = false; } };
-  }, [neck, scene]);
+  }, [neck, scene, pendantScene]);
 
   // Use the same top classification as the variant styling, even when the top is hidden.
   useLayoutEffect(() => {
