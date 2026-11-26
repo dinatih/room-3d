@@ -12,7 +12,7 @@ const approach = { owner: 'fixture', goal: { x: 0, z: 0 }, start: { x: -80, z: 0
   actors: [], exiting: false, flexible: false, escape: [] };
 const duo = { anchor: { x: 0, z: 0 }, offsets: [{ x: 20, z: 0 }], partner: definition, surfaces };
 const clientModule = (journal = []) => load('src/features/scene/ai/navigation/pathfindingClient.ts', {
-  '@/devLog': { devLog: entry => journal.push(entry), DEV_LOG_ENABLED: true },
+  '@/devLog': { devLog: entry => journal.push(entry), NAV_TRACE_ENABLED: true },
   './navigationScope': scopes, './mesh': meshModule, './queries': queries, '../../cameraState': { cameraState: {} },
 }, source => source.replaceAll('import.meta.url', "'file:///navigation.ts'").replace(/if \(import\.meta\.hot\)[\s\S]*$/, ''));
 

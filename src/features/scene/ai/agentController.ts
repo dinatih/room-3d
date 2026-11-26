@@ -27,7 +27,7 @@ import { handleDuoInteraction } from './agent/agentDuoHandler';
 import { releaseAgentDoors } from './navigation/doorRequests';
 import { setDesk2SmartActionState } from '@features/scene/utils/deskScreenVideo';
 import { NavigationScope, NavigationPending, type NavigationJob } from './navigation/navigationScope';
-import { devLog, DEV_LOG_ENABLED } from '@/devLog';
+import { devLog, NAV_TRACE_ENABLED } from '@/devLog';
 import { isAppIdle } from '../idleState';
 import { LIFE_MINUTES_PER_SECOND } from './laraLife';
 
@@ -226,11 +226,11 @@ export function createAgentController(
   let diagnosticInstruction: AgentInstruction | undefined;
   const reportNavigationStop = (reason: string, label: string, target: { x: number; z: number }, actorBlockers?: ActorBlockers, pending = false) => {
     const key = `${label}:${reason}`;
-    if (navigationError === key && (!DEV_LOG_ENABLED || diagnosticStop)) return;
+    if (navigationError === key && (!NAV_TRACE_ENABLED || diagnosticStop)) return;
     navigationError = key;
     const instruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex] ?? routeInstruction;
     const objId = instruction?.smartObjectId ?? claimedSlot?.objectId;
-    if (DEV_LOG_ENABLED) {
+    if (NAV_TRACE_ENABLED) {
       diagnosticStop ??= { reason, startedAt: performance.now() };
       devLog({ tag: _characterId, category: 'nav', action: 'nav_stop', data: {
         reason, label, target, pending, instruction, state, status: agentStatus, deployment,
@@ -2080,7 +2080,7 @@ export function createAgentController(
         const label = objId ? SMART_OBJECTS[objId]?.name ?? objId : instruction?.targetZoneId ?? instruction?.type ?? 'navigation';
         reportNavigationStop(pendingReason, label, state, undefined, true);
       }
-      if (DEV_LOG_ENABLED) {
+      if (NAV_TRACE_ENABLED) {
         const now = performance.now();
         if (state.x !== diagnosticX || state.z !== diagnosticZ) { lastProgressAt = now; diagnosticX = state.x; diagnosticZ = state.z; }
         if (next !== diagnosticInstruction) {

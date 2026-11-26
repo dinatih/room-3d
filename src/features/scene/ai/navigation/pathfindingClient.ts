@@ -4,7 +4,7 @@ import type { PathRequest, PathResponse, NavigationQuery, NavigationResult, Work
 import { navigationQuery, readNavigationJob, type NavigationJob } from './navigationScope';
 import { cameraState } from '../../cameraState';
 import { NavigationMesh } from './mesh';
-import { devLog, DEV_LOG_ENABLED } from '@/devLog';
+import { devLog, NAV_TRACE_ENABLED } from '@/devLog';
 
 export interface NavigationGraph extends GraphSnapshot {
   readonly id: number;
@@ -27,14 +27,14 @@ interface Job extends NavigationJob<NavigationResult> {
   waitStartedAt?: number;
 }
 const queue = new Map<number, Job>();
-const navigationEpoch = DEV_LOG_ENABLED ? crypto.randomUUID() : '';
+const navigationEpoch = NAV_TRACE_ENABLED ? crypto.randomUUID() : '';
 let nextGraphId = 0, nextJobId = 0;
 let worker: Worker | undefined;
 const workerGraphIds = new Set<number>();
 let failure: Error | undefined;
 
 function traceJob(action: string, job: Job, data: object = {}) {
-  devLog({ tag: 'navigation', category: 'nav', action, data: { epoch: navigationEpoch, jobId: job.id, graphId: job.graphId, kind: job.query.kind,
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action, data: { epoch: navigationEpoch, jobId: job.id, graphId: job.graphId, kind: job.query.kind,
     status: job.status, queued: Math.max(0, queue.size - 1), runningJobId: queue.values().next().value?.id, ...data } });
 }
 
@@ -158,7 +158,7 @@ export function findPath(graph: NavigationGraph, start: Point, target: Point): P
   try { path = graph.find(start, target); }
   catch (error) { devLog({ tag: 'error', category: 'nav', action: 'nav_path_error', data: { epoch: graph.epoch, graphId: graph.id, start, target, error, definition: graph.definition } }); throw error; }
   const elapsed = performance.now() - began;
-  devLog({ tag: 'navigation', category: 'nav', action: 'nav_path', data: { epoch: graph.epoch, graphId: graph.id, start, target, path, elapsedMs: elapsed,
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_path', data: { epoch: graph.epoch, graphId: graph.id, start, target, path, elapsedMs: elapsed,
     startAccessible: path ? true : graph.canReach(start, start), targetAccessible: path ? true : graph.canReach(target, target) } });
   const timing = pathfindingStats.timings.path;
   timing.completed++; timing.consumed++; timing.localMs += elapsed;
@@ -170,7 +170,7 @@ function releaseGraph(id: number): void {
   for (const job of queue.values()) if (job.graphId === id) job.cancel();
   workerGraphIds.delete(id);
   worker?.postMessage({ release: id });
-  devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_released', data: { epoch: navigationEpoch, graphId: id } });
 }
 
 type GraphPreparation = { id: number; epoch: string; readonly pending: boolean; read(): NavigationGraph; retain(): () => void; cancel(): void };
@@ -178,13 +178,13 @@ const sharedGraphs = new Map<string, GraphPreparation>();
 export function prepareNavigationGraph(definition: WorkerDefinition): GraphPreparation {
   const key = JSON.stringify(definition), shared = sharedGraphs.get(key);
   if (shared) {
-    devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: navigationEpoch, graphId: shared.id, cause: 'shared-geometry' } });
+    if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: navigationEpoch, graphId: shared.id, cause: 'shared-geometry' } });
     const release = shared.retain();
     let cancelled = false;
     return { ...shared, get pending() { return shared.pending; }, cancel: () => { if (!cancelled) { cancelled = true; release(); } } };
   }
   const id = ++nextGraphId;
-  devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_created', data: { epoch: navigationEpoch, graphId: id, definition } });
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_created', data: { epoch: navigationEpoch, graphId: id, definition } });
   const job = request(id, definition, { kind: 'build' });
   let graph: NavigationGraph | undefined;
   let users = 1, cancelled = false;
@@ -225,7 +225,7 @@ export function readObjectApproach(graph: NavigationGraph, approach: ApproachQue
   const began = performance.now(), direct = directObjectApproach(approach, graph);
   const candidates = direct ? [direct] : objectApproachCandidates(approach, graph);
   const elapsed = performance.now() - began, timing = pathfindingStats.timings.approach;
-  devLog({ tag: 'navigation', category: 'nav', action: 'nav_approach_candidates', data: { epoch: graph.epoch, graphId: graph.id,
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_approach_candidates', data: { epoch: graph.epoch, graphId: graph.id,
     owner: approach.owner, goal: approach.goal, start: approach.start, owned: approach.owned, actors: approach.actors,
     exiting: approach.exiting, flexible: approach.flexible, region: approach.region, candidates, direct: Boolean(direct), elapsedMs: elapsed } });
   timing.completed++; timing.consumed++; timing.localMs += elapsed;

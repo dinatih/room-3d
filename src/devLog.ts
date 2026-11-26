@@ -1,5 +1,6 @@
 /** Development journal, independent of console visibility and rendering frames. */
 export const DEV_LOG_ENABLED = Boolean(import.meta.hot);
+export const NAV_TRACE_ENABLED = DEV_LOG_ENABLED && new URLSearchParams(location.search).get('navTrace') === '1';
 type DevEntry = { tag: string; category?: string; action?: string; message?: string; data?: unknown };
 const host = window as Window & { __roomDevLog?: { session: string; pageStartedAt: string; sequence: number; closed?: boolean } };
 const firstLoad = DEV_LOG_ENABLED && !host.__roomDevLog;

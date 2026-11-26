@@ -11,7 +11,7 @@ import type { GraphDefinition, ApproachRegion } from './queries';
 import { NavigationScope, NavigationPending, navigationValue, getNavigationScope } from './navigationScope';
 import { findPath, prepareNavigationGraph, readObjectApproach, getNavigationJobDiagnostics, type NavigationGraph } from './pathfindingClient';
 import { OccupancyManager, isInRoom, LIMITED_ROOMS, ROOM_CAPACITIES, ROOM_FOOTPRINTS } from '../occupancyManager';
-import { devLog, DEV_LOG_ENABLED } from '@/devLog';
+import { devLog, NAV_TRACE_ENABLED } from '@/devLog';
 
 export { architectureObstacles };
 export const doorKeys = Object.keys(DOOR_CONFIGS) as DoorKey[];
@@ -113,13 +113,13 @@ function getNavigationPreparation(profile: AgentProfile, excludeOwner?: string |
   const signature = JSON.stringify(definition);
   if (old?.signature === signature) {
     old.revision = revision; old.doorAngles = doorAngles;
-    devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: old.preparation.epoch, graphId: old.preparation.id, cause: 'unchanged-geometry', revision } });
+    if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_reused', data: { epoch: old.preparation.epoch, graphId: old.preparation.id, cause: 'unchanged-geometry', revision } });
     return old;
   }
   const preparation = prepareNavigationGraph(definition);
   const previous = old?.previous ?? (old?.graph ? old.preparation : undefined);
   if (old && old.preparation !== previous) old.preparation.cancel();
-  if (DEV_LOG_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_geometry', data: {
+  if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_graph_geometry', data: {
     epoch: preparation.epoch, graphId: preparation.id, revision, cause: !old ? 'initial' : old.doorAngles !== doorAngles ? 'doors' : 'obstacles', excludeOwners: excludeSet, doorAngles: angles, shutterBlocked,
     movingFurniture: [...movingFurniture], definition, sources: solid,
   } });
@@ -174,7 +174,7 @@ export function getObjectApproach(owner: string, goal: Point, agentId: string, s
     surfaces: walkableSurfaces, actors: getAgentObstacles(agentId), exiting, flexible, region, escape,
   });
   const free = candidates.find(p => isAgentDestinationFree(agentId, p)) ?? candidates[0];
-  devLog({ tag: agentId, category: 'nav', action: 'nav_approach_selected', data: { owner, goal, start, exiting, flexible, region, epoch: graph.epoch, graphId: graph.id, candidates, selected: free ?? null, containingOwners } });
+  if (NAV_TRACE_ENABLED) devLog({ tag: agentId, category: 'nav', action: 'nav_approach_selected', data: { owner, goal, start, exiting, flexible, region, epoch: graph.epoch, graphId: graph.id, candidates, selected: free ?? null, containingOwners } });
   return free ?? null;
 }
 
@@ -208,9 +208,9 @@ export function navigationDiagnostics(route: RouteState, agentId: string, start:
     try { limited = limitAgentMovement(agentId, start, next); }
     finally { blockers = endActorBlockCheck(agentId); }
   }
-  if (DEV_LOG_ENABLED && performance.now() - lastWorldDiagnosticAt >= 1000) {
+  if (NAV_TRACE_ENABLED && performance.now() - lastWorldDiagnosticAt >= 1000) {
     lastWorldDiagnosticAt = performance.now();
-    devLog({ tag: 'navigation', category: 'nav', action: 'nav_world', data: {
+    if (NAV_TRACE_ENABLED) devLog({ tag: 'navigation', category: 'nav', action: 'nav_world', data: {
       revision: getObstacleRevision(), navigationRadius: NAVIGATION_RADIUS_CM, actors: getActorNavigationDiagnostics(), furniture: [...furnitureObstacles.values()], movingFurniture: [...movingFurniture],
       doors: doorKeys.map(key => ({ key, actualAngle: doorCollisionState[key].angle, allowedAngle: computeDoorAllowedAngle(DOOR_CONFIGS[key]), limits: getDoorLimitDiagnostics(key), config: DOOR_CONFIGS[key] })),
       glassDoor: glassDoorState,
@@ -281,7 +281,7 @@ export function recoverDoorContact(route: RouteState, agentId: string, start: Po
     }
     if (!target) return undefined;
     route.doorEscape = { key, target, path };
-    devLog({ tag: agentId, category: 'nav', action: 'nav_door_escape', data: { key, start, target, reason: route.waitReason } });
+    if (NAV_TRACE_ENABLED) devLog({ tag: agentId, category: 'nav', action: 'nav_door_escape', data: { key, start, target, reason: route.waitReason } });
   }
   const { key, target } = route.doorEscape;
   const path = route.doorEscape.path;
@@ -493,7 +493,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       const barriers = [...base.obstacles, ...obstacles.map(polygon => [polygon])];
       if (remaining.every((point, i) => !i || segmentFree(remaining[i - 1], point, barriers))) {
         route.crowd.signature = signature;
-        devLog({ tag: agentId, category: 'nav', action: 'nav_detour_reused', data: { graphId: route.crowd.preparation?.id, cause: 'remaining-segments-free' } });
+        if (NAV_TRACE_ENABLED) devLog({ tag: agentId, category: 'nav', action: 'nav_detour_reused', data: { graphId: route.crowd.preparation?.id, cause: 'remaining-segments-free' } });
       }
     }
     if (obstacles.length && (route.crowd?.planning || route.crowd?.preparing || route.crowd?.base !== base || route.crowd.signature !== signature || !progressing && !route.crowd.graph)) {
@@ -502,7 +502,7 @@ function advanceWithNavigation(route: RouteState, agentId: string, start: Point,
       if (!crowd || crowd.base !== base || !crowd.planning && !crowd.preparing && crowd.signature !== signature) {
         crowd?.preparation?.cancel();
         const preparation = prepareNavigationGraph({ obstacles: [...base.obstacles, ...obstacles.map(polygon => [polygon])], surfaces: walkableSurfaces });
-        devLog({ tag: agentId, category: 'nav', action: 'nav_detour_geometry', data: { epoch: preparation.epoch, graphId: preparation.id, cause: !crowd ? 'blocked-segment' : 'remaining-segment-obstructed', baseId: base.id } });
+        if (NAV_TRACE_ENABLED) devLog({ tag: agentId, category: 'nav', action: 'nav_detour_geometry', data: { epoch: preparation.epoch, graphId: preparation.id, cause: !crowd ? 'blocked-segment' : 'remaining-segment-obstructed', baseId: base.id } });
         crowd = { base, graph: null, preparation, preparing: true, signature,
           resume: crowd?.resume ?? { start: { ...start }, next: route.path[route.index] ?? target } };
         route.crowd = crowd;

@@ -3,7 +3,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { getAgentProfile, hasAgentProfile, NAVIGATION_RADIUS_CM } from '../navigation/obstacles';
 import { inflate, CLEARANCE_ERROR, BOOLEAN_PRECISION, pointInRing, projectToSegment, distance, type Point, type Polygon } from '../navigation/geometry';
 import { duoSessionManager } from '../duoSessionManager';
-import { devLog } from '@/devLog';
+import { devLog, NAV_TRACE_ENABLED } from '@/devLog';
 
 export interface SteeringResult { steerX: number; steerZ: number }
 const SHARED_STEER: SteeringResult = { steerX: 0, steerZ: 0 };
@@ -48,7 +48,7 @@ const actorOverlap = (point: Point, center: Point, radius: number) =>
 
 export function reserveAgentDestination(id: string, target: Point | null): void {
   const previous = destinations.get(id);
-  if (previous?.x !== target?.x || previous?.z !== target?.z) devLog({ tag: id, category: 'nav', action: 'nav_reservation', data: { previous, target } });
+  if (NAV_TRACE_ENABLED && (previous?.x !== target?.x || previous?.z !== target?.z)) devLog({ tag: id, category: 'nav', action: 'nav_reservation', data: { previous, target } });
   if (target) destinations.set(id, { ...target });
   else {
     destinations.delete(id);

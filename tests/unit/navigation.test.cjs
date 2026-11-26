@@ -14,7 +14,7 @@ const queries = require('../../src/features/scene/ai/navigation/queries.ts');
 let pathRequests = 0, cancelledGraphs = 0, holdBuilds = false;
 let roomFull = false, checkedRoom;
 const navigationDependencies = {
-    '@/devLog': { devLog() {}, DEV_LOG_ENABLED: false },
+    '@/devLog': { devLog() {}, NAV_TRACE_ENABLED: false },
     './navigationScope': require('../../src/features/scene/ai/navigation/navigationScope.ts'),
     '../occupancyManager': { OccupancyManager: { hasRoomCapacity: room => room !== checkedRoom || !roomFull }, isInRoom: (room, point) => room === checkedRoom && point.x > 0, LIMITED_ROOMS: ['living', 'bathroom', 'corridor'], ROOM_CAPACITIES: { living: 8, bathroom: 3, corridor: 2 }, ROOM_FOOTPRINTS: {} },
     '../../positionState': { positionState: {} }, '../../furniturePositions': { movingFurniture: new Set() }, './architecture': architecture, './obstacles': obstacles, './geometry': g,

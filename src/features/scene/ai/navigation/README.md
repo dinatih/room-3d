@@ -125,6 +125,10 @@ Chaque ligne conserve l'URL, le navigateur, la séquence d'émission et le temps
 modifiés. Les exceptions, rejets de promesses et messages console warn/error
 sont conservés avec stack et cause, y compris la reproduction du funnel.
 
+Les traces détaillées sont désactivées par défaut. Ajouter `navTrace=1` aux
+paramètres de l’URL pour les activer au chargement. La campagne de navigation
+active ce paramètre automatiquement. Les erreurs de navigation restent journalisées.
+
 Les événements `nav_graph_created` et `nav_graph_geometry` contiennent la
 géométrie et ses propriétaires. `nav_path` conserve les chemins et distingue un
 départ invalide d'une cible invalide. Les événements `nav_job_*` relient le job

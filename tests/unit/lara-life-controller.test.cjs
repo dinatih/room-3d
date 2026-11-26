@@ -108,7 +108,7 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
     } }, './navigation/doorRequests': { releaseAgentDoors: noop },
     '@features/scene/utils/deskScreenVideo': { setDesk2SmartActionState: noop },
     './navigation/navigationScope': { NavigationScope: class { clear() {} run(callback) { return callback(); } }, NavigationPending },
-    '@/devLog': { devLog: entry => journal.push(entry), DEV_LOG_ENABLED: diagnostics }, '../idleState': { isAppIdle: () => false },
+    '@/devLog': { devLog: entry => journal.push(entry), NAV_TRACE_ENABLED: diagnostics }, '../idleState': { isAppIdle: () => false },
   });
   const scenario = id === 'vivida' ? [{ ...sequence('bathtub-garden', 'center')[0], lifePhase: 'bath' }]
     : sequence(id === 'cha' ? 'walk' : 'desk-bollsidan-2', 'use');
