@@ -362,6 +362,7 @@
           ${navigator.share ? `<li><button class="dropdown-item small js-share-native" type="button"><i class="bi bi-phone me-2"></i>Share…</button></li>` : ""}
           <li><hr class="dropdown-divider" /></li>
           <li><a class="dropdown-item small js-share-x" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter-x me-2"></i>X.com</a></li>
+          <li><a class="dropdown-item small js-share-threads" target="_blank" rel="noopener noreferrer"><i class="bi bi-threads me-2"></i>Threads</a></li>
           <li><button class="dropdown-item small js-share-insta" type="button"><i class="bi bi-instagram me-2"></i>Instagram</button></li>
           <li><a class="dropdown-item small js-share-fb" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook me-2"></i>Facebook</a></li>
           <li><a class="dropdown-item small js-share-reddit" target="_blank" rel="noopener noreferrer"><i class="bi bi-reddit me-2"></i>Reddit</a></li>
@@ -376,32 +377,28 @@
       const encTitle = encodeURIComponent(title);
       const encBoth = encodeURIComponent(`${title} — ${url}`);
 
-      const xLink = container.querySelector(".js-share-x");
-      const fbLink = container.querySelector(".js-share-fb");
-      const redditLink = container.querySelector(".js-share-reddit");
-      const waLink = container.querySelector(".js-share-wa");
+      container.querySelectorAll(".js-share-x").forEach(link => { link.href = `https://twitter.com/intent/tweet?text=${encTitle}&url=${encUrl}`; });
+      container.querySelectorAll(".js-share-threads").forEach(link => { link.href = `https://www.threads.com/intent/post?text=${encBoth}`; });
+      container.querySelectorAll(".js-share-fb").forEach(link => { link.href = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`; });
+      container.querySelectorAll(".js-share-reddit").forEach(link => { link.href = `https://www.reddit.com/submit?url=${encUrl}&title=${encTitle}`; });
+      container.querySelectorAll(".js-share-wa").forEach(link => { link.href = `https://wa.me/?text=${encBoth}`; });
 
-      if (xLink) xLink.href = `https://twitter.com/intent/tweet?text=${encTitle}&url=${encUrl}`;
-      if (fbLink) fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`;
-      if (redditLink) redditLink.href = `https://www.reddit.com/submit?url=${encUrl}&title=${encTitle}`;
-      if (waLink) waLink.href = `https://wa.me/?text=${encBoth}`;
-
-      container.querySelector(".js-share-copy")?.addEventListener("click", (e) => {
+      container.querySelectorAll(".js-share-copy").forEach(button => button.addEventListener("click", (e) => {
         e.stopPropagation();
         copyText(url, "Link copied to clipboard!");
-      });
+      }));
       container.querySelector(".js-share-native")?.addEventListener("click", async (e) => {
         e.stopPropagation();
         try { await navigator.share({ title, text: title, url }); } catch {}
       });
-      container.querySelector(".js-share-insta")?.addEventListener("click", async (e) => {
+      container.querySelectorAll(".js-share-insta").forEach(button => button.addEventListener("click", async (e) => {
         e.stopPropagation();
         if (navigator.share) {
           try { await navigator.share({ title, text: `${title} ${url}`, url }); return; } catch {}
         }
         await copyText(`${title} — ${url}`, "Link copied for Instagram!");
         window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-      });
+      }));
     }
 
     const globalShareWrap = document.getElementById("globalShareWrap");
@@ -449,6 +446,7 @@
         <div class="dropdown dropup">${buildShareDropdownHtml("btn btn-sm btn-gta")}</div>
         <button class="btn btn-sm btn-outline-gta js-share-copy" type="button" title="Copy link"><i class="bi bi-link-45deg"></i> Copy</button>
         <a class="btn btn-sm btn-outline-secondary js-share-x" target="_blank" rel="noopener noreferrer" title="X.com"><i class="bi bi-twitter-x"></i></a>
+        <a class="btn btn-sm btn-outline-secondary js-share-threads" target="_blank" rel="noopener noreferrer" title="Threads"><i class="bi bi-threads"></i></a>
         <a class="btn btn-sm btn-outline-secondary js-share-reddit" target="_blank" rel="noopener noreferrer" title="Reddit"><i class="bi bi-reddit"></i></a>
         <a class="btn btn-sm btn-outline-secondary js-share-wa" target="_blank" rel="noopener noreferrer" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
       `;
