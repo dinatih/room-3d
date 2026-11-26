@@ -157,6 +157,19 @@ function isMirrorInCameraView(camera: THREE.Camera, obj: THREE.Object3D | null):
   return !_mirrorBox.isEmpty() && _mirrorFrustum.intersectsBox(_mirrorBox);
 }
 
+function updateMirrorVisibility(
+  reflector: THREE.Group | null,
+  ambient: THREE.Object3D | null,
+  isVisible: boolean,
+) {
+  if (reflector && reflector.visible !== isVisible) {
+    reflector.visible = isVisible;
+  }
+  if (ambient && ambient.visible !== !isVisible) {
+    ambient.visible = !isVisible;
+  }
+}
+
 const silverMirrorMat = new THREE.MeshStandardMaterial({
   color: 0xd0d8e0,
   roughness: 0.05,
@@ -206,17 +219,13 @@ export function MirrorsD({ showReflection, reflectorOnly = false }: { showReflec
 
   useFrame(({ camera }) => {
     if (!showReflection) return;
+    const { isFisheyeModalOpen, mirrorDistanceCulling } = useSceneStore.getState();
+    const inView = isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current);
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
-    const isVisible = useSceneStore.getState().isFisheyeModalOpen
-      || (!isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270
-          && isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current));
+    const isVisible = isFisheyeModalOpen
+      || (inView && (!mirrorDistanceCulling || (!isBath && camera.position.z < (mirZ + 10) && camera.position.z >= -200 && camera.position.y <= 270)));
 
-    if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
-      reflectorRef.current.visible = isVisible;
-    }
-    if (ambientRef.current && ambientRef.current.visible !== !isVisible) {
-      ambientRef.current.visible = !isVisible;
-    }
+    updateMirrorVisibility(reflectorRef.current, ambientRef.current, isVisible);
   });
 
   return (
@@ -272,17 +281,13 @@ export function MirrorsA({ showReflection, reflectorOnly = false }: { showReflec
 
   useFrame(({ camera }) => {
     if (!showReflection) return;
+    const { isFisheyeModalOpen, mirrorDistanceCulling } = useSceneStore.getState();
+    const inView = isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current);
     const isBath = camera.position.x >= -30 && camera.position.x <= 200 && camera.position.z >= 450;
-    const isVisible = useSceneStore.getState().isFisheyeModalOpen
-      || (!isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270
-          && isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current));
+    const isVisible = isFisheyeModalOpen
+      || (inView && (!mirrorDistanceCulling || (!isBath && camera.position.x > 0 && camera.position.x <= 500 && camera.position.z >= -100 && camera.position.z <= 420 && camera.position.y <= 270)));
 
-    if (reflectorRef.current && reflectorRef.current.visible !== isVisible) {
-      reflectorRef.current.visible = isVisible;
-    }
-    if (ambientRef.current && ambientRef.current.visible !== !isVisible) {
-      ambientRef.current.visible = !isVisible;
-    }
+    updateMirrorVisibility(reflectorRef.current, ambientRef.current, isVisible);
   });
 
   return (
@@ -342,22 +347,21 @@ export function MirrorBath({ showReflection }: { showReflection: boolean }) {
 
   useFrame(({ camera }) => {
     if (!showReflection) return;
+    const { mirrorDistanceCulling } = useSceneStore.getState();
+    const inView = isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current);
     // La passe de rendu Reflector n'est active que si la caméra est dans la salle de bain ou devant la porte
     const isNearBath =
-      camera.position.x >= -30 &&
-      camera.position.x <= 255 &&
-      camera.position.z >= 450 &&
-      camera.position.z <= 750 &&
-      camera.position.y >= 0 &&
-      camera.position.y <= 270 &&
-      isMirrorInCameraView(camera, ambientRef.current ?? reflectorRef.current);
+      inView &&
+      (!mirrorDistanceCulling || (
+        camera.position.x >= -30 &&
+        camera.position.x <= 255 &&
+        camera.position.z >= 450 &&
+        camera.position.z <= 750 &&
+        camera.position.y >= 0 &&
+        camera.position.y <= 270
+      ));
 
-    if (reflectorRef.current && reflectorRef.current.visible !== isNearBath) {
-      reflectorRef.current.visible = isNearBath;
-    }
-    if (ambientRef.current && ambientRef.current.visible !== !isNearBath) {
-      ambientRef.current.visible = !isNearBath;
-    }
+    updateMirrorVisibility(reflectorRef.current, ambientRef.current, isNearBath);
   });
 
   if (!showReflection) return null;

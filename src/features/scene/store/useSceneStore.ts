@@ -121,6 +121,8 @@ interface SceneStore {
   setMirrorResolution: (resolution: number) => void;
   mirrorAutoResolution: boolean;
   setMirrorAutoResolution: (enabled: boolean) => void;
+  mirrorDistanceCulling: boolean;
+  setMirrorDistanceCulling: (enabled: boolean) => void;
   screenVideosEnabled: boolean;
   screenVideoQuality: ScreenVideoQuality;
   setScreenVideosEnabled: (enabled: boolean) => void;
@@ -417,6 +419,11 @@ export const useSceneStore = create<SceneStore>((set) => ({
   mirrorAutoResolution: true,
   setMirrorAutoResolution: (enabled) => {
     set({ mirrorAutoResolution: enabled });
+    cameraState.invalidate?.();
+  },
+  mirrorDistanceCulling: true,
+  setMirrorDistanceCulling: (enabled) => {
+    set({ mirrorDistanceCulling: enabled });
     cameraState.invalidate?.();
   },
   screenVideosEnabled: true,

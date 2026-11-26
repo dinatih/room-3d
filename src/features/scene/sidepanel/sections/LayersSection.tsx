@@ -29,6 +29,8 @@ export function LayersSection({
   const setMirrorResolution = useSceneStore(state => state.setMirrorResolution);
   const mirrorAutoResolution = useSceneStore(state => state.mirrorAutoResolution);
   const setMirrorAutoResolution = useSceneStore(state => state.setMirrorAutoResolution);
+  const mirrorDistanceCulling = useSceneStore(state => state.mirrorDistanceCulling);
+  const setMirrorDistanceCulling = useSceneStore(state => state.setMirrorDistanceCulling);
   const currentHdri = useSceneStore(state => state.currentHdri);
   const screenVideosEnabled = useSceneStore(state => state.screenVideosEnabled);
   const screenVideoQuality = useSceneStore(state => state.screenVideoQuality);
@@ -207,6 +209,19 @@ export function LayersSection({
           />
           <label htmlFor="mirror-auto-resolution" className="form-check-label" title="2048 à moins de 50 cm, 1024 à moins de 1 m, sinon 512.">
             Résolution automatique selon la distance
+          </label>
+        </div>
+        <div className="form-check form-switch small mb-0">
+          <input
+            id="mirror-distance-culling"
+            type="checkbox"
+            role="switch"
+            className="form-check-input"
+            checked={mirrorDistanceCulling}
+            onChange={(e) => setMirrorDistanceCulling(e.target.checked)}
+          />
+          <label htmlFor="mirror-distance-culling" className="form-check-label" title="Remplace les miroirs par une surface passive à distance. Désactiver pour afficher les reflets (512 × 512) même de loin.">
+            Désactiver les reflets à distance
           </label>
         </div>
       </div>
