@@ -12,12 +12,12 @@ parser=argparse.ArgumentParser();parser.add_argument('--clips',nargs='+',default
 args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 CLIPS=args.clips
 if len(set(CLIPS))!=len(CLIPS):raise ValueError('Duplicate clips')
-path=ROOT/'artifacts/ushiro/ushiro.blend'
+path=ROOT/'sources_backup/artifacts/ushiro/ushiro.blend'
 bpy.ops.wm.open_mainfile(filepath=str(path))
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
 meshes=sorted((o for o in bpy.data.objects if o.type=='MESH'),key=lambda o:len(o.data.vertices))
 old={name:bpy.data.actions[name] for name in CLIPS}
-with bpy.data.libraries.load(str(ROOT/'artifacts/ushiro/rebuild/candidate.blend'),link=False) as (source,target):
+with bpy.data.libraries.load(str(ROOT/'sources_backup/artifacts/ushiro/rebuild/candidate.blend'),link=False) as (source,target):
     target.objects=list(source.objects)
     target.actions=list(CLIPS)
 objects=list(target.objects);actions=list(target.actions)
@@ -52,12 +52,13 @@ for name,action in zip(CLIPS,actions):
 for obj in objects:bpy.data.objects.remove(obj,do_unlink=True)
 action=bpy.data.actions['idle 50'];rig.animation_data.action=action;rig.animation_data.action_slot=action.slots[0]
 bpy.context.scene.frame_set(0);bpy.data.orphans_purge(do_recursive=True)
-if len(bpy.data.actions)!=119:raise RuntimeError('Incomplete animation catalog after base update')
-reports=ROOT/'artifacts/ushiro/rebuild'
+expected_count=len(json.loads((ROOT/'src/features/inventory/dogAnimationOptions.json').read_text())['animated-pitbull-dog'])
+if len(bpy.data.actions)!=expected_count:raise RuntimeError('Incomplete animation catalog after base update')
+reports=ROOT/'sources_backup/artifacts/ushiro/rebuild'
 contact_report=json.loads((reports/'contact-report.json').read_text())
 draft_report=json.loads((reports/'draft/contact-report.json').read_text())
 for clip in CLIPS:contact_report[clip]=draft_report[clip]
-if len(contact_report)!=119:raise RuntimeError('Incomplete contact report')
+if len(contact_report)!=expected_count:raise RuntimeError('Incomplete contact report')
 (reports/'contact-report.json').write_text(json.dumps(contact_report,indent=2)+'\n')
 bpy.ops.wm.save_as_mainfile(filepath=str(path),compress=True)
 bpy.ops.export_scene.gltf(filepath=str(ROOT/'public/characters/ushiro/ushiro.glb'),export_format='GLB',export_extras=True,export_animations=True,export_skins=True,export_animation_mode='ACTIONS',export_force_sampling=False)

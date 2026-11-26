@@ -8,7 +8,7 @@ from pathlib import Path
 import argparse, json, math, os, shutil, sys, tempfile, zipfile, runpy
 import bpy
 import numpy as np
-from mathutils import Vector, Matrix
+from mathutils import Vector, Matrix, Euler
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
@@ -577,10 +577,15 @@ def retarget_bases(source_bases, source_world):
         # shake. Tail01 still carries the donor's wag at the tail attachment.
         preserve= (name in {f'Tail{i:02d}' for i in range(2,8)} or name in {'LeftEar','LeftEar2','LeftEar3','RightEar','RightEar2','RightEar3'})
         if preserve: q=Matrix.Identity(3).to_quaternion();loc=Vector()
+        elif name == 'Tail01':
+            # Keep only the lateral wag (Z); strip the Pitbull donor's downward pitch (X)
+            # because Ushiro's bind tail is already curled over the back.
+            q=Euler((0.0,0.0,q.to_euler('XYZ').z),'XYZ').to_quaternion()
+            loc=Vector()
         result[name]=q.to_matrix().to_4x4()
         # Blender's imported donor armature has a uniform object scale. Convert
         # its local translations into world units before proportion scaling.
-        if name in fixed_segments or preserve or name in spine_stretch_bones or name in neck_stretch_bones:
+        if name in fixed_segments or preserve or name=='Tail01' or name in spine_stretch_bones or name in neck_stretch_bones:
             translation=Vector()
         else:
             # Vertical displacement follows limb proportions,
