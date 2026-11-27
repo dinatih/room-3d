@@ -161,7 +161,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88,0.93,1.0), snowCover);
           if (snowCover > 0.0) {
             vec2 footprintUV = gardenPosition / vec2(${EXTERIOR_GROUND.width}.0, ${EXTERIOR_GROUND.depth}.0) + 0.5;
-            diffuseColor.rgb *= 1.0 - 0.25 * texture2D(gardenFootprints, footprintUV).a * snowCover;
+            diffuseColor.rgb *= 1.0 - 0.4 * texture2D(gardenFootprints, footprintUV).a * snowCover;
           }
           diffuseColor.a = mix(diffuseColor.a, 1.0, max(snowCover, puddle));
         }
