@@ -322,6 +322,12 @@ export function useCameraShortcuts({
         return;
       }
 
+      if (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === '[' || e.key === '{')) {
+        e.preventDefault();
+        if (!e.repeat) goToDefaultOrbit();
+        return;
+      }
+
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
         if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();

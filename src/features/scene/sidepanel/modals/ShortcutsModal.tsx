@@ -53,7 +53,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Sélecteur animations Duo (toggle)" keys={['Z']} />
               <R label="Debug gabarits PNJ + trajets et obstacles (toggle)" keys={['J']} />
               <R label="Basculer Rotation / Translation" keys={['R', 'T']} />
-              <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O']} />
+              <R label="Vue Orbit perspective par défaut (Nord-Ouest)" keys={['Alt+O', '[', '{']} />
               <R label="Follow / FPV (alterner)" keys={['F', 'V']} />
               <R label="Vue 3ème personne directe"  keys={['3']} />
               <R label={<>Ambiance HDRI aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['5']} />

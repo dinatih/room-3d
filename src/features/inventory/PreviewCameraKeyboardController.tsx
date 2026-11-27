@@ -60,8 +60,11 @@ export function PreviewCameraKeyboardController({
         return;
       }
 
-      // Reset view (Alt + O)
-      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O')) {
+      // Reset view (Alt + O, [, {)
+      if (
+        (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'o' || e.key === 'O')) ||
+        (!e.altKey && !e.ctrlKey && !e.metaKey && (e.key === '[' || e.key === '{'))
+      ) {
         e.preventDefault();
         onResetView?.();
         return;
