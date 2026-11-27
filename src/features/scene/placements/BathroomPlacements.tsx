@@ -1,3 +1,4 @@
+import { useLaundry } from '../ai/laundry';
 import { MagicSponge, RowentaDR8250 } from '../items/LaundryHousehold';
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
@@ -217,6 +218,7 @@ export function BathroomFurniture() {
 
 // Pass 2 — Furnishings (Habillage & confort fonctionnel)
 export function BathroomFurnishings() {
+  const bagAtHook = useLaundry(state => state.bag === 'hook');
   return (
     <MergedStaticGroup name="merged-bathroom-furnishings">
       {/* Tapis Gazon SDB */}
@@ -318,7 +320,7 @@ export function BathroomFurnishings() {
         <SdbLaundryHook />
         <group position={[0, LAUNDRY_HOOK_GRIP_HEIGHT - KABBA_HANDLE_HEIGHT, 0]}
           userData={{ sceneItemRoot: true, itemName: 'Sac KABBA rouge — linge sale' }}>
-          <KabbaLaundryBag />
+          {bagAtHook && <KabbaLaundryBag />}
         </group>
       </group>
 

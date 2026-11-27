@@ -343,7 +343,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'pick-laundry',
-        name: 'Prendre le sac de Linge sale',
+        name: 'Faire la lessive',
         relative: true,
         offset: [-30, 0, -35], // 35 cm devant la porte de droite (collée à la douche)
         rotY: 0,
@@ -701,6 +701,11 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
       }
     ]
   },
+  'laundry-living': {
+    id: 'laundry-living', name: 'Rangement du linge', category: 'storage',
+    position: [175, 0, 120],
+    slots: [{ slotId: 'sort', name: 'Ranger le linge', rotY: Math.PI }],
+  },
   'building-b-garden': {
     id: 'building-b-garden',
     name: 'Entrée Cours Bâtiment B (Jardin)',
@@ -709,10 +714,9 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
     slots: [
       {
         slotId: 'laundromat',
-        name: 'Aller au lavomatique',
+        name: 'Faire la lessive',
         offset: [-300, 0, -200],
         rotY: Math.PI / 2,
-        animationsRandom: 'dance',
       },
       {
         slotId: 'admire',
@@ -1155,7 +1159,7 @@ export function getAllSmartObjects(): ResolvedSmartObject[] {
 
 export function getAllSmartObjectIds(): string[] {
   const isDouble = positionState['bed-double']?.idx === 1;
-  return Object.keys(SMART_OBJECTS).filter(id => id === 'bed-double' ? isDouble : (id !== 'bed-west' && id !== 'bed-east') || !isDouble);
+  return Object.keys(SMART_OBJECTS).filter(id => id !== 'laundry-living').filter(id => id === 'bed-double' ? isDouble : (id !== 'bed-west' && id !== 'bed-east') || !isDouble);
 }
 
 export function getSmartObjectsByCategory(category: SmartObjectCategory): ResolvedSmartObject[] {

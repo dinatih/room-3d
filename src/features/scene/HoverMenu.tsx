@@ -1,3 +1,4 @@
+import { isLaundryAction } from './ai/laundry';
 /**
  * HoverMenu.tsx
  *
@@ -16,7 +17,7 @@ import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
 import { resolveNavigation } from './ai/navigation/navigationScope';
 import { OccupancyManager } from './ai/occupancyManager';
-import { isCharacterVisibleInMode } from './characterConfig';
+import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
 import { isHomeAssistantControlDisabled, useHomeAssistant } from '../home-assistant/connection';
@@ -695,7 +696,7 @@ export function HoverOverlay() {
                       const candidateIds = Object.keys(cameraState.positions).filter(
                         (charId) =>
                           charId !== 'ulotte' && charId !== 'shiba' &&
-                          charId !== 'robin' && OccupancyManager.canUseObject(objectId, charId) &&
+                          charId !== 'robin' && (!isLaundryAction(objectId, slotId) || AUTONOMOUS_NPC_IDS.has(charId)) && OccupancyManager.canUseObject(objectId, charId) &&
                           (isCharacterVisibleInMode(charId, laraCount, activeCharacterId, extraChars, activeExtraIds, activeMainIds) ||
                             charId === activeCharacterId)
                       );

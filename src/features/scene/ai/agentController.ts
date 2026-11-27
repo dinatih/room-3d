@@ -1,3 +1,4 @@
+import { isLaundryAction, laundrySteps, LAUNDRY_CLOSET, useLaundry, type LaundryStage } from './laundry';
 import { startCooking, cancelCooking, advanceCooking, kitchenCooking, COOKING_DURATION } from './kitchenCooking';
 import { AgentInstruction } from './aiTypes';
 import { SMART_OBJECTS, getSmartObject, buildSmartObjectInstructionSequence, isDuoSlot } from './smartObjectRegistry';
@@ -354,6 +355,17 @@ export function createAgentController(
     }
   };
 
+  let laundryReturn: { stage: LaundryStage; remaining: number } | null = null;
+  const cancelLaundry = (reason: string) => {
+    if (useLaundry.getState().owner !== _characterId) return;
+    useLaundry.setState({ owner: null, bag: 'hook' });
+    laundryReturn = null;
+    useSceneStore.getState().triggerAction('sdbClosetR', false);
+    appLog(_characterId, `Lessive annulée. ${reason}`, { category: 'object', action: 'laundry_cancel' });
+  };
+  const buildLaundry = (stage: LaundryStage) => laundrySteps(stage,
+    buildSmartObjectInstructionSequence(LAUNDRY_CLOSET.smartObjectId, LAUNDRY_CLOSET.slotId, _characterId));
+
   const reactToLifeEvent = (reason: string, animation: string, partnerId?: string) => {
     const current = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
     if (!connected || !hasLife || !loop || !deployment.hasCompleted || manualOverride || postureTransition || lifeActivity !== 'pause'
@@ -380,7 +392,7 @@ export function createAgentController(
     if (!enabled) return () => {};
     connected = true;
     const onInvite = (e: any) => {
-      if (e.detail?.targetId === _characterId) {
+      if (e.detail?.targetId === _characterId && !dynamicNavQueue[dynamicNavIndex]?.laundryStep) {
         const store = useSceneStore.getState();
         const isFromUI = e.detail?.fromId === 'HoverMenu' || e.detail?.fromId === 'ZoneAiDebug' || e.detail?.fromId === 'Toolbar' || e.detail?.fromId === 'SidePanel' || e.detail?.fromId === 'Inventory';
         const confirmedReturn = e.detail?.lifeInvitationConfirmed && hasLife && loop && !manualOverride && lifeActivity !== null;
@@ -468,7 +480,12 @@ export function createAgentController(
           return;
         }
         const targetSlot = slotId || SMART_OBJECTS[objectId]?.slots[0]?.slotId;
-        if (targetSlot && OccupancyManager.isSlotOccupied(objectId, targetSlot, _characterId)) {
+        const startsLaundry = isLaundryAction(objectId, targetSlot);
+        if (startsLaundry && (!loop || useLaundry.getState().owner)) {
+          appLog(_characterId, 'Lessive indisponible pour le moment.', { category: 'object', action: 'laundry_unavailable' });
+          return;
+        }
+        if (!startsLaundry && targetSlot && OccupancyManager.isSlotOccupied(objectId, targetSlot, _characterId)) {
           const occupant = OccupancyManager.getOccupant(objectId, targetSlot);
           appLog(_characterId, `⚠️ Action impossible : ${SMART_OBJECTS[objectId]?.name || objectId} est déjà occupé${occupant ? ` (${occupant})` : ''}`, {
             category: 'object',
@@ -479,6 +496,7 @@ export function createAgentController(
           return;
         }
 
+        cancelLaundry('Nouvel ordre manuel.');
         interruptLife(`${actorName} exécute l’action demandée.`);
         navigationScope.clear();
         releaseClaimedSlot();
@@ -486,7 +504,8 @@ export function createAgentController(
         duoRole = null;
         duoInvited = false;
 
-        const seq = buildSmartObjectInstructionSequence(objectId, slotId, _characterId);
+        const seq = startsLaundry ? buildLaundry('load') : buildSmartObjectInstructionSequence(objectId, slotId, _characterId);
+        if (startsLaundry) useLaundry.setState({ owner: _characterId, bag: 'hook' });
         if (seq && seq.length > 0) {
           if (animation) {
             const useStep = seq.find((s) => s.type === 'USE_OBJECT');
@@ -498,7 +517,7 @@ export function createAgentController(
               }
             }
           }
-          if (targetSlot) {
+          if (targetSlot && !startsLaundry) {
             OccupancyManager.claimSlot(objectId, targetSlot, _characterId);
             claimedSlot = { objectId, slotId: targetSlot };
           }
@@ -531,6 +550,7 @@ export function createAgentController(
       const { targetId, fromId, objectId, slotId, forcedAnimId, allowDeferral, activity: requestedActivity } = (event as CustomEvent<{
         targetId: string; fromId: string; objectId?: string; slotId?: string; forcedAnimId?: string; allowDeferral?: boolean; activity?: 'dance' | 'combat' | 'meal';
       }>).detail;
+      if (targetId === _characterId && dynamicNavQueue[dynamicNavIndex]?.laundryStep) { event.preventDefault(); return; }
       if (!hasLife || targetId !== _characterId) return;
       const activity = requestedActivity ?? invitedLifeActivity(objectId, slotId);
       const refusal = activity === 'meal' && life.needs.meal < LIFE_SETTINGS.priority ? 'N’a pas encore faim.'
@@ -604,6 +624,7 @@ export function createAgentController(
     document.addEventListener('agent-force-smartobject', onForceSmartObject);
     return () => {
       if (hasLife) cancelDeferredInvitation('La vie autonome est suspendue.');
+      cancelLaundry('PNJ retiré de la scène.');
       connected = false;
       navigationScope.clear();
       document.removeEventListener('npc-invite-life-activity', onActivityInvitation);
@@ -623,6 +644,7 @@ export function createAgentController(
 
   const syncScenario = () => {
     if (scenario !== prevScenario) {
+      cancelLaundry('Changement de scénario.');
       navigationScope.clear();
       releaseKitchenStorageAccess(_characterId);
       const previousAnimation = state.animation;
@@ -714,6 +736,25 @@ export function createAgentController(
   const advanceToNextStep = (hasNavStep: boolean) => {
     const next = hasNavStep ? dynamicNavQueue[dynamicNavIndex + 1] ?? scenario?.[stepIndex] : scenario?.[stepIndex + 1];
     const current = hasNavStep ? dynamicNavQueue[dynamicNavIndex] : scenario?.[stepIndex];
+    if (current?.laundryEvent && useLaundry.getState().owner === _characterId) {
+      const event = current.laundryEvent;
+      if (event === 'carry') useLaundry.setState({ bag: 'hand' });
+      if (event === 'drop') {
+        // Position the cabas in front of the interaction stance.
+        const reach = 40;
+        const x = state.x + Math.sin(state.rotY) * reach;
+        const z = state.z + Math.cos(state.rotY) * reach;
+        useLaundry.setState({ bag: 'floor', floor: [x, getWalkableGroundY(x, z), z] });
+      }
+      if (event === 'wash' || event === 'dry') {
+        laundryReturn = { stage: event === 'wash' ? 'transfer' : 'collect', remaining: 60 + Math.random() * 60 };
+      }
+      if (event === 'finish') useLaundry.setState({ bag: 'hook' });
+      appLog(_characterId, `Lessive · ${event}`, { category: 'object', action: `laundry_${event}` });
+    }
+    if (current?.laundryStep && !next?.laundryStep && !laundryReturn && useLaundry.getState().owner === _characterId) {
+      useLaundry.setState({ owner: null });
+    }
     if (hasLife && loop && next?.lifePhase === 'eat-meal' && current?.lifePhase === 'prepare-meal') {
       logLife('life_meal_shared', `${actorName} termine un repas : ${lifeHousehold.meals.portions} portion(s) à partager.`, { portions: lifeHousehold.meals.portions }, current);
       if (connected) document.dispatchEvent(new CustomEvent('npc-life-event', { detail: { kind: 'meal', activity: 'meal', fromId: _characterId, room: LIMITED_ROOMS.find(room => isInRoom(room, state)) ?? 'garden' } }));
@@ -783,6 +824,7 @@ export function createAgentController(
 
   const retrySmartAction = (objectId: string) => {
     const failedInstruction = dynamicNavQueue[dynamicNavIndex] ?? scenario?.[stepIndex];
+    if (failedInstruction?.laundryStep) cancelLaundry('Destination inaccessible.');
     const failedActivity = hasLife && loop ? lifeActivity : null;
     if (hasLife) releaseLifeMeal(lifeId);
     const failedDuo = Boolean(duoRole) || isDuoSlot(objectId, failedInstruction?.slotId);
@@ -1120,6 +1162,15 @@ export function createAgentController(
       if (agentStatus !== 'MOVING') return state;
     }
 
+    if (laundryReturn) {
+      laundryReturn.remaining -= dt;
+      if (laundryReturn.remaining <= 0 && agentStatus === 'IDLE' && !dynamicNavQueue.length && !claimedSlot) {
+        interruptLife('Reprise de la lessive.');
+        dynamicNavQueue = buildLaundry(laundryReturn.stage);
+        dynamicNavIndex = 0;
+        laundryReturn = null;
+      }
+    }
     const scenarioLength = scenario ? scenario.length : 0;
 
     // ── 2. Fin de scénario / Bouclage ──
@@ -1184,6 +1235,10 @@ export function createAgentController(
         }
         const objId = currentInstruction.smartObjectId;
         let reqSlotId = currentInstruction.slotId || SMART_OBJECTS[objId]?.slots[0]?.slotId || 'default';
+        if (currentInstruction.laundryStep && OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
+          state.animation = 'idle';
+          return state;
+        }
         const isDuo = isDuoSlot(objId, reqSlotId);
         if (hasLife && loop && lifeActivity && OccupancyManager.isSlotOccupied(objId, reqSlotId, _characterId)) {
           retrySmartAction(objId);
@@ -1548,6 +1603,12 @@ export function createAgentController(
           if (objId) route.owner = getInteractionOwner(target.owner ?? objId);
           const slotId = currentInstruction.slotId || (objId ? SMART_OBJECTS[objId]?.slots[0]?.slotId : undefined) || 'default';
           if (objId && OccupancyManager.isSlotOccupied(objId, slotId, _characterId)) {
+            if (currentInstruction.laundryStep) {
+              releaseClaimedSlot();
+              agentStatus = 'IDLE';
+              state.animation = 'idle';
+              return state;
+            }
             if (hasLife && loop && lifeActivity) { retrySmartAction(objId); return state; }
             const occupant = OccupancyManager.getOccupant(objId, slotId);
             const objName = SMART_OBJECTS[objId]?.name || objId;
@@ -1895,6 +1956,7 @@ export function createAgentController(
       if (useLaraLifeStore.getState().characters[lifeId].room !== room) publish({ room });
     }
     if (!manualOverride) {
+      cancelLaundry('Prise de contrôle manuel.');
       interruptLife(`Vous contrôlez les déplacements de ${actorName}.`);
       manualOverride = true;
       const activeInstruction = dynamicNavIndex < dynamicNavQueue.length

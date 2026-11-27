@@ -96,6 +96,8 @@ export interface SpatialZoneDef {
 export type InstructionType = 'MOVE_TO' | 'PREPARE_OBJECT' | 'INTERACT' | 'WAIT' | 'RETURN_TO_START' | 'USE_OBJECT' | 'ROTATE_360' | 'OBSERVE_OBJECT';
 
 export interface AgentInstruction {
+  laundryStep?: boolean;
+  laundryEvent?: import('./laundry').LaundryEvent;
   /** Departure step consumed when the rise already reached free standing space. */
   type: InstructionType;
   /** Déplacement de dégagement hors du débattement d'une porte. */

@@ -3,7 +3,9 @@
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
 import { Suspense, useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
+import { useLaundry } from '../ai/laundry';
+import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import * as THREE from 'three';
 import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
 import { useGLTF } from '@react-three/drei';
@@ -102,6 +104,34 @@ const LGBTA_HAIR_COLORS = [
   'arc-en-ciel', 'rose', 'violet', 'bleu', 'vert', 'rouge',
   'blanc', 'blond', 'roux', 'brun', 'noir'
 ];
+
+function LaundryBagPose({ rig, bag, floor }: {
+  rig: THREE.Object3D;
+  bag: 'hand' | 'floor';
+  floor: [number, number, number];
+}) {
+  const ref = useRef<THREE.Group>(null);
+  const hand = useMemo(() => {
+    const name = resolveTargetBoneName(rig, 'RightHand');
+    const bone = name && rig.getObjectByName(name);
+    if (!bone) throw new Error('Le portage du cabas nécessite un os de main droite.');
+    return bone;
+  }, [rig]);
+  useFrame(() => {
+    const group = ref.current;
+    if (!group?.parent) return;
+    if (bag === 'hand') {
+      hand.getWorldPosition(group.position);
+      group.position.y -= KABBA_HANDLE_HEIGHT;
+    } else {
+      group.position.fromArray(floor);
+    }
+    group.parent.worldToLocal(group.position);
+    if (bag === 'floor') group.parent.getWorldQuaternion(group.quaternion).invert();
+    else group.quaternion.identity();
+  });
+  return <group ref={ref}><KabbaLaundryBag /></group>;
+}
 
 function MealPlateModel({ shadows }: { shadows: boolean }) {
   const ref = useRef<THREE.Group>(null);
@@ -413,6 +443,9 @@ export function Character({
 
   const finalScenario = isGuidedTour ? activeActionScenario : (isAutonomous ? autonomousScenario : EMPTY_SCENARIO);
   const loopScenario = isAutonomous && !isGuidedTour;
+
+  const laundryBag = useLaundry(state => state.owner === renderId ? state.bag : 'hook');
+  const laundryFloor = useLaundry(state => state.floor);
 
   const hasSkyDrop = isAutonomous;
   const spawnDelay = hasSkyDrop ? ((characterIndex ?? 0) * 1.0) : 0;
@@ -1412,6 +1445,10 @@ export function Character({
       <group ref={animOriginRef}>
         <primitive ref={modelRef} object={scene} />
       </group>
+
+      {agentEnabled && laundryBag !== 'hook' && <Suspense fallback={null}>
+        <LaundryBagPose rig={scene} bag={laundryBag} floor={laundryFloor} />
+      </Suspense>}
 
       {isLara && <group ref={mealPlateRef} name="lara-meal-plate" visible={false}>
         <Suspense fallback={null}>

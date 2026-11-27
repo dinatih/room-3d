@@ -1,3 +1,4 @@
+import { isLaundryAction } from './laundry';
 import { AgentInstruction } from './aiTypes';
 import { buildSmartObjectInstructionSequence, getAllSmartObjects } from './smartObjectRegistry';
 import { OccupancyManager } from './occupancyManager';
@@ -44,7 +45,7 @@ export const INITIAL_SMART_OBJECT_BY_CHAR: Record<string, string> = randomSpawn 
 /** Each available slot is one candidate, including coordinated duo activities. */
 export function getAvailableAutonomousActivities(characterId: string) {
   return getAllSmartObjects().filter(obj => obj.id !== 'bed-arrangement' && OccupancyManager.canUseObject(obj.id, characterId))
-    .flatMap(obj => obj.slots.filter(slot => !OccupancyManager.isSlotOccupied(obj.id, slot.slotId, characterId))
+    .flatMap(obj => obj.slots.filter(slot => !isLaundryAction(obj.id, slot.slotId) && !OccupancyManager.isSlotOccupied(obj.id, slot.slotId, characterId))
       .map(slot => ({ id: obj.id, slotId: slot.slotId })));
 }
 
@@ -72,7 +73,7 @@ export function getLaraLifeCandidates(characterId: LifeCharacterId, handsDirty: 
   const objects = getAllSmartObjects().filter(object => object.id !== 'bed-arrangement' && OccupancyManager.canUseObject(object.id, characterId));
   const canPrepare = lifeHousehold.meals.portions > 0 || lifeHousehold.meals.held[characterId] || mealPreparations(characterId, excluded).length > 0;
   return objects.flatMap(object =>
-    object.slots.filter(slot => (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
+    object.slots.filter(slot => !isLaundryAction(object.id, slot.slotId) && (!slot.isDuo || lifeSocialActivity(object.id, slot.slotId) || lifeSpecialtyActivity(object.id, slot.slotId) || isLifeSeat(object.category, slot)) && !OccupancyManager.isSlotOccupied(object.id, slot.slotId, characterId))
       .flatMap(slot => {
         const task = getHomeTask(object.id, slot.slotId);
         const seat = isLifeSeat(object.category, slot);
