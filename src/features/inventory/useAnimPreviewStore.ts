@@ -13,9 +13,23 @@ const setSession = (key: string, val: string) => {
   try { sessionStorage.setItem(key, val); } catch {}
 };
 
+export interface AnimPreviewHeatmapStats {
+  width: number;
+  depth: number;
+  height: number;
+  radius: number;
+  sampleCount: number;
+  duration: number;
+  voxelCount: number;
+}
+
 export interface AnimPreviewState {
   walkDebug: boolean;
   walkCycleSpeed: number | null;
+  heatmapDebug: boolean;
+  heatmapShowGround: boolean;
+  heatmapShow3D: boolean;
+  heatmapStats: AnimPreviewHeatmapStats | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -39,6 +53,9 @@ export interface AnimPreviewState {
   togglePlay: () => void;
   toggleLockHipsXZ: () => void;
   setLockHipsXZ: (locked: boolean) => void;
+  toggleHeatmapDebug: () => void;
+  setHeatmapShowGround: (show: boolean) => void;
+  setHeatmapShow3D: (show: boolean) => void;
   setSpeed: (speed: number) => void;
   setLooping: (loop: boolean) => void;
   setScrubbing: (scrubbing: boolean) => void;
@@ -58,6 +75,10 @@ export interface AnimPreviewState {
 export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
   walkDebug: false,
   walkCycleSpeed: null,
+  heatmapDebug: false,
+  heatmapShowGround: true,
+  heatmapShow3D: true,
+  heatmapStats: null,
   isPlaying: true,
   currentTime: 0,
   duration: 0,
@@ -82,6 +103,9 @@ export const useAnimPreviewStore = create<AnimPreviewState>((set, get) => ({
     setSession('anim_lock_hips_xz', String(locked));
     set({ lockHipsXZ: locked });
   },
+  toggleHeatmapDebug: () => set((s) => ({ heatmapDebug: !s.heatmapDebug })),
+  setHeatmapShowGround: (heatmapShowGround: boolean) => set({ heatmapShowGround }),
+  setHeatmapShow3D: (heatmapShow3D: boolean) => set({ heatmapShow3D }),
 
   play: () => {
     const { currentTime, duration, isLooping, activeSegments } = get();

@@ -161,6 +161,7 @@ export interface LayerState {
   npcCollisions: boolean;
   debugNpcCollisions: boolean;
   debugFurnitureCollisions: boolean;
+  debugAnimationHeatmap: boolean;
   windowStepElevation?: boolean;
   breastPhysics: boolean;
   breastIntensity?: number;

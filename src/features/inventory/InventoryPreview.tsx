@@ -30,6 +30,7 @@ import { resolveDuoPreviewParticipants, type DuoAnimationDef } from '@features/s
 import { CHARACTERS, isExtraCharacter } from '@features/scene/characterConfig';
 import { SkySphere } from '@features/scene/SkySphere';
 import { useAnimPreviewStore } from './useAnimPreviewStore';
+import { AnimationHeatmapPreview } from './AnimationHeatmapPreview';
 import { WigFitPanel } from './WigFitPanel';
 import { AnimFrameController } from './AnimFrameController';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
@@ -479,6 +480,8 @@ export function InventoryPreview({
 }) {
   const isMobile = useIsMobile();
   const walkDebug = useAnimPreviewStore(state => state.walkDebug);
+  const heatmapDebug = useAnimPreviewStore(state => state.heatmapDebug);
+  const toggleHeatmapDebug = useAnimPreviewStore(state => state.toggleHeatmapDebug);
   const [showMiniPerf, setShowMiniPerf] = useState(() => defaultShowMiniPerf !== undefined ? defaultShowMiniPerf : !isMobile);
   const glbPath = item && 'glbPath' in item ? item.glbPath : undefined;
   const referenceSheet = item && 'referenceSheet' in item ? item.referenceSheet : undefined;
@@ -848,6 +851,14 @@ export function InventoryPreview({
                 onSelectBoneName={setSelectedBoneName}
                 onSkeletonGroupsChange={setSkeletonGroups}
               />
+              {heatmapDebug && isHumanCharacter && (
+                <AnimationHeatmapPreview
+                  characterId={item.id}
+                  characterAnim={actionStates.characterAnim}
+                  duoAnimDef={actionStates.duoAnimDef}
+                  duoPartnerId={duoParticipants?.partnerId ?? actionStates.duoPartnerId}
+                />
+              )}
               <DevToolsCollector />
             </Canvas>
             </>
@@ -1092,6 +1103,18 @@ export function InventoryPreview({
             aria-pressed={simulateMotion}
           >
             <i className="bi bi-wind" aria-hidden="true" />
+          </button>
+        )}
+        {isHumanCharacter && (
+          <button
+            type="button"
+            className={`${TOOLBAR_BUTTON_CLASS} ${heatmapDebug ? 'btn-danger text-white' : 'btn-outline-secondary'}`}
+            onClick={toggleHeatmapDebug}
+            title={heatmapDebug ? 'Masquer la heatmap d’espace (Sol 2D + Volume 3D)' : 'Afficher la heatmap d’espace de l’animation (Sol 2D + Volume 3D)'}
+            aria-label="Heatmap d’espace"
+            aria-pressed={heatmapDebug}
+          >
+            <i className="bi bi-thermometer-half" aria-hidden="true" />
           </button>
         )}
         {isHumanCharacter && item?.id !== 'unitree-h2' && (

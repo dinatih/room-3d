@@ -85,6 +85,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   npcCollisions: true,
   debugNpcCollisions: false,
   debugFurnitureCollisions: false,
+  debugAnimationHeatmap: false,
   windowStepElevation: true,
   // Terrain
   bermudaGrass: true,
@@ -258,6 +259,11 @@ export const MONITORED_LAYERS: LayerUrlMapping[] = [
     layerKey: 'laraWristBandana',
     canonicalParam: 'laraWristBandana',
     urlParams: ['larawristbandana', 'wristbandana', 'bandanapoignet'],
+  },
+  {
+    layerKey: 'debugAnimationHeatmap',
+    canonicalParam: 'debugAnimationHeatmap',
+    urlParams: ['debuganimationheatmap', 'animheatmap', 'heatmap'],
   },
 ];
 

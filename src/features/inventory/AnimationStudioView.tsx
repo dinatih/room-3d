@@ -35,6 +35,12 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
   const filters = filtersByMode[mode];
   const walksOnly = filters.category === 'walk' || filters.category === 'npc-walk';
   const walkCycleSpeed = useAnimPreviewStore(state => state.walkCycleSpeed);
+  const heatmapDebug = useAnimPreviewStore(state => state.heatmapDebug);
+  const heatmapShowGround = useAnimPreviewStore(state => state.heatmapShowGround);
+  const heatmapShow3D = useAnimPreviewStore(state => state.heatmapShow3D);
+  const heatmapStats = useAnimPreviewStore(state => state.heatmapStats);
+  const setHeatmapShowGround = useAnimPreviewStore(state => state.setHeatmapShowGround);
+  const setHeatmapShow3D = useAnimPreviewStore(state => state.setHeatmapShow3D);
   useEffect(() => {
     useAnimPreviewStore.setState({ walkDebug: walksOnly && mode === 'solo', walkCycleSpeed: null });
     return () => { useAnimPreviewStore.setState({ walkDebug: false, walkCycleSpeed: null }); };
@@ -311,6 +317,26 @@ export function AnimationStudioView({ initialTarget, externalTarget, isMobile = 
         </div>
         <div className="animation-studio__tools">
           {walksOnly && mode === 'solo' && <p className="small p-2 mb-0">Diagnostic : sol défilant, foulée calibrée sur les pieds. {walkCycleSpeed === null ? 'Calibration en attente…' : `${walkCycleSpeed.toFixed(1)} cm/s à cadence native.`}</p>}
+          {heatmapDebug && (
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 px-2 py-1 border-top bg-white small">
+              <div className="d-flex flex-wrap align-items-center gap-1">
+                <span className="fw-semibold text-danger"><i className="bi bi-thermometer-half me-1" aria-hidden="true" />Heatmap</span>
+                {heatmapStats ? (
+                  <>
+                    <span className="badge text-bg-light border">{heatmapStats.width} × {heatmapStats.depth} × {heatmapStats.height} cm</span>
+                    <span className="badge text-bg-light border">Rayon max {heatmapStats.radius} cm</span>
+                    <span className="badge text-bg-light border">{heatmapStats.sampleCount} poses · {heatmapStats.voxelCount} voxels</span>
+                  </>
+                ) : (
+                  <span className="text-muted">Calcul en cours…</span>
+                )}
+              </div>
+              <div className="btn-group btn-group-sm" role="group" aria-label="Calques heatmap">
+                <button type="button" className={`btn ${heatmapShowGround ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setHeatmapShowGround(!heatmapShowGround)}>Sol 2D</button>
+                <button type="button" className={`btn ${heatmapShow3D ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setHeatmapShow3D(!heatmapShow3D)}>Volume 3D</button>
+              </div>
+            </div>
+          )}
           <div className="animation-studio__transport p-2 border-top bg-white">
             <div className="d-flex gap-1 align-items-center mb-1">
               <div className="btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Parcourir les résultats filtrés">

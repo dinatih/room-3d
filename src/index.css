@@ -418,3 +418,18 @@ button, input, select, textarea {
   border-color: var(--red);
   box-shadow: 0 0 0 0.15rem rgba(211, 47, 47, 0.15);
 }
+
+.anim-heatmap-panel {
+  position: fixed;
+  left: max(1rem, env(safe-area-inset-left));
+  top: max(1rem, env(safe-area-inset-top));
+  z-index: 251;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 8rem);
+  pointer-events: auto;
+}
+.anim-heatmap-panel--collapsed { width: fit-content; }
+.anim-heatmap-body { max-height: min(68dvh, 38rem); }
+.anim-heatmap-panel .form-control, .anim-heatmap-panel .form-select {
+  background-color: rgba(255, 255, 255, 0.65);
+}

@@ -38,6 +38,8 @@ import { CharacterGroup } from './character';
 import { AiZonesHelper } from './ai/AiZonesHelper';
 import { ZoneAiDebugOverlay } from './ai/ZoneAiDebugOverlay';
 import { CollisionDebugHelper } from './ai/CollisionDebugHelper';
+import { AnimationHeatmapHelper } from './ai/AnimationHeatmapHelper';
+import { AnimationHeatmapOverlay } from './ai/AnimationHeatmapOverlay';
 import { WireframeLayer }   from '@features/scene/WireframeLayer';
 import { WallEdgesLayer, EdgeHoverRaycaster, EdgeHoverOverlay } from '@features/scene/WallEdgesLayer';
 import { GridLayer }        from '@features/scene/Grid';
@@ -969,6 +971,7 @@ export function Studio() {
         <Suspense fallback={null}>
           {layers.aiZones && <AiZonesHelper />}
           {(layers.debugNpcCollisions || layers.debugFurnitureCollisions) && <CollisionDebugHelper />}
+          {layers.debugAnimationHeatmap && <AnimationHeatmapHelper />}
         </Suspense>
         {layers.wallEdges   && <WallEdgesLayer />}
         {layers.measuredDimensions && <RealMeasurementsLayer />}
@@ -1147,6 +1150,7 @@ export function Studio() {
         </ViewControlBar>
         <HoverOverlay />
         {layers.aiZones && <ZoneAiDebugOverlay />}
+        {layers.debugAnimationHeatmap && <AnimationHeatmapOverlay />}
         {layers.wallEdges && <EdgeHoverOverlay />}
       </div>
       {showInventory && (
