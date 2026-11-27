@@ -1351,7 +1351,13 @@ it('un ordre de cuisiner après un déplacement manuel laisse une portion dispon
     assert(w.controller.hasPendingDynamicTask());
     w.tick();
     assert.equal(w.controller.state.animation, 'cook');
-    w.tick(15);
+    w.tick(5);
+    assert.equal(w.controller.state.animation, 'take-book-shelf');
+    w.tick(8);
+    assert.equal(w.controller.state.animation, 'cooking-stir-pan');
+    w.tick(1);
+    assert.equal(w.controller.state.animation, 'take-book-shelf');
+    w.tick(1);
     assert.equal(life.lifeHousehold.meals.portions, 1);
     assert.deepEqual(life.lifeHousehold.meals.held, {});
   } finally {

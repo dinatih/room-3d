@@ -1793,8 +1793,7 @@ export function createAgentController(
       const target = getResolvedCoords(currentInstruction);
       const cooking = currentInstruction.smartObjectId === 'cuisine-group' && currentInstruction.slotId === 'cook-stove';
       const cookingTime = kitchenCooking.session?.elapsed ?? 0;
-      const cookingGesture = cookingTime < 3 ? 'idle'
-        : cookingTime < 5 || cookingTime >= 13 ? 'kit-551-pour03-poses' : 'cooking-stir-pan';
+      const cookingGesture = cookingTime < 5 || cookingTime >= 13 ? 'take-book-shelf' : 'cooking-stir-pan';
       state.animation = resolveAnimationId(cooking ? cookingGesture : currentInstruction.animation || target.anim || 'idle');
       if (currentInstruction.type === 'USE_OBJECT' || currentInstruction.type === 'INTERACT') {
         if (currentInstruction.smartObjectId) { state.x = target.tx; state.z = target.tz; }
