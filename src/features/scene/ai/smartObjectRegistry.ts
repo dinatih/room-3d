@@ -319,7 +319,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         approachOffset: SHOWER_APPROACH,
         offset: [8, 15, 650],
         rotY: Math.PI / 2,
-        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],
+        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands', 'decoupe-shower-short'],
         repeatCount: 4,
         repeatVariation: true,
       },
@@ -329,7 +329,7 @@ export const SMART_OBJECTS: Record<string, SmartObjectDef> = {
         approachOffset: SHOWER_APPROACH,
         offset: [42, 15, 660],
         rotY: -Math.PI / 2,
-        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands'],
+        animationsRandom: ['take-off-tshirt', 'fab-daily-life-wash-hands', 'decoupe-shower-short'],
         repeatCount: 4,
         repeatVariation: true,
       }
