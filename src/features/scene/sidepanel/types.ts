@@ -176,6 +176,8 @@ export interface LayerState {
   breastSquash?: number;
   breastGravity?: number;
   hairPhysics: boolean;
+  debugLaraWigs: boolean;
+  debugWigOffset?: number;
   wigPhysics?: boolean;
   wigStiffness?: number;
   wigDamping?: number;

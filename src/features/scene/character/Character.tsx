@@ -9,6 +9,7 @@ import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import * as THREE from 'three';
 import { createSnowFootprintTracker } from '../snowFootprints';
 import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
+import { getDebugLaraWig } from './laraWigDebug';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
 import { enableAnimatedFrustumCulling } from '../utils/animatedFrustumCulling';
@@ -178,7 +179,10 @@ export function Character({
 }: CharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>(variant === 'helena' || id === 'helena' ? 'hair_111' : 'original');
   const usesNativeHair = !isPreview && (id === 'native' || variant === 'native');
-  const haircut = usesNativeHair ? 'original' : (isPreview && previewHaircut ? previewHaircut : localHaircut);
+  const debugWig = useSceneStore(state => state.layers.debugLaraWigs && (!isPreview || isGridPartner)
+    ? getDebugLaraWig(id, state.layers.debugWigOffset ?? 0)
+    : undefined);
+  const haircut = debugWig ?? (usesNativeHair ? 'original' : (isPreview && previewHaircut ? previewHaircut : localHaircut));
 
   const [localHairColor, setLocalHairColor] = useState<string | undefined>(variant === 'helena' || id === 'helena' ? 'noir' : undefined);
   const hairColor = (isPreview && previewHairColor) ? previewHairColor : localHairColor;
@@ -1516,18 +1520,20 @@ export function Character({
         ) : null
       ))}
 
-      {headBone && (variant === 'vivida' || id === 'vivida') && (
+      {headBone && !debugWig && (variant === 'vivida' || id === 'vivida') && (
         <CharacterBaseballCap attachTo={headBone} />
       )}
 
       {headRefBone && haircut !== 'original' && (
-        <Wig
-          id={haircut.replace('hair_', '')}
-          color={hairColor}
-          onBonesExtracted={setWigBones}
-          attachTo={headRefBone}
-          fitToLara
-        />
+        <Suspense fallback={null}>
+          <Wig
+            id={haircut.replace('hair_', '')}
+            color={debugWig ? 'rouge' : hairColor}
+            onBonesExtracted={setWigBones}
+            attachTo={headRefBone}
+            fitToLara
+          />
+        </Suspense>
       )}
       {!isPreview && <HeartParachute
         ref={parachuteRef}

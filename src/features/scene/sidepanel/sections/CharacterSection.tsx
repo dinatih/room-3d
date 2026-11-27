@@ -1,5 +1,6 @@
 import { useSceneStore } from '../../store/useSceneStore';
 import { WIGS_ITEMS } from '@features/inventory/inventoryData';
+import { nextDebugWigOffset } from '../../character/laraWigDebug';
 import {
   LARA_TOP_SPECS,
   LARA_BOTTOM_SPECS,
@@ -183,6 +184,31 @@ export function CharacterSection({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="d-flex align-items-center justify-content-between gap-2 mt-2">
+            <label className="form-check form-switch mb-0 small">
+              <input
+                type="checkbox"
+                role="switch"
+                className="form-check-input"
+                checked={layers.debugLaraWigs}
+                onChange={() => onToggleLayer('debugLaraWigs')}
+              />
+              Perruques rouges (debug)
+            </label>
+            {layers.debugLaraWigs && (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary py-0"
+                onClick={() => {
+                  const { layers, setLayers } = useSceneStore.getState();
+                  setLayers({ debugWigOffset: nextDebugWigOffset(layers.debugWigOffset ?? 0) });
+                }}
+              >
+                Décaler les coupes
+              </button>
+            )}
           </div>
 
             {/* ── Réglages Physique Perruques (directement sous la coupe) ── */}

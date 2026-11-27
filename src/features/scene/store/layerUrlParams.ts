@@ -72,6 +72,7 @@ export const LAYER_DEFAULTS: Record<string, boolean> = {
   // Physique
   breastPhysics: true,
   hairPhysics: true,
+  debugLaraWigs: false,
   wigPhysics: true,
   characterShadows: true,
   characterWireframe: false,
