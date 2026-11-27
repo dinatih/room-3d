@@ -17,7 +17,7 @@ import { getSmartObject } from './ai/smartObjectRegistry';
 import { duoSessionManager } from './ai/duoSessionManager';
 import { resolveNavigation } from './ai/navigation/navigationScope';
 import { OccupancyManager } from './ai/occupancyManager';
-import { AUTONOMOUS_NPC_IDS, isCharacterVisibleInMode } from './characterConfig';
+import { AUTONOMOUS_NPC_IDS, findCharacter, isCharacterVisibleInMode } from './characterConfig';
 
 import { getActionDef, getActionLabel, type ActionDef } from './objectActionRegistry';
 import { isHomeAssistantControlDisabled, useHomeAssistant } from '../home-assistant/connection';
@@ -479,10 +479,20 @@ function injectPulse() {
   document.head.appendChild(s);
 }
 
+const ASSIGNMENT_NOTICE_DURATION_MS = 4000;
+
 export function HoverOverlay() {
   const ha = useHomeAssistant();
   const dotRef = React.useRef<HTMLDivElement>(null);
   
+  const [assignment, setAssignment] = useState<{ characterId: string; actionName: string } | null>(null);
+
+  useEffect(() => {
+    if (!assignment) return;
+    const timeout = window.setTimeout(() => setAssignment(null), ASSIGNMENT_NOTICE_DURATION_MS);
+    return () => window.clearTimeout(timeout);
+  }, [assignment]);
+
   // S'abonne aux changements d'états du mobilier pour re-rendre les labels réactifs (ex: Ouvrir/Fermer)
   useSceneStore(state => state.furniture);
   useSceneStore(state => state.extraStates);
@@ -576,6 +586,15 @@ export function HoverOverlay() {
           zIndex: 300,
         }}
       />
+
+      <div role="status" className="position-fixed top-0 start-50 translate-middle-x mt-3 pe-none z-3">
+        {assignment && (
+          <div className="bg-dark text-light border border-warning rounded-pill shadow px-3 py-2 small">
+            <strong>{findCharacter(assignment.characterId)?.name ?? assignment.characterId}</strong>
+            {' · '}{assignment.actionName}
+          </div>
+        )}
+      </div>
 
       {/* ── Modal épinglé au clic ── */}
       {showModal && lockedActions.length > 0 && (
@@ -712,6 +731,7 @@ export function HoverOverlay() {
                       }
 
                       if (closestCharId) {
+                        setAssignment({ characterId: closestCharId, actionName: slot?.name ?? obj?.name ?? objectId });
                         appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`, {
                           category: 'object',
                           action: 'smartobject_assign',
