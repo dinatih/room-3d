@@ -41,7 +41,7 @@ export interface WigProps {
   offset?: [number, number, number];
   scale?: number;
   windEnabled?: boolean;
-  onBonesExtracted?: (bones: { bone: THREE.Bone; restQ: THREE.Quaternion; index: number }[]) => void;
+  onBonesExtracted?: (bones: THREE.Bone[]) => void;
   attachTo?: THREE.Object3D | null;
   fitToLara?: boolean;
 }
@@ -188,34 +188,23 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
   useLayoutEffect(() => {
     if (!scene) return;
 
-    // 1. Extraire les os pour l'animation/physique et configurer les matériaux
     hairBonesRef.current.forEach(({ bone, restQ }) => bone.quaternion.copy(restQ));
-    hasResetWindRef.current = false;
-    const extractedBones: WigBone[] = [];
-    scene.traverse((child: any) => {
-      if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
-        const sm = child as THREE.SkinnedMesh;
-        // Extract bones DIRECTLY from the SkinnedMesh's skeleton!
-        if (extractedBones.length === 0) {
-          const isFixedBone = (n: string) => {
-            const lower = n.toLowerCase();
-            return lower.includes('root') || lower.includes('spine') || lower.includes('neck') ||
-                   lower.includes('head') || lower.includes('scalp') || lower.includes('all') ||
-                   lower.includes('forehead') || lower.includes('jbone') || lower.includes('base') ||
-                   lower.includes('attach');
-          };
-          sm.skeleton.bones.forEach(b => {
-            if (!isFixedBone(b.name)) {
-              extractedBones.push({
-                bone: b,
-                restQ: b.quaternion.clone(),
-                index: extractedBones.length
-              });
-            }
-          });
+    const bones = new Set<THREE.Bone>();
+    scene.traverse(child => {
+      const mesh = child as THREE.SkinnedMesh;
+      if (!mesh.isSkinnedMesh) return;
+      for (const bone of mesh.skeleton.bones) {
+        if (!/root|spine|neck|head|scalp|all|forehead|jbone|base|attach/i.test(bone.name)) {
+          bones.add(bone);
         }
       }
-      
+    });
+    hairBonesRef.current = [...bones].map((bone, index) => ({ bone, index, restQ: bone.quaternion.clone() }));
+    hasResetWindRef.current = false;
+  }, [scene]);
+
+  useLayoutEffect(() => {
+    scene.traverse((child: any) => {
       if ((child as THREE.Mesh).isMesh) {
         const m = child as THREE.Mesh;
         m.castShadow = true;
@@ -284,27 +273,10 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
         }
       }
     });
-    
-    hairBonesRef.current = extractedBones;
-    if (onBonesExtracted) {
-      onBonesExtracted(hairBonesRef.current);
-    }
-  }, [scene, color, scale, id, nativeColorMap]);
+  }, [scene, color, cleanId, attachTo, nativeColorMap]);
 
   useLayoutEffect(() => {
     if (attachTo && scene) {
-      // Remove any previously attached hair armatures to prevent duplicate wigs (never delete native bones like hair_1)
-      const existingWigs = attachTo.children.filter(
-        (c: any) => !c.isBone && (c.userData.isWigRoot || /^[0-9]+$/.test(c.name) || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_')),
-      );
-      
-      if (existingWigs.length > 0) {
-        existingWigs.forEach((w: any) => {
-          disposeOwnedWigResources(w);
-          attachTo.remove(w);
-        });
-      }
-
       attachTo.add(fittedScene);
     }
     return () => {
@@ -314,6 +286,16 @@ export function Wig({ id, color, offset = [0, 0, 0], scale = 1, windEnabled = fa
       }
     };
   }, [attachTo, scene, fittedScene]);
+
+  useLayoutEffect(() => {
+    if (!onBonesExtracted) return;
+    const bones = hairBonesRef.current.map(({ bone, restQ }) => {
+      bone.quaternion.copy(restQ);
+      return bone;
+    });
+    onBonesExtracted(bones);
+    return () => onBonesExtracted([]);
+  }, [attachTo, fittedScene, fit, onBonesExtracted]);
 
   const hasResetWindRef = useRef(false);
 

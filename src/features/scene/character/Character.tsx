@@ -2,7 +2,7 @@
  * Character.tsx — Personnages (Characters).
  * Version modulaire intégrant animations, physique Verlet, styles/accessoires et agent IA.
  */
-import { Suspense, useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useRef, useLayoutEffect, useEffect, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useLaundry } from '../ai/laundry';
 import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
@@ -15,7 +15,7 @@ import { mergeLaraPairs } from './mergeLaraPairs';
 import { useLaraShadowBatching } from './useLaraShadowBatching';
 import { cameraState } from '@features/scene/cameraState';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
-import { Wig, HAIR_COLORS, disposeOwnedWigResources } from '../items/Wig';
+import { Wig, HAIR_COLORS } from '../items/Wig';
 import { CharacterPendant, type CharacterPendantHandle } from './CharacterPendant';
 import { CharacterBaseballCap } from './CharacterBaseballCap';
 import { CharacterClothing } from './CharacterClothing';
@@ -176,7 +176,8 @@ export function Character({
   isAnimationMaster,
 }: CharacterProps) {
   const [localHaircut, setLocalHaircut] = useState<string>(variant === 'helena' || id === 'helena' ? 'hair_111' : 'original');
-  const haircut = isPreview && previewHaircut ? previewHaircut : localHaircut;
+  const usesNativeHair = !isPreview && (id === 'native' || variant === 'native');
+  const haircut = usesNativeHair ? 'original' : (isPreview && previewHaircut ? previewHaircut : localHaircut);
 
   const [localHairColor, setLocalHairColor] = useState<string | undefined>(variant === 'helena' || id === 'helena' ? 'noir' : undefined);
   const hairColor = (isPreview && previewHairColor) ? previewHairColor : localHairColor;
@@ -342,6 +343,10 @@ export function Character({
     initPhysicsBones,
     updatePhysics
   } = useCharacterPhysics();
+
+  const setWigBones = useCallback((bones: THREE.Bone[]) => {
+    customHairChainRef.current = buildHairChain(bones);
+  }, [customHairChainRef]);
 
   // Rotation périodique coiffures et couleurs variant LGBT+ (toutes les 20s)
   useEffect(() => {
@@ -698,9 +703,8 @@ export function Character({
     if (!scene) return;
 
     // 1. Visibilité et coloration de la chevelure d'origine
-    const isNativeLara = (id === 'native' || variant === 'native') && !isPreview;
-    const showNativeHair = isNativeLara || haircut === 'original';
-    const targetColor = !isNativeLara && hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
+    const showNativeHair = haircut === 'original';
+    const targetColor = !usesNativeHair && hairColor && HAIR_COLORS[hairColor] ? HAIR_COLORS[hairColor] : null;
 
     for (const item of parts.nativeHairMeshes) {
       const meshName = (item.mesh.name || '').toLowerCase();
@@ -731,29 +735,12 @@ export function Character({
       }
     }
 
-    // 2. Bone de tête
-    const headBone = parts.bones.head;
-    if (!headBone) return;
-
-    if (haircut === 'original') {
-      const ghostWigs = headBone.children.filter((c: any) => !c.isBone && (c.userData.isWigRoot || c.name.toLowerCase().includes('hair') || c.name.includes('_ARM_')));
-      ghostWigs.forEach((w: any) => {
-        disposeOwnedWigResources(w);
-        headBone.remove(w);
-      });
-    }
-
-    const existingAttachment = headBone.getObjectByName('lara_custom_hair_attachment');
-    if (existingAttachment) {
-      headBone.remove(existingAttachment);
-    }
-
     if (groupRef.current) {
       updateCharacterLayers(groupRef.current, isActive && cameraState.isFirstPersonView());
     }
 
     invalidate();
-  }, [scene, parts, haircut, hairColor, variant, isActive, invalidate]);
+  }, [scene, parts, haircut, hairColor, variant, usesNativeHair, isActive, invalidate]);
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
   const pausedPoseReady = useRef(false);
@@ -1131,7 +1118,12 @@ export function Character({
         action.paused = true;
         mixer.update(previewPlayback.playing ? delta : 0);
         pendantDelta = previewPlayback.playing ? delta : 0;
-        updatePhysics(pendantDelta, { haircut, isMoving: false, targetAnim: target, characterAnim, clockElapsedTime: previewPlayback.time }, scene);
+        updatePhysics(pendantDelta, {
+          haircut,
+          targetAnim: target,
+          characterAnim,
+          clockElapsedTime: previewPlayback.time,
+        }, scene);
       }
     } else if (isControlledByStore) {
       actions[activeActionName.current]?.setEffectiveTimeScale(1);
@@ -1251,9 +1243,9 @@ export function Character({
       }
 
       if (isVisibleInFrustum) {
-        updatePhysics(animDelta, {
+        updatePhysics(pendantDelta, {
           haircut,
-          isMoving,
+          resetHair: resetPendant,
           targetAnim: target,
           characterAnim,
           clockElapsedTime: store.currentTime
@@ -1310,9 +1302,8 @@ export function Character({
       }
 
       if (isVisibleInFrustum) {
-        updatePhysics(delta, {
+        updatePhysics(agentAnimationPaused && !isTemporaryLoadingFallback ? 0 : delta, {
           haircut,
-          isMoving,
           targetAnim: target,
           characterAnim,
           clockElapsedTime: state.clock.elapsedTime
@@ -1517,13 +1508,11 @@ export function Character({
         <CharacterBaseballCap attachTo={headBone} />
       )}
 
-      {headRefBone && (isPreview || (id !== 'native' && variant !== 'native')) && haircut !== 'original' && (
+      {headRefBone && haircut !== 'original' && (
         <Wig
           id={haircut.replace('hair_', '')}
           color={hairColor}
-          onBonesExtracted={(bones) => {
-            customHairChainRef.current = buildHairChain(bones.map(b => b.bone));
-          }}
+          onBonesExtracted={setWigBones}
           attachTo={headRefBone}
           fitToLara
         />

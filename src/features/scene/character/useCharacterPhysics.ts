@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import * as THREE from 'three';
 import { useSceneStore } from '@features/scene/store/useSceneStore';
 import type { CharacterParts } from '../characterParts';
+import type { HairNode } from '../retargeting/hairChain';
 
 // Static temp vectors for zero-allocation per-frame physics & transforms
 const _tmpV1 = new THREE.Vector3();
@@ -9,6 +10,7 @@ const _tmpV2 = new THREE.Vector3();
 const _tmpV3 = new THREE.Vector3();
 const _tmpV4 = new THREE.Vector3();
 const _tmpG  = new THREE.Vector3(0, -981, 0);
+const HAIR_STEP = 1 / 60;
 const _downWorld = new THREE.Vector3(0, -1, 0);
 const _upDir = new THREE.Vector3(0, 1, 0);
 const _rightDir = new THREE.Vector3(1, 0, 0);
@@ -23,16 +25,14 @@ const _swingQuat = new THREE.Quaternion();
 const _parentWQuat = new THREE.Quaternion();
 const _jointWorld = new THREE.Vector3();
 const _restDirWorld = new THREE.Vector3();
-const _restDir = new THREE.Vector3();
 const _restTip = new THREE.Vector3();
 const _hairVel = new THREE.Vector3();
+const _hairMotion = new THREE.Vector3();
 const _hairNext = new THREE.Vector3();
 const _hairDir = new THREE.Vector3();
-const _hairFinalDir = new THREE.Vector3();
 const _hairCurrentDirWorld = new THREE.Vector3();
 const _colliderCenter = new THREE.Vector3();
 const _colliderOffset = new THREE.Vector3();
-const _rotAxis = new THREE.Vector3();
 const _clampedSwingQuat = new THREE.Quaternion();
 const _headW = new THREE.Vector3();
 const _hipsW = new THREE.Vector3();
@@ -41,15 +41,16 @@ const _rShoulderW = new THREE.Vector3();
 
 export interface CharacterPhysicsContext {
   haircut: string;
-  isMoving: boolean;
   targetAnim: string;
+  resetHair?: boolean;
   characterAnim?: string;
   clockElapsedTime: number;
 }
 
 export function useCharacterPhysics() {
-  const hairChainRef = useRef<any[]>([]);
-  const customHairChainRef = useRef<any[]>([]);
+  const hairChainRef = useRef<HairNode[]>([]);
+  const customHairChainRef = useRef<HairNode[]>([]);
+  const previousHairChainRef = useRef<HairNode[]>([]);
   const breastChainRef = useRef<any[]>([]);
   const breastImpulseRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const breastVelRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
@@ -63,8 +64,9 @@ export function useCharacterPhysics() {
   const hipsBoneRef = useRef<THREE.Bone | null>(null);
   const lShoulderRef = useRef<THREE.Bone | null>(null);
   const rShoulderRef = useRef<THREE.Bone | null>(null);
+  const backpacksRef = useRef<CharacterParts['backpacks']>([]);
 
-  const physicsPrevDt = useRef<number>(1 / 60);
+  const hairAccumulator = useRef(0);
 
   const initPhysicsBones = (parts: CharacterParts) => {
     hipsBoneRef.current = parts.bones.hips;
@@ -72,6 +74,7 @@ export function useCharacterPhysics() {
     headBoneRef.current = parts.bones.head;
     lShoulderRef.current = parts.bones.lShoulder;
     rShoulderRef.current = parts.bones.rShoulder;
+    backpacksRef.current = parts.backpacks;
 
     const breastChain: any[] = [];
     for (const bone of parts.bones.breastBones) {
@@ -100,7 +103,32 @@ export function useCharacterPhysics() {
     const enableHairPhysics = layers.hairPhysics;
     const enableBreastPhysics = layers.breastPhysics;
 
-    if (!enableHairPhysics && !enableBreastPhysics) {
+    // Ponytail & Wig physics simulation (Verlet)
+    const activeHairChain = ctx.haircut !== 'original'
+      ? customHairChainRef.current
+      : hairChainRef.current;
+
+    if (previousHairChainRef.current !== activeHairChain) {
+      hairAccumulator.current = 0;
+      for (const node of previousHairChainRef.current) {
+        node.bone.quaternion.copy(node.restQuat);
+        node.needsReset = true;
+      }
+      previousHairChainRef.current = activeHairChain;
+    }
+
+    for (const node of activeHairChain) {
+      if (!enableHairPhysics || ctx.resetHair) {
+        if (!node.needsReset) node.bone.quaternion.copy(node.restQuat);
+        node.needsReset = true;
+      } else if (delta <= 0) {
+        node.tipPrev.copy(node.tipWorld);
+      }
+    }
+
+    if (delta <= 0) {
+      hairAccumulator.current = 0;
+      prevSpinePosRef.current = null;
       return;
     }
 
@@ -110,133 +138,81 @@ export function useCharacterPhysics() {
       scene.updateMatrixWorld(true);
     }
 
-    let simDt = delta;
-    if (simDt > 0.05) simDt = 0.05;
-    const dtRatio = (physicsPrevDt.current > 0 && simDt > 0) ? (simDt / physicsPrevDt.current) : (simDt > 0 ? 1 : 0);
+    const simDt = Math.min(delta, 0.05);
 
-    // Ponytail & Wig physics simulation (Verlet)
-    const activeHairChain = (ctx.haircut !== 'original' && customHairChainRef.current.length > 0)
-      ? customHairChainRef.current
-      : hairChainRef.current;
-
-    if (!enableHairPhysics && activeHairChain.length > 0) {
-      for (const node of activeHairChain) {
-        if (node.restQuat) {
-          node.bone.quaternion.copy(node.restQuat);
-        }
-      }
-    }
-
+    if (!enableHairPhysics || ctx.resetHair) hairAccumulator.current = 0;
     if (enableHairPhysics && activeHairChain.length > 0) {
-      const firstNode = activeHairChain[0];
-      const baseParent = firstNode.bone.parent;
-      if (baseParent) {
-        baseParent.getWorldQuaternion(_baseParentQuat);
+      hairAccumulator.current += simDt;
+      _upDir.set(0, 1, 0);
+      _rightDir.set(1, 0, 0);
+      _backDir.set(0, 0, -1);
+      if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
+        const headW = _headW.setFromMatrixPosition(headBoneRef.current.matrixWorld);
+        const hipsW = _hipsW.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
+        const lShoulderW = _lShoulderW.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
+        const rShoulderW = _rShoulderW.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
 
-        if (headBoneRef.current && hipsBoneRef.current && lShoulderRef.current && rShoulderRef.current) {
-          const headW = _headW.setFromMatrixPosition(headBoneRef.current.matrixWorld);
-          const hipsW = _hipsW.setFromMatrixPosition(hipsBoneRef.current.matrixWorld);
-          const lShoulderW = _lShoulderW.setFromMatrixPosition(lShoulderRef.current.matrixWorld);
-          const rShoulderW = _rShoulderW.setFromMatrixPosition(rShoulderRef.current.matrixWorld);
+        _upDir.subVectors(headW, hipsW).normalize();
+        _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
+        _backDir.crossVectors(_upDir, _rightDir).normalize();
+        _rightDir.crossVectors(_backDir, _upDir);
+      }
 
-          _upDir.subVectors(headW, hipsW).normalize();
-          _rightDir.subVectors(lShoulderW, rShoulderW).normalize();
-          _backDir.crossVectors(_upDir, _rightDir).normalize();
-        }
+      const isWig = ctx.haircut !== 'original';
 
-        const isWig = (ctx.haircut !== 'original');
-        const isHeadMoving = ctx.isMoving || (ctx.targetAnim !== 'idle') || (ctx.characterAnim && ctx.characterAnim.toLowerCase().includes('walk')) || (ctx.characterAnim && ctx.characterAnim.toLowerCase().includes('run'));
+      const userWigStiffness = isWig ? (layers.wigStiffness ?? 1.0) : 1.0;
+      const damping = isWig ? (layers.wigDamping ?? 0.80) : 0.80;
+      const userWigGravity = isWig ? (layers.wigGravity ?? 1.0) : 1.0;
+      const userWigInertia = isWig ? (layers.wigInertia ?? 1.0) : 1.0;
+      const userWigTipWeight = isWig ? (layers.wigTipWeight ?? 1.2) : 1.2;
+      const userWigWind = isWig ? (layers.wigWind ?? 0.0) : 0.0;
+      const headColliderRadius = isWig ? (layers.wigHeadCollisionRadius ?? 13.0) : 13.0;
 
-        const userWigStiffness = isWig ? (layers.wigStiffness ?? 1.0) : 1.0;
-        const userWigDamping = isWig ? (layers.wigDamping ?? 0.80) : 0.80;
-        const userWigGravity = isWig ? (layers.wigGravity ?? 1.0) : 1.0;
-        const userWigInertia = isWig ? (layers.wigInertia ?? 1.0) : 1.0;
-        const userWigTipWeight = isWig ? (layers.wigTipWeight ?? 1.2) : 1.2;
-        const userWigWind = isWig ? (layers.wigWind ?? 0.0) : 0.0;
-        const userWigHeadRadius = isWig ? (layers.wigHeadCollisionRadius ?? 13.0) : 13.0;
+      const stiffness = THREE.MathUtils.clamp(0.038 * userWigStiffness, 0, 1);
+      const wigMaxAngle = THREE.MathUtils.degToRad(layers.wigMaxAngle ?? 15);
+      const backpackSpine = backpacksRef.current.some(({ mesh }) => mesh.visible) ? spine2BoneRef.current : null;
 
-        const baseDamping = isHeadMoving ? 0.70 : 0.85;
-        const dampingFactor = isWig 
-          ? (isHeadMoving ? (userWigDamping * 0.90) : userWigDamping)
-          : baseDamping;
-
-        const baseStiffness = isHeadMoving ? 0.038 : 0.12;
-        const lerpStiffness = isWig
-          ? Math.min(1.0, baseStiffness * userWigStiffness)
-          : baseStiffness;
-
-        const gravMultiplier = isWig ? userWigGravity : 1.0;
-        const headColliderRadius = isWig ? userWigHeadRadius : 13.0;
-
-        for (let nodeIdx = 0; nodeIdx < activeHairChain.length; nodeIdx++) {
-          const node = activeHairChain[nodeIdx];
-          const { bone, relQuat, axis, worldLength } = node;
+      // Fixed steps keep gravity, damping and contacts consistent when the render rate varies.
+      while (hairAccumulator.current >= HAIR_STEP) {
+        hairAccumulator.current -= HAIR_STEP;
+        for (const node of activeHairChain) {
+          const { bone, rootParent, relQuat, axis, length, progress } = node;
           const parent = bone.parent;
           if (!parent) continue;
 
+          bone.updateWorldMatrix(true, false);
+          rootParent.matrixWorld.decompose(_tmpV1, _baseParentQuat, _tmpV2);
           const jointWorld = _jointWorld.setFromMatrixPosition(bone.matrixWorld);
+          const worldLength = _hairDir.copy(axis).multiplyScalar(length).applyMatrix4(bone.matrixWorld).distanceTo(jointWorld);
           const restDirWorld = _restDirWorld.copy(axis).applyQuaternion(_boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat)).normalize();
-          const restDir = _restDir.copy(_downWorld).lerp(restDirWorld, 0.10).normalize();
-          const restTip = _restTip.copy(jointWorld).addScaledVector(restDir, worldLength);
+          const restTip = _restTip.copy(jointWorld).addScaledVector(restDirWorld, worldLength);
 
-          // Teleportation safety reset
-          const dist = jointWorld.distanceTo(node.tipWorld);
-          if (dist > Math.max(worldLength * 3, 20.0)) {
+          if (node.needsReset) {
+            node.needsReset = false;
             node.tipWorld.copy(restTip);
             node.tipPrev.copy(restTip);
           }
 
-          // Normalized position along the chain (0 = root, 1 = tip)
-          const pChain = nodeIdx / Math.max(1, activeHairChain.length - 1);
-
-          // 1. Damping: progressively increase damping towards the tip for wigs to kill whip vibrations
-          const nodeDamping = isWig
-            ? Math.min(0.98, dampingFactor + (0.96 - dampingFactor) * pChain * 0.5)
-            : dampingFactor;
-
-          // 2. Velocity computation with anti-flick clamping
-          const vel = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(dtRatio * (1 - nodeDamping));
-          if (isWig) {
-            const maxTipTravel = worldLength * (0.6 + (1 - pChain) * 0.6);
-            if (vel.length() > maxTipTravel) {
-              vel.setLength(maxTipTravel);
-            }
-          }
-
-          // 3. Tip weight anchor (acts like a small stabilizing weight at the tip of each strand)
-          const tipAnchorStrength = isWig ? (userWigTipWeight * pChain * pChain) : 0;
-
-          const tipWeightFactor = isWig
-            ? (1.0 + (userWigInertia - 1.0) * (1.0 - pChain * 0.5))
-            : (1.0 + pChain * 0.40);
-
+          const nodeDamping = isWig ? THREE.MathUtils.lerp(damping, 0.96, progress * 0.5) : damping;
+          const velocity = _hairVel.subVectors(node.tipWorld, node.tipPrev).multiplyScalar(1 - nodeDamping);
+          const tipWeight = isWig ? userWigTipWeight * progress * progress : 0;
+          const inertia = isWig
+            ? 1 + (userWigInertia - 1) * (1 - progress * 0.5)
+            : 1 + progress * 0.40;
           const next = _hairNext.copy(node.tipWorld)
-            .add(vel)
-            .addScaledVector(_tmpG, simDt * simDt * tipWeightFactor * gravMultiplier);
+            .add(velocity)
+            .addScaledVector(_tmpG, HAIR_STEP * HAIR_STEP * inertia * userWigGravity)
+            .addScaledVector(_downWorld, HAIR_STEP * HAIR_STEP * 4800 * tipWeight);
 
-          if (tipAnchorStrength > 0) {
-            next.addScaledVector(_downWorld, simDt * 80.0 * tipAnchorStrength);
+          if (userWigWind > 0) {
+            const tWind = (ctx.clockElapsedTime - hairAccumulator.current) * 3 + progress;
+            const windDisplacement = 900 * userWigWind * HAIR_STEP * HAIR_STEP;
+            next.x += Math.sin(tWind) * windDisplacement;
+            next.z += Math.cos(tWind * 0.7) * windDisplacement;
           }
 
-          // Ambient wind breeze for wigs
-          if (isWig && userWigWind > 0) {
-            const tWind = (ctx.clockElapsedTime * 3.0) + (nodeIdx * 0.5);
-            const wX = Math.sin(tWind) * 0.25 * userWigWind;
-            const wZ = Math.cos(tWind * 0.7) * 0.25 * userWigWind;
-            next.x += wX * simDt * 60;
-            next.z += wZ * simDt * 60;
-          }
-
-          // Spring return to natural rest orientation
-          const effectiveStiffness = isWig
-            ? Math.min(1.0, lerpStiffness * (1.0 + tipAnchorStrength * 0.5))
-            : lerpStiffness;
-          const springFactor = Math.min(1.0, effectiveStiffness * Math.min(1.0, simDt * 60));
-          next.lerp(restTip, springFactor);
-
-          // Anti-vibration sleep filter when velocity is low
-          const sleepThreshold = isWig ? (0.25 + pChain * 0.35) : 0.1;
-          const isNodeSleeping = !isHeadMoving && vel.lengthSq() < sleepThreshold;
+          next.lerp(restTip, stiffness);
+          const motion = _hairMotion.subVectors(next, node.tipWorld);
 
           // Constraints pass (2 passes)
           for (let i = 0; i < 2; i++) {
@@ -245,7 +221,7 @@ export function useCharacterPhysics() {
             if (currentLen > 1e-6) {
               dir.multiplyScalar(worldLength / currentLen);
             } else {
-              dir.copy(restDir).multiplyScalar(worldLength);
+              dir.copy(restDirWorld).multiplyScalar(worldLength);
             }
             next.copy(jointWorld).add(dir);
 
@@ -255,13 +231,17 @@ export function useCharacterPhysics() {
               const radius = headColliderRadius;
               const dCenter = next.distanceTo(center);
               if (dCenter < radius) {
-                next.add(_colliderOffset.subVectors(next, center).normalize().multiplyScalar(radius - dCenter));
+                const normal = _colliderOffset.subVectors(next, center);
+                if (dCenter > 0) normal.divideScalar(dCenter);
+                else normal.copy(restDirWorld);
+                next.addScaledVector(normal, radius - dCenter);
+                motion.addScaledVector(normal, -Math.min(0, motion.dot(normal)));
               }
             }
 
             // Sac à dos (Collider OBB)
-            if (spine2BoneRef.current) {
-              const backpackCenter = _colliderCenter.setFromMatrixPosition(spine2BoneRef.current.matrixWorld).addScaledVector(_backDir, 11);
+            if (backpackSpine) {
+              const backpackCenter = _colliderCenter.setFromMatrixPosition(backpackSpine.matrixWorld).addScaledVector(_backDir, 11);
               const localPos = _colliderOffset.subVectors(next, backpackCenter);
               const px = localPos.dot(_rightDir);
               const py = localPos.dot(_upDir);
@@ -273,53 +253,30 @@ export function useCharacterPhysics() {
 
               if (Math.abs(px) < halfW && Math.abs(py) < halfH && pz < thickness && pz > -5.0) {
                 next.addScaledVector(_backDir, thickness - pz);
+                motion.addScaledVector(_backDir, -Math.min(0, motion.dot(_backDir)));
               }
             }
           }
 
-          const finalDir = _hairFinalDir.subVectors(next, jointWorld);
-          const finalLen = finalDir.length();
-          if (finalLen > 1e-6) {
-            finalDir.multiplyScalar(worldLength / finalLen);
-          } else {
-            finalDir.copy(restDir).multiplyScalar(worldLength);
-          }
+          const currentDirWorld = _hairCurrentDirWorld.subVectors(next, jointWorld).normalize();
+          if (currentDirWorld.lengthSq() === 0) currentDirWorld.copy(restDirWorld);
 
-          const currentDirWorld = _hairCurrentDirWorld.copy(finalDir).normalize();
-
-          // Cône de déviation angulaire stricte (Perruques UNIQUEMENT - max 15° par rapport au repos)
-          if (isWig) {
-            const maxAngleDeg = layers.wigMaxAngle ?? 15;
-            const maxAngleRad = (maxAngleDeg * Math.PI) / 180;
-            const cosAngle = Math.max(-1.0, Math.min(1.0, restDirWorld.dot(currentDirWorld)));
-            const currentAngle = Math.acos(cosAngle);
-
-            if (currentAngle > maxAngleRad) {
-              _rotAxis.crossVectors(restDirWorld, currentDirWorld);
-              if (_rotAxis.lengthSq() > 1e-6) {
-                _rotAxis.normalize();
-                _clampedSwingQuat.setFromAxisAngle(_rotAxis, maxAngleRad);
-                currentDirWorld.copy(restDirWorld).applyQuaternion(_clampedSwingQuat).normalize();
-                finalDir.copy(currentDirWorld).multiplyScalar(worldLength);
-              }
-            }
-          }
-
-          if (isNodeSleeping) {
-            node.tipWorld.copy(jointWorld).add(finalDir);
-            node.tipPrev.copy(node.tipWorld);
-          } else {
-            node.tipPrev.copy(node.tipWorld);
-            node.tipWorld.copy(jointWorld).add(finalDir);
-          }
-
-          const parentWQuat = parent.getWorldQuaternion(_parentWQuat);
-          const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
           const swing = _swingQuat.setFromUnitVectors(restDirWorld, currentDirWorld);
+          if (isWig) {
+            swing.copy(_clampedSwingQuat.identity().rotateTowards(swing, wigMaxAngle));
+            currentDirWorld.copy(restDirWorld).applyQuaternion(swing);
+          }
 
+          // Carry only tangential motion. Constraint corrections must never feed the next Verlet step.
+          motion.addScaledVector(currentDirWorld, -motion.dot(currentDirWorld));
+          node.tipWorld.copy(jointWorld).addScaledVector(currentDirWorld, worldLength);
+          node.tipPrev.copy(node.tipWorld).sub(motion);
+
+          parent.matrixWorld.decompose(_tmpV1, _parentWQuat, _tmpV2);
+          const boneRestWorldQuat = _boneRestWorldQuat.copy(_baseParentQuat).multiply(relQuat);
           const newWorldQuat = swing.multiply(boneRestWorldQuat);
-          bone.quaternion.copy(parentWQuat.invert().multiply(newWorldQuat));
-          bone.updateMatrixWorld(true);
+          bone.quaternion.copy(_parentWQuat.invert().multiply(newWorldQuat)).normalize();
+          bone.updateWorldMatrix(false, false);
         }
       }
     }
@@ -501,7 +458,6 @@ export function useCharacterPhysics() {
       }
     }
 
-    if (simDt > 0) physicsPrevDt.current = simDt;
   };
 
   return {

@@ -10,55 +10,58 @@ export function getDepth(node: THREE.Object3D): number {
   return depth;
 }
 
+export interface HairNode {
+  bone: THREE.Bone;
+  rootParent: THREE.Object3D;
+  restQuat: THREE.Quaternion;
+  relQuat: THREE.Quaternion;
+  axis: THREE.Vector3;
+  length: number;
+  progress: number;
+  tipWorld: THREE.Vector3;
+  tipPrev: THREE.Vector3;
+  needsReset: boolean;
+}
+
 export function buildHairChain(hairBones: THREE.Bone[]) {
-  const hairChain: any[] = [];
-  const bones = [...hairBones].sort((a, b) => getDepth(a) - getDepth(b));
+  const bones = new Set(hairBones);
+  const chain: HairNode[] = [];
+  const nodes = new Map<THREE.Object3D, HairNode>();
+  const strandRoots = new Map<HairNode, HairNode>();
+  const strandLengths = new Map<HairNode, number>();
 
-  if (bones.length > 0) {
-    const baseParent = bones[0].parent;
-    if (baseParent) {
-      baseParent.updateMatrixWorld(true);
-      const baseParentRestQuat = baseParent.getWorldQuaternion(new THREE.Quaternion());
+  for (const bone of [...bones].sort((a, b) => getDepth(a) - getDepth(b))) {
+    if (!bone.parent) continue;
 
-      let prevAxis = new THREE.Vector3(0, -1, 0);
-      for (const bone of bones) {
-        let axis = prevAxis.clone();
-        let length = 8.0;
-        const child = bone.children.find(x => bones.includes(x as THREE.Bone));
-        if (child && child.position.lengthSq() > 1e-8) {
-          length = child.position.length();
-          axis = child.position.clone().normalize();
-        }
-        prevAxis = axis.clone();
-        bone.updateMatrixWorld(true);
-        const jointWorld = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-        const worldScale = new THREE.Vector3().setFromMatrixScale(bone.matrixWorld);
-        const tipDirWorld = axis.clone().transformDirection(bone.matrixWorld).normalize();
+    const restQuat = (bone.userData.restQuat as THREE.Quaternion | undefined)?.clone() ?? bone.quaternion.clone();
+    const parentNode = nodes.get(bone.parent);
+    const child = bone.children.find(child => bones.has(child as THREE.Bone) && child.position.lengthSq() > 0);
+    // Extend a terminal segment along the incoming segment in the bone's rest frame.
+    const offset = child?.position.clone() ?? bone.position.clone().applyQuaternion(restQuat.clone().invert());
+    const length = offset.length();
+    if (length === 0) continue;
 
-        let worldLength = length * worldScale.y;
-        if (child) {
-          const p1 = new THREE.Vector3().setFromMatrixPosition(bone.matrixWorld);
-          const p2 = new THREE.Vector3().setFromMatrixPosition(child.matrixWorld);
-          worldLength = p1.distanceTo(p2);
-        }
-        if (worldLength < 0.1) worldLength = 0.1;
-
-        const tipWorld = jointWorld.clone().addScaledVector(tipDirWorld, worldLength);
-        const boneRestQuat = bone.getWorldQuaternion(new THREE.Quaternion());
-        const relQuat = baseParentRestQuat.clone().invert().multiply(boneRestQuat);
-
-        hairChain.push({
-          bone,
-          restQuat: bone.quaternion.clone(),
-          relQuat,
-          axis,
-          length,
-          worldLength,
-          tipWorld: tipWorld.clone(),
-          tipPrev: tipWorld.clone(),
-        });
-      }
-    }
+    const node: HairNode = {
+      bone,
+      rootParent: parentNode?.rootParent ?? bone.parent,
+      restQuat,
+      relQuat: parentNode ? parentNode.relQuat.clone().multiply(restQuat) : restQuat.clone(),
+      axis: offset.divideScalar(length),
+      length,
+      progress: parentNode ? parentNode.progress + 1 : 0,
+      tipWorld: new THREE.Vector3(),
+      tipPrev: new THREE.Vector3(),
+      needsReset: true,
+    };
+    const root = (parentNode && strandRoots.get(parentNode)) ?? node;
+    strandRoots.set(node, root);
+    strandLengths.set(root, node.progress);
+    nodes.set(bone, node);
+    chain.push(node);
   }
-  return hairChain;
+  for (const node of chain) {
+    const root = strandRoots.get(node)!;
+    node.progress /= Math.max(1, strandLengths.get(root)!);
+  }
+  return chain;
 }
