@@ -521,6 +521,8 @@ export function createAgentController(
             OccupancyManager.claimSlot(objectId, targetSlot, _characterId);
             claimedSlot = { objectId, slotId: targetSlot };
           }
+          manualOverride = false;
+          interruptedSmartObjectId = undefined;
           dynamicNavQueue = seq;
           dynamicNavIndex = 0;
           resetRoute(route, _characterId);

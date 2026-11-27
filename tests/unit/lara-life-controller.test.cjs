@@ -46,6 +46,10 @@ function world(id = 'native', withMeal = false, withSleep = false, withHygiene =
   const duoTicks = [];
   const duoDefinitions = {};
   const { createAgentController } = load('src/features/scene/ai/agentController.ts', {
+    './laundry': load('src/features/scene/ai/laundry.ts', {
+      zustand: require('zustand'),
+      '../animations/animationResolver': { getAnimationDef: () => ({ duration: 1 }) },
+    }),
     './kitchenCooking': require('../../src/features/scene/ai/kitchenCooking.ts'),
     './smartObjectRegistry': { SMART_OBJECTS: objects, getSmartObject: objectId => {
       const object = objects[objectId];
@@ -1333,17 +1337,20 @@ it('pilote les quinze secondes de cuisine sans portions anticipées et annule su
   }
 });
 
-it('un ordre direct de cuisiner laisse une portion disponible sans engager le cuisinier à table', () => {
+it('un ordre de cuisiner après un déplacement manuel laisse une portion disponible sans engager Lara à table', () => {
   const originalDocument = global.document;
   global.document = new EventTarget();
   Object.assign(life.lifeHousehold, life.createLifeHousehold());
   const w = world(), disconnect = w.controller.connect();
   try {
     w.tick();
+    w.controller.setPosition(15, 0, 10);
     document.dispatchEvent(new CustomEvent('agent-force-smartobject', {
       detail: { targetId: 'native', objectId: 'cuisine-group', slotId: 'cook-stove' },
     }));
+    assert(w.controller.hasPendingDynamicTask());
     w.tick();
+    assert.equal(w.controller.state.animation, 'cook');
     w.tick(15);
     assert.equal(life.lifeHousehold.meals.portions, 1);
     assert.deepEqual(life.lifeHousehold.meals.held, {});
