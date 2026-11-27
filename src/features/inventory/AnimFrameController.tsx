@@ -1,4 +1,4 @@
-import { AnimationCutLinks, AnimationCutSave } from './AnimationCutSave';
+import { AnimationVariantLinks, AnimationVariantSave } from './AnimationVariantSave';
 import { useShallow } from 'zustand/react/shallow';
 import { AnimationTimeline, AnimationFrameReadout } from './AnimationPlaybackReadout';
 import { AnimationSelect } from './AnimationSelect';
@@ -143,7 +143,7 @@ export function AnimFrameController({
     );
   }, [animDef, animKey, animName, clipName, targetKey]);
 
-  const canSaveCut = import.meta.env.DEV && isHumanCharacter && !duoAnimDef && !isTPose;
+  const canEditSolo = import.meta.env.DEV && isHumanCharacter && !duoAnimDef && !isTPose;
   const catKey = def?.path ? getAnimCategory(def.path) : undefined;
   const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
 
@@ -660,7 +660,7 @@ export function AnimFrameController({
           {([[0, 'X', 'danger'], [1, 'Y', 'success'], [2, 'Z', 'primary']] as const).map(([axis, label, color]) => (
             <div key={axis} className="col-6 col-md-3">
               <div className="input-group input-group-sm">
-                <span className={`input-group-text font-monospace fw-bold text-${color} bg-light py-0 px-1.5`}>{label}</span>
+                <span className={`input-group-text font-monospace fw-bold text-${color} bg-light py-0 px-1.5`}>{duo ? label : `Offset ${label}`}</span>
                 <input type="number" step="1" className="form-control form-control-sm text-end font-monospace py-0 px-1"
                   value={offset[axis]} onChange={event => updateOffset(axis, parseFloat(event.target.value) || 0)} title={`Décalage ${label} en cm`} />
                 <span className="input-group-text small bg-light py-0 px-1 text-muted">cm</span>
@@ -1053,7 +1053,7 @@ export function AnimFrameController({
             <i className="bi bi-repeat" aria-hidden="true" />
           </button>
           {/* Bouton Toggle Outil de Coupe / Trimming (Dev Only) */}
-          {def && (
+          {canEditSolo && def && (
             <button
               type="button"
               className={`btn py-0 px-2 btn-sm d-inline-flex align-items-center justify-content-center ${
@@ -1068,12 +1068,12 @@ export function AnimFrameController({
               }}
               title={
                 showTrimPanel
-                  ? 'Fermer l\'outil de découpe'
+                  ? 'Fermer l’éditeur d’animation'
                   : effectiveSegments.length > 0
                   ? `Outil de découpe (${effectiveSegments.length} segment(s) actif(s))`
-                  : 'Outil de découpe d\'animation (Trimming & Cuts)'
+                  : 'Éditer l’animation'
               }
-              aria-label="Outil de découpe d'animation"
+              aria-label="Éditer l’animation" aria-expanded={showTrimPanel}
             >
               <i className="bi bi-scissors" aria-hidden="true" />
               {effectiveSegments.length > 0 && (
@@ -1235,25 +1235,20 @@ export function AnimFrameController({
                 )}
               </div>
 
-              {def && <AnimationCutLinks animation={def} />}
-
-              {/* Editeur en direct Offset Pos & Rot (Solo) */}
-              {def && (
-                transformEditor(false)
-              )}
+              {def && <AnimationVariantLinks animation={def} />}
             </div>
           )}
         </div>
       )}
 
-      {/* ── Ligne 4 : Volet Dev Découpe d'Animation (Trimming & Multi-Cuts) ── */}
-      {showTrimPanel && def && (
+      {/* Édition des variantes solo */}
+      {showTrimPanel && canEditSolo && def && (
         <div className="card bg-white bg-opacity-90 border shadow-sm p-2 mt-2 text-dark user-select-text small" style={{ cursor: 'text' }}>
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-2">
             <div className="d-flex align-items-center gap-2">
               <i className="bi bi-scissors text-danger fs-5" aria-hidden="true" />
               <div>
-                <strong className="text-dark fs-6">Découpe d'Animation (Trims &amp; Cuts)</strong>
+                <strong className="text-dark fs-6">Édition de l’animation</strong>
                 <span className="ms-2 badge bg-light text-secondary border font-monospace">{def.id}</span>
                 {hasSegmentsOverride && (
                   <span className="ms-1 badge bg-primary text-white" style={{ fontSize: '10px' }}>Modifié en direct</span>
@@ -1287,9 +1282,13 @@ export function AnimFrameController({
             </div>
           </div>
 
-          {canSaveCut && <div className="mb-2">
-            <AnimationCutSave key={def.id} animation={def} segments={effectiveSegments} duration={duration} />
-          </div>}
+          {transformEditor(false)}
+          <div className="mb-2">
+            <AnimationVariantSave key={def.id} animation={def} segments={effectiveSegments} duration={duration}
+              alignment={{ offset: effectiveSoloOffset, rotY: effectiveSoloRotYRad }}
+              hasAlignmentChange={effectiveSoloOffset.some((value, axis) => value !== (def.defaultOffset?.[axis] ?? 0))
+                || effectiveSoloRotYRad !== (def.defaultRotYOffset ?? 0)} />
+          </div>
 
           {/* Actions de coupe simples et intuitives */}
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-2 bg-light rounded border">

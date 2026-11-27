@@ -54,6 +54,7 @@ export interface AnimationDefinition {
    * Permet de couper le début, la fin et/ou des sections au milieu de l'animation.
    */
   segments?: Array<[number, number]>;
+  variantFrom?: { id: string; segments?: Array<[number, number]> };
   cutFrom?: { id: string; segments: Array<[number, number]> };
 }
 
