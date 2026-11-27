@@ -747,7 +747,7 @@ export function createAgentController(
         useLaundry.setState({ bag: 'floor', floor: [x, getWalkableGroundY(x, z), z] });
       }
       if (event === 'wash' || event === 'dry') {
-        laundryReturn = { stage: event === 'wash' ? 'transfer' : 'collect', remaining: 60 + Math.random() * 60 };
+        laundryReturn = { stage: event === 'wash' ? 'transfer' : 'collect', remaining: 30 };
       }
       if (event === 'finish') useLaundry.setState({ bag: 'hook' });
       appLog(_characterId, `Lessive · ${event}`, { category: 'object', action: `laundry_${event}` });
