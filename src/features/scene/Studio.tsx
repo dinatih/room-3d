@@ -680,6 +680,7 @@ export function Studio() {
         if (k === 'z') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraTop', useSceneStore.getState().layers.laraTop === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'c') { e.preventDefault(); useSceneStore.getState().setLaraClothing('laraBottom', useSceneStore.getState().layers.laraBottom === 'none' ? 'native' : 'none'); cameraState.invalidate?.(); return; }
         if (k === 'x') { e.preventDefault(); const store = useSceneStore.getState(); const value = store.layers.laraTop === 'none' && store.layers.laraBottom === 'none' ? 'native' : 'none'; store.setLaraClothing('laraTop', value); store.setLaraClothing('laraBottom', value); cameraState.invalidate?.(); return; }
+        if (k === 'r') { e.preventDefault(); if (!e.repeat) useSceneStore.getState().randomizeLaraOutfit(); return; }
         return;
       }
 

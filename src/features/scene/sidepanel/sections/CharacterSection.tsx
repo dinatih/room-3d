@@ -296,8 +296,20 @@ export function CharacterSection({
 
       {layers.character && (
         <div className="py-1 border-bottom bg-transparent d-flex flex-column">
-          <div className="text-muted fw-bold text-dark text-uppercase mt-1 mb-1 px-2" style={{ fontSize: '9px' }}>
-            <i className="bi bi-tags me-1" aria-hidden="true" />Outfits lara
+          <div className="d-flex justify-content-between align-items-center mt-1 mb-1 px-2">
+            <span className="text-muted fw-bold text-dark text-uppercase" style={{ fontSize: '9px' }}>
+              <i className="bi bi-tags me-1" aria-hidden="true" />Outfits lara
+            </span>
+            <button
+              type="button"
+              className="btn btn-sm btn-warning text-dark p-0 px-1 border-0 shadow-sm fw-bold rounded"
+              onClick={() => useSceneStore.getState().randomizeLaraOutfit()}
+              title="Outfit aléatoire (Alt+R)"
+              aria-label="Outfit aléatoire (Alt+R)"
+              style={{ height: '18px', lineHeight: 1 }}
+            >
+              <i className="bi bi-shuffle" aria-hidden="true" />
+            </button>
           </div>
           {layerBtn('light',  iconLabel('bi-crosshair', 'Pistolets Lara'), 'laraPistols')}
           {layerBtn('light',  iconLabel('bi-eyeglasses', 'Lunettes Lara (Shift+B)'), 'laraGlasses')}

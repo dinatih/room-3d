@@ -73,6 +73,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
               <R label="Haut bikini (toggle)"       keys={['Shift+Z']} />
               <R label="Bas bikini (toggle)"        keys={['Shift+C']} />
               <R label="Haut et bas bikini (toggle)" keys={['Shift+X']} />
+              <R label={<>Outfit Lara aléatoire <i className="bi bi-shuffle" aria-hidden="true" /></>} keys={['Alt+R']} />
               <R label="Miroirs HD (toggle)"        keys={['Alt+G']} />
               {LAYER_SHORTCUTS.map(entry => (
                 <R

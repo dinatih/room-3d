@@ -37,7 +37,13 @@ import {
   LAYER_DEFAULTS,
 } from './layerUrlParams';
 import type { FurnitureState, LayerState, GroundType, LaraClothing, LaraHoodieZip } from '../sidepanel/types';
-import { isOnePieceTop } from '../character/laraOutfits';
+import {
+  LARA_TOP_IDS,
+  LARA_BOTTOM_IDS,
+  LARA_HOODIE_ZIP_IDS,
+  isHoodieTop,
+  isOnePieceTop,
+} from '../character/laraOutfits';
 import {
   type LaraCountMode,
   isExtraCharacter,
@@ -160,6 +166,7 @@ interface SceneStore {
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
   setLaraClothing: (key: 'laraTop' | 'laraBottom' | 'laraHoodieZip', value: LaraClothing | LaraHoodieZip) => void;
+  randomizeLaraOutfit: () => void;
   toggleLayer: (key: keyof LayerState) => void;
   setLayers: (partial: Partial<LayerState>) => void;
   setActiveExtraIds: (ids: string[]) => void;
@@ -614,6 +621,48 @@ export const useSceneStore = create<SceneStore>((set) => ({
       return { layers: nextLayers };
     });
     updateUrlLaraClothing(key, value);
+    cameraState.invalidate?.();
+  },
+
+  randomizeLaraOutfit: () => {
+    const pick = <T,>(items: readonly T[]): T => items[Math.floor(Math.random() * items.length)];
+    const coin = () => Math.random() < 0.5;
+    set((state) => {
+      const topCandidates = LARA_TOP_IDS.filter((id) => id !== 'none' && id !== state.layers.laraTop);
+      const nextTop = pick(topCandidates.length > 0 ? topCandidates : LARA_TOP_IDS.filter((id) => id !== 'none'));
+      const bottomCandidates = LARA_BOTTOM_IDS.filter((id) => id !== 'none');
+      const nextBottom = isOnePieceTop(nextTop) ? 'none' : pick(bottomCandidates);
+      const nextZip = isHoodieTop(nextTop) ? pick(LARA_HOODIE_ZIP_IDS) : (state.layers.laraHoodieZip ?? 'closed');
+
+      const footwear = pick(['barefoot', 'boots', 'socks', 'sneakers'] as const);
+      const nextBoolLayers = {
+        laraShoes: footwear === 'boots',
+        laraSocks: footwear === 'socks' || (footwear === 'sneakers' && coin()),
+        laraSneakers: footwear === 'sneakers',
+        laraPistols: coin(),
+        laraGlasses: coin(),
+        accessories: coin(),
+        laraNeckBandana: coin(),
+        laraWristBandana: coin(),
+      };
+
+      const nextLayers: LayerState = {
+        ...state.layers,
+        laraTop: nextTop,
+        laraBottom: nextBottom,
+        laraHoodieZip: nextZip,
+        ...nextBoolLayers,
+      };
+
+      updateUrlLaraClothing('laraTop', nextTop);
+      updateUrlLaraClothing('laraBottom', nextBottom);
+      updateUrlLaraClothing('laraHoodieZip', nextZip);
+      for (const [layerKey, val] of Object.entries(nextBoolLayers) as Array<[keyof LayerState, boolean]>) {
+        updateUrlLayer(layerKey, val);
+      }
+
+      return { layers: nextLayers };
+    });
     cameraState.invalidate?.();
   },
 
