@@ -7,6 +7,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useLaundry } from '../ai/laundry';
 import { KabbaLaundryBag, KABBA_HANDLE_HEIGHT } from '../items/KabbaLaundryBag';
 import * as THREE from 'three';
+import { createSnowFootprintTracker } from '../snowFootprints';
 import { getWalkCycleSpeed, walkTimeScale } from './walkCadence';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFClone, hasMountedGLTFClones } from '@features/scene/useGLTFClone';
@@ -744,6 +745,7 @@ export function Character({
 
   // Boucle frame principale : positionnement, mix d'animations & physiques
   const pausedPoseReady = useRef(false);
+  const trackSnowFootprints = useMemo(() => createSnowFootprintTracker(scene), [scene]);
   const frameControl = useRef({ agentAnimationPaused: false, isUserManuallyMoving: false, hasDynamicTask: false, distance: 0, lifeSpeed: 1 });
   useCharacterFrame(renderId, { simulate: (_state, delta) => {
     if (!isPaused) pausedPoseReady.current = false;
@@ -866,6 +868,7 @@ export function Character({
     const { agentAnimationPaused, isUserManuallyMoving, hasDynamicTask, lifeSpeed } = frameControl.current;
     const lifeDelta = delta * lifeSpeed;
     if (!groupRef.current.visible) {
+      trackSnowFootprints(false, groupRef.current.position, 0);
       if (navigationEnabled && !isPreview) delete cameraState.headPositions[id];
       return;
     }
@@ -1104,6 +1107,7 @@ export function Character({
     let pendantDelta = 0;
     let resetPendant = isTPose;
     if (isPaused && !isPreview) {
+      trackSnowFootprints(false, groupRef.current.position, 0);
       // Evaluate the loaded pose once, without advancing animation or secondary physics.
       mixer.update(0);
     } else if (isPreview && previewPlayback) {
@@ -1285,12 +1289,20 @@ export function Character({
       }
       const mixerStarted = performance.now();
       const walkingAction = actions[activeActionName.current];
-      if (walkingAction) {
-        const speed = getWalkCycleSpeed(walkingAction.getClip(), scene);
-        if (speed !== null) walkingAction.setEffectiveTimeScale(walkTimeScale(frameControl.current.distance, lifeDelta, speed));
+      const speed = walkingAction ? getWalkCycleSpeed(walkingAction.getClip(), scene) : null;
+      const travel = frameControl.current.distance;
+      if (walkingAction && speed !== null) {
+        walkingAction.setEffectiveTimeScale(walkTimeScale(travel, lifeDelta, speed));
       }
       mixer.update(agentAnimationPaused && !isTemporaryLoadingFallback ? 0 : lifeDelta);
       recordMixer(performance.now() - mixerStarted);
+      const continuousWalk = walkingAction && speed !== null && travel > 0
+        && travel <= speed * Math.max(lifeDelta, walkingAction.getClip().duration / 2);
+      trackSnowFootprints(
+        navigationEnabled && !isPreview && !characterGrid && !isGridPartner && id !== 'unitree-h2'
+          && !agentAnimationPaused && !isTemporaryLoadingFallback && !!continuousWalk,
+        groupRef.current.position, groupRef.current.rotation.y,
+      );
 
       // Parachute d'atterrissage réactif
       const falling = currentAnimClip.current === 'falling' ||

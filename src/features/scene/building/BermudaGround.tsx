@@ -1,4 +1,5 @@
 import { useFrame } from '@react-three/fiber';
+import { createSnowFootprintMask, snowFootprints } from '../snowFootprints';
 import { weatherSurface } from '../weatherSurface';
 import { useEffect, useMemo } from 'react';
 import { useWeather } from '../Weather';
@@ -79,10 +80,18 @@ export function BermudaGround({ active, groundType = 'bermuda', yPos = 0 }: Berm
   );
 }
 
-function WeatherSurfaceUniforms({ uniforms }: { uniforms: { gardenSnow: { value: number }; gardenWater: { value: number } } }) {
-  useFrame(() => {
+function WeatherSurfaceUniforms({ uniforms, mask }: {
+  uniforms: { gardenSnow: { value: number }; gardenWater: { value: number } };
+  mask: ReturnType<typeof createSnowFootprintMask>;
+}) {
+  useEffect(() => {
+    snowFootprints.add = mask.add;
+    return () => { if (snowFootprints.add === mask.add) delete snowFootprints.add; };
+  }, [mask]);
+  useFrame(({ invalidate }) => {
     uniforms.gardenSnow.value = weatherSurface.snow;
     uniforms.gardenWater.value = weatherSurface.water;
+    if (mask.update(performance.now(), weatherSurface.snow)) invalidate();
   });
   return null;
 }
@@ -95,7 +104,11 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
     roughnessMap: config.roughness,
   });
 
-  const surfaceUniforms = useMemo(() => ({ gardenSnow: { value: 0 }, gardenWater: { value: 0 } }), []);
+  const mask = useMemo(() => enabled ? createSnowFootprintMask() : null, [enabled]);
+  useEffect(() => () => mask?.texture.dispose(), [mask]);
+  const surfaceUniforms = useMemo(() => ({
+    gardenSnow: { value: 0 }, gardenWater: { value: 0 }, gardenFootprints: { value: mask?.texture },
+  }), [mask]);
   const material = useMemo(() => {
     const repeatX = EXTERIOR_GROUND.width / config.tileSize;
     const repeatY = EXTERIOR_GROUND.depth / config.tileSize;
@@ -130,7 +143,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
       Object.assign(shader.uniforms, surfaceUniforms);
       shader.vertexShader = 'varying vec2 gardenPosition;\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n gardenPosition = position.xy;');
       shader.fragmentShader = `
-        varying vec2 gardenPosition; uniform float gardenSnow; uniform float gardenWater;
+        varying vec2 gardenPosition; uniform float gardenSnow; uniform float gardenWater; uniform sampler2D gardenFootprints;
         float gardenHash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
         float gardenNoise(vec2 p) {
           vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -146,6 +159,10 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
           puddle = (1.0 - smoothstep(gardenWater * 0.65 - 0.06, gardenWater * 0.65 + 0.06, terrain)) * (1.0-snowCover) * smoothstep(0.0, 0.08, gardenWater);
           diffuseColor.rgb = mix(diffuseColor.rgb * (1.0 - gardenWater * 0.35), vec3(0.12,0.17,0.2), puddle * 0.7);
           diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.88,0.93,1.0), snowCover);
+          if (snowCover > 0.0) {
+            vec2 footprintUV = gardenPosition / vec2(${EXTERIOR_GROUND.width}.0, ${EXTERIOR_GROUND.depth}.0) + 0.5;
+            diffuseColor.rgb *= 1.0 - 0.25 * texture2D(gardenFootprints, footprintUV).a * snowCover;
+          }
           diffuseColor.a = mix(diffuseColor.a, 1.0, max(snowCover, puddle));
         }
       `).replace('#include <roughnessmap_fragment>', `
@@ -175,7 +192,7 @@ function TexturedGroundMesh({ config, yPos }: { config: GroundConfig; yPos: numb
         itemName: `Terrain Extérieur (${config.label})`,
       }}
     >
-      {enabled && <WeatherSurfaceUniforms uniforms={surfaceUniforms} />}
+      {mask && <WeatherSurfaceUniforms uniforms={surfaceUniforms} mask={mask} />}
       <planeGeometry args={[EXTERIOR_GROUND.width, EXTERIOR_GROUND.depth]} />
     </mesh>
   );
