@@ -203,6 +203,16 @@
         </div>
         <div class="modal-body text-center p-2 bg-black">
           <img id="zoomImg" src="" class="img-fluid rounded" alt="" />
+          <div id="zoomCompareWrap" class="row g-2 align-items-center d-none">
+            <div class="col-6">
+              <img id="zoomOrigImg" src="" class="img-fluid rounded border border-secondary-subtle" alt="Original" />
+              <div class="small text-body-secondary mt-1">Original</div>
+            </div>
+            <div class="col-6">
+              <img id="zoomScarletImg" src="" class="img-fluid rounded border border-danger-subtle" alt="Rouge écarlate" />
+              <div class="small text-danger fw-semibold mt-1">Rouge écarlate</div>
+            </div>
+          </div>
           <div class="d-flex justify-content-center gap-2 mt-2 flex-wrap" id="zoomThumbs"></div>
           <div class="d-flex justify-content-center gap-1 mt-2 flex-wrap" id="zoomVariants"></div>
         </div>
@@ -429,9 +439,21 @@
 
     function setZoomImage(idx) {
       if (!activeZoomItem) return;
-      const list = getItemPreviews(activeZoomItem);
+      const list = activeZoomItem.previews || [activeZoomItem.preview];
       activeZoomIdx = (idx + list.length) % list.length;
-      document.getElementById("zoomImg").src = list[activeZoomIdx];
+      const isScarlet = scarletMode.checked && Boolean(activeZoomItem.scarlet_preview);
+      const zoomImg = document.getElementById("zoomImg");
+      const compareWrap = document.getElementById("zoomCompareWrap");
+      if (isScarlet) {
+        zoomImg.classList.add("d-none");
+        compareWrap.classList.remove("d-none");
+        document.getElementById("zoomOrigImg").src = list[activeZoomIdx];
+        document.getElementById("zoomScarletImg").src = activeZoomItem.scarlet_preview;
+      } else {
+        compareWrap.classList.add("d-none");
+        zoomImg.classList.remove("d-none");
+        zoomImg.src = list[activeZoomIdx];
+      }
       document.querySelectorAll("#zoomThumbs img").forEach((img, i) => {
         img.classList.toggle("active", i === activeZoomIdx);
       });
@@ -439,7 +461,7 @@
 
     function openZoom(item, startIdx = 0) {
       activeZoomItem = item;
-      const list = getItemPreviews(item);
+      const list = item.previews || [item.preview];
       document.getElementById("zoomTitle").textContent = `${item.name} — ${item.shop}`;
       document.getElementById("zoomSubtitleFr").textContent = [item.name_fr, item.sub_category, item.location].filter(Boolean).join(" • ");
       const thumbsEl = document.getElementById("zoomThumbs");
@@ -521,7 +543,7 @@
       if (fBadge) fBadge.textContent = `${filtered.length} / ${ITEMS.length} results`;
       cardsGrid.innerHTML = "";
       for (const item of filtered) {
-        const list = getItemPreviews(item);
+        const list = item.previews || [item.preview];
         const isScarlet = scarletMode.checked && Boolean(item.scarlet_preview);
         const col = document.createElement("div");
         col.className = "col-6 col-sm-4 col-md-3 col-lg-2";
@@ -529,10 +551,22 @@
         const stripHtml = list.length > 1
           ? `<div class="d-flex flex-wrap gap-1 px-2 pt-2 bg-black border-bottom border-secondary-subtle pb-2 justify-content-center">${list.map((src, i) => `<img src="${src}" class="angle-dot ${i === 0 ? 'active' : ''}" data-idx="${i}" title="${i === 0 ? 'Main' : 'Variant ' + (i + 1)}" loading="lazy" />`).join("")}</div>`
           : "";
+        const mediaHtml = isScarlet
+          ? `<div class="d-flex overflow-hidden rounded-top">
+              <div class="w-50 position-relative border-end border-secondary-subtle">
+                <img src="${list[0]}" class="preview-img js-orig-img" loading="lazy" alt="${item.name} (Original)" />
+                <span class="badge text-bg-dark bg-opacity-75 position-absolute bottom-0 start-0 m-1">Original</span>
+              </div>
+              <div class="w-50 position-relative">
+                <img src="${item.scarlet_preview}" class="preview-img js-scarlet-img" loading="lazy" alt="${item.name} (Rouge écarlate)" />
+                <span class="badge bg-danger bg-opacity-90 position-absolute bottom-0 end-0 m-1">Rouge</span>
+              </div>
+            </div>`
+          : `<img src="${list[0]}" class="card-img-top preview-img js-orig-img" loading="lazy" alt="${item.name}" />`;
         col.innerHTML = `
           <div class="card h-100 card-style border gta-card shadow-sm">
             <div class="position-relative">
-              <img src="${list[0]}" class="card-img-top preview-img" loading="lazy" alt="${item.name}" />
+              ${mediaHtml}
               <div class="dropdown position-absolute top-0 start-0 m-1 js-card-share">${buildShareDropdownHtml("btn btn-sm btn-dark bg-opacity-75 text-gta-pink border border-secondary py-0 px-1")}</div>
               ${isScarlet ? `<span class="badge bg-danger bg-opacity-90 border border-light-subtle position-absolute top-0 end-0 m-1">Rouge écarlate</span>` : (list.length > 1 ? `<span class="badge text-bg-dark bg-opacity-75 border border-secondary position-absolute top-0 end-0 m-1">${list.length} views</span>` : "")}
             </div>
@@ -557,9 +591,11 @@
           url: getItemUrl(item),
           title: `GTA 6 Lucia — ${item.name} (${item.shop})`
         }));
-        const mainImg = col.querySelector(".preview-img");
+        const mainImg = col.querySelector(".js-orig-img");
         let currentIdx = 0;
-        mainImg.addEventListener("click", () => openZoom(item, currentIdx));
+        col.querySelectorAll(".preview-img").forEach(img => {
+          img.addEventListener("click", () => openZoom(item, currentIdx));
+        });
         col.querySelectorAll(".angle-dot").forEach(dot => {
           dot.addEventListener("click", () => {
             currentIdx = Number(dot.dataset.idx);
