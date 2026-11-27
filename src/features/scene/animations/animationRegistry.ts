@@ -10,6 +10,8 @@ import { FAB_ANIMATION_DEFINITIONS } from './fabManifest';
 import { KIT_ANIMATION_DEFINITIONS } from './kitManifest';
 import { ACCAD_ANIMATION_DEFINITIONS } from './accadManifest';
 
+import customCuts from './customCuts.json';
+
 export type AnimationCategory = 'combat' | 'dances' | 'emotes_gestures' | 'interactions' | 'locomotion' | 'poses_idles' | 'sports_fitness' | 'yoga';
 
 
@@ -52,9 +54,11 @@ export interface AnimationDefinition {
    * Permet de couper le début, la fin et/ou des sections au milieu de l'animation.
    */
   segments?: Array<[number, number]>;
+  cutFrom?: { id: string; segments: Array<[number, number]> };
 }
 
 export const ANIMATION_DEFINITIONS: AnimationDefinition[] = [
+  ...(customCuts as AnimationDefinition[]),
   ...INTERX_ANIMATION_DEFINITIONS,
   ...FAB_ANIMATION_DEFINITIONS,
   ...KIT_ANIMATION_DEFINITIONS,

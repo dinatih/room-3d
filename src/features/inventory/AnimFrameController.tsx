@@ -1,3 +1,4 @@
+import { AnimationCutLinks, AnimationCutSave } from './AnimationCutSave';
 import { useShallow } from 'zustand/react/shallow';
 import { AnimationTimeline, AnimationFrameReadout } from './AnimationPlaybackReadout';
 import { AnimationSelect } from './AnimationSelect';
@@ -142,6 +143,7 @@ export function AnimFrameController({
     );
   }, [animDef, animKey, animName, clipName, targetKey]);
 
+  const canSaveCut = import.meta.env.DEV && isHumanCharacter && !duoAnimDef && !isTPose;
   const catKey = def?.path ? getAnimCategory(def.path) : undefined;
   const catObj = catKey ? ANIM_CATEGORIES.find(c => c.key === catKey) : undefined;
 
@@ -1233,6 +1235,8 @@ export function AnimFrameController({
                 )}
               </div>
 
+              {def && <AnimationCutLinks animation={def} />}
+
               {/* Editeur en direct Offset Pos & Rot (Solo) */}
               {def && (
                 transformEditor(false)
@@ -1282,6 +1286,10 @@ export function AnimFrameController({
               )}
             </div>
           </div>
+
+          {canSaveCut && <div className="mb-2">
+            <AnimationCutSave key={def.id} animation={def} segments={effectiveSegments} duration={duration} />
+          </div>}
 
           {/* Actions de coupe simples et intuitives */}
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2 p-2 bg-light rounded border">

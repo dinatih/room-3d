@@ -6,6 +6,8 @@ import pkg from './package.json' with { type: 'json' };
 import { devLogPlugin } from './scripts/dev-log-plugin.ts';
 import { renderServicePlugin } from './scripts/render-service-plugin.ts';
 
+import { animationCutPlugin } from './scripts/animation-cut-plugin.ts';
+
 const commitHash = (() => {
   try {
     const raw = process.env.VITE_COMMIT_HASH || execSync('git rev-parse --short HEAD').toString();
@@ -18,7 +20,7 @@ const commitHash = (() => {
 const buildTime = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 
 export default defineConfig({
-  plugins: [react(), devLogPlugin(), renderServicePlugin()],
+  plugins: [react(), devLogPlugin(), renderServicePlugin(), animationCutPlugin()],
   base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

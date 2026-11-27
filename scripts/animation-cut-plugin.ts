@@ -1,0 +1,100 @@
+import { mkdir, open, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import type { Plugin } from 'vite';
+import type { AnimationDefinition } from '../src/features/scene/animations/animationRegistry.ts';
+import { exportAnimationCut } from './export-animation-cut.ts';
+
+const registryModule = '/src/features/scene/animations/animationRegistry.ts';
+const manifestPath = '/src/features/scene/animations/customCuts.json';
+
+export function animationCutPlugin(): Plugin {
+  return {
+    name: 'room-animation-cut',
+    apply: 'serve',
+    handleHotUpdate({ file, server }) {
+      // The save response lets the editor decide when to open the updated catalogue.
+      if (file === server.config.root + manifestPath) {
+        for (const module of server.moduleGraph.getModulesByFile(file) ?? []) server.moduleGraph.invalidateModule(module);
+        return [];
+      }
+    },
+    configureServer(server) {
+      const publicDir = server.config.publicDir;
+      const manifest = server.config.root + manifestPath;
+      let pending = Promise.resolve();
+
+      server.middlewares.use('/__animation-cut', (req, res) => {
+        const reply = (status: number, payload: object) => {
+          res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify(payload));
+        };
+        if (req.method !== 'POST') return reply(405, { error: 'Méthode non autorisée.' });
+        if (!req.headers.origin || !['http://' + req.headers.host, 'https://' + req.headers.host].includes(req.headers.origin)
+          || req.headers['content-type'] !== 'application/json') {
+          return reply(403, { error: 'Requête extérieure au studio.' });
+        }
+
+        async function save() {
+          let body = '';
+          for await (const chunk of req) body += chunk;
+          const { sourceId, name, segments } = JSON.parse(body);
+          const label = typeof name === 'string' ? name.trim() : '';
+          const slug = label.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+            .replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          if (!slug || slug.length > 120) throw new Error('Saisissez un nom valide pour la découpe.');
+          if (typeof sourceId !== 'string' || !Array.isArray(segments) || !segments.length
+            || !segments.every(segment => Array.isArray(segment) && segment.length === 2 && segment.every(Number.isFinite))) {
+            throw new Error('Sélectionnez une animation et des plages valides.');
+          }
+
+          const entries: AnimationDefinition[] = JSON.parse(await readFile(manifest, 'utf8'));
+          const { ANIMATION_DEFINITIONS } = await server.ssrLoadModule(registryModule);
+          const definitions = [...entries, ...ANIMATION_DEFINITIONS] as AnimationDefinition[];
+          const source = definitions.find(def => def.id === sourceId);
+          if (!source) throw new Error('Animation introuvable.');
+          const id = 'decoupe-' + slug;
+          if (definitions.some(def => def.id === id || def.aliases?.includes(id))) {
+            throw new Error('Ce nom de découpe existe déjà.');
+          }
+
+          const animationDir = await realpath(path.join(publicDir, 'animations'));
+          const sourceFile = await realpath(path.resolve(publicDir, source.path));
+          if (!sourceFile.startsWith(animationDir + path.sep)) throw new Error('Source hors du dossier des animations.');
+          const { bytes, duration, segments: exportedSegments } = await exportAnimationCut(sourceFile, label, segments);
+          const relative = `animations/custom/${id}.glb`;
+          const output = path.join(publicDir, relative);
+          const directory = path.dirname(output);
+          await mkdir(directory, { recursive: true });
+          if (await realpath(directory) !== path.join(animationDir, 'custom')) throw new Error('Dossier de sortie invalide.');
+
+          const entry: AnimationDefinition = {
+            id, label, path: relative, duration, category: source.category,
+            tags: [...new Set([...source.tags, 'decoupe'])],
+            defaultOffset: source.defaultOffset, defaultRotYOffset: source.defaultRotYOffset,
+            equipment: source.equipment, loop: source.loop, rootMotionSpace: source.rootMotionSpace,
+            cutFrom: { id: source.id, segments: exportedSegments },
+          };
+          const temporary = manifest + '.tmp';
+          const file = await open(output, 'wx');
+          try {
+            try {
+              await file.writeFile(bytes);
+            } finally {
+              await file.close();
+            }
+            await writeFile(temporary, JSON.stringify([...entries, entry], null, 2) + '\n');
+            await rename(temporary, manifest);
+          } catch (error) {
+            await Promise.all([rm(temporary, { force: true }), rm(output)]);
+            throw error;
+          }
+          reply(201, { id, label });
+        }
+
+        pending = pending.then(save).catch(error => {
+          reply(400, { error: error.code === 'EEXIST' ? 'Ce fichier de découpe existe déjà.' : error.message });
+        });
+      });
+    },
+  };
+}
