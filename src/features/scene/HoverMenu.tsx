@@ -731,6 +731,7 @@ export function HoverOverlay() {
                       }
 
                       if (closestCharId) {
+                        store.setActiveCharacterId(closestCharId);
                         setAssignment({ characterId: closestCharId, actionName: slot?.name ?? obj?.name ?? objectId });
                         appLog(closestCharId, `🤖 Ordre SmartObject: ${closestCharId} assigné à ${obj?.name ?? objectId} (${slot?.name ?? slotId})`, {
                           category: 'object',
