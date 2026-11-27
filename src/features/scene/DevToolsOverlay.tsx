@@ -45,7 +45,7 @@ export function drawFps(canvas: HTMLCanvasElement, samples: number[]) {
   const bw = W / 80;
   for (let i = 0; i < samples.length; i++) {
     const f = samples[i]; if (!f) continue;
-    gfx.fillStyle = f >= 50 ? '#22c55e' : f >= 30 ? '#f59e0b' : '#ef4444';
+    gfx.fillStyle = f >= 50 ? '#22c55e' : f >= 30 ? '#f59e0b' : f >= 15 ? '#ef4444' : '#ffffff';
     gfx.fillRect(i * bw, H - (f / maxFps) * H, Math.max(1, bw - 0.5), (f / maxFps) * H);
   }
 }
