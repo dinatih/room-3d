@@ -43,6 +43,8 @@ import {
   LARA_HOODIE_ZIP_IDS,
   isHoodieTop,
   isOnePieceTop,
+  formatLaraOutfitSummary,
+  type LaraOutfitSummary,
 } from '../character/laraOutfits';
 import {
   type LaraCountMode,
@@ -165,6 +167,8 @@ interface SceneStore {
   setLaraCount: (count: LaraCountMode | 0) => void;
   setHdri: (id: string) => void;
   toggleFurniture: (key: keyof FurnitureState) => void;
+  laraOutfitNotice: (LaraOutfitSummary & { id: number }) | null;
+  clearLaraOutfitNotice: () => void;
   setLaraClothing: (key: 'laraTop' | 'laraBottom' | 'laraHoodieZip', value: LaraClothing | LaraHoodieZip) => void;
   randomizeLaraOutfit: () => void;
   toggleLayer: (key: keyof LayerState) => void;
@@ -407,6 +411,8 @@ if (!initialLayers.character) {
   cameraState.characterHidden = true;
 }
 
+let laraOutfitNoticeCounter = 0;
+
 export const useSceneStore = create<SceneStore>((set) => ({
   nightLighting: false,
   wigGridHairColor: '',
@@ -506,6 +512,8 @@ export const useSceneStore = create<SceneStore>((set) => ({
   isCvModalOpen: false,
   isPhotoModeOpen: false,
   isFisheyeModalOpen: false,
+  laraOutfitNotice: null,
+  clearLaraOutfitNotice: () => set({ laraOutfitNotice: null }),
   desk2ScreenActive: false,
   setDesk2SmartActionActive: (active: boolean) => {
     set(state => {
@@ -661,7 +669,13 @@ export const useSceneStore = create<SceneStore>((set) => ({
         updateUrlLayer(layerKey, val);
       }
 
-      return { layers: nextLayers };
+      return {
+        layers: nextLayers,
+        laraOutfitNotice: {
+          id: ++laraOutfitNoticeCounter,
+          ...formatLaraOutfitSummary(nextLayers),
+        },
+      };
     });
     cameraState.invalidate?.();
   },

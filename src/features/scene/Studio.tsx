@@ -484,6 +484,40 @@ function SceneAmbientLight() {
   return <ambientLight ref={(node) => { node?.layers.enableAll(); }} color={color} intensity={intensity} />;
 }
 
+const LARA_OUTFIT_NOTICE_DURATION_MS = 3500;
+
+function LaraOutfitToast() {
+  const notice = useSceneStore((state) => state.laraOutfitNotice);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = window.setTimeout(() => {
+      if (useSceneStore.getState().laraOutfitNotice?.id === notice.id) {
+        useSceneStore.getState().clearLaraOutfitNotice();
+      }
+    }, LARA_OUTFIT_NOTICE_DURATION_MS);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+
+  if (!notice) return null;
+
+  return (
+    <div
+      role="status"
+      className="position-fixed top-0 start-50 translate-middle-x mt-3 pe-none px-2 mw-100"
+      style={{ zIndex: 300 }}
+    >
+      <div className="bg-dark text-light border border-warning rounded-4 shadow px-3 py-2 small text-center">
+        <div>
+          <i className="bi bi-shuffle text-warning me-1" aria-hidden="true" />
+          <strong>{notice.title}</strong>
+        </div>
+        <div className="opacity-75 small">{notice.details}</div>
+      </div>
+    </div>
+  );
+}
+
 export function Studio() {
   // ResizeObserver peut attendre une image visible avant de mesurer les Canvas.
   useEffect(() => { window.dispatchEvent(new Event('resize')); }, []);
@@ -1105,6 +1139,7 @@ export function Studio() {
       </Canvas>
 
       {/* HTML overlays */}
+      <LaraOutfitToast />
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
       <div className={`ui-fade-overlay ${hideUI ? 'ui-hidden' : ''}`}>
         {planeMode && <PlaneControls model={planeModel} onCycleModel={cyclePlaneModel} viewMode={planeViewMode} launched={planeLaunched} onExit={() => setPlaneMode(false)} />}

@@ -250,6 +250,50 @@ export type LaraExtraClothingId = keyof typeof LARA_EXTRA_CLOTHING_PATHS;
 const TOP_SPEC_MAP = new Map<string, LaraGarmentSpec>(LARA_TOP_SPECS.map((s) => [s.id, s]));
 const BOTTOM_SPEC_MAP = new Map<string, LaraGarmentSpec>(LARA_BOTTOM_SPECS.map((s) => [s.id, s]));
 const ZIP_SUFFIX_MAP = new Map<LaraHoodieZip, string>(LARA_HOODIE_ZIP_OPTIONS.map((z) => [z.id, z.suffix]));
+const ZIP_LABEL_MAP = new Map<LaraHoodieZip, string>(LARA_HOODIE_ZIP_OPTIONS.map((z) => [z.id, z.label]));
+
+export interface LaraOutfitSummary {
+  title: string;
+  details: string;
+}
+
+export function formatLaraOutfitSummary(layers: {
+  laraTop: LaraClothing;
+  laraBottom: LaraClothing;
+  laraHoodieZip?: LaraHoodieZip;
+  laraShoes?: boolean;
+  laraSocks?: boolean;
+  laraSneakers?: boolean;
+  laraPistols?: boolean;
+  laraGlasses?: boolean;
+  accessories?: boolean;
+  laraNeckBandana?: boolean;
+  laraWristBandana?: boolean;
+}): LaraOutfitSummary {
+  const topBase = TOP_SPEC_MAP.get(layers.laraTop)?.label ?? layers.laraTop;
+  const topLabel = isHoodieTop(layers.laraTop)
+    ? `${topBase} (${ZIP_LABEL_MAP.get(layers.laraHoodieZip ?? 'closed') ?? 'Fermé'})`
+    : topBase;
+  const bottomLabel = layers.laraBottom !== 'none'
+    ? (BOTTOM_SPEC_MAP.get(layers.laraBottom)?.label ?? layers.laraBottom)
+    : null;
+  const title = bottomLabel ? `${topLabel} + ${bottomLabel}` : topLabel;
+
+  const extras: string[] = [];
+  if (layers.laraShoes) extras.push('Bottes');
+  if (layers.laraSneakers) extras.push('Baskets rouges');
+  if (layers.laraSocks) extras.push('Chaussettes rouges');
+  if (layers.laraGlasses) extras.push('Lunettes');
+  if (layers.laraPistols) extras.push('Pistolets');
+  if (layers.accessories) extras.push('Accessoires');
+  if (layers.laraNeckBandana) extras.push('Bandana cou');
+  if (layers.laraWristBandana) extras.push('Bandana poignet');
+
+  return {
+    title,
+    details: extras.length > 0 ? extras.join(' · ') : 'Sans accessoires',
+  };
+}
 
 export function isHoodieTop(id: LaraClothing): boolean {
   return Boolean(TOP_SPEC_MAP.get(id)?.hasZipStates);
