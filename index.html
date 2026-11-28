@@ -8,12 +8,13 @@
     <link href="/fonts/bebas-neue/font.css" rel="stylesheet" />
     <title>Inventaire 3D</title>
     <script data-goatcounter="https://dinatih.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
-    <style>html{font-size:14px!important}*{box-sizing:border-box;margin:0;padding:0}body{background:#111827;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}#loading{z-index:9999;flex-direction:column;justify-content:center;align-items:center;padding:20px;display:flex;position:fixed;inset:0}#loading-backdrop{pointer-events:none;background:#111827 url(/environment/ciel_paris_bg_aligned.webp) 0%/auto 100% repeat-x;transition:opacity .85s cubic-bezier(.4,0,.2,1),transform 1.35s cubic-bezier(.2,0,.2,1);animation:60s linear infinite loading-bg-scroll;position:absolute;inset:0}@keyframes loading-bg-scroll{0%{background-position-x:0%}to{background-position-x:-100%}}#loading-backdrop:before{content:"";pointer-events:none;background:radial-gradient(circle,#0f172a40 0%,#0f172a99 100%);position:absolute;inset:0}#loading-backdrop.exiting{opacity:0;transform:scale(1.05)}#loading-envelope{z-index:1;clip-path:inset(-40px -40px 0);width:100%;max-width:580px;padding-bottom:12px;position:relative}#loading-envelope:after{content:"";z-index:2;clip-path:polygon(0 45%,8% 25%,18% 40%,29% 15%,40% 35%,52% 20%,64% 40%,77% 15%,89% 35%,100% 25%,100% 65%,89% 75%,77% 60%,64% 80%,52% 65%,40% 85%,29% 65%,18% 80%,8% 65%,0 75%);transform-origin:0;pointer-events:none;background:#17212d;width:calc(100% + 32px);height:8px;animation:.55s ease-in-out both loading-canvas-split;position:absolute;bottom:0;left:-16px}@keyframes loading-canvas-split{0%{transform:scaleX(0)}to{transform:scaleX(1)}}#loading-envelope.exiting:after{animation:1.6s ease-in-out both loading-canvas-close}@keyframes loading-canvas-close{0%,75%{transform:scaleX(1)}to{transform:scaleX(0)}}#loading-card{z-index:1;color:#1f2937;text-align:center;background:#ffffff4d;border:1px solid #ffffffb3;border-radius:.375rem;width:100%;max-width:580px;padding:28px 32px;animation:1.15s cubic-bezier(.22,1,.36,1) .55s both loading-card-enter;position:relative;box-shadow:0 8px 32px #00000038,inset 0 1px 1px #ffffffd9}@keyframes loading-card-enter{0%{transform:translateY(calc(100% + 12px))}to{transform:translateY(0)}}#loading-card.exiting{pointer-events:none;animation:1.2s cubic-bezier(.4,0,.2,1) both loading-card-exit}@keyframes loading-card-exit{0%{transform:translateY(0)}to{transform:translateY(calc(100% + 12px))}}@media (prefers-reduced-motion:reduce){#loading-card,#loading-card.exiting{animation:none}#loading-card.exiting{visibility:hidden}#loading-envelope:after{display:none}}#loading-header{flex-direction:column;align-items:center;gap:14px;margin-bottom:18px;display:flex}#loading-photos{justify-content:center;gap:16px;display:flex}.profile-avatar{object-fit:cover;border:3px solid #d32f2f;border-radius:50%;width:85px;height:85px;box-shadow:0 4px 12px #d32f2f40}#loading-title h1{color:#111827;letter-spacing:.02em;text-shadow:0 1px 1px #ffffffd9;margin-bottom:4px;font-size:24px;font-weight:700}#loading-title h2{color:#b91c1c;text-shadow:0 1px 1px #ffffffd9;margin-bottom:4px;font-size:14px;font-weight:700}#loading-title .subtitle{color:#374151;text-shadow:0 1px 1px #fffffff2;font-size:12px;font-weight:600}#loading-body{color:#1f2937;text-align:left;background:#ffffffa6;border-top:1px solid #ffffff73;border-radius:.375rem .375rem 0 0;margin-bottom:0;padding:14px 18px 0;font-size:13px;line-height:1.55}#loading-body strong{color:#991b1b}#loading-body em{color:#374151;text-shadow:0 1px 1px #ffffffd9;margin-top:6px;font-style:italic;display:block}#loading-body .links{color:#374151;text-shadow:0 1px 1px #ffffffd9;margin-top:10px;font-size:12px;font-weight:500}#loading-body a{color:#b91c1c;font-weight:700;text-decoration:none}#loading-body a:hover{text-decoration:underline}#loading-progress-section{background:#ffffffa6;border-radius:0 0 .375rem .375rem;flex-direction:column;align-items:center;display:flex}#loading-ball{pointer-events:none;flex-shrink:0;width:100%;height:56px}#loading-track{background:#0f172a29;border:1px solid #fff6;border-radius:3px;width:100%;height:6px;overflow:hidden;box-shadow:inset 0 1px 2px #0003}#loading-bar{background:linear-gradient(90deg,#d32f2f,#ef4444);border-radius:3px;width:0%;height:100%;transition:width .15s;box-shadow:0 0 8px #d32f2f66}#loading-bar.is-preparing{animation:1s ease-in-out infinite alternate loading-pulse}@keyframes loading-pulse{0%{opacity:1}to{opacity:.35}}#loading-item,#loading-shaders{color:#1f2937;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 1px #fffffff2;width:100%;max-width:100%;font-family:monospace;font-size:11px;font-weight:600;overflow:hidden}</style>
-    <script type="module" crossorigin src="/assets/inventory-_Ai7UV5A.js"></script>
+    <style>html{font-size:14px!important}*{box-sizing:border-box;margin:0;padding:0}body{background:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;overflow:hidden}#loading{z-index:9999;flex-direction:column;justify-content:center;align-items:center;padding:20px;display:flex;position:fixed;inset:0}#loading-backdrop{pointer-events:none;background:#111827 url(/environment/ciel_paris_bg_aligned.webp) 0%/auto 100% repeat-x;transition:opacity .85s cubic-bezier(.4,0,.2,1),transform 1.35s cubic-bezier(.2,0,.2,1);animation:60s linear infinite loading-bg-scroll;position:absolute;inset:0}@keyframes loading-bg-scroll{0%{background-position-x:0%}to{background-position-x:-100%}}#loading-backdrop:before{content:"";pointer-events:none;background:radial-gradient(circle,#0f172a2e 0%,#0f172a8f 100%);position:absolute;inset:0}#loading-backdrop.exiting{opacity:0;transform:scale(1.05)}#loading-envelope{z-index:1;clip-path:inset(-40px -40px 0);width:100%;max-width:560px;padding-bottom:12px;position:relative}#loading-envelope:after{content:"";z-index:2;transform-origin:50%;pointer-events:none;background:#ffffffb3;width:calc(100% - 32px);height:2px;animation:.55s ease-in-out both loading-canvas-split;position:absolute;bottom:0;left:16px}@keyframes loading-canvas-split{0%{transform:scaleX(0)}to{transform:scaleX(1)}}#loading-envelope.exiting:after{animation:1.6s ease-in-out both loading-canvas-close}@keyframes loading-canvas-close{0%,75%{transform:scaleX(1)}to{transform:scaleX(0)}}#loading-card{z-index:1;-webkit-backdrop-filter:blur(24px)saturate(140%);color:#0f172a;background:#fffc;border:1px solid #ffffffd9;border-radius:20px;animation:1.15s cubic-bezier(.22,1,.36,1) .55s both loading-card-enter;position:relative;overflow:hidden;box-shadow:0 24px 64px #0f172a47}@keyframes loading-card-enter{0%{transform:translateY(calc(100% + 12px))}to{transform:translateY(0)}}#loading-card.exiting{pointer-events:none;animation:1.2s cubic-bezier(.4,0,.2,1) both loading-card-exit}@keyframes loading-card-exit{0%{transform:translateY(0)}to{transform:translateY(calc(100% + 12px))}}.editorial-main{grid-template-columns:112px 1fr;align-items:center;gap:22px;padding:28px 28px 24px;display:grid}.editorial-portrait{width:112px;height:112px;position:relative}.editorial-portrait .main-photo{object-fit:cover;border-radius:18px;width:112px;height:112px;box-shadow:0 10px 24px #0f172a2e}.editorial-portrait .gh-photo{object-fit:cover;border:2.5px solid #fff;border-radius:50%;width:34px;height:34px;position:absolute;bottom:-6px;right:-6px;box-shadow:0 4px 10px #0f172a33}.editorial-kicker{letter-spacing:.08em;text-transform:uppercase;color:#047857;background:#10b98124;border-radius:999px;align-items:center;gap:7px;margin-bottom:10px;padding:3px 10px;font-size:11px;font-weight:700;display:inline-flex}.editorial-kicker:before{content:"";background:#10b981;border-radius:50%;width:6px;height:6px}#loading-title h1{letter-spacing:.03em;color:#0f172a;margin-bottom:4px;font-family:Bebas Neue,system-ui,sans-serif;font-size:40px;line-height:.92}#loading-title h2{color:#b91c1c;margin-bottom:6px;font-size:14px;font-weight:600}#loading-title .subtitle{color:#475569;margin-bottom:12px;font-size:12.5px}.editorial-links{color:#475569;flex-wrap:wrap;align-items:center;gap:10px;font-size:12px;display:flex}.editorial-links a{color:#0f172a;border-bottom:1px solid #b91c1c59;font-weight:600;text-decoration:none;transition:border-color .15s,color .15s}.editorial-links a:hover{color:#b91c1c;border-color:#b91c1c}#loading-progress-section{background:#f1f5f9b8;border-top:1px solid #0f172a14;padding:12px 28px 14px}#loading-track{background:#0f172a1f;border-radius:999px;width:100%;height:4px;margin-bottom:8px;overflow:hidden}#loading-bar{background:linear-gradient(90deg,#b91c1c,#ef4444);border-radius:999px;width:0%;height:100%;transition:width .15s}#loading-bar.is-preparing{animation:1s ease-in-out infinite alternate loading-pulse}@keyframes loading-pulse{0%{opacity:1}to{opacity:.4}}.progress-meta{color:#475569;justify-content:space-between;align-items:center;gap:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;display:flex}#loading-item{text-overflow:ellipsis;white-space:nowrap;color:#1e293b;font-weight:600;overflow:hidden}#loading-shaders{flex-shrink:0}@media (width<=540px){.editorial-main{text-align:center;grid-template-columns:1fr;gap:14px;padding:24px 20px 20px}.editorial-portrait{margin:0 auto}.editorial-links{justify-content:center}#loading-progress-section{padding:12px 20px 14px}.progress-meta{flex-direction:column;gap:2px}}@media (prefers-reduced-motion:reduce){#loading-card,#loading-card.exiting{animation:none}#loading-card.exiting{visibility:hidden}#loading-envelope:after{display:none}}</style>
+    <script type="module" crossorigin src="/assets/inventory-C3Xpy5aF.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-XKyaHtl9.js">
-    <link rel="modulepreload" crossorigin href="/assets/app-q9tiuvDu.js">
+    <link rel="modulepreload" crossorigin href="/assets/AppConsole-zYBgqUnu.js">
+    <link rel="modulepreload" crossorigin href="/assets/app-D5xbNVPt.js">
     <link rel="stylesheet" crossorigin href="/assets/app-BQD7KEal.css">
-    <link rel="stylesheet" crossorigin href="/assets/inventory-Bq53N7rD.css">
+    <link rel="stylesheet" crossorigin href="/assets/inventory-CZ47bGaa.css">
     <link rel="stylesheet" crossorigin href="/assets/bootstrap-icons-DTAiiby3.css">
   </head>
   <body>
@@ -21,35 +22,33 @@
       <div id="loading-backdrop"></div>
       <div id="loading-envelope">
         <div id="loading-card">
-          <div id="loading-header">
-            <div id="loading-photos">
-              <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="David HERELLE Github" class="profile-avatar" />
-              <img src="/david_profile.jpeg" alt="David HERELLE Corporate" class="profile-avatar" />
+          <div class="editorial-main">
+            <div class="editorial-portrait">
+              <img src="/david_profile.jpeg" alt="David HERELLE" class="main-photo" />
+              <img src="https://avatars.githubusercontent.com/u/309161?v=4" alt="GitHub dinatih" class="gh-photo" />
             </div>
-            <div id="loading-title">
-              <h1>David HERELLE</h1>
-              <h2>Architecte de Systèmes d'Information Web & Tech Lead</h2>
-              <div class="subtitle">Superviseur d'Agents IA · 8+ ans d’expérience (JobTeaser, Tracktor...)</div>
-            </div>
-          </div>
 
-          <div id="loading-body">
-            <p>
-              🚀 <strong>À la recherche de mon prochain défi technique (2026) !</strong><br />
-              Spécialiste de l'architecture Web (Ruby on Rails, PostgreSQL, React, R3F, Three.js) et du pilotage d'agents IA.<br />
-              <em>"L'IA ne remplace pas le développeur, elle supprime 90% du boilerplate pour se concentrer sur l'architecture, la créativité et les décisions métier."</em>
-            </p>
-            <div class="links">
-              📍 Paris 13ème (BNF / Station F) · 🌐 <a href="https://github.com/dinatih" target="_blank">GitHub dinatih</a> · <a href="https://www.linkedin.com/in/dinatih/" target="_blank">LinkedIn Profile</a>
+            <div id="loading-title">
+              <span class="editorial-kicker">Disponible · Défi Tech 2026</span>
+              <h1>DAVID HERELLE</h1>
+              <h2>Tech Lead · Architecte Web &amp; Agents IA</h2>
+              <div class="subtitle">8+ ans d’expérience · Rails, React, Three.js</div>
+              <div class="editorial-links">
+                <span>Paris 13e</span>
+                <span>·</span>
+                <a href="https://github.com/dinatih" target="_blank" rel="noreferrer">GitHub</a>
+                <span>·</span>
+                <a href="https://www.linkedin.com/in/dinatih/" target="_blank" rel="noreferrer">LinkedIn</a>
+              </div>
             </div>
           </div>
 
           <div id="loading-progress-section">
-            <div id="loading-ball" role="img" aria-label="Chargement de la scène 3D : balle rebondissante"></div>
             <div id="loading-track"><div id="loading-bar"></div></div>
-            <div id="loading-item" class="text-truncate w-100 px-3 mt-2">Chargement des éléments…</div>
-            <div id="loading-shaders" class="text-truncate w-100 px-3 mb-2" aria-live="polite"></div>
-
+            <div class="progress-meta">
+              <div id="loading-item">Chargement des éléments…</div>
+              <div id="loading-shaders" aria-live="polite"></div>
+            </div>
           </div>
         </div>
       </div>
