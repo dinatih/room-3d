@@ -39,7 +39,7 @@ def _setup_nude_lara():
         "bikini_top", "bikini_bottom", "shirt", "shorts", "body_torso", "body_legs",
         "body_legs_barefoot", "body_bare_feet_clothed", "boots", "backpack", "gear",
         "handgun_left", "handgun_right", "handgun_left_holster", "handgun_right_holster",
-        "buckle", "metal", "glasses", "hair_classic", "hair_fmv", "gloves", "fingers",
+        "buckle", "metal", "glasses", "hair_classic", "hair_fmv",
     }
     for obj in bpy.data.objects:
         if obj.type == "MESH":

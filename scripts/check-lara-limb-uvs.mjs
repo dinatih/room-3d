@@ -10,8 +10,9 @@ const io = new NodeIO().registerExtensions([KHRDracoMeshCompression, EXTTextureW
   .registerDependencies({ 'draco3d.decoder': await draco3d.createDecoderModule() });
 const before = await io.readBinary(execFileSync('git', ['show', 'HEAD:public/characters/lara/lara_native.glb'], {maxBuffer:Infinity}));
 const after = await io.read('public/characters/lara/lara_native.glb');
-const oldNodes = before.getRoot().listNodes();
+const oldNodes = before.getRoot().listNodes().filter(n => n.getName() !== 'body_nude_hands');
 const newNodes = after.getRoot().listNodes();
+assert(!newNodes.some(n => n.getName() === 'body_nude_hands'), 'Bare hands must be absent from the model');
 assert.deepEqual(newNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort(), oldNodes.filter(n=>!n.getName().startsWith('body_bare_feet_clothed')&&!n.getName().startsWith('body_legs_barefoot')).map(n => n.getName()).sort());
 for (const old of oldNodes) {
   const node = newNodes.find(n => n.getName() === old.getName() && Boolean(n.getMesh()) === Boolean(old.getMesh()));
@@ -23,8 +24,8 @@ for (const old of oldNodes) {
   }
   if (old.getMesh()) {
     const count = m => m.listPrimitives().reduce((n,p) => n + p.getIndices().getCount(),0);
-    if (old.getName() === 'body_nude_hands' || old.getName() === 'body_bare_feet_clothed') {
-      assert(count(node.getMesh())>0, 'Bare hands lost all triangles');
+    if (old.getName() === 'body_bare_feet_clothed') {
+      assert(count(node.getMesh())>0, 'Clothed bare feet lost all triangles');
     } else if (old.getName() === 'body_nude_torso') {
       assert(count(node.getMesh()) >= count(old.getMesh()), 'Rebuilt torso lost triangles');
     } else {
@@ -32,7 +33,7 @@ for (const old of oldNodes) {
     }
   }
 }
-for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude_legs','body_nude_hands','body_nude_feet','body_torso','body_nude_torso']) {
+for (const name of ['arms','body_legs','body_legs_barefoot','fingers','body_nude_legs','body_nude_feet','body_torso','body_nude_torso']) {
   const mesh = newNodes.find(n => n.getName() === name).getMesh();
   for (const primitive of mesh.listPrimitives()) {
     const pos = primitive.getAttribute('POSITION');
@@ -101,11 +102,11 @@ try {
     const {extractCharacterParts,applyClothingAndAccessoriesVisibility}=await import('/src/features/scene/characterParts.ts');
     for (const {style,scene} of entries) {
       const parts=extractCharacterParts(scene);
-      for(const key of ['boots','feet','feetClothed','legsBarefoot','gloves','hands']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
+      for(const key of ['boots','feet','feetClothed','legsBarefoot','gloves']) if(!parts[key].length) throw Error(`${style}: missing ${key}`);
       for(const laraShoes of [true,false])
       for(const [laraNude,laraTopOff,laraBottomOff] of [[false,false,false],[false,true,false],[false,false,true],[true,false,false]]) {
         applyClothingAndAccessoriesVisibility(parts,{laraShoes,laraTop:laraNude||laraTopOff?'none':'native',laraBottom:laraNude||laraBottomOff?'none':'native',showAccessories:false,laraPistols:false,equipment:{holster:false,pistols:false,backpack:false}});
-        for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['legsBarefoot',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',true],['hands',false],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsNude',laraNude||laraBottomOff]]) {
+        for(const [key,visible] of [['boots',laraShoes],['feet',!laraShoes&&(laraNude||laraBottomOff)],['feetClothed',!laraShoes&&!laraNude&&!laraBottomOff],['legsBarefoot',!laraShoes&&!laraNude&&!laraBottomOff],['gloves',true],['torsoClothed',!laraNude&&!laraTopOff],['torsoNude',laraNude||laraTopOff],['legsNude',laraNude||laraBottomOff]]) {
           if(parts[key].some(({mesh})=>mesh.visible!==visible)) throw Error(`${style}: incorrect ${key} visibility`);
         }
         if(parts.legsClothed.some(({mesh})=>mesh.visible!==(mesh.name==='body_legs'?!laraNude&&!laraBottomOff&&laraShoes:!laraNude&&!laraBottomOff))) throw Error(`${style}: clothed legs visibility`);

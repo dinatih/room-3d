@@ -34,7 +34,6 @@ export interface CharacterParts {
   feet: CharacterMeshPart[];
   feetClothed: CharacterMeshPart[];
   gloves: CharacterMeshPart[];
-  hands: CharacterMeshPart[];
   bikiniTop: CharacterMeshPart[];
   bikiniBottom: CharacterMeshPart[];
   torsoClothed: CharacterMeshPart[];
@@ -134,7 +133,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
   const feet: CharacterMeshPart[] = [];
   const feetClothed: CharacterMeshPart[] = [];
   const gloves: CharacterMeshPart[] = [];
-  const hands: CharacterMeshPart[] = [];
   const bikiniTop: CharacterMeshPart[] = [];
   const bikiniBottom: CharacterMeshPart[] = [];
   const torsoClothed: CharacterMeshPart[] = [];
@@ -259,8 +257,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
         feet.push({ mesh });
       } else if (name === 'gloves' || name === 'fingers' || name.includes('gloves') || name.includes('fingers')) {
         gloves.push({ mesh });
-      } else if (name === 'body_nude_hands' || name.includes('hands') || name.includes('5_hands')) {
-        hands.push({ mesh });
       } else if (name === 'shirt' || name === 'body_torso' || (name.includes('torso') && !name.includes('nude')) || name.includes('shirt')) {
         torsoClothed.push({ mesh });
       } else if (name === 'body_nude_torso' || (name.includes('torso') && name.includes('nude')) || name.includes('5_body_torso')) {
@@ -312,7 +308,6 @@ export function extractCharacterParts(scene: THREE.Object3D): CharacterParts {
     feet,
     feetClothed,
     gloves,
-    hands,
     bikiniTop,
     bikiniBottom,
     torsoClothed,
@@ -379,12 +374,11 @@ export function applyClothingAndAccessoriesVisibility(parts: CharacterParts, opt
   const isTopNude = opts.laraTop !== 'native';
   const isBottomNude = opts.laraBottom !== 'native';
 
-  // Boots / Feet / Gloves / Hands
+  // Boots / Feet / Gloves
   setPartVisibility(parts.boots, showNativeBoots);
   setPartVisibility(parts.feet, (!showNativeBoots && isBottomNude) || showSneakers);
   setPartVisibility(parts.feetClothed, !showNativeBoots && !showSneakers && !isBottomNude);
   setPartVisibility(parts.gloves, true);
-  setPartVisibility(parts.hands, false);
 
   setPartVisibility(parts.bikiniTop,opts.laraTop === 'bikini');
   setPartVisibility(parts.bikiniBottom,opts.laraBottom === 'bikini');

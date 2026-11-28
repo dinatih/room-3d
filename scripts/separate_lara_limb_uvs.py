@@ -16,8 +16,8 @@ from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[1]
 FOLDER = ROOT / 'public/characters/lara'
-SOURCE = FOLDER / 'lara_perfect.blend'
-TARGETS = ('arms', 'body_legs', 'fingers', 'body_nude_legs', 'body_nude_hands', 'body_nude_feet')
+SOURCE = ROOT / 'sources_backup/characters/lara/lara_perfect.blend'
+TARGETS = ('arms', 'body_legs', 'fingers', 'body_nude_legs', 'body_nude_feet')
 MARKER = 'lara_limb_uv_layout'
 LAYOUT = 'left-right-v1'
 

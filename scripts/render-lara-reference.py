@@ -6,7 +6,6 @@ Anatomical: append -- --anatomical (neutral clay surface, no equipment).
 from pathlib import Path
 import sys
 import bpy
-import bmesh
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,7 +17,7 @@ bpy.ops.import_scene.gltf(filepath=str(ROOT / 'public/characters/lara/lara_nativ
 # Display only the original clothed outfit, excluding alternate body/hair meshes.
 hidden = {
     'bikini_bottom', 'bikini_top', 'body_bare_feet_clothed', 'body_legs_barefoot',
-    'body_nude_feet', 'body_nude_hands', 'body_nude_legs', 'body_nude_panties',
+    'body_nude_feet', 'body_nude_legs', 'body_nude_panties',
     'body_nude_torso', 'hair_classic', 'hair_fmv', 'Icosphere',
     'handgun_left', 'handgun_right',
 }
@@ -28,7 +27,7 @@ for obj in bpy.context.scene.objects:
         if anatomical:
             obj.hide_render = obj.name not in {
                 'body_nude_torso', 'body_nude_legs', 'body_nude_feet',
-                'body_nude_hands', 'body_nude_panties', 'arms', 'face',
+                'body_nude_panties', 'arms', 'gloves', 'fingers', 'face',
                 'eyes', 'eye2', 'lashes', 'hair_base',
             }
             # Neutral anatomical mannequin: no outfit textures or accessories.
@@ -38,25 +37,6 @@ for obj in bpy.context.scene.objects:
                 material.diffuse_color = (0.5, 0.58, 0.62, 1)
             for slot in obj.material_slots:
                 slot.material = material
-if anatomical:
-    # The bare-hand source has torn tips and overlapping wrist surfaces.
-    # Close/weld arms/hands only in this disposable render scene.
-    # Never export or save this temporary geometry to the source asset.
-    bpy.ops.object.select_all(action='DESELECT')
-    for name in ['arms', 'body_nude_hands']:
-        bpy.data.objects[name].select_set(True)
-    bpy.context.view_layer.objects.active = bpy.data.objects['body_nude_hands']
-    bpy.ops.object.join()
-    hands = bpy.context.object
-    surface = bmesh.new()
-    surface.from_mesh(hands.data)
-    # Match the source mesh's float precision when welding UV seam duplicates.
-    bmesh.ops.remove_doubles(surface, verts=list(surface.verts), dist=2 ** -23)
-    bmesh.ops.holes_fill(surface, edges=[edge for edge in surface.edges if edge.is_boundary])
-    bmesh.ops.recalc_face_normals(surface, faces=list(surface.faces))
-    surface.to_mesh(hands.data)
-    surface.free()
-    hands.data.update()
 meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH' and not o.hide_render]
 points = [o.matrix_world @ Vector(v) for o in meshes for v in o.bound_box]
 low = Vector(tuple(min(p[i] for p in points) for i in range(3)))
