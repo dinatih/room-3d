@@ -484,7 +484,7 @@ function SceneAmbientLight() {
   return <ambientLight ref={(node) => { node?.layers.enableAll(); }} color={color} intensity={intensity} />;
 }
 
-const LARA_OUTFIT_NOTICE_DURATION_MS = 3500;
+const LARA_OUTFIT_NOTICE_DURATION_MS = 12000;
 
 function LaraOutfitToast() {
   const notice = useSceneStore((state) => state.laraOutfitNotice);
