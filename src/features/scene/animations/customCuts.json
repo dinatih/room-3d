@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "id": "decoupe-shower-short",
+    "label": "shower-short",
+    "path": "animations/custom/decoupe-shower-short.glb",
+    "duration": 3.4666664600372314,
+    "category": "emotes_gestures",
+    "tags": [
+      "free-fire",
+      "emotes",
+      "decoupe"
+    ],
+    "cutFrom": {
+      "id": "ff-smile",
+      "segments": [
+        [
+          0.7333333492279053,
+          4.199999809265137
+        ]
+      ]
+    }
+  }
+]
