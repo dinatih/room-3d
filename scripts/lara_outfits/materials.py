@@ -32,6 +32,11 @@ def _height_to_normal_rgba(height: np.ndarray, strength: float = 1.0) -> np.ndar
     return rgba
 
 
+# Native Lara bikini red (Bikini_Red in lara_perfect.blend)
+NATIVE_BIKINI_RED_LINEAR = (0.72, 0.0003, 0.001)
+NATIVE_BIKINI_RED_SRGB = np.array([0.865008, 0.003876, 0.012920], dtype=np.float32)
+
+
 def _generate_textures() -> dict[str, bpy.types.Image]:
     rng = np.random.default_rng(42)
     size = 512
@@ -53,21 +58,21 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     fine_rib_u = xx / size * 176.0 * 2.0 * math.pi
     fine_rib_h = np.cos(fine_rib_u) * 0.90 + np.sin(rib_v) * 0.15 + fine_noise * 0.10
 
-    # 1. Cotton Fleece / Rib / Lining (Red)
-    base_red_fleece = np.array([0.74, 0.11, 0.14], dtype=np.float32)
+    # 1. Cotton Fleece / Rib / Lining (Native Bikini Red)
+    base_red_fleece = NATIVE_BIKINI_RED_SRGB
     melange = np.clip(1.0 + low_noise * 0.055 + fine_noise * 0.045 + knit_v * 0.015, 0.80, 1.18)
     fleece_rgb = np.clip(base_red_fleece[None, None, :] * melange[..., None], 0.0, 1.0)
     fleece_rgba = np.ones((size, size, 4), dtype=np.float32)
     fleece_rgba[..., :3] = fleece_rgb
     img_red_fleece_col = _make_image("tex_cotton_red_fleece_col", fleece_rgba, "sRGB")
 
-    base_red_rib = np.array([0.62, 0.085, 0.11], dtype=np.float32)
+    base_red_rib = NATIVE_BIKINI_RED_SRGB * 0.85
     rib_rgb = np.clip(base_red_rib[None, None, :] * melange[..., None], 0.0, 1.0)
     rib_rgba = np.ones((size, size, 4), dtype=np.float32)
     rib_rgba[..., :3] = rib_rgb
     img_red_rib_col = _make_image("tex_cotton_red_rib_col", rib_rgba, "sRGB")
 
-    base_red_lining = np.array([0.50, 0.068, 0.09], dtype=np.float32)
+    base_red_lining = NATIVE_BIKINI_RED_SRGB * 0.70
     lining_rgb = np.clip(base_red_lining[None, None, :] * melange[..., None], 0.0, 1.0)
     lining_rgba = np.ones((size, size, 4), dtype=np.float32)
     lining_rgba[..., :3] = lining_rgb
@@ -77,8 +82,8 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     img_rib_nrm = _make_image("tex_cotton_rib_nrm", _height_to_normal_rgba(rib_h, 1.15), "Non-Color")
     img_fine_rib_nrm = _make_image("tex_cotton_fine_rib_nrm", _height_to_normal_rgba(fine_rib_h, 1.25), "Non-Color")
 
-    # 2. Deep Red Cotton-Elastane Jersey (Legging / T-Shirt / Fine Rib Tank)
-    base_red_legging = np.array([0.68, 0.085, 0.12], dtype=np.float32)
+    # 2. Cotton-Elastane Jersey (Legging / T-Shirt / Fine Rib Tank)
+    base_red_legging = NATIVE_BIKINI_RED_SRGB
     leg_melange = np.clip(1.0 + low_noise * 0.045 + fine_noise * 0.035 + knit_v * 0.020, 0.82, 1.18)
     leg_rgb = np.clip(base_red_legging[None, None, :] * leg_melange[..., None], 0.0, 1.0)
     leg_rgba = np.ones((size, size, 4), dtype=np.float32)
@@ -86,8 +91,8 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     img_red_legging_col = _make_image("tex_legging_red_col", leg_rgba, "sRGB")
     img_jersey_nrm = _make_image("tex_legging_jersey_nrm", _height_to_normal_rgba(knit_v * 0.6 + fine_noise * 0.15, 0.55), "Non-Color")
 
-    # 3. Swimwear / Lycra Elastane (smooth sleek satin-matte crimson)
-    base_red_lycra = np.array([0.76, 0.085, 0.12], dtype=np.float32)
+    # 3. Swimwear / Lycra Elastane (Native Bikini Red)
+    base_red_lycra = NATIVE_BIKINI_RED_SRGB
     lycra_weave = (np.sin(u * 1.4) * np.sin(v * 1.4)) * 0.25 + fine_noise * 0.08
     lycra_rgb = np.clip(base_red_lycra[None, None, :] * (1.0 + lycra_weave[..., None] * 0.03), 0.0, 1.0)
     lycra_rgba = np.ones((size, size, 4), dtype=np.float32)
@@ -100,9 +105,9 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     cord_v = yy / size * 48.0 * 2.0 * math.pi
     cord_h = np.sin(cord_u + cord_v) * 0.6 + np.sin(cord_u - cord_v) * 0.4
     cord_col = np.ones((size, size, 4), dtype=np.float32)
-    cord_col[..., 0] = np.clip(0.78 + cord_h * 0.05, 0.0, 1.0)
-    cord_col[..., 1] = np.clip(0.11 + cord_h * 0.02, 0.0, 1.0)
-    cord_col[..., 2] = np.clip(0.14 + cord_h * 0.02, 0.0, 1.0)
+    cord_col[..., 0] = np.clip(NATIVE_BIKINI_RED_SRGB[0] + cord_h * 0.04, 0.0, 1.0)
+    cord_col[..., 1] = np.clip(NATIVE_BIKINI_RED_SRGB[1] + cord_h * 0.002, 0.0, 1.0)
+    cord_col[..., 2] = np.clip(NATIVE_BIKINI_RED_SRGB[2] + cord_h * 0.004, 0.0, 1.0)
     img_cord_col = _make_image("tex_cord_col", cord_col, "sRGB")
     img_cord_nrm = _make_image("tex_cord_nrm", _height_to_normal_rgba(cord_h, 1.2), "Non-Color")
 
@@ -113,7 +118,7 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
         np.exp(-((np.sin(bu) ** 2 + np.cos(bv) ** 2) * 3.5))
         + 0.45 * (np.cos(bu * 3.0) * np.cos(bv * 3.0) > 0.72).astype(np.float32)
     )
-    bandana_base = np.array([0.74, 0.08, 0.10], dtype=np.float32)
+    bandana_base = NATIVE_BIKINI_RED_SRGB
     bandana_cream = np.array([0.92, 0.88, 0.84], dtype=np.float32)
     mask = np.clip((paisley - 0.55) * 2.5, 0.0, 1.0)[..., None]
     bandana_rgb = bandana_base[None, None, :] * (1.0 - 0.55 * mask) + bandana_cream[None, None, :] * (0.55 * mask)
@@ -126,7 +131,7 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
 
     # 6. Canvas / Sneaker Upper (Red)
     canvas_h = (np.sin(xx / size * 140.0 * math.pi) * 0.5 + np.sin(yy / size * 140.0 * math.pi) * 0.5) + fine_noise * 0.20
-    canvas_base = np.array([0.70, 0.075, 0.10], dtype=np.float32)
+    canvas_base = NATIVE_BIKINI_RED_SRGB
     canvas_rgb = np.clip(canvas_base[None, None, :] * (1.0 + canvas_h[..., None] * 0.04), 0.0, 1.0)
     canvas_rgba = np.ones((size, size, 4), dtype=np.float32)
     canvas_rgba[..., :3] = canvas_rgb
@@ -140,14 +145,14 @@ def _generate_textures() -> dict[str, bpy.types.Image]:
     twill = np.sin(twill_phase) * 0.60 + warp + weft
     slub = low_noise * 0.14 + fine_noise * 0.18
     denim_h = twill * 0.55 + slub
-    denim_base = np.array([0.76, 0.048, 0.058], dtype=np.float32)
+    denim_base = NATIVE_BIKINI_RED_SRGB
     denim_wash = np.clip(1.0 + low_noise * 0.045 + fine_noise * 0.030 + twill * 0.032, 0.84, 1.16)
     denim_rgb = np.clip(denim_base[None, None, :] * denim_wash[..., None], 0.0, 1.0)
     denim_rgba = np.ones((size, size, 4), dtype=np.float32)
     denim_rgba[..., :3] = denim_rgb
     img_denim_col = _make_image("tex_denim_red_col", denim_rgba, "sRGB")
 
-    denim_seam_base = np.array([0.56, 0.032, 0.040], dtype=np.float32)
+    denim_seam_base = NATIVE_BIKINI_RED_SRGB * 0.75
     denim_seam_rgb = np.clip(denim_seam_base[None, None, :] * denim_wash[..., None], 0.0, 1.0)
     denim_seam_rgba = np.ones((size, size, 4), dtype=np.float32)
     denim_seam_rgba[..., :3] = denim_seam_rgb
@@ -240,10 +245,13 @@ def make_pbr_material(
 
 def create_material_library() -> dict[str, bpy.types.Material]:
     textures = _generate_textures()
+    lin_main = (*NATIVE_BIKINI_RED_LINEAR, 1.0)
+    lin_mid = (0.52, 0.0002, 0.0007, 1.0)
+    lin_dark = (0.36, 0.00015, 0.0005, 1.0)
     return {
         "legging": make_pbr_material(
             "Legging_Cotton_Red",
-            base_color=(0.42, 0.015, 0.025, 1.0),
+            base_color=lin_main,
             roughness=0.86,
             metallic=0.0,
             color_img=textures["red_legging_col"],
@@ -253,7 +261,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "fleece": make_pbr_material(
             "Cotton_Fleece_Red",
-            base_color=(0.50, 0.020, 0.030, 1.0),
+            base_color=lin_main,
             roughness=0.90,
             metallic=0.0,
             color_img=textures["red_fleece_col"],
@@ -263,7 +271,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "rib": make_pbr_material(
             "Cotton_Rib_Red",
-            base_color=(0.36, 0.014, 0.022, 1.0),
+            base_color=lin_mid,
             roughness=0.90,
             metallic=0.0,
             color_img=textures["red_rib_col"],
@@ -273,7 +281,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "fine_rib": make_pbr_material(
             "Cotton_Fine_Rib_Red",
-            base_color=(0.44, 0.016, 0.026, 1.0),
+            base_color=lin_main,
             roughness=0.86,
             metallic=0.0,
             color_img=textures["red_legging_col"],
@@ -283,7 +291,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "jersey": make_pbr_material(
             "Cotton_Jersey_Red",
-            base_color=(0.48, 0.018, 0.028, 1.0),
+            base_color=lin_main,
             roughness=0.88,
             metallic=0.0,
             color_img=textures["red_fleece_col"],
@@ -293,7 +301,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "lining": make_pbr_material(
             "Cotton_Hood_Lining_Red",
-            base_color=(0.24, 0.010, 0.016, 1.0),
+            base_color=lin_dark,
             roughness=0.95,
             metallic=0.0,
             color_img=textures["red_lining_col"],
@@ -303,26 +311,26 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "zip_tape": make_pbr_material(
             "Zipper_Tape_Red",
-            base_color=(0.28, 0.012, 0.020, 1.0),
+            base_color=lin_dark,
             roughness=0.88,
             metallic=0.0,
         ),
         "zip_plastic_red": make_pbr_material(
             "Zipper_Rail_Plastic_Red",
-            base_color=(0.55, 0.018, 0.028, 1.0),
+            base_color=lin_main,
             roughness=0.34,
             metallic=0.0,
             specular=0.58,
         ),
         "zip_metal_red": make_pbr_material(
             "Zipper_Metal_Red",
-            base_color=(0.68, 0.032, 0.045, 1.0),
+            base_color=lin_main,
             roughness=0.24,
             metallic=0.88,
         ),
         "cord": make_pbr_material(
             "Cotton_Drawstring_Red",
-            base_color=(0.56, 0.022, 0.032, 1.0),
+            base_color=lin_main,
             roughness=0.92,
             metallic=0.0,
             color_img=textures["cord_col"],
@@ -332,7 +340,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "swimwear": make_pbr_material(
             "Swimwear_Lycra_Red",
-            base_color=(0.54, 0.018, 0.030, 1.0),
+            base_color=lin_main,
             roughness=0.42,
             metallic=0.0,
             color_img=textures["lycra_col"],
@@ -343,7 +351,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "wetsuit": make_pbr_material(
             "Wetsuit_Neoprene_Red",
-            base_color=(0.46, 0.016, 0.024, 1.0),
+            base_color=lin_main,
             roughness=0.58,
             metallic=0.0,
             color_img=textures["lycra_col"],
@@ -354,7 +362,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "bandana": make_pbr_material(
             "Bandana_Cotton_Red",
-            base_color=(0.52, 0.018, 0.026, 1.0),
+            base_color=lin_main,
             roughness=0.84,
             metallic=0.0,
             color_img=textures["bandana_col"],
@@ -364,7 +372,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "sneaker_canvas": make_pbr_material(
             "Sneaker_Canvas_Red",
-            base_color=(0.50, 0.016, 0.024, 1.0),
+            base_color=lin_main,
             roughness=0.76,
             metallic=0.0,
             color_img=textures["canvas_col"],
@@ -374,14 +382,14 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "sneaker_rubber": make_pbr_material(
             "Sneaker_Rubber_Red",
-            base_color=(0.42, 0.014, 0.022, 1.0),
+            base_color=lin_mid,
             roughness=0.62,
             metallic=0.0,
             specular=0.40,
         ),
         "socks": make_pbr_material(
             "Socks_Knit_Red",
-            base_color=(0.48, 0.018, 0.026, 1.0),
+            base_color=lin_main,
             roughness=0.90,
             metallic=0.0,
             color_img=textures["red_rib_col"],
@@ -391,7 +399,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "denim": make_pbr_material(
             "Denim_Twill_Red",
-            base_color=(0.55, 0.014, 0.020, 1.0),
+            base_color=lin_main,
             roughness=0.82,
             metallic=0.0,
             color_img=textures["denim_col"],
@@ -402,7 +410,7 @@ def create_material_library() -> dict[str, bpy.types.Material]:
         ),
         "denim_seam": make_pbr_material(
             "Denim_Seam_Red",
-            base_color=(0.38, 0.010, 0.015, 1.0),
+            base_color=lin_mid,
             roughness=0.86,
             metallic=0.0,
             color_img=textures["denim_seam_col"],
