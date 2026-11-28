@@ -4,7 +4,7 @@ import { weatherSurface } from './weatherSurface';
 import { EXTERIOR_GROUND } from './environmentData';
 import { resolveTargetBoneName } from './retargeting/boneResolver';
 
-const LIFETIME_MS = 15_000;
+const LIFETIME_MS = 30_000;
 const { min, max } = SPATIAL_ZONES_CONFIG.find(zone => zone.id === 'garden')!.bounds;
 const { x, z, width, depth } = EXTERIOR_GROUND;
 const shapes = {
