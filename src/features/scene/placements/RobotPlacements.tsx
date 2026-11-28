@@ -1,5 +1,6 @@
+import { createGroundTrail } from '../snowFootprints';
 import { useRobotVisibility } from '../store/useRobotVisibility';
-import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ComponentType } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh, Object3D, Vector3 } from 'three';
 import { LAYER_WALKER_DETAIL } from '@config';
@@ -49,6 +50,10 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
   const hiddenMeshes = useRef(new Map<Mesh, number>());
   const cameraRadius = useRef(0);
   const [profile, setProfile] = useState<AgentProfile | null>(null);
+  const wheeled = config.walk === 'roll';
+  const snowTrail = useMemo(() => createGroundTrail(wheeled ? 'wheel' : 'robot',
+    wheeled ? 5 : (profile?.height ?? 1) / 4), [wheeled, profile]);
+  const halfTrack = useRef(0);
   const route = useRef(createRouteState());
   const navigation = useRef(new NavigationScope());
   const life = useRef({ automatic: ('automatic' in config ? config.automatic : true), target: null as Point | null, wait: config.pause, searching: false });
@@ -70,6 +75,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
     // Camera on the upper front edge of the measured body, clear of its own meshes.
     cameraMount.current.set(0, size.y, size.z / 2);
     cameraRadius.current = size.length() / 2;
+    halfTrack.current = size.x / 4;
     const measured = { excludeStudio: true, radius: Math.hypot(size.x, size.z) / 2 * config.radiusScale, height: size.y };
     setProfile(previous => previous?.radius === measured.radius && previous.height === measured.height ? previous : measured);
   }, [config.radiusScale]);
@@ -138,7 +144,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
       life.current.target = null; life.current.searching = false;
       life.current.automatic = false;
     }
-    if (driver.current.active) { selectMotion(driver.current.moving ? config.walk : 'idle'); state.invalidate(); return; }
+    if (driver.current.active) { snowTrail(root, config.speed * delta, halfTrack.current); selectMotion(driver.current.moving ? config.walk : 'idle'); state.invalidate(); return; }
     if (driver.current.resumed) { life.current.automatic = true; life.current.wait = 0; }
     if (soloActive.current) { state.invalidate(); return; }
     const ai = life.current;
@@ -193,6 +199,7 @@ function Robot({ config }: { config: typeof ROBOTS[number] }) {
         }
       }
     }
+    snowTrail(root, config.speed * delta, halfTrack.current);
     cameraState.positions[id] = { x: root.position.x, y: root.position.y, z: root.position.z, yaw: root.rotation.y };
     state.invalidate();
     });

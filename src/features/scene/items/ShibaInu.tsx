@@ -1,6 +1,7 @@
+import { createGroundTrail } from '../snowFootprints';
 import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
-import { createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
+import { DOG_ACTIVITY, createDogBehavior, DOG_CLIPS, resumeDogBehavior, releaseDogRoute, updateDogBehavior, updateDogControl, transitionDogAction, type DogAction } from './dogBehavior';
 import { createRouteState, followRoute, resetRoute } from '../ai/navigation/service';
 import { getWalkableGroundY } from '../ai/navigation/groundElevation';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
@@ -47,6 +48,7 @@ function findDogClip(animations: THREE.AnimationClip[], keyword: string): THREE.
 export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = false, showSkeletonPreview = false, onSize }: { isPreview?: boolean, previewAnim?: string, dancePreview?: boolean, showSkeletonPreview?: boolean, onSize?: (size: THREE.Vector3) => void }) {
   const navigationEnabled = useNavigationEnabled();
   const routeRef = useRef(createRouteState());
+  const snowTrail = useMemo(() => createGroundTrail('paw', 18), []);
   const life = useMemo(createDogBehavior, []);
   const activeAction = useRef<THREE.AnimationAction | null>(null);
   const { scene, animations } = useGLTFClone(GLB_PATH);
@@ -215,6 +217,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     mixerRef.current.update(delta);
     invalidate();
     if (updateDogControl(life, context(), delta)) {
+      snowTrail(modelRef.current, WALK_SPEED * delta, 7);
       if (life.driver!.started) { resetRoute(routeRef.current, 'shiba'); danceRef.current.owner = null; }
       return;
     }
@@ -292,6 +295,7 @@ export function ShibaInu({ isPreview = false, previewAnim = '', dancePreview = f
     }
     
     if (!isPreview) {
+      snowTrail(modelRef.current, DOG_ACTIVITY.runSpeed * delta, 7);
       cameraState.positions['shiba'] = {
         x: modelRef.current.position.x,
         y: modelRef.current.position.y,

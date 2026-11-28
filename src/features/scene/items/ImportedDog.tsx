@@ -1,3 +1,4 @@
+import { createGroundTrail } from '../snowFootprints';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { AnimationMixer, Group, LoopOnce, Vector3, type AnimationAction } from 'three';
@@ -7,7 +8,7 @@ import { cameraState } from '../cameraState';
 import { glbLocalBBox } from '../glbUtils';
 import { BlobShadow } from '../BlobShadow';
 import { useGLTFClone } from '../useGLTFClone';
-import { createDogBehavior, resumeDogBehavior, updateDogBehavior, releaseDogRoute, transitionDogAction, type DogContext } from './dogBehavior';
+import { DOG_ACTIVITY, createDogBehavior, resumeDogBehavior, updateDogBehavior, releaseDogRoute, transitionDogAction, type DogContext } from './dogBehavior';
 import { setAgentProfile, removeAgentProfile } from '../ai/navigation/obstacles';
 import { useNavigationEnabled } from '../ai/navigation/NavigationContext';
 import { PITBULL_LIFE_CLIPS, NATIVE_DOG_LIFE_CLIPS, DOG_PAUSES, type DogLifeClips } from './dogLifeClips';
@@ -20,6 +21,7 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
   const mixer = useMemo(() => new AnimationMixer(scene), [scene]);
   const root = useRef<Group>(null);
   const [shadowSize, setShadowSize] = useState<[number, number] | null>(null);
+  const snowTrail = useMemo(() => createGroundTrail('paw', height / 2), [height]);
   const life = useMemo(createDogBehavior, []);
   const active = useRef<AnimationAction | null>(null);
   const navigationEnabled = useNavigationEnabled();
@@ -77,10 +79,13 @@ export function ImportedDog({ path, height, clip, onSize, agentId, walkClip, run
   useFrame((_, delta) => {
     if (isPreview) { mixer.setTime(useAnimPreviewStore.getState().tick(delta)); invalidate(); return; }
     if (autonomous) {
-    updateDogBehavior(life, context(), delta);
-    root.current!.getWorldQuaternion(life.rotation);
-    cameraState.positions[agentId!] = { x: life.position.x, y: life.position.y, z: life.position.z, yaw: life.euler.setFromQuaternion(life.rotation).y };
-  } mixer.update(delta); });
+      updateDogBehavior(life, context(), delta);
+      snowTrail(root.current!, DOG_ACTIVITY.runSpeed * delta, height / 7);
+      root.current!.getWorldQuaternion(life.rotation);
+      cameraState.positions[agentId!] = { x: life.position.x, y: life.position.y, z: life.position.z, yaw: life.euler.setFromQuaternion(life.rotation).y };
+    }
+    mixer.update(delta);
+  });
   return (
     <group ref={root}>
       {shadowSize && <BlobShadow size={shadowSize} />}

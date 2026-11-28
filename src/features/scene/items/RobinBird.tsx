@@ -1,3 +1,4 @@
+import { stampBirdTracks } from '../snowFootprints';
 import { updateClipPreview } from '@features/inventory/updateClipPreview';
 import { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -355,7 +356,11 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
       }
       footContact.current!.ground(model, scene);
       if (forage.elapsed >= forage.duration) {
-        if (forage.step) { ai.perch = forage.step; model.position.copy(forage.to); }
+        if (forage.step) {
+          ai.perch = forage.step;
+          model.position.copy(forage.to);
+          if (ai.perch.descriptor.id === 'garden-ground') stampBirdTracks(model, feet);
+        }
         if (forage.remaining <= 0) takeOff();
         else if (forage.phase === 'startled') startForagePhase('backstep');
         else {
@@ -376,6 +381,7 @@ export function RobinBird({ isPreview = false, previewAnim = '', showSkeletonPre
         ai.timer = isAtFeeder ? 5 + Math.random() * 5 : 3 + Math.random() * 5;
         playAnimation(isAtFeeder ? 'Robin_Bird_Eat' : 'Robin_Bird_Idle');
         footContact.current!.ground(model, scene);
+        if (ai.perch!.descriptor.id === 'garden-ground') stampBirdTracks(model, feet);
         if (ai.perch!.descriptor.kind === 'ground') {
           ai.state = 'foraging';
           ai.forage = { phase: 'observe', remaining: 20 + Math.random() * 20, elapsed: 0, duration: 0,
