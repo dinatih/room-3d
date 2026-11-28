@@ -130,8 +130,8 @@ export function createSnowFootprintMask() {
           context.save();
           context.translate((mark.x - x + width / 2) / 2, (mark.z - z + depth / 2) / 2);
           context.rotate(mark.angle);
-          const [length, width] = shapes[mark.shape];
-          context.scale(length, width);
+          const [markLength, markWidth] = shapes[mark.shape];
+          context.scale(markLength, markWidth);
           const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
           gradient.addColorStop(0, 'white');
           gradient.addColorStop(1, 'transparent');
